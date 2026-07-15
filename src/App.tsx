@@ -1,26 +1,62 @@
+import { useMemo, useState } from "react";
+import { DataBasisPanel } from "./components/DataBasisPanel";
+import { ForecastChart } from "./components/ForecastChart";
+import { GovernmentHeader } from "./components/GovernmentHeader";
+import { GovernmentReadinessPanel } from "./components/GovernmentReadinessPanel";
+import { Heatmap } from "./components/Heatmap";
+import { PlanForm } from "./components/PlanForm";
+import { ReportView } from "./components/ReportView";
+import { RiskPanel } from "./components/RiskPanel";
+import { ScenarioControls } from "./components/ScenarioControls";
+import { SummaryCards } from "./components/SummaryCards";
+import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
+import { sampleTourismContext } from "./data/sampleTourApi";
+import { sampleTrendContext } from "./data/sampleTrends";
+import { createForecast } from "./services/forecast";
+import { createPlanningReport } from "./services/report";
+import { createSimulation } from "./services/simulation";
+
 export function App() {
+  const [plan, setPlan] = useState(sampleFestivalPlan);
+  const [selectedHour, setSelectedHour] = useState(20);
+
+  const forecast = useMemo(
+    () => createForecast(plan, sampleTourismContext, sampleTrendContext),
+    [plan],
+  );
+  const simulation = useMemo(
+    () => createSimulation(plan, forecast, selectedHour),
+    [forecast, plan, selectedHour],
+  );
+  const report = useMemo(
+    () => createPlanningReport(plan, forecast, simulation),
+    [forecast, plan, simulation],
+  );
+
   return (
     <main className="app-shell">
-      <header className="government-header">
-        <div>
-          <p className="eyebrow">정부 지침 기반 B2G SaaS MVP</p>
-          <h1>페스트트윈(Fest-Twin)</h1>
-          <p>
-            지자체 축제 기획안을 TourAPI와 트렌드 데이터로 사전 진단하는
-            축제 수요 예측·군중 안전 플랫폼입니다.
-          </p>
-        </div>
-        <span className="status-pill">공공 검토용 데모</span>
-      </header>
-
-      <section className="standard-strip" aria-label="적용 지침">
-        <span>KRDS</span>
-        <span>전자정부 웹 품질</span>
-        <span>KWCAG 2.2</span>
-        <span>공공 SaaS</span>
-        <span>공공데이터</span>
-        <span>개인정보 최소수집</span>
-      </section>
+      <GovernmentHeader />
+      <GovernmentReadinessPanel />
+      <SummaryCards forecast={forecast} simulation={simulation} report={report} />
+      <div className="workspace-grid">
+        <aside className="left-column">
+          <PlanForm plan={plan} onPlanChange={setPlan} />
+          <ScenarioControls
+            hours={plan.operatingHours}
+            selectedHour={selectedHour}
+            onSelectedHourChange={setSelectedHour}
+          />
+          <DataBasisPanel tourism={sampleTourismContext} trends={sampleTrendContext} />
+        </aside>
+        <section className="main-column">
+          <ForecastChart forecast={forecast} />
+          <Heatmap plan={plan} simulation={simulation} />
+        </section>
+        <aside className="right-column">
+          <RiskPanel report={report} />
+        </aside>
+      </div>
+      <ReportView report={report} />
     </main>
   );
 }
