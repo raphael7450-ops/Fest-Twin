@@ -48,7 +48,7 @@ DONE_WITH_CONCERNS
 
 ### Results
 
-- Port `18080` is documented as a deployment blocker; operators must free it or stop the conflicting service.
+- Port `18080` is documented as a deployment blocker; operators must escalate to the server owner or administrator to free it.
 - Redeploy now requires a fresh local `git archive` upload, server-side source replacement, rebuild, and restart.
 
 ## Task 2 Re-review Remediation

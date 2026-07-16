@@ -55,9 +55,24 @@ TourAPI 키 없이 빌드하면 앱은 샘플 fallback으로 동작한다.
 서버에서 실행한다.
 
 ```bash
-docker stop fest-twin-demo 2>/dev/null || true
-docker rm fest-twin-demo 2>/dev/null || true
-docker run -d --name fest-twin-demo --restart unless-stopped -p 18080:80 fest-twin-demo
+existing_container="$(docker ps -aq --filter 'name=^fest-twin-demo$')"
+if [ -n "$existing_container" ]; then
+  ownership_marker="$(docker inspect --format '{{index .Config.Labels "com.fest-twin.managed-by"}}' "$existing_container")"
+  if [ "$ownership_marker" != "fest-twin-internal-demo" ]; then
+    echo "fest-twin-demo exists without the deployment ownership marker; stop and ask the server owner or administrator."
+    exit 1
+  fi
+  read -r -p "Confirm fest-twin-demo is the managed demo container from this deployment (type yes): " ownership_confirmed
+  if [ "$ownership_confirmed" != "yes" ]; then
+    echo "Ownership was not confirmed; leaving the existing container unchanged."
+    exit 1
+  fi
+  if [ "$ownership_confirmed" = "yes" ]; then
+    docker stop "$existing_container"
+    docker rm "$existing_container"
+  fi
+fi
+docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 fest-twin-demo
 ```
 
 ## 확인
@@ -84,8 +99,25 @@ docker logs --tail=100 fest-twin-demo
 ## 중지와 삭제
 
 ```bash
-docker stop fest-twin-demo
-docker rm fest-twin-demo
+existing_container="$(docker ps -aq --filter 'name=^fest-twin-demo$')"
+if [ -z "$existing_container" ]; then
+  echo "fest-twin-demo does not exist."
+  exit 0
+fi
+ownership_marker="$(docker inspect --format '{{index .Config.Labels "com.fest-twin.managed-by"}}' "$existing_container")"
+if [ "$ownership_marker" != "fest-twin-internal-demo" ]; then
+  echo "fest-twin-demo lacks the deployment ownership marker; stop and ask the server owner or administrator."
+  exit 1
+fi
+read -r -p "Confirm fest-twin-demo is the managed demo container from this deployment (type yes): " ownership_confirmed
+if [ "$ownership_confirmed" != "yes" ]; then
+  echo "Ownership was not confirmed; leaving the existing container unchanged."
+  exit 1
+fi
+if [ "$ownership_confirmed" = "yes" ]; then
+  docker stop "$existing_container"
+  docker rm "$existing_container"
+fi
 ```
 
 ## 재배포
@@ -101,13 +133,28 @@ git archive --format=tar HEAD | ssh cwuser@192.168.55.223 "rm -rf ~/fest-twin-de
 그 다음 서버에서 실행한다.
 
 ```bash
-docker stop fest-twin-demo 2>/dev/null || true
-docker rm fest-twin-demo 2>/dev/null || true
+existing_container="$(docker ps -aq --filter 'name=^fest-twin-demo$')"
+if [ -n "$existing_container" ]; then
+  ownership_marker="$(docker inspect --format '{{index .Config.Labels "com.fest-twin.managed-by"}}' "$existing_container")"
+  if [ "$ownership_marker" != "fest-twin-internal-demo" ]; then
+    echo "fest-twin-demo exists without the deployment ownership marker; stop and ask the server owner or administrator."
+    exit 1
+  fi
+  read -r -p "Confirm fest-twin-demo is the managed demo container from this deployment (type yes): " ownership_confirmed
+  if [ "$ownership_confirmed" != "yes" ]; then
+    echo "Ownership was not confirmed; leaving the existing container unchanged."
+    exit 1
+  fi
+  if [ "$ownership_confirmed" = "yes" ]; then
+    docker stop "$existing_container"
+    docker rm "$existing_container"
+  fi
+fi
 rm -rf ~/fest-twin-demo
 mv ~/fest-twin-demo.new ~/fest-twin-demo
 cd ~/fest-twin-demo
 docker build -t fest-twin-demo .
-docker run -d --name fest-twin-demo --restart unless-stopped -p 18080:80 fest-twin-demo
+docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 fest-twin-demo
 ```
 
 ## 문제 해결
