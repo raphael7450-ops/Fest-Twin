@@ -1,5 +1,7 @@
 # Fest-Twin TourAPI 점진 연동 설계
 
+> 이 문서는 2026-07-16 서버 프록시 전환 이전의 점진 연동 설계 기록이다. 현재 구현과 배포 기준은 `docs/superpowers/specs/2026-07-16-tourapi-server-proxy-design.md`이며, TourAPI 인증키는 브라우저 환경변수가 아니라 서버 런타임 `TOUR_API_KEY`로만 제공한다.
+
 ## 1. 목표
 
 페스트트윈의 현재 샘플 기반 관광 데이터 흐름을 한국관광공사 TourAPI 실제 호출로 확장한다. 목표는 실데이터 활용 근거를 강화하되, API 장애나 브라우저 제약이 있어도 공모전 데모가 깨지지 않는 구조를 만드는 것이다.
@@ -10,7 +12,7 @@
 
 포함 범위:
 
-- `.env.local`의 `VITE_TOUR_API_KEY` 기반 인증키 사용
+- `.env.local`의 `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE` 기반 인증키 사용
 - TourAPI 호출 성공 시 실제 축제·관광지 데이터를 `TourismContext`로 변환
 - 호출 실패, 응답 부족, 지역 코드 매핑 실패, CORS 문제 발생 시 기존 샘플 데이터로 fallback
 - 데이터 근거 패널에서 실제 API 사용 여부와 fallback 여부 표시
@@ -104,7 +106,7 @@ TourAPI 응답은 현재 도메인 타입으로 변환한다.
 
 ## 8. 보안과 키 관리
 
-인증키는 `.env.local`의 `VITE_TOUR_API_KEY`에 저장한다. `.env.local`은 Git에 커밋하지 않는다.
+인증키는 `.env.local`의 `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`에 저장한다. `.env.local`은 Git에 커밋하지 않는다.
 
 프론트엔드 Vite 환경변수는 브라우저 번들에 포함될 수 있으므로, 이 방식은 데모와 개발용으로만 사용한다. 운영 또는 공개 배포 전에는 서버 프록시를 도입해 키가 브라우저에 노출되지 않게 해야 한다.
 

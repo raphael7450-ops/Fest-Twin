@@ -1,17 +1,19 @@
 # TourAPI Integration Implementation Plan
 
+> Superseded: this plan records the earlier browser-side TourAPI integration phase. Current implementation and deployment follow `docs/superpowers/plans/2026-07-16-tourapi-server-proxy.md`; TourAPI credentials must be provided only as the server runtime `TOUR_API_KEY`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Connect Fest-Twin's tourism evidence flow to Korea Tourism Organization TourAPI while preserving the current sample-data fallback.
 
 **Architecture:** Keep the app as a Vite + React + TypeScript single-page app. Expand `TourismContext` provenance so UI can distinguish real TourAPI data, partial fallback, and sample fallback. Put TourAPI URL construction, response normalization, and fallback handling inside `src/services/tourApiAdapter.ts`, then make `App.tsx` load tourism context asynchronously without breaking forecast, simulation, or report rendering.
 
-**Tech Stack:** Vite, React 18, TypeScript, Vitest, Testing Library, browser `fetch`, Vite env variable `VITE_TOUR_API_KEY`.
+**Tech Stack:** Vite, React 18, TypeScript, Vitest, Testing Library, browser `fetch`, Vite env variable `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`.
 
 ## Global Constraints
 
 - Do not commit the actual TourAPI key.
-- Store the key only in `.env.local` as `VITE_TOUR_API_KEY`.
+- Store the key only in `.env.local` as `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`.
 - `.env.local` must remain ignored by Git.
 - Use `areaCode2`, `searchFestival2`, `detailCommon2`, and `locationBasedList2` only in this phase.
 - If the API key is missing, HTTP fails, JSON parsing fails, response shape changes, region mapping fails, or CORS blocks the request, use the existing sample tourism context.
@@ -32,7 +34,7 @@
 - Modify `src/App.tsx`: load tourism context through `getTourismContext(plan)` instead of importing `sampleTourismContext` directly.
 - Modify `src/App.test.tsx`: wait for asynchronous dashboard data to render.
 - Modify `.gitignore`: ensure `.env.local` is ignored.
-- Create `.env.example`: document `VITE_TOUR_API_KEY` without a real value.
+- Create `.env.example`: document `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE` without a real value.
 - Modify `README.md`: add TourAPI key setup and warning that frontend env keys are demo-only.
 - Modify `docs/demo-verification.md`: add TourAPI fallback and key-based checks.
 
@@ -158,7 +160,7 @@ export function createFallbackTourismContext(
 }
 
 export async function getTourismContext(plan: FestivalPlan): Promise<TourismContext> {
-  const hasTourApiKey = Boolean(import.meta.env.VITE_TOUR_API_KEY);
+  const hasTourApiKey = Boolean(import.meta.env.LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE);
 
   if (!hasTourApiKey) {
     return createFallbackTourismContext(plan, "TourAPI 인증키가 없어 샘플 데이터를 사용합니다.");
@@ -536,7 +538,7 @@ export async function getTourismContext(
   plan: FestivalPlan,
   options: TourApiOptions = {},
 ): Promise<TourismContext> {
-  const apiKey = options.apiKey ?? import.meta.env.VITE_TOUR_API_KEY;
+  const apiKey = options.apiKey ?? import.meta.env.LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE;
   const fetchImpl = options.fetchImpl ?? fetch;
 
   if (!apiKey) {
@@ -871,7 +873,7 @@ git commit -m "feat: show TourAPI data source status"
 - Modify: `docs/demo-verification.md`
 
 **Interfaces:**
-- Consumes: `VITE_TOUR_API_KEY`, current npm scripts.
+- Consumes: `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`, current npm scripts.
 - Produces: documented local setup and verification path without committing secrets.
 
 - [ ] **Step 1: Verify `.env.local` is ignored**
@@ -897,7 +899,7 @@ If `.env.local` is not already ignored, add these lines to `.gitignore`:
 Create `.env.example`:
 
 ```env
-VITE_TOUR_API_KEY=replace-with-your-tourapi-service-key
+LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE=replace-with-your-tourapi-service-key
 ```
 
 - [ ] **Step 3: Update README TourAPI setup**
@@ -910,7 +912,7 @@ Add this section after the local run commands in `README.md`:
 한국관광공사 TourAPI 활용 신청을 완료했다면 로컬에 `.env.local`을 만들고 다음 값을 넣습니다.
 
 ```env
-VITE_TOUR_API_KEY=발급받은_일반_인증키
+LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE=발급받은_일반_인증키
 ```
 
 앱은 `areaCode2`, `searchFestival2`, `detailCommon2`, `locationBasedList2`를 우선 사용합니다. 인증키가 없거나 호출에 실패하면 기존 TourAPI 형태의 샘플 데이터로 자동 대체됩니다.
@@ -927,7 +929,7 @@ Add this section to `docs/demo-verification.md` before `## 집에서 재확인`:
 ## TourAPI 실제 연동 확인
 
 - [ ] `.env.local`이 없는 상태에서 앱이 샘플 데이터 대체 사용 상태로 정상 렌더링된다.
-- [ ] `.env.local`에 `VITE_TOUR_API_KEY`를 넣은 상태에서 앱이 TourAPI 호출을 시도한다.
+- [ ] `.env.local`에 `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`를 넣은 상태에서 앱이 TourAPI 호출을 시도한다.
 - [ ] TourAPI 호출이 성공하면 데이터 근거 패널에 실제 TourAPI 조회 성공 또는 일부 조회 및 샘플 보완 상태가 표시된다.
 - [ ] TourAPI 호출이 실패해도 수요 예측, 혼잡도 시뮬레이션, 기획 보완 리포트가 유지된다.
 - [ ] 실제 인증키는 Git 변경 목록에 포함되지 않는다.
@@ -980,26 +982,26 @@ Expected: PASS.
 
 ```powershell
 git status --short
-$tourApiKey = $env:VITE_TOUR_API_KEY
+$tourApiKey = $env:LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE
 if ([string]::IsNullOrWhiteSpace($tourApiKey)) {
-  Write-Output "VITE_TOUR_API_KEY is not set; secret scan skipped."
+  Write-Output "LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE is not set; secret scan skipped."
 } else {
   git grep -n --fixed-strings -- $tourApiKey
   if ($LASTEXITCODE -eq 1) {
-    Write-Output "No matches for the environment-provided VITE_TOUR_API_KEY value."
+    Write-Output "No matches for the environment-provided LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE value."
   }
   exit $LASTEXITCODE
 }
 ```
 
-Expected: `git status --short` is clean after commits, and the guarded scan reports no matches for the environment-provided `VITE_TOUR_API_KEY` value when the variable is non-empty.
+Expected: `git status --short` is clean after commits, and the guarded scan reports no matches for the environment-provided `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE` value when the variable is non-empty.
 
 - [ ] Optional local live check with the user's key:
 
 Create `.env.local` locally with:
 
 ```env
-VITE_TOUR_API_KEY=<actual key>
+LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE=<actual key>
 ```
 
 Run:
