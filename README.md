@@ -70,6 +70,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [공공데이터 및 개인정보 최소수집 정책](docs/public-data-and-privacy-policy.md)
 - [수요 예측·혼잡 진단·리포트 산정 기준](docs/forecast-simulation-report-method.md)
 - [정부용 대시보드 화면 흐름](docs/dashboard-service-flow.md)
+- [데모 검증 체크리스트](docs/demo-verification.md)
 - [로컬 작업 이어가기](docs/local-continuation-guide.md)
 
 ## MVP 흐름
