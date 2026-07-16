@@ -175,6 +175,9 @@ if [ -f "$HOME/fest-twin-demo.env" ]; then
   tourapi_env_args=(--env-file "$HOME/fest-twin-demo.env")
 fi
 
+# 키 없는 재배포를 강제할 때는 위의 env 파일 자동 감지 블록을 다음 한 줄로 교체한다.
+# tourapi_env_args=()
+
 rm -rf "$staging_dir"
 mkdir -p "$staging_dir"
 tar -xf "$HOME/fest-twin-demo.tar" -C "$staging_dir"
