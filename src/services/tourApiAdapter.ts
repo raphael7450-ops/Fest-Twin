@@ -7,10 +7,6 @@ import type {
 } from "../domain/types";
 import { clamp } from "./forecast";
 
-const TOUR_API_BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
-const MOBILE_OS = "ETC";
-const MOBILE_APP = "FestTwin";
-
 interface TourApiOptions {
   apiKey?: string;
   fetchImpl?: typeof fetch;
@@ -34,10 +30,10 @@ interface TourApiItem {
 }
 
 type TourApiOperation =
-  | "areaCode2"
-  | "searchFestival2"
-  | "detailCommon2"
-  | "locationBasedList2";
+  | "area-code"
+  | "festivals"
+  | "detail"
+  | "nearby";
 
 type ValidFestivalItem = TourApiItem & {
   contentid: string | number;
@@ -109,15 +105,9 @@ export function createFallbackTourismContext(
 
 function createTourApiUrl(
   operation: TourApiOperation,
-  apiKey: string,
   params: Record<string, string | number | undefined>,
 ) {
-  const url = new URL(`${TOUR_API_BASE_URL}/${operation}`);
-
-  url.searchParams.set("serviceKey", apiKey);
-  url.searchParams.set("MobileOS", MOBILE_OS);
-  url.searchParams.set("MobileApp", MOBILE_APP);
-  url.searchParams.set("_type", "json");
+  const url = new URL(`/api/tour/${operation}`, window.location.origin);
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== "") {
@@ -125,7 +115,7 @@ function createTourApiUrl(
     }
   });
 
-  return url.toString();
+  return `${url.pathname}${url.search}`;
 }
 
 function validateItem(operation: TourApiOperation, value: unknown): TourApiItem {
@@ -135,7 +125,7 @@ function validateItem(operation: TourApiOperation, value: unknown): TourApiItem 
 
   const item = value as TourApiItem;
 
-  if (operation === "areaCode2") {
+  if (operation === "area-code") {
     if (!hasText(item.code) || !hasText(item.name)) {
       throw new Error(`TourAPI ${operation} item is missing code or name`);
     }
@@ -146,7 +136,7 @@ function validateItem(operation: TourApiOperation, value: unknown): TourApiItem 
     throw new Error(`TourAPI ${operation} item is missing contentid or title`);
   }
 
-  if (operation === "locationBasedList2") {
+  if (operation === "nearby") {
     if (!isValidNearbyItem(item)) {
       throw new Error(`TourAPI ${operation} item is missing content type or distance`);
     }
@@ -197,12 +187,11 @@ function normalizeItems(operation: TourApiOperation, payload: unknown): TourApiI
 
 async function fetchTourApiItems(
   operation: TourApiOperation,
-  apiKey: string,
   params: Record<string, string | number | undefined>,
   fetchImpl: typeof fetch,
   signal?: AbortSignal,
 ) {
-  const response = await fetchImpl(createTourApiUrl(operation, apiKey, params), { signal });
+  const response = await fetchImpl(createTourApiUrl(operation, params), { signal });
 
   if (!response.ok) {
     throw new Error(`TourAPI ${operation} HTTP ${response.status}`);
@@ -346,13 +335,11 @@ export function mapTourApiItemsToTourismContext(
 
 async function resolveAreaCode(
   plan: FestivalPlan,
-  apiKey: string,
   fetchImpl: typeof fetch,
   signal?: AbortSignal,
 ) {
   const items = (await fetchTourApiItems(
-    "areaCode2",
-    apiKey,
+    "area-code",
     { numOfRows: 50, pageNo: 1 },
     fetchImpl,
     signal,
@@ -365,18 +352,10 @@ export async function getTourismContext(
   plan: FestivalPlan,
   options: TourApiOptions = {},
 ): Promise<TourismContext> {
-  const apiKey = options.apiKey ?? import.meta.env.VITE_TOUR_API_KEY;
   const fetchImpl = options.fetchImpl ?? fetch;
 
-  if (!apiKey) {
-    return createFallbackTourismContext(
-      plan,
-      "TourAPI 인증키가 없어 샘플 데이터를 사용합니다.",
-    );
-  }
-
   try {
-    const areaCode = await resolveAreaCode(plan, apiKey, fetchImpl, options.signal);
+    const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
 
     if (!areaCode) {
       return createFallbackTourismContext(
@@ -386,8 +365,7 @@ export async function getTourismContext(
     }
 
     const festivalItems = await fetchTourApiItems(
-      "searchFestival2",
-      apiKey,
+      "festivals",
       {
         numOfRows: 10,
         pageNo: 1,
@@ -402,8 +380,7 @@ export async function getTourismContext(
     const detailItems = await Promise.all(
       festivalItems.slice(0, 5).map((item) =>
         fetchTourApiItems(
-          "detailCommon2",
-          apiKey,
+          "detail",
           {
             contentId: item.contentid,
             defaultYN: "Y",
@@ -420,8 +397,7 @@ export async function getTourismContext(
     const firstLocatedItem = detailItems.find((item) => item.mapx && item.mapy);
     const nearbyItems = firstLocatedItem
       ? await fetchTourApiItems(
-          "locationBasedList2",
-          apiKey,
+          "nearby",
           {
             numOfRows: 10,
             pageNo: 1,

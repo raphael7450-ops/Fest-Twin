@@ -32,19 +32,18 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("public data adapters", () => {
-  it("returns TourAPI-like fallback data with explicit provenance when no API key is configured", async () => {
-    const fetchMock = vi.fn();
+  it("returns TourAPI-like fallback data with explicit provenance when the proxy fails", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({}, { ok: false, status: 503 }));
     const tourism = await getTourismContext(sampleFestivalPlan, {
-      apiKey: "",
       fetchImpl: fetchMock as unknown as typeof fetch,
     });
 
     expect(tourism.provenance.sourceName).toContain("TourAPI");
     expect(tourism.provenance.sourceStatus).toBe("sample-fallback");
     expect(tourism.provenance.collectedPersonalData).toBe(false);
-    expect(tourism.provenance.fallbackReason).toContain("인증키");
+    expect(tourism.provenance.fallbackReason).toContain("호출 실패");
     expect(tourism.nearbySpots[0].category).toContain(sampleFestivalPlan.region);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it("creates a region-aware fallback context with a public-data explanation", () => {
@@ -55,7 +54,7 @@ describe("public data adapters", () => {
     expect(tourism.nearbySpots.every((spot) => spot.category.includes("서울"))).toBe(true);
   });
 
-  it("orchestrates all four TourAPI endpoints with decoded-key URL parameters", async () => {
+  it("orchestrates all four TourAPI proxy endpoints without exposing a browser service key", async () => {
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),
       tourApiPayload([
@@ -93,9 +92,7 @@ describe("public data adapters", () => {
       jsonResponse(responses.shift()),
     );
     const fetchImpl = fetchMock as unknown as typeof fetch;
-    const apiKey = "test-key+/=";
-
-    const tourism = await getTourismContext(sampleFestivalPlan, { apiKey, fetchImpl });
+    const tourism = await getTourismContext(sampleFestivalPlan, { fetchImpl });
 
     expect(tourism.provenance.sourceStatus).toBe("live");
     expect(tourism.similarFestivals[0]).toMatchObject({
@@ -110,16 +107,14 @@ describe("public data adapters", () => {
       distanceKm: 0.8,
     });
 
-    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input)));
-    expect(urls.map((url) => url.pathname.split("/").at(-1))).toEqual([
-      "areaCode2",
-      "searchFestival2",
-      "detailCommon2",
-      "locationBasedList2",
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/api/tour/area-code",
+      "/api/tour/festivals",
+      "/api/tour/detail",
+      "/api/tour/nearby",
     ]);
-    expect(urls.every((url) => url.searchParams.get("serviceKey") === apiKey)).toBe(true);
-    expect(String(fetchMock.mock.calls[0][0])).toContain("serviceKey=test-key%2B%2F%3D");
-    expect(String(fetchMock.mock.calls[0][0])).not.toContain("%252B");
+    expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20260918");
     expect(urls[1].searchParams.get("eventEndDate")).toBe("20260920");
