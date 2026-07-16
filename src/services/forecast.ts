@@ -16,8 +16,19 @@ function average(values: number[]) {
     : values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function confidenceFromCounts(tourismCount: number, trendCount: number): RiskLevel {
-  if (tourismCount >= 3 && trendCount >= 4) return "high";
+function confidenceFromEvidence(
+  tourism: TourismContext,
+  trends: TrendContext,
+): RiskLevel {
+  const tourismCount = tourism.nearbySpots.length;
+  const trendCount = trends.signals.length;
+  const reliableProvenance =
+    tourism.provenance.sourceStatus === "live" &&
+    trends.provenance.sourceType !== "trend-sample" &&
+    trends.provenance.sourceStatus !== "sample-fallback" &&
+    trends.provenance.sourceStatus !== "partial-fallback";
+
+  if (tourismCount >= 3 && trendCount >= 4 && reliableProvenance) return "high";
   if (tourismCount >= 2 && trendCount >= 2) return "medium";
   return "low";
 }
@@ -87,7 +98,7 @@ export function createForecast(
     visitorsByHour,
     peakHour: peak.hour,
     successScore,
-    confidence: confidenceFromCounts(tourism.nearbySpots.length, trends.signals.length),
+    confidence: confidenceFromEvidence(tourism, trends),
     reasons: [
       {
         label: "TourAPI 주변 관광 매력도",
@@ -95,14 +106,23 @@ export function createForecast(
         description: "주변 관광지 흡인력을 수요 예측 근거로 반영했습니다.",
       },
       {
-        label: "유사 축제 기준 수요",
+        label: "유사 축제 추정 수요 프록시",
         impact: Math.round(similarDemand),
-        description: "유사 축제 방문객 규모를 기준값으로 사용했습니다.",
+        description:
+          tourism.provenance.sourceStatus === "live"
+            ? "TourAPI 행사 메타데이터로 산정한 실제 방문객 집계가 아닌 추정 프록시입니다."
+            : "샘플 축제 메타데이터로 산정한 실제 방문객 집계가 아닌 추정 프록시입니다.",
       },
       {
-        label: "소셜 트렌드 관심도",
+        label:
+          trends.provenance.sourceType === "trend-sample"
+            ? "샘플 트렌드 관심도 프록시"
+            : "트렌드 관심도 프록시",
         impact: Math.round(socialInterest),
-        description: "비식별 키워드 관심도를 수요 보정에 반영했습니다.",
+        description:
+          trends.provenance.sourceType === "trend-sample"
+            ? "사전 정의된 비개인 샘플 관심도이며 실시간 소셜 트렌드가 아닙니다."
+            : "비개인 키워드 관심도 프록시를 수요 보정에 반영했습니다.",
       },
       {
         label: "프로그램 매력도",

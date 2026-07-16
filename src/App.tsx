@@ -22,20 +22,41 @@ export function App() {
   const [plan, setPlan] = useState(sampleFestivalPlan);
   const [selectedHour, setSelectedHour] = useState(20);
   const [tourism, setTourism] = useState(sampleTourismContext);
+  const tourApiPlanKey = JSON.stringify({
+    region: plan.region,
+    venueAddress: plan.venueAddress,
+    startDate: plan.startDate,
+    endDate: plan.endDate,
+    name: plan.name,
+    keywords: plan.keywords,
+  });
 
   useEffect(() => {
-    let isCurrent = true;
-
-    getTourismContext(plan).then((nextTourism) => {
-      if (isCurrent) {
-        setTourism(nextTourism);
-      }
-    });
+    const controller = new AbortController();
+    const planSnapshot = plan;
+    const timeoutId = window.setTimeout(() => {
+      getTourismContext(planSnapshot, { signal: controller.signal })
+        .then((nextTourism) => {
+          if (!controller.signal.aborted) {
+            setTourism(nextTourism);
+          }
+        })
+        .catch((error: unknown) => {
+          if (
+            !controller.signal.aborted &&
+            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+          ) {
+            console.error("TourAPI context loading failed", error);
+          }
+        });
+    }, 300);
 
     return () => {
-      isCurrent = false;
+      window.clearTimeout(timeoutId);
+      controller.abort();
     };
-  }, [plan]);
+    // The serialized key intentionally excludes budget, capacity, facilities, and programs.
+  }, [tourApiPlanKey]);
 
   const forecast = useMemo(
     () => createForecast(plan, tourism, sampleTrendContext),

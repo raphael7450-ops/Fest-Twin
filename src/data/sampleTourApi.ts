@@ -5,7 +5,7 @@ export const sampleTourismContext: TourismContext = {
     sourceName: "한국관광공사 TourAPI 샘플",
     sourceType: "public-data",
     basisText:
-      "지역 기반 관광정보, 위치 기반 관광정보, 행사·축제 정보를 수요 예측 근거로 사용합니다.",
+      "샘플 관광정보와 행사 메타데이터 기반 추정 수요 프록시를 예측 근거로 사용합니다.",
     fallbackText:
       "실제 API 키가 없거나 호출에 실패하면 TourAPI 형태의 샘플 데이터를 사용합니다.",
     collectedPersonalData: false,

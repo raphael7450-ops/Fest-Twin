@@ -7,7 +7,7 @@ export const sampleTrendContext: TrendContext = {
     basisText:
       "개인 계정이 아닌 키워드 단위 관심도와 언급량을 수요 보정에 사용합니다.",
     fallbackText:
-      "실시간 트렌드 수집이 불가능하면 사전 정의된 샘플 트렌드를 사용합니다.",
+      "현재 MVP는 실시간 트렌드를 수집하지 않고 사전 정의된 샘플을 사용합니다.",
     collectedPersonalData: false,
   },
   signals: [

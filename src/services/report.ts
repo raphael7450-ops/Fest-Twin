@@ -43,7 +43,7 @@ export function createPlanningReport(
       score: forecast.successScore,
       level: scoreToLevel(forecast.successScore),
       reason:
-        "TourAPI 주변 관광 매력도, 유사 축제, 소셜 관심도, 프로그램 매력도를 종합했습니다.",
+        "관광 매력도, 유사 축제 추정 수요와 트렌드 관심도 프록시, 프로그램 매력도를 종합했습니다.",
     },
     {
       label: "밀집 위험",

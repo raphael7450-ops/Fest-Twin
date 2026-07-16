@@ -25,7 +25,7 @@ export function SummaryCards({ forecast, simulation, report }: SummaryCardsProps
       <article className="metric-card">
         <span>흥행 가능성</span>
         <strong>{forecast.successScore}점</strong>
-        <small>TourAPI·트렌드 기반</small>
+        <small>공공데이터·샘플 프록시 기반</small>
       </article>
       <article className="metric-card">
         <span>혼잡 위험도</span>
