@@ -19,6 +19,8 @@
 - Do not put server password, SSH password, or secrets in Dockerfile, docs, scripts, or Git history.
 - `.env.local` must not be copied into the Docker image or Docker build context.
 - Do not modify existing server containers such as `autochart-nginx`, `nextcloud`, `open-webui`, or service containers.
+- `18080` is the only permitted host port; a port conflict blocks deployment and is escalated to the server owner or administrator.
+- Stop or remove `fest-twin-demo` only after its management label and explicit operator confirmation establish that it is the managed demo container.
 - Do not add HTTPS, domain setup, CI/CD, database, backend API, or server proxy in this phase.
 - The app must still work without a TourAPI key through existing sample fallback.
 - SPA reloads must route back to `/index.html`.
@@ -191,15 +193,19 @@ docker ps --format 'table {{.Names}}\t{{.Ports}}\t{{.Status}}'
 ss -tuln | grep ':18080' || true
 ```
 
-`18080`이 이미 사용 중이면 `18081` 또는 `19080`을 사용하고, 아래 `docker run`의 왼쪽 포트를 같이 변경한다.
+`18080`이 이미 사용 중이면 배포를 중단하고 서버 소유자 또는 관리자에게 포트 해제를 요청한다. 다른 호스트 포트로 변경하지 않으며, 충돌한 서비스나 컨테이너를 중지 또는 삭제하지 않는다.
 
 ## 소스 업로드
 
 SSH 키가 등록되어 있다면 로컬에서 예시처럼 업로드할 수 있다.
 
 ```powershell
-git archive --format=tar HEAD | ssh cwuser@192.168.55.223 "mkdir -p ~/fest-twin-demo && tar -x -C ~/fest-twin-demo"
+git archive -o fest-twin-demo.tar HEAD
+scp .\fest-twin-demo.tar cwuser@192.168.55.223:~/
+Remove-Item .\fest-twin-demo.tar
 ```
+
+`git archive HEAD` excludes uncommitted changes, so commit the intended deployment source first. On the server, remove and recreate `~/fest-twin-demo.staging`, extract `~/fest-twin-demo.tar` there with `tar -xf`, then move it to `~/fest-twin-demo` only when the initial release directory does not already exist.
 
 비밀번호를 명령줄 인자로 넣지 않는다. SSH 키가 없다면 압축 파일을 수동으로 업로드한다.
 
@@ -209,7 +215,7 @@ git archive --format=tar HEAD | ssh cwuser@192.168.55.223 "mkdir -p ~/fest-twin-
 
 ```bash
 cd ~/fest-twin-demo
-docker build -t fest-twin-demo .
+docker build -t fest-twin-demo:initial .
 ```
 
 TourAPI 키 없이 빌드하면 앱은 샘플 fallback으로 동작한다.
@@ -221,9 +227,12 @@ TourAPI 키 없이 빌드하면 앱은 샘플 fallback으로 동작한다.
 서버에서 실행한다.
 
 ```bash
-docker stop fest-twin-demo 2>/dev/null || true
-docker rm fest-twin-demo 2>/dev/null || true
-docker run -d --name fest-twin-demo --restart unless-stopped -p 18080:80 fest-twin-demo
+existing_container="$(docker ps -aq --filter 'name=^fest-twin-demo$')"
+if [ -n "$existing_container" ]; then
+  echo "fest-twin-demo already exists; do not modify it. Verify ownership and use the redeploy procedure."
+  exit 1
+fi
+docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 fest-twin-demo:initial
 ```
 
 ## 확인
@@ -249,21 +258,13 @@ docker logs --tail=100 fest-twin-demo
 
 ## 중지와 삭제
 
-```bash
-docker stop fest-twin-demo
-docker rm fest-twin-demo
-```
+Only stop and remove a container after checking the `com.fest-twin.managed-by=fest-twin-internal-demo` label and receiving explicit operator confirmation. If the label is absent or ownership is uncertain, leave the container unchanged and escalate to the server owner or administrator.
 
 ## 재배포
 
-```bash
-cd ~/fest-twin-demo
-git pull 2>/dev/null || true
-docker build -t fest-twin-demo .
-docker stop fest-twin-demo 2>/dev/null || true
-docker rm fest-twin-demo 2>/dev/null || true
-docker run -d --name fest-twin-demo --restart unless-stopped -p 18080:80 fest-twin-demo
-```
+Create `fest-twin-demo.tar` with `git archive -o fest-twin-demo.tar HEAD`, upload it with `scp`, and remove the local archive. On the server, extract it into a freshly removed/recreated `~/fest-twin-demo.staging` directory. Build that staging source with a unique tag such as `fest-twin-demo:$(date -u +%Y%m%d%H%M%S)` before inspecting, stopping, or removing the current container.
+
+After a successful build, verify the current container has `com.fest-twin.managed-by=fest-twin-internal-demo` and explicitly confirm ownership. Save its image ID with `docker inspect --format '{{.Image}}'`, then stop/remove it, replace the release source with the staging directory, and start the unique new image. If start or local HTTP verification fails, remove the failed replacement and run the saved previous image ID with the same management label and `18080:80` mapping.
 
 ## 문제 해결
 
@@ -275,9 +276,7 @@ ss -tuln | grep ':18080'
 
 컨테이너 이름 충돌:
 
-```bash
-docker rm -f fest-twin-demo
-```
+Do not stop or remove an existing container unless its management label and explicit operator confirmation prove it is the managed demo container. Otherwise, escalate to the server owner or administrator.
 
 SPA 새로고침 404:
 
@@ -302,12 +301,12 @@ In `README.md`, add this bullet to the current documents list:
 Run:
 
 ```powershell
-$key = $env:VITE_TOUR_API_KEY
-if ($key) { git grep --fixed-strings -n -- $key -- Dockerfile .dockerignore nginx.conf docs README.md }
-rg -n '(PASSWORD|PASSWD|SECRET|TOKEN)\s*[:=]\s*[''\"]?[A-Za-z0-9_\-]{12,}' Dockerfile .dockerignore nginx.conf docs README.md
+$secretAssignmentPattern = '(?i)^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:KEY|PASSWORD|PASSWD|SECRET|TOKEN)[A-Z0-9_]*\s*[:=]\s*(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
+$scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
+rg -n --pcre2 $secretAssignmentPattern $scanPaths
 ```
 
-Expected: both commands return no matches when no real local key or secret assignment is present.
+Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers names containing `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, including `VITE_TOUR_API_KEY`, without searching for or requiring a real key.
 
 - [ ] **Step 4: Commit Task 2**
 
@@ -361,9 +360,9 @@ Expected:
 - [ ] Check no secret was added:
 
 ```powershell
-$key = $env:VITE_TOUR_API_KEY
-if ($key) { git grep --fixed-strings -n -- $key -- Dockerfile .dockerignore nginx.conf docs README.md }
-rg -n '(PASSWORD|PASSWD|SECRET|TOKEN)\s*[:=]\s*[''\"]?[A-Za-z0-9_\-]{12,}' Dockerfile .dockerignore nginx.conf docs README.md
+$secretAssignmentPattern = '(?i)^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:KEY|PASSWORD|PASSWD|SECRET|TOKEN)[A-Z0-9_]*\s*[:=]\s*(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
+$scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
+rg -n --pcre2 $secretAssignmentPattern $scanPaths
 ```
 
-Expected: both commands return no matches when no real local key or secret assignment is present.
+Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers names containing `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, including `VITE_TOUR_API_KEY`, without searching for or requiring a real key.
