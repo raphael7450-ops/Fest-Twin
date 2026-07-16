@@ -1,71 +1,71 @@
-# TourAPI Server Proxy Implementation Plan
+# TourAPI 서버 프록시 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **agent 작업자 필수 지침:** 이 계획을 구현할 때는 `superpowers:subagent-driven-development`(권장) 또는 `superpowers:executing-plans`를 사용한다. 각 단계는 진행 추적을 위해 체크박스(`- [ ]`) 형식을 사용한다.
 
-**Goal:** Move TourAPI key usage from the browser bundle to a server-side proxy while preserving the existing dashboard URL and fallback behavior.
+**목표:** TourAPI 인증키 사용을 브라우저 번들에서 서버 프록시로 옮기고, 기존 대시보드 주소와 fallback 동작을 유지한다.
 
-**Architecture:** Add a small Node/Express server that serves the built React app and proxies `/api/tour/*` requests to Korea Tourism Organization TourAPI. The React data adapter calls same-origin proxy endpoints and falls back to sample data if the proxy is unavailable or returns an error. Docker runs the Node server on container port `80`, still mapped to host `18080`.
+**아키텍처:** Node/Express 서버를 추가해 빌드된 React 앱을 서빙하고 `/api/tour/*` 요청을 한국관광공사 TourAPI로 프록시한다. React 데이터 어댑터는 같은 origin의 프록시 엔드포인트를 호출하며, 프록시가 없거나 오류를 반환하면 기존 샘플 데이터로 대체한다. Docker는 Node 서버를 컨테이너 포트 `80`에서 실행하고, 호스트 포트는 기존처럼 `18080`에 매핑한다.
 
-**Tech Stack:** React 18, TypeScript, Vite, Vitest, Node 20, Express, Docker.
+**기술 스택:** React 18, TypeScript, Vite, Vitest, Node 20, Express, Docker.
 
-## Global Constraints
+## 전역 제약
 
-- TourAPI authentication keys must not be stored in Git, Docker images, browser bundles, logs, or error responses.
-- The server reads the key only from runtime environment variable `TOUR_API_KEY`.
-- The public dashboard URL remains `http://192.168.55.223:18080/`.
-- The app must still work without `TOUR_API_KEY` by using existing sample fallback data.
-- Docker keeps host port mapping `18080:80`.
-- Do not add login, a database, key management UI, long-term external API storage, or real-time social data integration.
-- `.env*` files remain excluded from Docker build context except `.env.example`.
+- TourAPI 인증키는 Git, Docker 이미지, 브라우저 번들, 로그, 오류 응답에 저장하거나 노출하지 않는다.
+- 서버는 런타임 환경변수 `TOUR_API_KEY`에서만 인증키를 읽는다.
+- 공개 대시보드 URL은 `http://192.168.55.223:18080/`를 유지한다.
+- 앱은 `TOUR_API_KEY` 없이도 기존 샘플 fallback 데이터로 동작해야 한다.
+- Docker 호스트 포트 매핑은 `18080:80`을 유지한다.
+- 로그인, 데이터베이스, 키 관리 UI, 외부 API 응답 장기 저장, 실시간 소셜 데이터 연동은 추가하지 않는다.
+- `.env*` 파일은 `.env.example`을 제외하고 계속 Docker build context에서 제외한다.
 
 ---
 
-## File Structure
+## 파일 구조
 
-- Create `server/tourProxy.js`: validates proxy requests, calls TourAPI with `TOUR_API_KEY`, normalizes HTTP errors, and never exposes the key.
-- Create `server/index.js`: creates the Express app, mounts `/api/tour/*`, serves `dist`, and applies SPA fallback.
-- Create `server/tourProxy.test.ts`: unit tests for proxy URL construction, query validation, missing key, upstream failure, and key redaction.
-- Modify `package.json`: add `express`, add server start script, and keep existing test/build commands.
-- Modify `package-lock.json`: lock the new runtime dependency.
-- Modify `src/services/tourApiAdapter.ts`: route live calls through `/api/tour/*` by default and keep sample fallback on proxy failures.
-- Modify `src/services/dataAdapters.test.ts`: update TourAPI adapter tests so they assert proxy paths and fallback behavior instead of browser-side `serviceKey`.
-- Modify `Dockerfile`: build the React app, install production server dependencies, copy `server/` and `dist`, and run `node server/index.js`.
-- Leave `nginx.conf` unchanged; it becomes an unused legacy file until a later cleanup because the new Docker runtime no longer depends on nginx.
-- Modify `README.md`: deprecate browser-side `VITE_TOUR_API_KEY` and document `TOUR_API_KEY` for server proxy mode.
-- Modify `docs/internal-docker-deploy.md`: document keyless demo mode and `TOUR_API_KEY` env-file mode without showing any real key.
+- 생성 `server/tourProxy.js`: 프록시 요청을 검증하고, `TOUR_API_KEY`로 TourAPI를 호출하며, HTTP 오류를 정규화하고 키를 노출하지 않는다.
+- 생성 `server/index.js`: Express 앱을 만들고, `/api/tour/*` 라우터를 붙이며, `dist`와 SPA fallback을 서빙한다.
+- 생성 `server/tourProxy.test.ts`: 프록시 URL 생성, query 검증, 키 없음, upstream 실패, 키 비노출을 테스트한다.
+- 수정 `package.json`: `express`를 추가하고 서버 시작 스크립트를 추가한다.
+- 수정 `package-lock.json`: 새 런타임 의존성을 lock한다.
+- 수정 `src/services/tourApiAdapter.ts`: live 호출을 기본적으로 `/api/tour/*`로 보내고 프록시 실패 시 샘플 fallback을 유지한다.
+- 수정 `src/services/dataAdapters.test.ts`: 브라우저 `serviceKey` 대신 프록시 경로와 fallback 동작을 검증하도록 TourAPI 어댑터 테스트를 갱신한다.
+- 수정 `Dockerfile`: React 앱을 빌드하고, production 서버 의존성과 `server/`, `dist`를 복사한 뒤 `node server/index.js`를 실행한다.
+- 유지 `nginx.conf`: 새 Docker runtime은 nginx에 의존하지 않으므로 당장은 사용하지 않는 legacy 파일로 남긴다.
+- 수정 `README.md`: 브라우저용 `VITE_TOUR_API_KEY` 사용을 폐기하고 서버 프록시 모드의 `TOUR_API_KEY`를 문서화한다.
+- 수정 `docs/internal-docker-deploy.md`: 키 없는 데모 모드와 `TOUR_API_KEY` env-file 모드를 실제 키 없이 문서화한다.
 
-## Task 1: Server Proxy
+## Task 1: 서버 프록시
 
-**Files:**
-- Create: `server/tourProxy.js`
-- Create: `server/index.js`
-- Create: `server/tourProxy.test.ts`
-- Modify: `package.json`
-- Modify: `package-lock.json`
+**파일:**
+- 생성: `server/tourProxy.js`
+- 생성: `server/index.js`
+- 생성: `server/tourProxy.test.ts`
+- 수정: `package.json`
+- 수정: `package-lock.json`
 
-**Interfaces:**
-- Produces: `createTourProxyRouter(options?: { fetchImpl?: typeof fetch; apiKey?: string }): import("express").Router`
-- Produces: `createApp(options?: { fetchImpl?: typeof fetch; apiKey?: string; staticDir?: string }): import("express").Express`
-- Consumes: server runtime env `TOUR_API_KEY` and optional `PORT`
-- Later tasks consume same-origin endpoints:
+**인터페이스:**
+- 제공: `createTourProxyRouter(options?: { fetchImpl?: typeof fetch; apiKey?: string }): import("express").Router`
+- 제공: `createApp(options?: { fetchImpl?: typeof fetch; apiKey?: string; staticDir?: string }): import("express").Express`
+- 사용: 서버 런타임 환경변수 `TOUR_API_KEY`와 선택 환경변수 `PORT`
+- 이후 태스크가 사용할 same-origin 엔드포인트:
   - `GET /api/tour/area-code`
   - `GET /api/tour/festivals`
   - `GET /api/tour/detail`
   - `GET /api/tour/nearby`
 
-- [ ] **Step 1: Install Express**
+- [ ] **Step 1: Express 설치**
 
-Run:
+실행:
 
 ```powershell
 npm install express
 ```
 
-Expected: `package.json` gains `"express"` under dependencies and `package-lock.json` updates.
+예상: `package.json`의 dependencies에 `"express"`가 추가되고 `package-lock.json`이 갱신된다.
 
-- [ ] **Step 2: Add server tests first**
+- [ ] **Step 2: 서버 테스트를 먼저 추가**
 
-Create `server/tourProxy.test.ts` with this content:
+`server/tourProxy.test.ts`를 다음 내용으로 생성한다.
 
 ```ts
 import express from "express";
@@ -190,19 +190,19 @@ describe("TourAPI server proxy", () => {
 });
 ```
 
-- [ ] **Step 3: Run the new test to verify it fails**
+- [ ] **Step 3: 새 테스트가 실패하는지 확인**
 
-Run:
+실행:
 
 ```powershell
 npx vitest run --config vitest.config.ts server/tourProxy.test.ts
 ```
 
-Expected: FAIL because `server/tourProxy.js` does not exist.
+예상: `server/tourProxy.js`가 없어서 실패한다.
 
-- [ ] **Step 4: Implement the proxy router**
+- [ ] **Step 4: 프록시 라우터 구현**
 
-Create `server/tourProxy.js` with this content:
+`server/tourProxy.js`를 다음 내용으로 생성한다.
 
 ```js
 import express from "express";
@@ -347,9 +347,9 @@ export function createTourProxyRouter(options = {}) {
 }
 ```
 
-- [ ] **Step 5: Implement the Express app**
+- [ ] **Step 5: Express 앱 구현**
 
-Create `server/index.js` with this content:
+`server/index.js`를 다음 내용으로 생성한다.
 
 ```js
 import express from "express";
@@ -387,9 +387,9 @@ if (process.env.NODE_ENV !== "test") {
 }
 ```
 
-- [ ] **Step 6: Add package scripts**
+- [ ] **Step 6: package script 추가**
 
-Modify `package.json` scripts to include:
+`package.json`의 scripts에 `start`를 추가한다.
 
 ```json
 {
@@ -403,41 +403,41 @@ Modify `package.json` scripts to include:
 }
 ```
 
-- [ ] **Step 7: Run server proxy tests**
+- [ ] **Step 7: 서버 프록시 테스트 실행**
 
-Run:
+실행:
 
 ```powershell
 npx vitest run --config vitest.config.ts server/tourProxy.test.ts
 ```
 
-Expected: PASS for all tests in `server/tourProxy.test.ts`.
+예상: `server/tourProxy.test.ts`의 모든 테스트가 통과한다.
 
-- [ ] **Step 8: Commit Task 1**
+- [ ] **Step 8: Task 1 커밋**
 
-Run:
+실행:
 
 ```powershell
 git add package.json package-lock.json server/tourProxy.js server/index.js server/tourProxy.test.ts
 git commit -m "feat: add TourAPI server proxy"
 ```
 
-Expected: commit succeeds.
+예상: 커밋이 성공한다.
 
-## Task 2: Client Adapter Proxy Switch
+## Task 2: 클라이언트 어댑터 프록시 전환
 
-**Files:**
-- Modify: `src/services/tourApiAdapter.ts`
-- Modify: `src/services/dataAdapters.test.ts`
+**파일:**
+- 수정: `src/services/tourApiAdapter.ts`
+- 수정: `src/services/dataAdapters.test.ts`
 
-**Interfaces:**
-- Consumes: `GET /api/tour/area-code`, `/api/tour/festivals`, `/api/tour/detail`, `/api/tour/nearby`
-- Produces: existing `getTourismContext(plan, options)` API remains unchanged
-- Produces: `TourApiOptions.apiKey` becomes test-only legacy override for direct URL mode only if needed; production code does not read `import.meta.env.VITE_TOUR_API_KEY`
+**인터페이스:**
+- 사용: `GET /api/tour/area-code`, `/api/tour/festivals`, `/api/tour/detail`, `/api/tour/nearby`
+- 제공: 기존 `getTourismContext(plan, options)` API는 유지한다.
+- 제공: `TourApiOptions.apiKey`는 필요하면 테스트용 legacy override로만 남기고, production code는 `import.meta.env.VITE_TOUR_API_KEY`를 읽지 않는다.
 
-- [ ] **Step 1: Update adapter tests first**
+- [ ] **Step 1: 어댑터 테스트를 먼저 갱신**
 
-In `src/services/dataAdapters.test.ts`, replace the test named `"orchestrates all four TourAPI endpoints with decoded-key URL parameters"` with:
+`src/services/dataAdapters.test.ts`에서 `"orchestrates all four TourAPI endpoints with decoded-key URL parameters"` 테스트를 다음 테스트로 교체한다.
 
 ```ts
   it("orchestrates all four TourAPI proxy endpoints without exposing a browser service key", async () => {
@@ -511,19 +511,19 @@ In `src/services/dataAdapters.test.ts`, replace the test named `"orchestrates al
   });
 ```
 
-- [ ] **Step 2: Run adapter tests to verify they fail**
+- [ ] **Step 2: 어댑터 테스트 실패 확인**
 
-Run:
+실행:
 
 ```powershell
 npx vitest run --config vitest.config.ts src/services/dataAdapters.test.ts
 ```
 
-Expected: FAIL because `tourApiAdapter.ts` still requires an API key and builds TourAPI origin URLs.
+예상: `tourApiAdapter.ts`가 아직 API key를 요구하고 TourAPI 원본 URL을 만들기 때문에 실패한다.
 
-- [ ] **Step 3: Change the adapter URL builder**
+- [ ] **Step 3: 어댑터 URL builder 변경**
 
-In `src/services/tourApiAdapter.ts`, remove `TOUR_API_BASE_URL`, remove `apiKey` from `createTourApiUrl`, and replace the operation names with proxy endpoints:
+`src/services/tourApiAdapter.ts`에서 `TOUR_API_BASE_URL`을 제거하고, `createTourApiUrl`에서 `apiKey` 인자를 제거하며, operation 이름을 프록시 엔드포인트로 바꾼다.
 
 ```ts
 type TourApiOperation =
@@ -548,7 +548,7 @@ function createTourApiUrl(
 }
 ```
 
-Also replace each operation string:
+operation 문자열을 다음처럼 교체한다.
 
 ```ts
 "areaCode2" -> "area-code"
@@ -557,9 +557,9 @@ Also replace each operation string:
 "locationBasedList2" -> "nearby"
 ```
 
-- [ ] **Step 4: Change fetch orchestration to not require a browser key**
+- [ ] **Step 4: 브라우저 키 없이 fetch orchestration 변경**
 
-Update `fetchTourApiItems`, `resolveAreaCode`, and `getTourismContext` signatures so no production path reads `import.meta.env.VITE_TOUR_API_KEY`:
+`fetchTourApiItems`, `resolveAreaCode`, `getTourismContext` 시그니처를 바꿔 production path에서 `import.meta.env.VITE_TOUR_API_KEY`를 읽지 않게 한다.
 
 ```ts
 async function fetchTourApiItems(
@@ -602,11 +602,11 @@ export async function getTourismContext(
     const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
 ```
 
-Then remove `apiKey` arguments from the remaining `fetchTourApiItems` calls.
+이후 나머지 `fetchTourApiItems` 호출에서 `apiKey` 인자를 제거한다.
 
-- [ ] **Step 5: Keep fallback semantics**
+- [ ] **Step 5: fallback semantics 유지**
 
-Ensure the existing `catch` block remains:
+기존 `catch` 블록은 유지한다.
 
 ```ts
   } catch (error) {
@@ -623,45 +623,45 @@ Ensure the existing `catch` block remains:
   }
 ```
 
-Expected: when `/api/tour/*` returns `503`, `502`, malformed JSON, or a failed network request, the client uses sample fallback.
+예상: `/api/tour/*`가 `503`, `502`, 잘못된 JSON, 네트워크 오류를 반환하면 클라이언트는 sample fallback을 사용한다.
 
-- [ ] **Step 6: Run adapter tests**
+- [ ] **Step 6: 어댑터 테스트 실행**
 
-Run:
+실행:
 
 ```powershell
 npx vitest run --config vitest.config.ts src/services/dataAdapters.test.ts
 ```
 
-Expected: PASS.
+예상: 통과한다.
 
-- [ ] **Step 7: Commit Task 2**
+- [ ] **Step 7: Task 2 커밋**
 
-Run:
+실행:
 
 ```powershell
 git add src/services/tourApiAdapter.ts src/services/dataAdapters.test.ts
 git commit -m "feat: route TourAPI calls through server proxy"
 ```
 
-Expected: commit succeeds.
+예상: 커밋이 성공한다.
 
-## Task 3: Docker and Documentation
+## Task 3: Docker와 문서
 
-**Files:**
-- Modify: `Dockerfile`
-- Modify: `README.md`
-- Modify: `docs/internal-docker-deploy.md`
+**파일:**
+- 수정: `Dockerfile`
+- 수정: `README.md`
+- 수정: `docs/internal-docker-deploy.md`
 
-**Interfaces:**
-- Consumes: `npm run build` output in `dist`
-- Consumes: `npm start`
-- Produces: Docker image that runs `node server/index.js` with `PORT=80`
-- Produces: deployment docs for keyless demo mode and `TOUR_API_KEY` env-file mode
+**인터페이스:**
+- 사용: `npm run build` 결과물 `dist`
+- 사용: `npm start`
+- 제공: `PORT=80`으로 `node server/index.js`를 실행하는 Docker 이미지
+- 제공: 키 없는 데모 모드와 `TOUR_API_KEY` env-file 모드 배포 문서
 
-- [ ] **Step 1: Update Dockerfile**
+- [ ] **Step 1: Dockerfile 갱신**
 
-Replace `Dockerfile` with:
+`Dockerfile`을 다음 내용으로 교체한다.
 
 ```Dockerfile
 FROM node:20-alpine AS build
@@ -691,9 +691,9 @@ EXPOSE 80
 CMD ["node", "server/index.js"]
 ```
 
-- [ ] **Step 2: Update README TourAPI section**
+- [ ] **Step 2: README TourAPI 섹션 갱신**
 
-In `README.md`, replace the current "TourAPI 실제 연동" section with text that states:
+`README.md`의 현재 "TourAPI 실제 연동" 섹션을 다음 내용으로 교체한다.
 
 ```markdown
 ## TourAPI 실제 연동
@@ -709,18 +709,18 @@ React 앱은 같은 origin의 `/api/tour/*` 프록시만 호출합니다. 프록
 로컬에서 Vite 개발 서버만 실행하면 프록시가 없으므로 sample fallback으로 동작합니다. 실제 TourAPI를 로컬에서 검증하려면 `npm run build` 후 `TOUR_API_KEY`와 함께 `npm start`를 실행합니다.
 ```
 
-Close and reopen code fences correctly in the actual file.
+실제 파일에서는 Markdown 코드 fence가 올바르게 닫히도록 작성한다.
 
-- [ ] **Step 3: Update Docker deployment docs**
+- [ ] **Step 3: Docker 배포 문서 갱신**
 
-In `docs/internal-docker-deploy.md`, update the prerequisites and run sections so they include:
+`docs/internal-docker-deploy.md`의 전제 조건과 실행 섹션에 다음 내용을 포함한다.
 
 ```markdown
 - 키 없는 내부 데모는 `TOUR_API_KEY` 없이 실행하며 sample fallback으로 동작한다.
 - 실제 TourAPI 모드는 서버에만 있는 env 파일로 `TOUR_API_KEY`를 주입한다.
 ```
 
-Add a server-side env-file example without any real key:
+실제 키가 없는 서버 env-file 예시를 추가한다.
 
 ```bash
 cat > "$HOME/fest-twin-demo.env" <<'EOF'
@@ -729,101 +729,101 @@ EOF
 chmod 600 "$HOME/fest-twin-demo.env"
 ```
 
-Document keyless run:
+키 없는 실행을 문서화한다.
 
 ```bash
 docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 fest-twin-demo:initial
 ```
 
-Document real TourAPI run:
+실제 TourAPI 실행을 문서화한다.
 
 ```bash
 docker run -d --name fest-twin-demo --env-file "$HOME/fest-twin-demo.env" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 fest-twin-demo:initial
 ```
 
-- [ ] **Step 4: Run build**
+- [ ] **Step 4: build 실행**
 
-Run:
+실행:
 
 ```powershell
 npm run build
 ```
 
-Expected: PASS.
+예상: 통과한다.
 
-- [ ] **Step 5: Run docs secret scan**
+- [ ] **Step 5: 문서/설정 비밀값 scan 실행**
 
-Run:
+실행:
 
 ```powershell
 rg -n -i '(\b(ENV|ARG)\s+[A-Z0-9_]*(KEY|PASSWORD|PASSWD|SECRET|TOKEN)[A-Z0-9_]*\s*(=|\s)|--build-arg\s+[A-Z0-9_]*(KEY|PASSWORD|PASSWD|SECRET|TOKEN)[A-Z0-9_]*=|[A-Z0-9_]*(KEY|PASSWORD|PASSWD|SECRET|TOKEN)[A-Z0-9_]*\s*[:=]\s*[''"]?[A-Za-z0-9_./+\-]{12,})' Dockerfile .dockerignore server README.md docs/internal-docker-deploy.md docs/superpowers/specs/2026-07-16-tourapi-server-proxy-design.md docs/superpowers/plans/2026-07-16-tourapi-server-proxy.md
 ```
 
-Expected: no output and exit code `1`.
+예상: 출력이 없고 exit code는 `1`이다.
 
-- [ ] **Step 6: Commit Task 3**
+- [ ] **Step 6: Task 3 커밋**
 
-Run:
+실행:
 
 ```powershell
 git add Dockerfile README.md docs/internal-docker-deploy.md
 git commit -m "chore: run Fest-Twin through Node server"
 ```
 
-Expected: commit succeeds.
+예상: 커밋이 성공한다.
 
-## Task 4: Full Verification and Server Redeploy
+## Task 4: 전체 검증과 서버 재배포
 
-**Files:**
-- Modify only if verification reveals a root cause that must be fixed.
+**파일:**
+- 검증 중 root cause가 확인되어 수정이 필요한 경우에만 변경한다.
 
-**Interfaces:**
-- Consumes: committed implementation from Tasks 1-3
-- Produces: redeployed `fest-twin-demo` container on `192.168.55.223:18080`
+**인터페이스:**
+- 사용: Task 1-3의 커밋된 구현
+- 제공: `192.168.55.223:18080`의 재배포된 `fest-twin-demo` 컨테이너
 
-- [ ] **Step 1: Run the full test suite**
+- [ ] **Step 1: 전체 테스트 실행**
 
-Run:
+실행:
 
 ```powershell
 npm run test
 ```
 
-Expected: all Vitest files pass.
+예상: 모든 Vitest 파일이 통과한다.
 
-- [ ] **Step 2: Run production build**
+- [ ] **Step 2: production build 실행**
 
-Run:
+실행:
 
 ```powershell
 npm run build
 ```
 
-Expected: TypeScript and Vite build pass.
+예상: TypeScript와 Vite build가 통과한다.
 
-- [ ] **Step 3: Run whitespace check**
+- [ ] **Step 3: whitespace check 실행**
 
-Run:
+실행:
 
 ```powershell
 git diff --check
 ```
 
-Expected: no output.
+예상: 출력이 없다.
 
-- [ ] **Step 4: Confirm Docker is still unavailable locally or build locally if available**
+- [ ] **Step 4: 로컬 Docker 가능 여부 확인**
 
-Run:
+실행:
 
 ```powershell
 docker --version
 ```
 
-Expected on this workstation today: Docker may be unavailable. If unavailable, perform Docker build verification on the server during redeploy.
+예상: 이 워크스테이션에서는 Docker가 없을 수 있다. 없으면 서버 재배포 과정에서 Docker build를 검증한다.
 
-- [ ] **Step 5: Archive and upload committed HEAD**
+- [ ] **Step 5: 커밋된 HEAD archive 업로드**
 
-Run:
+실행:
 
 ```powershell
 git archive -o fest-twin-demo.tar HEAD
@@ -831,40 +831,40 @@ scp .\fest-twin-demo.tar cwuser@192.168.55.223:~/fest-twin-demo.tar
 Remove-Item .\fest-twin-demo.tar
 ```
 
-Expected: upload succeeds.
+예상: 업로드가 성공한다.
 
-- [ ] **Step 6: Redeploy on the server using the documented rollback procedure**
+- [ ] **Step 6: 문서화된 rollback 절차로 서버 재배포**
 
-Run the redeploy procedure from `docs/internal-docker-deploy.md`. Use keyless mode first unless the user confirms the server env file should be created with the real key.
+`docs/internal-docker-deploy.md`의 재배포 절차를 실행한다. 사용자가 실제 키를 서버 env 파일에 넣으라고 명확히 승인하지 않으면 키 없는 모드로 먼저 실행한다.
 
-Expected:
+예상:
 
 ```text
 fest-twin-demo ... 0.0.0.0:18080->80/tcp ... Up
 ```
 
-- [ ] **Step 7: Verify server endpoints**
+- [ ] **Step 7: 서버 엔드포인트 검증**
 
-Run:
+실행:
 
 ```powershell
 ssh -o BatchMode=yes cwuser@192.168.55.223 'docker ps --filter name=fest-twin-demo --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"; curl -fsSI --max-time 10 http://127.0.0.1:18080/; curl -fsS --max-time 10 http://127.0.0.1:18080/api/tour/area-code || true'
 curl.exe -I --max-time 15 http://192.168.55.223:18080/
 ```
 
-Expected:
+예상:
 
-- `/` returns `HTTP/1.1 200 OK`.
-- Without `TOUR_API_KEY`, `/api/tour/area-code` returns JSON error code `TOUR_API_KEY_MISSING`.
-- The dashboard still loads and falls back to sample TourAPI data.
+- `/`는 `HTTP/1.1 200 OK`를 반환한다.
+- `TOUR_API_KEY`가 없으면 `/api/tour/area-code`는 JSON error code `TOUR_API_KEY_MISSING`을 반환한다.
+- 대시보드는 계속 로드되고 sample TourAPI 데이터로 fallback한다.
 
-- [ ] **Step 8: Commit deployment documentation adjustments if any**
+- [ ] **Step 8: 필요한 경우 배포 문서 보완 커밋**
 
-If redeploy reveals a documentation gap and a docs patch is made, run:
+재배포 중 문서 gap이 확인되어 문서 patch를 만들었다면 실행한다.
 
 ```powershell
 git add docs/internal-docker-deploy.md
 git commit -m "docs: clarify TourAPI proxy deployment"
 ```
 
-Expected: commit succeeds only if docs changed.
+예상: 문서가 변경된 경우에만 커밋한다.
