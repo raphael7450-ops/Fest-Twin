@@ -23,6 +23,7 @@
 - Stop or remove `fest-twin-demo` only after its management label and explicit operator confirmation establish that it is the managed demo container.
 - Do not add HTTPS, domain setup, CI/CD, database, backend API, or server proxy in this phase.
 - The app must still work without a TourAPI key through existing sample fallback.
+- This Docker deployment is keyless/sample-fallback only: the Dockerfile has no TourAPI key build argument and `.env.local` is excluded from the build context. Key-protected live TourAPI requires a future server proxy.
 - SPA reloads must route back to `/index.html`.
 
 ---
@@ -218,9 +219,7 @@ cd ~/fest-twin-demo
 docker build -t fest-twin-demo:initial .
 ```
 
-TourAPI 키 없이 빌드하면 앱은 샘플 fallback으로 동작한다.
-
-내부 데모에서 임시로 TourAPI 키를 포함해 빌드해야 한다면, 키가 브라우저 번들에 노출될 수 있음을 전제로 새 키를 사용한다. 이 단계는 외부 공개용이 아니다.
+TourAPI 키 없이 빌드하면 앱은 샘플 fallback으로 동작한다. Dockerfile에는 키 전달용 build argument가 없고 `.env.local`은 빌드 컨텍스트에서 제외된다. 이 Docker 배포에서 키가 보호된 live TourAPI를 제공하려면 향후 서버 프록시가 필요하다.
 
 ## 실행
 
@@ -264,7 +263,7 @@ Only stop and remove a container after checking the `com.fest-twin.managed-by=fe
 
 Create `fest-twin-demo.tar` with `git archive -o fest-twin-demo.tar HEAD`, upload it with `scp`, and remove the local archive. On the server, extract it into a freshly removed/recreated `~/fest-twin-demo.staging` directory. Build that staging source with a unique tag such as `fest-twin-demo:$(date -u +%Y%m%d%H%M%S)` before inspecting, stopping, or removing the current container.
 
-After a successful build, verify the current container has `com.fest-twin.managed-by=fest-twin-internal-demo` and explicitly confirm ownership. Save its image ID with `docker inspect --format '{{.Image}}'`, then stop/remove it, replace the release source with the staging directory, and start the unique new image. If start or local HTTP verification fails, remove the failed replacement and run the saved previous image ID with the same management label and `18080:80` mapping.
+After a successful build, verify the current container has `com.fest-twin.managed-by=fest-twin-internal-demo` and explicitly confirm ownership. Run the replacement script with `set -euo pipefail`; it saves the existing container ID, image ID, and source directory, then stops/removes only the confirmed managed container. If stop/remove, source replacement, start, or local HTTP verification fails, the script restores the previous container or image and its source directory before exiting nonzero.
 
 ## 문제 해결
 
@@ -301,12 +300,12 @@ In `README.md`, add this bullet to the current documents list:
 Run:
 
 ```powershell
-$secretAssignmentPattern = '(?i)^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:KEY|PASSWORD|PASSWD|SECRET|TOKEN)[A-Z0-9_]*\s*[:=]\s*(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
+$assignmentPattern = '(?ix)(?:^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*[:=]\s*|^\s*(?:env|arg)\s+[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*|\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*)(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
 $scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
-rg -n --pcre2 $secretAssignmentPattern $scanPaths
+rg -n --pcre2 $assignmentPattern $scanPaths
 ```
 
-Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers names containing `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, including `VITE_TOUR_API_KEY`, without searching for or requiring a real key.
+Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers shell assignments, Dockerfile environment variable and build argument directives, and Docker CLI build arguments whose names contain `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, without searching for or requiring a real key.
 
 - [ ] **Step 4: Commit Task 2**
 
@@ -360,9 +359,9 @@ Expected:
 - [ ] Check no secret was added:
 
 ```powershell
-$secretAssignmentPattern = '(?i)^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:KEY|PASSWORD|PASSWD|SECRET|TOKEN)[A-Z0-9_]*\s*[:=]\s*(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
+$assignmentPattern = '(?ix)(?:^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*[:=]\s*|^\s*(?:env|arg)\s+[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*|\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*)(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
 $scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
-rg -n --pcre2 $secretAssignmentPattern $scanPaths
+rg -n --pcre2 $assignmentPattern $scanPaths
 ```
 
-Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers names containing `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, including `VITE_TOUR_API_KEY`, without searching for or requiring a real key.
+Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers shell assignments, Dockerfile environment variable and build argument directives, and Docker CLI build arguments whose names contain `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, without searching for or requiring a real key.
