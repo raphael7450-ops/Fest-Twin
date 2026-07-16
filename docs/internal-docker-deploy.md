@@ -170,6 +170,10 @@ deploy_id="$(date -u +%Y%m%d%H%M%S)-$$"
 release_backup="$HOME/fest-twin-demo.previous.$deploy_id"
 new_image="fest-twin-demo:$deploy_id"
 source_backed_up=false
+tourapi_env_args=()
+if [ -f "$HOME/fest-twin-demo.env" ]; then
+  tourapi_env_args=(--env-file "$HOME/fest-twin-demo.env")
+fi
 
 rm -rf "$staging_dir"
 mkdir -p "$staging_dir"
@@ -241,7 +245,7 @@ rollback() {
   fi
 
   if [ -z "$(docker ps -aq --filter 'name=^fest-twin-demo$')" ]; then
-    if ! docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$previous_image_id" >/dev/null; then
+    if ! docker run -d --name fest-twin-demo "${tourapi_env_args[@]}" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$previous_image_id" >/dev/null; then
       echo "Rollback could not recreate the previous container."
       exit 1
     fi
@@ -260,7 +264,7 @@ mv "$release_dir" "$release_backup"
 source_backed_up=true
 mv "$staging_dir" "$release_dir"
 
-docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$new_image"
+docker run -d --name fest-twin-demo "${tourapi_env_args[@]}" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$new_image"
 curl -fsS --max-time 10 http://127.0.0.1:18080/ > /dev/null
 
 trap - ERR
