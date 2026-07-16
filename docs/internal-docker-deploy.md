@@ -292,7 +292,9 @@ docker ps -a --filter name=fest-twin-demo
 
 SPA 새로고침 404:
 
-- `nginx.conf`에 `try_files $uri $uri/ /index.html;`이 있는지 확인한다.
+- `docker logs fest-twin-demo`에서 Node 서버가 정상적으로 시작했는지 확인한다.
+- 컨테이너가 `node server/index.js`로 실행 중인지 확인하고, `server/index.js`의 `express.static` 경로가 `/app/dist`를 가리키며 존재하지 않는 경로를 `/app/dist/index.html`로 fallback하는지 확인한다.
+- 이미지에 `dist/index.html`이 포함되어 있는지 확인한다: `docker run --rm fest-twin-demo:initial test -f /app/dist/index.html`
 
 TourAPI 호출 실패:
 
