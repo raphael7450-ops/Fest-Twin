@@ -34,6 +34,8 @@ type TourApiOperation =
   | "detail"
   | "nearby";
 
+type FestivalSearchScope = "exact-period" | "annual-region";
+
 type ValidFestivalItem = TourApiItem & {
   contentid: string | number;
   title: string;
@@ -115,6 +117,34 @@ function createTourApiUrl(
   });
 
   return `${url.pathname}${url.search}`;
+}
+
+function formatDateForTourApi(date: string) {
+  return date.replace(/-/g, "");
+}
+
+function buildExactFestivalSearchParams(plan: FestivalPlan, areaCode: string | number) {
+  return {
+    numOfRows: 10,
+    pageNo: 1,
+    arrange: "A",
+    areaCode,
+    eventStartDate: formatDateForTourApi(plan.startDate),
+    eventEndDate: formatDateForTourApi(plan.endDate),
+  };
+}
+
+function buildAnnualFestivalSearchParams(plan: FestivalPlan, areaCode: string | number) {
+  const year = plan.startDate.slice(0, 4);
+
+  return {
+    numOfRows: 10,
+    pageNo: 1,
+    arrange: "A",
+    areaCode,
+    eventStartDate: `${year}0101`,
+    eventEndDate: `${year}1231`,
+  };
 }
 
 function validateItem(operation: TourApiOperation, value: unknown): TourApiItem {
@@ -269,6 +299,7 @@ export function mapTourApiItemsToTourismContext(
   festivalItems: TourApiItem[],
   nearbyItems: TourApiItem[],
   retrievedAt: string,
+  options: { festivalSearchScope?: FestivalSearchScope } = {},
 ): TourismContext {
   const nearbySpots = nearbyItems.filter(isValidNearbyItem).slice(0, 6).map(mapNearbySpot);
   const similarFestivals = festivalItems
@@ -312,6 +343,26 @@ export function mapTourApiItemsToTourismContext(
         similarFestivals.length > 0
           ? similarFestivals
           : sampleTourismContext.similarFestivals,
+    };
+  }
+
+  if (options.festivalSearchScope === "annual-region") {
+    return {
+      provenance: {
+        sourceName: "한국관광공사 TourAPI + 기간 완화 검색",
+        sourceType: "public-data",
+        sourceStatus: "partial-fallback",
+        basisText:
+          "입력 기간 직접 일치 결과가 없어 같은 지역의 연간 TourAPI 축제 데이터를 참고하며 축제 수요는 메타데이터 기반 추정 프록시입니다.",
+        fallbackText:
+          "입력 기간과 직접 일치하지 않는 항목은 같은 지역의 연간 축제 데이터와 기존 샘플 데이터로 보완합니다.",
+        fallbackReason:
+          "입력 기간 직접 일치 결과가 없어 같은 지역의 연간 TourAPI 축제 데이터를 참고했습니다.",
+        retrievedAt,
+        collectedPersonalData: false,
+      },
+      nearbySpots,
+      similarFestivals,
     };
   }
 
@@ -363,19 +414,24 @@ export async function getTourismContext(
       );
     }
 
-    const festivalItems = await fetchTourApiItems(
+    let festivalSearchScope: FestivalSearchScope = "exact-period";
+    let festivalItems = await fetchTourApiItems(
       "festivals",
-      {
-        numOfRows: 10,
-        pageNo: 1,
-        arrange: "A",
-        areaCode,
-        eventStartDate: plan.startDate.replace(/-/g, ""),
-        eventEndDate: plan.endDate.replace(/-/g, ""),
-      },
+      buildExactFestivalSearchParams(plan, areaCode),
       fetchImpl,
       options.signal,
     );
+
+    if (festivalItems.length === 0) {
+      festivalSearchScope = "annual-region";
+      festivalItems = await fetchTourApiItems(
+        "festivals",
+        buildAnnualFestivalSearchParams(plan, areaCode),
+        fetchImpl,
+        options.signal,
+      );
+    }
+
     const detailItems = await Promise.all(
       festivalItems.slice(0, 5).map((item) =>
         fetchTourApiItems(
@@ -415,6 +471,7 @@ export async function getTourismContext(
       detailItems,
       nearbyItems,
       new Date().toISOString(),
+      { festivalSearchScope },
     );
   } catch (error) {
     if (

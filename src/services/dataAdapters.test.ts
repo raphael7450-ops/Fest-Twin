@@ -123,6 +123,67 @@ describe("public data adapters", () => {
     expect(urls[3].searchParams.get("radius")).toBe("5000");
   });
 
+  it("broadens empty exact-period festival searches to annual same-region TourAPI data", async () => {
+    const responses = [
+      tourApiPayload([{ code: "1", name: "서울" }]),
+      tourApiPayload([], 0),
+      tourApiPayload([
+        {
+          contentid: "300",
+          title: "서울라이트 광화문",
+          addr1: "서울특별시 종로구",
+          eventstartdate: "20251212",
+          eventenddate: "20260104",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "300",
+          title: "서울라이트 광화문",
+          addr1: "서울특별시 종로구",
+          firstimage: "https://example.com/light.jpg",
+          eventstartdate: "20251212",
+          eventenddate: "20260104",
+          overview: "광화문 일대에서 열리는 빛 축제",
+          mapx: "126.9767",
+          mapy: "37.5716",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "400",
+          title: "광화문광장",
+          contenttypeid: "12",
+          dist: "300",
+        },
+      ]),
+    ];
+    const fetchMock = vi.fn(async () => jsonResponse(responses.shift()));
+
+    const tourism = await getTourismContext(sampleFestivalPlan, {
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(tourism.provenance.sourceStatus).toBe("partial-fallback");
+    expect(tourism.provenance.fallbackReason).toContain("입력 기간");
+    expect(tourism.provenance.fallbackReason).toContain("연간");
+    expect(tourism.similarFestivals[0].name).toBe("서울라이트 광화문");
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/api/tour/area-code",
+      "/api/tour/festivals",
+      "/api/tour/festivals",
+      "/api/tour/detail",
+      "/api/tour/nearby",
+    ]);
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20260918");
+    expect(urls[1].searchParams.get("eventEndDate")).toBe("20260920");
+    expect(urls[2].searchParams.get("eventStartDate")).toBe("20260101");
+    expect(urls[2].searchParams.get("eventEndDate")).toBe("20261231");
+    expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
+  });
+
   it("rejects unreliable live data and preserves full versus partial fallback semantics", async () => {
     const httpErrorFetch = vi.fn(async () =>
       jsonResponse({}, { ok: false, status: 503 }),
@@ -143,6 +204,7 @@ describe("public data adapters", () => {
     ) as unknown as typeof fetch;
     const emptyFestivalResponses = [
       tourApiPayload([{ code: "1", name: "서울" }]),
+      tourApiPayload([], 0),
       tourApiPayload([], 0),
     ];
     const emptyFestivalFetch = vi.fn(async () =>
@@ -167,6 +229,7 @@ describe("public data adapters", () => {
     expect(itemFallback.provenance.sourceStatus).toBe("sample-fallback");
     expect(regionFallback.provenance.fallbackReason).toContain("지역 코드 매핑");
     expect(emptyFallback.provenance.sourceStatus).toBe("sample-fallback");
+    expect(emptyFestivalFetch).toHaveBeenCalledTimes(3);
 
     const noLiveRecords = mapTourApiItemsToTourismContext(
       sampleFestivalPlan,
