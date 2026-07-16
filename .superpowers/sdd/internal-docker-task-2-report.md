@@ -56,3 +56,8 @@ DONE_WITH_CONCERNS
 - The fixed port `18080` remains required.
 - If `18080` is occupied, deployment is blocked until the server owner or administrator frees it.
 - The deployment operator is explicitly not instructed to stop or remove the conflicting service or container.
+
+## Task 2 Final Review Remediation
+
+- Replaced the unconditional name-collision cleanup command with an inspection command.
+- Name collisions now block deployment and require escalation unless the existing container is confirmed to be the managed demo container from this deployment.
