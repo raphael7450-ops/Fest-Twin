@@ -49,7 +49,7 @@ DONE_WITH_CONCERNS
 
 ### Commit
 
-- `6e46c21 docs: fix TourAPI secret scan example`.
+- `1df1084 docs: fix TourAPI secret scan example`.
 
 ### Commands run
 
