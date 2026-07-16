@@ -17,13 +17,13 @@
 - Base runtime image is `nginx:alpine`.
 - Do not add or commit the actual TourAPI key.
 - Do not put server password, SSH password, or secrets in Dockerfile, docs, scripts, or Git history.
-- `.env.local` must not be copied into the Docker image or Docker build context.
+- No Vite `.env*` file other than `.env.example` may be copied into the Docker image or Docker build context.
 - Do not modify existing server containers such as `autochart-nginx`, `nextcloud`, `open-webui`, or service containers.
 - `18080` is the only permitted host port; a port conflict blocks deployment and is escalated to the server owner or administrator.
 - Stop or remove `fest-twin-demo` only after its management label and explicit operator confirmation establish that it is the managed demo container.
 - Do not add HTTPS, domain setup, CI/CD, database, backend API, or server proxy in this phase.
 - The app must still work without a TourAPI key through existing sample fallback.
-- This Docker deployment is keyless/sample-fallback only: the Dockerfile has no TourAPI key build argument and `.env.local` is excluded from the build context. Key-protected live TourAPI requires a future server proxy.
+- This Docker deployment is keyless/sample-fallback only: the Dockerfile has no TourAPI key build argument and all Vite `.env*` files except `.env.example` are excluded from the build context. Key-protected live TourAPI requires a future server proxy.
 - SPA reloads must route back to `/index.html`.
 
 ---
@@ -83,9 +83,8 @@ Create `.dockerignore`:
 .superpowers
 node_modules
 dist
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
 npm-debug.log*
 tsconfig.tsbuildinfo
 tsconfig.node.tsbuildinfo
@@ -219,7 +218,7 @@ cd ~/fest-twin-demo
 docker build -t fest-twin-demo:initial .
 ```
 
-TourAPI 키 없이 빌드하면 앱은 샘플 fallback으로 동작한다. Dockerfile에는 키 전달용 build argument가 없고 `.env.local`은 빌드 컨텍스트에서 제외된다. 이 Docker 배포에서 키가 보호된 live TourAPI를 제공하려면 향후 서버 프록시가 필요하다.
+TourAPI 키 없이 빌드하면 앱은 샘플 fallback으로 동작한다. Dockerfile에는 키 전달용 build argument가 없고 `.env.example`을 제외한 모든 Vite `.env*` 파일은 빌드 컨텍스트에서 제외된다. 이 Docker 배포에서 키가 보호된 live TourAPI를 제공하려면 향후 서버 프록시가 필요하다.
 
 ## 실행
 
@@ -300,12 +299,22 @@ In `README.md`, add this bullet to the current documents list:
 Run:
 
 ```powershell
-$assignmentPattern = '(?ix)(?:^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*[:=]\s*|^\s*(?:env|arg)\s+[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*|\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*)(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
+$secretName = '[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*'
+$secretValue = '(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
 $scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
-rg -n --pcre2 $assignmentPattern $scanPaths
+$shellAssignment = "(?ix)^\s*(?:export\s+|`$env:)?$secretName\s*[:=]\s*$secretValue"
+$dockerInstruction = "(?ix)^\s*(?:env|arg)\s+(?:[A-Z][A-Z0-9_]*\s*(?:=|\s+)\s*\S+\s+)*$secretName\s*(?:=|\s+)\s*$secretValue"
+$buildArgument = "(?ix)\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)$secretName\s*=\s*$secretValue"
+
+foreach ($check in @($shellAssignment, $dockerInstruction, $buildArgument)) {
+  rg -n --pcre2 $check $scanPaths
+  if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
+  if ($LASTEXITCODE -eq 0) { exit 1 }
+}
+exit 0
 ```
 
-Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers shell assignments, Dockerfile environment variable and build argument directives, and Docker CLI build arguments whose names contain `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, without searching for or requiring a real key.
+Expected: no output and exit code `0` when no actual secret assignment is present. The case-insensitive checks cover shell assignments, legacy and equals Dockerfile `ENV`/`ARG` directives with multiple arguments, and Docker CLI build arguments whose names contain `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, without self-matching the documented scan.
 
 - [ ] **Step 4: Commit Task 2**
 
@@ -359,9 +368,19 @@ Expected:
 - [ ] Check no secret was added:
 
 ```powershell
-$assignmentPattern = '(?ix)(?:^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*[:=]\s*|^\s*(?:env|arg)\s+[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*|\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*)(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
+$secretName = '[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*'
+$secretValue = '(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
 $scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
-rg -n --pcre2 $assignmentPattern $scanPaths
+$shellAssignment = "(?ix)^\s*(?:export\s+|`$env:)?$secretName\s*[:=]\s*$secretValue"
+$dockerInstruction = "(?ix)^\s*(?:env|arg)\s+(?:[A-Z][A-Z0-9_]*\s*(?:=|\s+)\s*\S+\s+)*$secretName\s*(?:=|\s+)\s*$secretValue"
+$buildArgument = "(?ix)\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)$secretName\s*=\s*$secretValue"
+
+foreach ($check in @($shellAssignment, $dockerInstruction, $buildArgument)) {
+  rg -n --pcre2 $check $scanPaths
+  if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
+  if ($LASTEXITCODE -eq 0) { exit 1 }
+}
+exit 0
 ```
 
-Expected: no matches when no actual secret assignment is present. The case-insensitive pattern covers shell assignments, Dockerfile environment variable and build argument directives, and Docker CLI build arguments whose names contain `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, without searching for or requiring a real key.
+Expected: no output and exit code `0` when no actual secret assignment is present. The case-insensitive checks cover shell assignments, legacy and equals Dockerfile `ENV`/`ARG` directives with multiple arguments, and Docker CLI build arguments whose names contain `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, without self-matching the documented scan.

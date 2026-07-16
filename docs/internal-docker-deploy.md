@@ -15,7 +15,7 @@ Fest-Twin 내부 데모를 `192.168.55.223` 서버에서 Docker 컨테이너로 
 - `18080` 포트가 비어 있어야 한다.
 - 실제 TourAPI 키, 서버 비밀번호, SSH 비밀번호는 Git에 저장하지 않는다.
 - 내부 데모는 TourAPI 키 없이도 샘플 fallback으로 동작한다.
-- 이 Docker 배포는 키 없이 샘플 fallback으로만 실행한다. Dockerfile에는 TourAPI 키용 build argument가 없고 `.env.local`은 빌드 컨텍스트에서 제외된다. 실제 TourAPI 키를 보호하는 live 운영은 향후 서버 프록시를 추가한 뒤에만 지원한다.
+- 이 Docker 배포는 키 없이 샘플 fallback으로만 실행한다. Dockerfile에는 TourAPI 키용 build argument가 없고 `.env.example`을 제외한 모든 Vite `.env*` 파일은 빌드 컨텍스트에서 제외된다. 실제 TourAPI 키를 보호하는 live 운영은 향후 서버 프록시를 추가한 뒤에만 지원한다.
 
 ## 서버 포트 확인
 
@@ -43,6 +43,8 @@ Remove-Item .\fest-twin-demo.tar
 서버에서 실행한다. 이 명령은 기존 배포 디렉터리에 덮어쓰지 않고, 깨끗한 staging 디렉터리에 압축을 푼 뒤 처음에만 배포 디렉터리로 이동한다.
 
 ```bash
+set -euo pipefail
+
 staging_dir="$HOME/fest-twin-demo.staging"
 release_dir="$HOME/fest-twin-demo"
 rm -rf "$staging_dir"
@@ -68,7 +70,7 @@ cd ~/fest-twin-demo
 docker build -t fest-twin-demo:initial .
 ```
 
-이 Docker 배포는 TourAPI 키 없이 빌드하며 앱은 샘플 fallback으로 동작한다. Dockerfile은 키 전달용 build argument를 지원하지 않고 `.env.local`은 빌드 컨텍스트에서 제외된다. 키가 필요한 live TourAPI 운영은 향후 서버 프록시를 도입한 뒤에만 지원한다.
+이 Docker 배포는 TourAPI 키 없이 빌드하며 앱은 샘플 fallback으로 동작한다. Dockerfile은 키 전달용 build argument를 지원하지 않고 `.env.example`을 제외한 모든 Vite `.env*` 파일은 빌드 컨텍스트에서 제외한다. 키가 필요한 live TourAPI 운영은 향후 서버 프록시를 도입한 뒤에만 지원한다.
 
 ## 실행
 
@@ -140,15 +142,17 @@ scp .\fest-twin-demo.tar cwuser@192.168.55.223:~/
 Remove-Item .\fest-twin-demo.tar
 ```
 
-서버에서 실행한다. `new_image`는 현재 UTC 시각을 사용한 고유 태그다. `set -euo pipefail`은 staging 준비, 빌드, 소유권 확인, 중지, 삭제, 소스 교체, 시작, HTTP 확인 중 하나라도 실패하면 다음 단계로 진행하지 않게 한다.
+서버에서 실행한다. `deploy_id`는 UTC 시각과 현재 셸 PID를 조합해 이미지 태그와 백업 경로를 모두 고유하게 만든다. `set -euo pipefail`은 staging 준비, 빌드, 소유권 확인, 중지, 삭제, 소스 교체, 시작, HTTP 확인 중 하나라도 실패하면 다음 단계로 진행하지 않게 한다.
 
 ```bash
 set -euo pipefail
 
 staging_dir="$HOME/fest-twin-demo.staging"
 release_dir="$HOME/fest-twin-demo"
-release_backup="$HOME/fest-twin-demo.previous"
-new_image="fest-twin-demo:$(date -u +%Y%m%d%H%M%S)"
+deploy_id="$(date -u +%Y%m%d%H%M%S)-$$"
+release_backup="$HOME/fest-twin-demo.previous.$deploy_id"
+new_image="fest-twin-demo:$deploy_id"
+source_backed_up=false
 
 rm -rf "$staging_dir"
 mkdir -p "$staging_dir"
@@ -204,7 +208,11 @@ rollback() {
     fi
   fi
 
-  if [ -d "$release_backup" ]; then
+  if [ "$source_backed_up" = true ]; then
+    if [ ! -d "$release_backup" ]; then
+      echo "Rollback expected source backup $release_backup, but it is missing."
+      exit 1
+    fi
     if ! rm -rf "$release_dir"; then
       echo "Rollback could not remove the failed release source."
       exit 1
@@ -227,8 +235,12 @@ rollback() {
 trap rollback ERR
 docker stop "$existing_container"
 docker rm "$existing_container"
-rm -rf "$release_backup"
+if [ -e "$release_backup" ]; then
+  echo "Refusing to reuse existing backup path $release_backup."
+  exit 1
+fi
 mv "$release_dir" "$release_backup"
+source_backed_up=true
 mv "$staging_dir" "$release_dir"
 
 docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$new_image"
@@ -241,7 +253,7 @@ if ! rm -rf "$release_backup"; then
 fi
 ```
 
-중지 또는 삭제가 실패하면 이전 컨테이너를 다시 시작한다. 이전 컨테이너가 이미 삭제된 뒤 소스 교체, 새 컨테이너 시작, 또는 HTTP 확인이 실패하면 위 명령은 새 관리 컨테이너만 제거하고 저장한 이전 이미지 ID로 이전 컨테이너를 다시 만든다. `release_backup`이 있으면 이전 소스도 복원한다. 어떤 복구 명령이 실패하거나 소유권을 확인할 수 없는 컨테이너가 있으면 오류를 출력하고 즉시 종료하며, 서버 소유자 또는 관리자에게 조치를 요청한다. 새 이미지와 staging 소스는 조사나 다음 재시도에 사용할 수 있도록 유지한다.
+중지 또는 삭제가 실패하면 이전 컨테이너를 다시 시작한다. 이전 컨테이너가 이미 삭제된 뒤 소스 교체, 새 컨테이너 시작, 또는 HTTP 확인이 실패하면 위 명령은 새 관리 컨테이너만 제거하고 저장한 이전 이미지 ID로 이전 컨테이너를 다시 만든다. 이전 소스는 이 배포가 `source_backed_up=true`으로 기록한 고유 `release_backup`이 있을 때만 복원한다. 어떤 복구 명령이 실패하거나 소유권을 확인할 수 없는 컨테이너가 있으면 오류를 출력하고 즉시 종료하며, 서버 소유자 또는 관리자에게 조치를 요청한다. 새 이미지와 staging 소스는 조사나 다음 재시도에 사용할 수 있도록 유지한다.
 
 ## 문제 해결
 
@@ -272,12 +284,22 @@ TourAPI 호출 실패:
 
 ## 문서와 설정의 비밀값 검사
 
-PowerShell에서 다음 검사는 이름에 `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, `TOKEN`을 포함하는 실제 값 할당을 대소문자 구분 없이 찾는다. 셸 환경 변수, Dockerfile 환경 변수와 build argument 지시문, 그리고 Docker CLI build argument를 검사한다. 패턴 변수명에는 이 단어를 넣지 않아 검사 명령이 자기 자신과 일치하지 않게 한다.
+PowerShell에서 다음 검사는 이름에 `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, `TOKEN`을 포함하는 실제 값 할당을 대소문자 구분 없이 찾는다. 셸 환경 변수, Dockerfile의 legacy 및 equals 형식 `ENV`/`ARG` 지시문(한 줄의 여러 인수 포함), 그리고 Docker CLI build argument를 검사한다. 검사 패턴은 변수로 조립하므로 문서의 검사 명령 자체와 일치하지 않는다.
 
 ```powershell
-$assignmentPattern = '(?ix)(?:^\s*(?:export\s+|\$env:)?[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*[:=]\s*|^\s*(?:env|arg)\s+[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*|\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*\s*=\s*)(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
+$secretName = '[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*'
+$secretValue = '(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
 $scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
-rg -n --pcre2 $assignmentPattern $scanPaths
+$shellAssignment = "(?ix)^\s*(?:export\s+|`$env:)?$secretName\s*[:=]\s*$secretValue"
+$dockerInstruction = "(?ix)^\s*(?:env|arg)\s+(?:[A-Z][A-Z0-9_]*\s*(?:=|\s+)\s*\S+\s+)*$secretName\s*(?:=|\s+)\s*$secretValue"
+$buildArgument = "(?ix)\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)$secretName\s*=\s*$secretValue"
+
+foreach ($check in @($shellAssignment, $dockerInstruction, $buildArgument)) {
+  rg -n --pcre2 $check $scanPaths
+  if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
+  if ($LASTEXITCODE -eq 0) { exit 1 }
+}
+exit 0
 ```
 
-정상 상태에서는 출력이 없다. 일치가 있으면 실제 비밀값을 제거하거나 Git 밖의 안전한 비밀 관리 방법으로 옮긴 뒤 다시 검사한다.
+정상 상태에서는 출력 없이 종료 코드 `0`으로 끝난다. 일치가 있으면 종료 코드 `1`로 멈춘다. 실제 비밀값을 제거하거나 Git 밖의 안전한 비밀 관리 방법으로 옮긴 뒤 다시 검사한다.

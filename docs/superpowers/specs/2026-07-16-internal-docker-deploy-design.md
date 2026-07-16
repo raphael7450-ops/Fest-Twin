@@ -25,7 +25,7 @@ Fest-Twin을 내부 데모용으로 원격 서버 `192.168.55.223`에 Docker 컨
 저장소에 다음 배포 파일을 추가한다.
 
 - `Dockerfile`: 멀티스테이지 빌드로 `npm ci`, `npm run build`, `nginx` 정적 서빙을 수행한다.
-- `.dockerignore`: `node_modules`, `dist`, 로컬 빌드 산출물, `.env.local`, Git 메타데이터를 이미지 빌드 컨텍스트에서 제외한다.
+- `.dockerignore`: `node_modules`, `dist`, 로컬 빌드 산출물, `.env.example`을 제외한 모든 Vite `.env*` 파일, Git 메타데이터를 이미지 빌드 컨텍스트에서 제외한다.
 - `nginx.conf`: SPA fallback을 위해 존재하지 않는 경로는 `/index.html`로 반환한다.
 - `docs/internal-docker-deploy.md`: 서버 배포 명령, 재배포 명령, 상태 확인, 중지/삭제, 문제 해결을 문서화한다.
 
@@ -34,8 +34,8 @@ Fest-Twin을 내부 데모용으로 원격 서버 `192.168.55.223`에 Docker 컨
 현재 Vite 환경변수는 빌드 시 브라우저 번들에 포함될 수 있다. 이 Docker 배포는 키 없이 샘플 fallback으로만 실행하며, 키가 필요한 live TourAPI 운영은 서버 프록시를 도입한 뒤에만 지원한다.
 
 - 실제 키는 Dockerfile, README, 문서, Git 커밋에 넣지 않는다.
-- Dockerfile에는 TourAPI 키용 build argument가 없고 `.env.local`은 Docker 빌드 컨텍스트에서 제외된다.
-- 따라서 Docker build argument나 서버의 임시 `.env.local`로 키를 전달하는 방식은 지원하지 않는다.
+- Dockerfile에는 TourAPI 키용 build argument가 없고 `.env.example`을 제외한 모든 Vite `.env*` 파일은 Docker 빌드 컨텍스트에서 제외된다.
+- 따라서 Docker build argument나 서버의 임시 Vite 환경 파일로 키를 전달하는 방식은 지원하지 않는다.
 - 키를 보호하는 live TourAPI 운영은 향후 서버 프록시를 도입한 뒤에만 지원한다.
 
 내부 데모에서 키 없이 배포해도 앱은 샘플 fallback으로 동작해야 한다.
