@@ -980,10 +980,10 @@ Expected: PASS.
 
 ```powershell
 git status --short
-git grep -n "<redacted-tourapi-key>"
+git grep -n "<actual-tourapi-key>"
 ```
 
-Expected: `git status --short` is clean after commits, and `git grep` returns no matches.
+Expected: `git status --short` is clean after commits, and `git grep` returns no matches for the actual local key value.
 
 - [ ] Optional local live check with the user's key:
 
@@ -1000,4 +1000,3 @@ npm run dev -- --port 5173
 ```
 
 Expected: dashboard renders at `http://127.0.0.1:5173/`; the data basis panel reports live, partial fallback, or sample fallback without breaking the dashboard.
-
