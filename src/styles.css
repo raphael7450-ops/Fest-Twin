@@ -20,6 +20,10 @@ select {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: 24px;
@@ -103,6 +107,23 @@ h3 {
 .recommendation small,
 .guideline-card small {
   color: #5d6b82;
+}
+
+.panel-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.print-button {
+  background: #0f766e;
+  border: 0;
+  border-radius: 7px;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 36px;
+  padding: 8px 12px;
 }
 
 .guideline-grid,
@@ -350,6 +371,11 @@ select {
     flex-direction: column;
   }
 
+  .panel-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .workspace-grid,
   .summary-grid,
   .score-table,
@@ -365,5 +391,38 @@ select {
   .bar-row strong {
     grid-column: 2;
     text-align: left;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .government-header,
+  .panel:not(.report-panel),
+  .summary-grid,
+  .workspace-grid,
+  .print-button {
+    display: none;
+  }
+
+  .app-shell {
+    padding: 0;
+  }
+
+  .report-panel {
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .panel-heading {
+    align-items: flex-start;
+  }
+
+  .score-table,
+  .recommendation-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
