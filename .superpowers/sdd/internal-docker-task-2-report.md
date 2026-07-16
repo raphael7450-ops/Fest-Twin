@@ -50,3 +50,9 @@ DONE_WITH_CONCERNS
 
 - Port `18080` is documented as a deployment blocker; operators must free it or stop the conflicting service.
 - Redeploy now requires a fresh local `git archive` upload, server-side source replacement, rebuild, and restart.
+
+## Task 2 Re-review Remediation
+
+- The fixed port `18080` remains required.
+- If `18080` is occupied, deployment is blocked until the server owner or administrator frees it.
+- The deployment operator is explicitly not instructed to stop or remove the conflicting service or container.
