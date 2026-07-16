@@ -126,6 +126,69 @@ h3 {
   padding: 8px 12px;
 }
 
+.secondary-button,
+.text-button,
+.scenario-list button {
+  border-radius: 7px;
+  min-height: 36px;
+}
+
+.secondary-button {
+  background: #17456f;
+  border: 0;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.text-button {
+  background: transparent;
+  border: 1px solid #cad5e2;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.text-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.scenario-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.scenario-empty {
+  margin-bottom: 0;
+}
+
+.scenario-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.scenario-list button {
+  background: #f7fafc;
+  border: 1px solid #d9e1ec;
+  color: #172033;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.scenario-list small {
+  color: #5d6b82;
+}
+
 .guideline-grid,
 .summary-grid,
 .score-table,
@@ -373,6 +436,10 @@ select {
 
   .panel-actions {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scenario-actions {
     flex-direction: column;
   }
 
