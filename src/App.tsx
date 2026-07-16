@@ -7,6 +7,7 @@ import { Heatmap } from "./components/Heatmap";
 import { PlanForm } from "./components/PlanForm";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
+import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
 import { SummaryCards } from "./components/SummaryCards";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
@@ -45,6 +46,14 @@ export function App() {
             hours={plan.operatingHours}
             selectedHour={selectedHour}
             onSelectedHourChange={setSelectedHour}
+          />
+          <ScenarioLibrary
+            plan={plan}
+            selectedHour={selectedHour}
+            onLoadScenario={(scenario) => {
+              setPlan(scenario.plan);
+              setSelectedHour(scenario.selectedHour);
+            }}
           />
           <DataBasisPanel tourism={sampleTourismContext} trends={sampleTrendContext} />
         </aside>
