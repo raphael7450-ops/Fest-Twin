@@ -6,7 +6,8 @@ const { getTourismContextMock } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
 }));
 
-vi.mock("./services/tourApiAdapter", () => ({
+vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/tourApiAdapter")>()),
   getTourismContext: getTourismContextMock,
 }));
 
@@ -85,6 +86,50 @@ describe("App", () => {
 
       expect(getTourismContextMock).toHaveBeenCalledTimes(2);
       expect(getTourismContextMock.mock.calls[1][0].region).toBe("서울특별시");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not show prior live TourAPI evidence while a changed region is loading", async () => {
+    vi.useFakeTimers();
+    let resolveChangedRegion: ((value: typeof sampleTourismContext) => void) | undefined;
+    const liveTourismContext = {
+      ...sampleTourismContext,
+      provenance: {
+        ...sampleTourismContext.provenance,
+        sourceName: "한국관광공사 TourAPI",
+        sourceStatus: "live" as const,
+      },
+    };
+
+    getTourismContextMock
+      .mockResolvedValueOnce(liveTourismContext)
+      .mockImplementationOnce(
+        () =>
+          new Promise<typeof sampleTourismContext>((resolve) => {
+            resolveChangedRegion = resolve;
+          }),
+      );
+
+    try {
+      const view = render(<App />);
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
+
+      fireEvent.change(view.getByLabelText("개최 지역"), {
+        target: { value: "부산광역시" },
+      });
+
+      expect(screen.queryByText("실제 TourAPI 조회 성공")).not.toBeInTheDocument();
+      expect(screen.getByText("샘플 데이터 대체 사용")).toBeInTheDocument();
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+      resolveChangedRegion?.(liveTourismContext);
     } finally {
       vi.useRealTimers();
     }

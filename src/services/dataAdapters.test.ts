@@ -33,13 +33,18 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 
 describe("public data adapters", () => {
   it("returns TourAPI-like fallback data with explicit provenance when no API key is configured", async () => {
-    const tourism = await getTourismContext(sampleFestivalPlan);
+    const fetchMock = vi.fn();
+    const tourism = await getTourismContext(sampleFestivalPlan, {
+      apiKey: "",
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
 
     expect(tourism.provenance.sourceName).toContain("TourAPI");
     expect(tourism.provenance.sourceStatus).toBe("sample-fallback");
     expect(tourism.provenance.collectedPersonalData).toBe(false);
     expect(tourism.provenance.fallbackReason).toContain("인증키");
     expect(tourism.nearbySpots[0].category).toContain(sampleFestivalPlan.region);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("creates a region-aware fallback context with a public-data explanation", () => {

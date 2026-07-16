@@ -16,12 +16,11 @@ import { sampleTrendContext } from "./data/sampleTrends";
 import { createForecast } from "./services/forecast";
 import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
-import { getTourismContext } from "./services/tourApiAdapter";
+import { createFallbackTourismContext, getTourismContext } from "./services/tourApiAdapter";
 
 export function App() {
   const [plan, setPlan] = useState(sampleFestivalPlan);
   const [selectedHour, setSelectedHour] = useState(20);
-  const [tourism, setTourism] = useState(sampleTourismContext);
   const tourApiPlanKey = JSON.stringify({
     region: plan.region,
     venueAddress: plan.venueAddress,
@@ -30,6 +29,20 @@ export function App() {
     name: plan.name,
     keywords: plan.keywords,
   });
+  const [tourismState, setTourismState] = useState(() => ({
+    planKey: tourApiPlanKey,
+    context: sampleTourismContext,
+  }));
+  const pendingTourism = useMemo(
+    () =>
+      createFallbackTourismContext(
+        plan,
+        "TourAPI 관련 기획 정보가 변경되어 최신 관광 데이터를 조회하는 동안 지역별 샘플 데이터를 사용합니다.",
+      ),
+    [tourApiPlanKey],
+  );
+  const tourism =
+    tourismState.planKey === tourApiPlanKey ? tourismState.context : pendingTourism;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -38,7 +51,7 @@ export function App() {
       getTourismContext(planSnapshot, { signal: controller.signal })
         .then((nextTourism) => {
           if (!controller.signal.aborted) {
-            setTourism(nextTourism);
+            setTourismState({ planKey: tourApiPlanKey, context: nextTourism });
           }
         })
         .catch((error: unknown) => {
