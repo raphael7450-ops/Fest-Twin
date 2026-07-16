@@ -1,4 +1,5 @@
 import type { PlanningReport } from "../domain/types";
+import { PrintReportButton } from "./PrintReportButton";
 
 interface ReportViewProps {
   report: PlanningReport;
@@ -9,7 +10,10 @@ export function ReportView({ report }: ReportViewProps) {
     <section className="panel report-panel">
       <div className="panel-heading">
         <h2>기획 보완 리포트</h2>
-        <span>공공 검토용 요약</span>
+        <div className="panel-actions">
+          <span>공공 검토용 요약</span>
+          <PrintReportButton />
+        </div>
       </div>
       <p className="report-summary">{report.summary}</p>
       <p className="muted">{report.governmentReviewNote}</p>
