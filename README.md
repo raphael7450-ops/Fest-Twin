@@ -88,6 +88,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [시나리오 저장 흐름](docs/scenario-save-flow.md)
 - [데모 검증 체크리스트](docs/demo-verification.md)
 - [로컬 작업 이어가기](docs/local-continuation-guide.md)
+- [내부 Docker 배포](docs/internal-docker-deploy.md)
 
 ## MVP 흐름
 
