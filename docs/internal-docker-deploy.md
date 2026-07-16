@@ -92,11 +92,15 @@ docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-i
 실제 TourAPI 모드에서는 서버에만 있는 env 파일을 만든다. 실제 키나 비밀번호를 Git과 명령 기록에 저장하지 않는다.
 
 ```bash
-cat > "$HOME/fest-twin-demo.env" <<'EOF'
-TOUR_API_KEY=발급받은_일반_인증키_Decoding_값
-EOF
+umask 077
+read -r -s -p "TourAPI decoding key: " tour_api_key
+printf '\n'
+printf 'TOUR_API_KEY=%s\n' "$tour_api_key" > "$HOME/fest-twin-demo.env"
+unset tour_api_key
 chmod 600 "$HOME/fest-twin-demo.env"
 ```
+
+입력한 키는 화면이나 셸 기록에 표시되지 않으며, env 파일은 소유자만 읽을 수 있다.
 
 그 후 실제 TourAPI를 사용하도록 실행한다.
 
@@ -170,13 +174,13 @@ deploy_id="$(date -u +%Y%m%d%H%M%S)-$$"
 release_backup="$HOME/fest-twin-demo.previous.$deploy_id"
 new_image="fest-twin-demo:$deploy_id"
 source_backed_up=false
-tourapi_env_args=()
+replacement_tourapi_env_args=()
 if [ -f "$HOME/fest-twin-demo.env" ]; then
-  tourapi_env_args=(--env-file "$HOME/fest-twin-demo.env")
+  replacement_tourapi_env_args=(--env-file "$HOME/fest-twin-demo.env")
 fi
 
 # 키 없는 재배포를 강제할 때는 위의 env 파일 자동 감지 블록을 다음 한 줄로 교체한다.
-# tourapi_env_args=()
+# replacement_tourapi_env_args=()
 
 rm -rf "$staging_dir"
 mkdir -p "$staging_dir"
@@ -206,6 +210,14 @@ fi
 
 previous_image_id="$(docker inspect --format '{{.Image}}' "$existing_container")"
 previous_container_id="$existing_container"
+previous_tourapi_env_file="$HOME/.fest-twin-demo.previous-tourapi.$deploy_id.env"
+previous_tourapi_env_args=()
+if docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$existing_container" | grep -q '^TOUR_API_KEY='; then
+  umask 077
+  docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$existing_container" | grep '^TOUR_API_KEY=' > "$previous_tourapi_env_file"
+  chmod 600 "$previous_tourapi_env_file"
+  previous_tourapi_env_args=(--env-file "$previous_tourapi_env_file")
+fi
 
 rollback() {
   status="$?"
@@ -248,11 +260,12 @@ rollback() {
   fi
 
   if [ -z "$(docker ps -aq --filter 'name=^fest-twin-demo$')" ]; then
-    if ! docker run -d --name fest-twin-demo "${tourapi_env_args[@]}" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$previous_image_id" >/dev/null; then
+    if ! docker run -d --name fest-twin-demo "${previous_tourapi_env_args[@]}" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$previous_image_id" >/dev/null; then
       echo "Rollback could not recreate the previous container."
       exit 1
     fi
   fi
+  rm -f "$previous_tourapi_env_file"
   exit "$status"
 }
 
@@ -267,17 +280,18 @@ mv "$release_dir" "$release_backup"
 source_backed_up=true
 mv "$staging_dir" "$release_dir"
 
-docker run -d --name fest-twin-demo "${tourapi_env_args[@]}" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$new_image"
+docker run -d --name fest-twin-demo "${replacement_tourapi_env_args[@]}" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 "$new_image"
 curl -fsS --max-time 10 http://127.0.0.1:18080/ > /dev/null
 
 trap - ERR
+rm -f "$previous_tourapi_env_file"
 if ! rm -rf "$release_backup"; then
   echo "New container is running, but cleanup of $release_backup failed; investigate before the next redeploy."
   exit 1
 fi
 ```
 
-중지 또는 삭제가 실패하면 이전 컨테이너를 다시 시작한다. 이전 컨테이너가 이미 삭제된 뒤 소스 교체, 새 컨테이너 시작, 또는 HTTP 확인이 실패하면 위 명령은 새 관리 컨테이너만 제거하고 저장한 이전 이미지 ID로 이전 컨테이너를 다시 만든다. 이전 소스는 이 배포가 `source_backed_up=true`으로 기록한 고유 `release_backup`이 있을 때만 복원한다. 어떤 복구 명령이 실패하거나 소유권을 확인할 수 없는 컨테이너가 있으면 오류를 출력하고 즉시 종료하며, 서버 소유자 또는 관리자에게 조치를 요청한다. 새 이미지와 staging 소스는 조사나 다음 재시도에 사용할 수 있도록 유지한다.
+중지 또는 삭제가 실패하면 이전 컨테이너를 다시 시작한다. 이전 컨테이너가 이미 삭제된 뒤 소스 교체, 새 컨테이너 시작, 또는 HTTP 확인이 실패하면 위 명령은 새 관리 컨테이너만 제거하고 저장한 이전 이미지 ID로 이전 컨테이너를 다시 만든다. 롤백 전에는 이전 컨테이너의 `TOUR_API_KEY` 런타임 설정을 소유자 전용 임시 env 파일에 저장하므로, 새 배포가 현재 env 파일을 사용하거나 키 없는 모드여도 이전 모드로 복원한다. 성공 또는 롤백 뒤 임시 파일은 삭제한다. 이전 소스는 이 배포가 `source_backed_up=true`으로 기록한 고유 `release_backup`이 있을 때만 복원한다. 어떤 복구 명령이 실패하거나 소유권을 확인할 수 없는 컨테이너가 있으면 오류를 출력하고 즉시 종료하며, 서버 소유자 또는 관리자에게 조치를 요청한다. 새 이미지와 staging 소스는 조사나 다음 재시도에 사용할 수 있도록 유지한다.
 
 ## 문제 해결
 

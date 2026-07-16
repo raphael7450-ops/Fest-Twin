@@ -8,7 +8,6 @@ import type {
 import { clamp } from "./forecast";
 
 interface TourApiOptions {
-  apiKey?: string;
   fetchImpl?: typeof fetch;
   signal?: AbortSignal;
 }

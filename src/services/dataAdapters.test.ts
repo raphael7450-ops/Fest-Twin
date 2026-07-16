@@ -151,15 +151,14 @@ describe("public data adapters", () => {
 
     const [httpFallback, jsonFallback, shapeFallback, itemFallback, regionFallback, emptyFallback] =
       await Promise.all([
-        getTourismContext(sampleFestivalPlan, { apiKey: "test-key", fetchImpl: httpErrorFetch }),
-        getTourismContext(sampleFestivalPlan, { apiKey: "test-key", fetchImpl: jsonErrorFetch }),
+        getTourismContext(sampleFestivalPlan, { fetchImpl: httpErrorFetch }),
+        getTourismContext(sampleFestivalPlan, { fetchImpl: jsonErrorFetch }),
         getTourismContext(sampleFestivalPlan, {
-          apiKey: "test-key",
           fetchImpl: malformedShapeFetch,
         }),
-        getTourismContext(sampleFestivalPlan, { apiKey: "test-key", fetchImpl: malformedItemFetch }),
-        getTourismContext(sampleFestivalPlan, { apiKey: "test-key", fetchImpl: missingRegionFetch }),
-        getTourismContext(sampleFestivalPlan, { apiKey: "test-key", fetchImpl: emptyFestivalFetch }),
+        getTourismContext(sampleFestivalPlan, { fetchImpl: malformedItemFetch }),
+        getTourismContext(sampleFestivalPlan, { fetchImpl: missingRegionFetch }),
+        getTourismContext(sampleFestivalPlan, { fetchImpl: emptyFestivalFetch }),
       ]);
 
     expect(httpFallback.provenance.sourceStatus).toBe("sample-fallback");

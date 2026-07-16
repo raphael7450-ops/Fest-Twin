@@ -67,7 +67,10 @@ function validateQuery(endpoint, query) {
     if (Array.isArray(value) || typeof value === "object") {
       return { ok: false, message: "TourAPI query parameter must be a scalar value." };
     }
-    if (numericParams.has(key) && value !== undefined && value !== "" && Number.isNaN(Number(value))) {
+    if (
+      numericParams.has(key) &&
+      (typeof value !== "string" || value.trim() === "" || !Number.isFinite(Number(value)))
+    ) {
       return { ok: false, message: "TourAPI numeric query parameter is invalid." };
     }
   }
