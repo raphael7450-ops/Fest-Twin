@@ -980,10 +980,19 @@ Expected: PASS.
 
 ```powershell
 git status --short
-git grep -n "<actual-tourapi-key>"
+$tourApiKey = $env:VITE_TOUR_API_KEY
+if ([string]::IsNullOrWhiteSpace($tourApiKey)) {
+  Write-Output "VITE_TOUR_API_KEY is not set; secret scan skipped."
+} else {
+  git grep -n --fixed-strings -- $tourApiKey
+  if ($LASTEXITCODE -eq 1) {
+    Write-Output "No matches for the environment-provided VITE_TOUR_API_KEY value."
+  }
+  exit $LASTEXITCODE
+}
 ```
 
-Expected: `git status --short` is clean after commits, and `git grep` returns no matches for the actual local key value.
+Expected: `git status --short` is clean after commits, and the guarded scan reports no matches for the environment-provided `VITE_TOUR_API_KEY` value when the variable is non-empty.
 
 - [ ] Optional local live check with the user's key:
 
