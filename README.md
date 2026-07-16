@@ -52,17 +52,15 @@ npm run build
 
 ## TourAPI 실제 연동
 
-한국관광공사 TourAPI 활용 신청을 완료했다면 로컬에 `.env.local`을 만들고 **일반 인증키(Decoding)** 값을 넣습니다.
+서버 배포와 실제 시연에서는 브라우저용 `VITE_TOUR_API_KEY`를 사용하지 않습니다. TourAPI 인증키는 서버 런타임 환경변수 `TOUR_API_KEY`로만 제공합니다.
 
 ```env
-VITE_TOUR_API_KEY=발급받은_일반_인증키_Decoding_값
+TOUR_API_KEY=발급받은_일반_인증키_Decoding_값
 ```
 
-앱은 `URLSearchParams`로 `serviceKey`를 요청 URL에 추가하면서 필요한 URL 인코딩을 한 번 수행합니다. 따라서 일반 인증키(Encoding) 값을 사용하거나 Decoding 값을 미리 URL 인코딩하지 마십시오.
+React 앱은 같은 origin의 `/api/tour/*` 프록시만 호출합니다. 프록시 서버가 `serviceKey`를 붙여 한국관광공사 TourAPI의 `areaCode2`, `searchFestival2`, `detailCommon2`, `locationBasedList2`를 호출합니다. 인증키가 없거나 호출·응답 검증에 실패하면 기존 TourAPI 형태의 샘플 데이터로 자동 대체됩니다.
 
-앱은 `areaCode2`, `searchFestival2`, `detailCommon2`, `locationBasedList2`를 사용합니다. 인증키가 없거나 호출·응답 검증에 실패하면 기존 TourAPI 형태의 샘플 데이터로 자동 대체됩니다.
-
-주의: Vite의 `VITE_` 환경변수는 브라우저 번들에 포함될 수 있으므로 이 방식은 데모와 로컬 개발용입니다. 공개 배포 또는 운영 전에는 서버 프록시를 도입해 인증키가 브라우저에 노출되지 않게 해야 합니다.
+로컬에서 Vite 개발 서버만 실행하면 프록시가 없으므로 sample fallback으로 동작합니다. 실제 TourAPI를 로컬에서 검증하려면 `npm run build` 후 `TOUR_API_KEY`와 함께 `npm start`를 실행합니다.
 
 ## 정부 지침 기반 설계
 

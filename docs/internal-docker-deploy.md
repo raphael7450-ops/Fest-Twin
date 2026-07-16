@@ -14,8 +14,8 @@ Fest-Twin 내부 데모를 `192.168.55.223` 서버에서 Docker 컨테이너로 
 - 서버에 Docker가 설치되어 있어야 한다.
 - `18080` 포트가 비어 있어야 한다.
 - 실제 TourAPI 키, 서버 비밀번호, SSH 비밀번호는 Git에 저장하지 않는다.
-- 내부 데모는 TourAPI 키 없이도 샘플 fallback으로 동작한다.
-- 이 Docker 배포는 키 없이 샘플 fallback으로만 실행한다. Dockerfile에는 TourAPI 키용 build argument가 없고 `.env.example`을 제외한 모든 Vite `.env*` 파일은 빌드 컨텍스트에서 제외된다. 실제 TourAPI 키를 보호하는 live 운영은 향후 서버 프록시를 추가한 뒤에만 지원한다.
+- 키 없는 내부 데모는 `TOUR_API_KEY` 없이 실행하며 sample fallback으로 동작한다.
+- 실제 TourAPI 모드는 서버에만 있는 env 파일로 `TOUR_API_KEY`를 주입한다.
 
 ## 서버 포트 확인
 
@@ -70,9 +70,11 @@ cd ~/fest-twin-demo
 docker build -t fest-twin-demo:initial .
 ```
 
-이 Docker 배포는 TourAPI 키 없이 빌드하며 앱은 샘플 fallback으로 동작한다. Dockerfile은 키 전달용 build argument를 지원하지 않고 `.env.example`을 제외한 모든 Vite `.env*` 파일은 빌드 컨텍스트에서 제외한다. 키가 필요한 live TourAPI 운영은 향후 서버 프록시를 도입한 뒤에만 지원한다.
+Docker 이미지는 TourAPI 키 없이 빌드한다. 키 없는 내부 데모는 sample fallback으로 동작하며, 실제 TourAPI 모드는 실행 시 서버 env 파일로 `TOUR_API_KEY`를 주입한다.
 
 ## 실행
+
+키 없는 내부 데모는 다음과 같이 실행한다.
 
 서버에서 실행한다.
 
@@ -85,6 +87,21 @@ if [ -n "$existing_container" ]; then
   exit 1
 fi
 docker run -d --name fest-twin-demo --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 fest-twin-demo:initial
+```
+
+실제 TourAPI 모드에서는 서버에만 있는 env 파일을 만든다. 실제 키나 비밀번호를 Git과 명령 기록에 저장하지 않는다.
+
+```bash
+cat > "$HOME/fest-twin-demo.env" <<'EOF'
+TOUR_API_KEY=발급받은_일반_인증키_Decoding_값
+EOF
+chmod 600 "$HOME/fest-twin-demo.env"
+```
+
+그 후 실제 TourAPI를 사용하도록 실행한다.
+
+```bash
+docker run -d --name fest-twin-demo --env-file "$HOME/fest-twin-demo.env" --label com.fest-twin.managed-by=fest-twin-internal-demo --restart unless-stopped -p 18080:80 fest-twin-demo:initial
 ```
 
 ## 확인
@@ -280,7 +297,7 @@ SPA 새로고침 404:
 TourAPI 호출 실패:
 
 - 내부 데모는 fallback으로 계속 동작해야 한다.
-- 이 Docker 배포에는 키 전달 경로가 없다. 실제 TourAPI 키를 보호하는 live 운영은 향후 서버 프록시를 도입한 뒤에만 지원한다.
+- 실제 TourAPI 모드에서는 서버의 `fest-twin-demo.env`에 `TOUR_API_KEY`가 있는지 확인하고, 컨테이너를 `--env-file` 옵션으로 실행했는지 확인한다.
 
 ## 문서와 설정의 비밀값 검사
 
