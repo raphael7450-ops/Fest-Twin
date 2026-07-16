@@ -158,7 +158,7 @@ describe("public data adapters", () => {
         },
       ]),
     ];
-    const fetchMock = vi.fn(async () => jsonResponse(responses.shift()));
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
 
     const tourism = await getTourismContext(sampleFestivalPlan, {
       fetchImpl: fetchMock as unknown as typeof fetch,
