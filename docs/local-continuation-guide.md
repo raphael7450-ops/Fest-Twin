@@ -2,14 +2,13 @@
 
 ## 브랜치
 
-현재 작업 브랜치는 `agent/government-guided-mvp`입니다. 집에서는 이 브랜치를 기준으로 이어서 작업한다.
+현재 작업 기준 브랜치는 `main`입니다. 집에서는 이 브랜치를 기준으로 이어서 작업한다.
 
 ## 처음 내려받기
 
 ```powershell
 git clone https://github.com/raphael7450-ops/Fest-Twin.git
 cd Fest-Twin
-git checkout agent/government-guided-mvp
 npm install
 npm run dev
 ```
@@ -21,8 +20,8 @@ npm run dev
 ```powershell
 cd Fest-Twin
 git fetch origin
-git checkout agent/government-guided-mvp
-git pull origin agent/government-guided-mvp
+git checkout main
+git pull origin main
 npm install
 npm run dev
 ```

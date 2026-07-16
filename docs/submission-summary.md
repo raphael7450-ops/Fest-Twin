@@ -7,7 +7,9 @@
 ## 빠른 확인
 
 - 내부 데모: http://192.168.55.223:18080/
-- GitHub PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
+- GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
+- 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
+- 제출 문구: [공모전 제출용 문구](contest-submission-copy.md)
 - 시연 순서: [제출 시연 가이드](submission-demo-guide.md)
 - 검증 체크리스트: [데모 검증 체크리스트](demo-verification.md)
 

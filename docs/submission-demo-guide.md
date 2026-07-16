@@ -3,9 +3,11 @@
 ## 접속 정보
 
 - 내부 데모: http://192.168.55.223:18080/
-- GitHub PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
+- GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
+- 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
 - 제출 요약서: [submission-summary.md](submission-summary.md)
-- 작업 브랜치: `agent/government-guided-mvp`
+- 제출 문구: [contest-submission-copy.md](contest-submission-copy.md)
+- 작업 기준 브랜치: `main`
 
 ## 5분 시연 순서
 
@@ -56,7 +58,6 @@
 ```powershell
 git clone https://github.com/raphael7450-ops/Fest-Twin.git
 cd Fest-Twin
-git checkout agent/government-guided-mvp
 npm install
 npm run test
 npm run build
@@ -68,6 +69,7 @@ npm run dev
 ## 관련 문서
 
 - [제출 요약서](submission-summary.md)
+- [공모전 제출용 문구](contest-submission-copy.md)
 - [데모 검증 체크리스트](demo-verification.md)
 - [정부 지침 기반 설계 체크리스트](government-readiness-checklist.md)
 - [수요 예측·혼잡 진단·리포트 산정 기준](forecast-simulation-report-method.md)
