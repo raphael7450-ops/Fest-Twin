@@ -70,6 +70,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [공공데이터 및 개인정보 최소수집 정책](docs/public-data-and-privacy-policy.md)
 - [수요 예측·혼잡 진단·리포트 산정 기준](docs/forecast-simulation-report-method.md)
 - [정부용 대시보드 화면 흐름](docs/dashboard-service-flow.md)
+- [리포트 출력 흐름](docs/report-export-flow.md)
 - [데모 검증 체크리스트](docs/demo-verification.md)
 - [로컬 작업 이어가기](docs/local-continuation-guide.md)
 
@@ -104,4 +105,5 @@ MVP는 개인정보를 수집하지 않습니다.
 - 설명 가능한 수요 예측 서비스
 - 격자 기반 혼잡도 시뮬레이션
 - 기획 보완 리포트
+- 브라우저 인쇄 기반 리포트 출력
 - 테스트 및 빌드 스크립트
