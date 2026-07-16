@@ -322,6 +322,11 @@ export function mapTourApiItemsToTourismContext(
   }
 
   if (nearbySpots.length === 0 || similarFestivals.length === 0) {
+    const fallbackReason =
+      options.festivalSearchScope === "annual-region"
+        ? "입력 기간 직접 일치 결과가 없어 같은 지역의 연간 TourAPI 축제 데이터를 참고했으며, 부족한 관광지 또는 축제 데이터는 샘플로 보완했습니다."
+        : "TourAPI 응답 일부 부족";
+
     return {
       ...createFallbackTourismContext(
         plan,
@@ -335,7 +340,7 @@ export function mapTourApiItemsToTourismContext(
           "실제 TourAPI 조회 결과 일부와 샘플 공공데이터를 함께 사용하며 축제 수요는 메타데이터 기반 추정 프록시입니다.",
         fallbackText:
           "TourAPI 응답이 부족한 항목은 기존 샘플 데이터로 보완합니다.",
-        fallbackReason: "TourAPI 응답 일부 부족",
+        fallbackReason,
         retrievedAt,
       },
       nearbySpots: nearbySpots.length > 0 ? nearbySpots : sampleTourismContext.nearbySpots,

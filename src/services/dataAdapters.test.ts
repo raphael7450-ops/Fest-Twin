@@ -184,6 +184,40 @@ describe("public data adapters", () => {
     expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
   });
 
+  it("discloses the annual broadened search when missing detail coordinates require sample supplementation", async () => {
+    const responses = [
+      tourApiPayload([{ code: "1", name: "서울" }]),
+      tourApiPayload([], 0),
+      tourApiPayload([
+        {
+          contentid: "300",
+          title: "서울라이트 광화문",
+          addr1: "서울특별시 종로구",
+          eventstartdate: "20251212",
+          eventenddate: "20260104",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "300",
+          title: "서울라이트 광화문",
+          addr1: "서울특별시 종로구",
+        },
+      ]),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    const tourism = await getTourismContext(sampleFestivalPlan, {
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(tourism.provenance.sourceStatus).toBe("partial-fallback");
+    expect(tourism.provenance.fallbackReason).toContain("입력 기간");
+    expect(tourism.provenance.fallbackReason).toContain("연간");
+    expect(tourism.provenance.fallbackReason).toMatch(/부족|샘플.*보완/);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
   it("rejects unreliable live data and preserves full versus partial fallback semantics", async () => {
     const httpErrorFetch = vi.fn(async () =>
       jsonResponse({}, { ok: false, status: 503 }),
