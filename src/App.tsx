@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
@@ -16,14 +16,30 @@ import { sampleTrendContext } from "./data/sampleTrends";
 import { createForecast } from "./services/forecast";
 import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
+import { getTourismContext } from "./services/tourApiAdapter";
 
 export function App() {
   const [plan, setPlan] = useState(sampleFestivalPlan);
   const [selectedHour, setSelectedHour] = useState(20);
+  const [tourism, setTourism] = useState(sampleTourismContext);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    getTourismContext(plan).then((nextTourism) => {
+      if (isCurrent) {
+        setTourism(nextTourism);
+      }
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [plan]);
 
   const forecast = useMemo(
-    () => createForecast(plan, sampleTourismContext, sampleTrendContext),
-    [plan],
+    () => createForecast(plan, tourism, sampleTrendContext),
+    [plan, tourism],
   );
   const simulation = useMemo(
     () => createSimulation(plan, forecast, selectedHour),
@@ -55,7 +71,7 @@ export function App() {
               setSelectedHour(scenario.selectedHour);
             }}
           />
-          <DataBasisPanel tourism={sampleTourismContext} trends={sampleTrendContext} />
+          <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
         </aside>
         <section className="main-column">
           <ForecastChart forecast={forecast} />
