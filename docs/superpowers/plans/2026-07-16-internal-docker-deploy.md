@@ -304,7 +304,7 @@ Run:
 ```powershell
 $key = $env:VITE_TOUR_API_KEY
 if ($key) { git grep --fixed-strings -n -- $key -- Dockerfile .dockerignore nginx.conf docs README.md }
-rg -n "(PASSWORD|PASSWD|SECRET|TOKEN)\\s*[:=]\\s*['\\\"]?[A-Za-z0-9_\\-]{12,}" Dockerfile .dockerignore nginx.conf docs README.md
+rg -n '(PASSWORD|PASSWD|SECRET|TOKEN)\s*[:=]\s*[''\"]?[A-Za-z0-9_\-]{12,}' Dockerfile .dockerignore nginx.conf docs README.md
 ```
 
 Expected: both commands return no matches when no real local key or secret assignment is present.
@@ -363,7 +363,7 @@ Expected:
 ```powershell
 $key = $env:VITE_TOUR_API_KEY
 if ($key) { git grep --fixed-strings -n -- $key -- Dockerfile .dockerignore nginx.conf docs README.md }
-rg -n "(PASSWORD|PASSWD|SECRET|TOKEN)\\s*[:=]\\s*['\\\"]?[A-Za-z0-9_\\-]{12,}" Dockerfile .dockerignore nginx.conf docs README.md
+rg -n '(PASSWORD|PASSWD|SECRET|TOKEN)\s*[:=]\s*[''\"]?[A-Za-z0-9_\-]{12,}' Dockerfile .dockerignore nginx.conf docs README.md
 ```
 
 Expected: both commands return no matches when no real local key or secret assignment is present.
