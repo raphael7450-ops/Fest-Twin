@@ -25,7 +25,7 @@ docker ps --format 'table {{.Names}}\t{{.Ports}}\t{{.Status}}'
 ss -tuln | grep ':18080' || true
 ```
 
-`18080`이 이미 사용 중이면 `18081` 또는 `19080`을 사용하고, 아래 `docker run`의 왼쪽 포트를 같이 변경한다.
+`18080`이 이미 사용 중이면 배포를 진행하지 않는다. 해당 포트를 사용하는 서비스를 확인한 뒤 중지하거나 포트를 비워야 하며, 다른 호스트 포트로 변경해서는 안 된다.
 
 ## 소스 업로드
 
@@ -90,12 +90,23 @@ docker rm fest-twin-demo
 
 ## 재배포
 
+로컬 작업 트리에서 최신 소스를 새 아카이브로 업로드한다. 서버에 Git 저장소가 없어도 되며, 기존 디렉터리에 덮어쓰지 않도록 임시 디렉터리에 먼저 압축을 푼다.
+
+로컬에서 실행한다.
+
+```powershell
+git archive --format=tar HEAD | ssh cwuser@192.168.55.223 "rm -rf ~/fest-twin-demo.new && mkdir -p ~/fest-twin-demo.new && tar -x -C ~/fest-twin-demo.new"
+```
+
+그 다음 서버에서 실행한다.
+
 ```bash
-cd ~/fest-twin-demo
-git pull 2>/dev/null || true
-docker build -t fest-twin-demo .
 docker stop fest-twin-demo 2>/dev/null || true
 docker rm fest-twin-demo 2>/dev/null || true
+rm -rf ~/fest-twin-demo
+mv ~/fest-twin-demo.new ~/fest-twin-demo
+cd ~/fest-twin-demo
+docker build -t fest-twin-demo .
 docker run -d --name fest-twin-demo --restart unless-stopped -p 18080:80 fest-twin-demo
 ```
 
@@ -106,6 +117,8 @@ docker run -d --name fest-twin-demo --restart unless-stopped -p 18080:80 fest-tw
 ```bash
 ss -tuln | grep ':18080'
 ```
+
+출력이 있으면 해당 서비스를 중지하거나 `18080`을 해제한 뒤 배포를 다시 시도한다. `18081`이나 `19080` 등 다른 호스트 포트로 변경하지 않는다.
 
 컨테이너 이름 충돌:
 
