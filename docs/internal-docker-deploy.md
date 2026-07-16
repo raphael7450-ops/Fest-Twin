@@ -233,12 +233,12 @@ rollback() {
 }
 
 trap rollback ERR
-docker stop "$existing_container"
-docker rm "$existing_container"
 if [ -e "$release_backup" ]; then
   echo "Refusing to reuse existing backup path $release_backup."
   exit 1
 fi
+docker stop "$existing_container"
+docker rm "$existing_container"
 mv "$release_dir" "$release_backup"
 source_backed_up=true
 mv "$staging_dir" "$release_dir"
