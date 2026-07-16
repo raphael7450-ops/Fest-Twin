@@ -27,6 +27,29 @@
 - 행사장 혼잡 히트맵
 - 기획 보완 리포트
 
+## 집에서 이어서 작업하기
+
+작업 브랜치는 `agent/government-guided-mvp`입니다.
+
+```powershell
+git clone https://github.com/raphael7450-ops/Fest-Twin.git
+cd Fest-Twin
+git checkout agent/government-guided-mvp
+npm install
+npm run dev
+```
+
+브라우저에서 `http://127.0.0.1:5173/`을 열면 현재 정부용 대시보드를 볼 수 있습니다.
+
+검증 명령은 다음과 같습니다.
+
+```powershell
+npm run test
+npm run build
+```
+
+권장 환경은 Node.js 20 이상입니다. 현재 개발 PC에서는 Node.js `v24.18.0`, npm `11.16.0`으로 검증했습니다.
+
 ## 정부 지침 기반 설계
 
 MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아니라, 다음 정부·공공 기준을 설계 출발점으로 둡니다.
@@ -43,6 +66,11 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 
 - [설계 문서](docs/superpowers/specs/2026-07-15-fest-twin-design.md)
 - [정부 지침 기반 MVP 구현 계획](docs/superpowers/plans/2026-07-15-fest-twin-mvp.md)
+- [정부 지침 기반 설계 체크리스트](docs/government-readiness-checklist.md)
+- [공공데이터 및 개인정보 최소수집 정책](docs/public-data-and-privacy-policy.md)
+- [수요 예측·혼잡 진단·리포트 산정 기준](docs/forecast-simulation-report-method.md)
+- [정부용 대시보드 화면 흐름](docs/dashboard-service-flow.md)
+- [로컬 작업 이어가기](docs/local-continuation-guide.md)
 
 ## MVP 흐름
 
@@ -67,6 +95,12 @@ MVP는 개인정보를 수집하지 않습니다.
 - 결제정보
 - 개인별 위치 이력
 
-## 다음 단계
+## 현재 구현 상태
 
-구현 단계에서는 Vite + React + TypeScript 기반 단일 페이지 MVP를 만들고, 예측·시뮬레이션·리포트 로직을 순수 TypeScript 서비스로 분리합니다.
+- Vite + React + TypeScript 기반 단일 페이지 앱
+- 정부 지침 반영 현황 패널
+- TourAPI 형태의 샘플 공공데이터와 비식별 트렌드 샘플
+- 설명 가능한 수요 예측 서비스
+- 격자 기반 혼잡도 시뮬레이션
+- 기획 보완 리포트
+- 테스트 및 빌드 스크립트
