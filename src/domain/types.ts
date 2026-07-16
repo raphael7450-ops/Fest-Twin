@@ -1,5 +1,9 @@
 export type ReadinessStatus = "반영" | "준비" | "향후";
 export type RiskLevel = "low" | "medium" | "high" | "critical";
+export type DataSourceStatus =
+  | "live"
+  | "partial-fallback"
+  | "sample-fallback";
 
 export interface GovernmentStandard {
   id: string;
@@ -67,8 +71,11 @@ export interface FestivalPlan {
 export interface DataProvenance {
   sourceName: string;
   sourceType: "public-data" | "trend-sample" | "user-input";
+  sourceStatus?: DataSourceStatus;
   basisText: string;
   fallbackText: string;
+  fallbackReason?: string;
+  retrievedAt?: string;
   collectedPersonalData: false;
 }
 
