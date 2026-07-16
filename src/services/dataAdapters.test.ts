@@ -119,6 +119,7 @@ describe("public data adapters", () => {
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20260918");
     expect(urls[1].searchParams.get("eventEndDate")).toBe("20260920");
     expect(urls[2].searchParams.get("contentId")).toBe("100");
+    expect(Array.from(urls[2].searchParams.keys()).sort()).toEqual(["contentId"]);
     expect(urls[3].searchParams.get("mapX")).toBe("126.92");
     expect(urls[3].searchParams.get("radius")).toBe("5000");
   });

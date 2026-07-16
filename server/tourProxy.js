@@ -22,14 +22,7 @@ const endpointConfig = {
   },
   detail: {
     operation: "detailCommon2",
-    allowedParams: new Set([
-      "contentId",
-      "defaultYN",
-      "firstImageYN",
-      "addrinfoYN",
-      "mapinfoYN",
-      "overviewYN",
-    ]),
+    allowedParams: new Set(["contentId"]),
   },
   nearby: {
     operation: "locationBasedList2",

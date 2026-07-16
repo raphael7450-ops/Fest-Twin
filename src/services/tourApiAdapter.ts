@@ -443,11 +443,6 @@ export async function getTourismContext(
           "detail",
           {
             contentId: item.contentid,
-            defaultYN: "Y",
-            firstImageYN: "Y",
-            addrinfoYN: "Y",
-            mapinfoYN: "Y",
-            overviewYN: "Y",
           },
           fetchImpl,
           options.signal,

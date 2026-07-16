@@ -81,6 +81,19 @@ describe("TourAPI server proxy", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("rejects deprecated detailCommon2 option flags that the current TourAPI rejects", async () => {
+    const fetchMock = vi.fn();
+
+    const { response, body } = await request(
+      "/api/tour/detail?contentId=3439947&defaultYN=Y&addrinfoYN=Y",
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("INVALID_QUERY");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["whitespace", "/api/tour/nearby?mapX=%20%20%20&mapY=37.52&radius=5000"],
     ["Infinity", "/api/tour/nearby?mapX=126.92&mapY=Infinity&radius=5000"],
