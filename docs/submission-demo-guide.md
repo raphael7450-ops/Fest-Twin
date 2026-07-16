@@ -4,6 +4,7 @@
 
 - 내부 데모: http://192.168.55.223:18080/
 - GitHub PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
+- 제출 요약서: [submission-summary.md](submission-summary.md)
 - 작업 브랜치: `agent/government-guided-mvp`
 
 ## 5분 시연 순서
@@ -66,6 +67,7 @@ npm run dev
 
 ## 관련 문서
 
+- [제출 요약서](submission-summary.md)
 - [데모 검증 체크리스트](demo-verification.md)
 - [정부 지침 기반 설계 체크리스트](government-readiness-checklist.md)
 - [수요 예측·혼잡 진단·리포트 산정 기준](forecast-simulation-report-method.md)
