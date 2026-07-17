@@ -29,6 +29,10 @@ describe("App", () => {
 
     expect(screen.getByText("페스트트윈(Fest-Twin)")).toBeInTheDocument();
     expect(screen.getByText("정부 지침 반영 현황")).toBeInTheDocument();
+    expect(screen.getByText("제출 데모 검증 현황")).toBeInTheDocument();
+    expect(screen.getByText("공개 데모")).toBeInTheDocument();
+    expect(screen.getByText("TourAPI 프록시")).toBeInTheDocument();
+    expect(screen.getByText("인증키는 서버 런타임 환경변수로만 주입")).toBeInTheDocument();
     expect(screen.getByText("축제 기획안 입력")).toBeInTheDocument();
     expect(screen.getByText("데이터 근거")).toBeInTheDocument();
     expect(await screen.findByText("샘플 데이터 대체 사용")).toBeInTheDocument();
