@@ -2,6 +2,7 @@
 
 ## 접속 정보
 
+- 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - 내부 데모: http://192.168.55.223:18080/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
 - 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1

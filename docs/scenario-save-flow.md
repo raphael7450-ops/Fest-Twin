@@ -34,7 +34,7 @@
 ## 집에서 확인
 
 ```powershell
-git checkout agent/government-guided-mvp
+git checkout main
 npm install
 npm run dev
 ```

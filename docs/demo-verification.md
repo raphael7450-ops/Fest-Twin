@@ -60,7 +60,7 @@
 ```powershell
 git clone https://github.com/raphael7450-ops/Fest-Twin.git
 cd Fest-Twin
-git checkout agent/government-guided-mvp
+git checkout main
 npm install
 npm run test
 npm run build
@@ -88,7 +88,7 @@ npm run dev
 - 내부 데모 주소: `http://192.168.55.223:18080/`
 - Docker 컨테이너: `fest-twin-demo`
 - Docker 이미지: `fest-twin-demo:20260717040227`
-- 외부 대시보드 HTTP 응답: `200 OK`
+- 내부 대시보드 HTTP 응답: `200 OK`
 - TourAPI 프록시 응답: `resultCode=0000`
 - 서울 연간 축제 조회 결과: `totalCount=2`, 첫 항목 `강남 미디어 윈터페스타`
 - `detailCommon2`는 현재 실제 TourAPI에서 `contentId`만 전달해 호출한다. 오래된 옵션 플래그는 프록시에서 거절한다.
@@ -97,3 +97,14 @@ npm run dev
 - 상호작용 검수: 예산 `1200`, 예상 수용 인원 `30000`, 진단 시간대 `20:00` 변경 후 시나리오 저장 목록 표시 확인
 - 인증키는 서버 런타임 환경변수로만 주입되며 문서와 Git 변경 목록에 기록하지 않는다.
 - 제출 시연 흐름은 [제출 시연 가이드](submission-demo-guide.md)를 따른다.
+
+## 2026-07-17 공개 데모 Funnel 검증
+
+- 공개 데모 주소: `https://cwserver.tail97dbc3.ts.net/`
+- 내부 데모 주소: `http://192.168.55.223:18080/`
+- 서버 로컬 응답: `http://127.0.0.1:18080/` HTTP 200
+- Funnel 공개 HTTPS 응답: HTTP 200
+- TourAPI 프록시: 공개 URL의 `/api/tour/festivals` 경로에서 `resultCode=0000` 응답 확인
+- Tailscale 설정: `cwuser`를 operator로 등록한 뒤 HTTPS 443 Serve/Funnel을 `http://127.0.0.1:18080`에 연결
+- 비밀값 기록 여부: 인증키와 SSH/Tailscale 인증 정보 미기록
+- 공개 데모는 인터넷에서 접근 가능하므로 제출·시연 기간에만 유지한다.
