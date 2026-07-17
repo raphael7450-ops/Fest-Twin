@@ -33,7 +33,8 @@ button {
 .panel,
 .metric-card,
 .recommendation,
-.guideline-card {
+.guideline-card,
+.submission-status-card {
   background: white;
   border: 1px solid #d9e1ec;
   border-radius: 8px;
@@ -85,6 +86,66 @@ h3 {
   font-size: 13px;
   font-weight: 800;
   padding: 8px 12px;
+}
+
+.status-link {
+  background: #17456f;
+  border-radius: 7px;
+  color: white;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 36px;
+  padding: 8px 12px;
+  text-decoration: none;
+}
+
+.submission-status-panel {
+  margin-bottom: 16px;
+}
+
+.submission-status-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.submission-status-card {
+  display: grid;
+  gap: 7px;
+  padding: 14px;
+}
+
+.submission-status-card span,
+.submission-status-card strong,
+.submission-status-card a,
+.submission-status-card small {
+  display: block;
+}
+
+.submission-status-card span {
+  color: #5d6b82;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.submission-status-card strong,
+.submission-status-card a {
+  color: #172033;
+  font-size: 16px;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.submission-status-card a:hover,
+.status-link:hover {
+  text-decoration: underline;
+}
+
+.submission-status-card small {
+  color: #5d6b82;
+  line-height: 1.45;
 }
 
 .panel {
@@ -414,7 +475,8 @@ select {
   .summary-grid,
   .score-table,
   .recommendation-grid,
-  .guideline-grid {
+  .guideline-grid,
+  .submission-status-grid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -447,8 +509,13 @@ select {
   .summary-grid,
   .score-table,
   .recommendation-grid,
-  .guideline-grid {
+  .guideline-grid,
+  .submission-status-grid {
     grid-template-columns: 1fr;
+  }
+
+  .status-link {
+    text-align: center;
   }
 
   .bar-row {

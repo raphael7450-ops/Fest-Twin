@@ -9,6 +9,7 @@ import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
 import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
+import { SubmissionStatusPanel } from "./components/SubmissionStatusPanel";
 import { SummaryCards } from "./components/SummaryCards";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleTourismContext } from "./data/sampleTourApi";
@@ -87,6 +88,7 @@ export function App() {
   return (
     <main className="app-shell">
       <GovernmentHeader />
+      <SubmissionStatusPanel />
       <GovernmentReadinessPanel />
       <SummaryCards forecast={forecast} simulation={simulation} report={report} />
       <div className="workspace-grid">

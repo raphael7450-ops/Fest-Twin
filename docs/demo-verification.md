@@ -108,3 +108,14 @@ npm run dev
 - Tailscale 설정: `cwuser`를 operator로 등록한 뒤 HTTPS 443 Serve/Funnel을 `http://127.0.0.1:18080`에 연결
 - 비밀값 기록 여부: 인증키와 SSH/Tailscale 인증 정보 미기록
 - 공개 데모는 인터넷에서 접근 가능하므로 제출·시연 기간에만 유지한다.
+
+## 2026-07-17 제출 검증 패널 배포 확인
+
+- 공개 데모 주소: `https://cwserver.tail97dbc3.ts.net/`
+- 상단 패널: `제출 데모 검증 현황` 표시 확인
+- 데스크톱 렌더링: 패널 표시 및 가로 넘침 없음
+- 모바일 렌더링: 패널 카드 1열 표시 및 가로 넘침 없음
+- 공개 URL TourAPI detail 프록시: `resultCode=0000`
+- Docker 컨테이너: `fest-twin-demo`
+- Docker 이미지: `fest-twin-demo:20260717092936`
+- 비밀값 기록 여부: 인증키와 SSH/Tailscale 인증 정보 미기록
