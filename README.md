@@ -4,12 +4,14 @@
 
 ## 빠른 데모 확인
 
+- 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - 내부 데모: http://192.168.55.223:18080/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
 - 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
 - 제출 요약: [제출 요약서](docs/submission-summary.md)
 - 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
+- 공개 데모 운영: [Tailscale Funnel 운영 문서](docs/public-demo-funnel.md)
 
 심사자는 첫 화면에서 정부 지침 기반 대시보드, 데이터 근거, 수요 예측, 혼잡 히트맵, 기획 보완 리포트를 순서대로 확인하면 됩니다.
 

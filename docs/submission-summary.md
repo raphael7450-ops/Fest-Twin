@@ -6,6 +6,7 @@
 
 ## 빠른 확인
 
+- 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - 내부 데모: http://192.168.55.223:18080/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
 - 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
@@ -51,9 +52,10 @@ MVP는 담당자 실명, 연락처, 결제정보, 개인별 위치 이력을 입
 
 - 자동 테스트: 10개 파일, 27개 항목 통과
 - 프로덕션 빌드: 정상 완료
+- 공개 데모: `https://cwserver.tail97dbc3.ts.net/` HTTP 200
 - 내부 데모: `http://192.168.55.223:18080/` HTTP 200
 - Docker 이미지: `fest-twin-demo:20260717040227`
-- TourAPI 프록시: `resultCode=0000`
+- 공개 URL TourAPI 프록시: `resultCode=0000`
 - 실제 화면 데이터 근거: `실제 TourAPI 일부 조회 및 샘플 보완`
 - 모바일 화면: 주요 섹션 텍스트 누락 없음, 가로 넘침 없음, 콘솔 오류 없음
 - 비밀값 검사: 실제 TourAPI 키, 서버 비밀번호, SSH 비밀번호 노출 없음

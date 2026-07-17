@@ -71,7 +71,7 @@
 ```powershell
 git clone https://github.com/raphael7450-ops/Fest-Twin.git
 cd Fest-Twin
-git checkout agent/government-guided-mvp
+git checkout main
 npm install
 npm run test
 npm run build
@@ -173,7 +173,7 @@ $obj = $json | ConvertFrom-Json
 - [ ] **Step 2: 푸시한다**
 
 ```powershell
-git push origin agent/government-guided-mvp
+git push origin main
 ```
 
 - [ ] **Step 3: PR 본문을 갱신한다**

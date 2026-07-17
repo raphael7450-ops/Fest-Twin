@@ -42,6 +42,7 @@ MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, �
 ## 제출 정보
 
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
+- 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - 내부 데모: http://192.168.55.223:18080/
 - 제출 요약서: `docs/submission-summary.md`
 - 시연 가이드: `docs/submission-demo-guide.md`
@@ -52,8 +53,9 @@ MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, �
 
 - 자동 테스트: 10개 파일, 27개 항목 통과
 - 프로덕션 빌드: 정상 완료
+- 공개 데모 HTTP 200 확인
 - 내부 데모 HTTP 200 확인
-- TourAPI `festivals`, `detail` 응답 정상 확인
+- 공개 URL TourAPI `festivals`, `detail` 응답 정상 확인
 - 실제 화면 데이터 근거: `실제 TourAPI 일부 조회 및 샘플 보완`
 - 모바일 화면: 주요 섹션 텍스트 누락 없음, 가로 넘침 없음, 콘솔 오류 없음
 - 실제 TourAPI 키, 서버 비밀번호, SSH 비밀번호는 Git과 문서에 기록하지 않음
