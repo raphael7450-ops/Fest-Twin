@@ -14,6 +14,8 @@
 - 제출 요약: [제출 요약서](docs/submission-summary.md)
 - 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
+- 운영 안내: [공개 데모 운영 안내](docs/demo-operations-runbook.md)
+- 최종 리허설: [최종 리허설 체크리스트](docs/final-rehearsal-checklist.md)
 
 ## 현재 공개 검증 상태
 
@@ -115,6 +117,8 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [공모전 제출용 문구](docs/contest-submission-copy.md)
 - [제출 요약서](docs/submission-summary.md)
 - [제출 시연 가이드](docs/submission-demo-guide.md)
+- [공개 데모 운영 안내](docs/demo-operations-runbook.md)
+- [최종 리허설 체크리스트](docs/final-rehearsal-checklist.md)
 - [리포트 출력 흐름](docs/report-export-flow.md)
 - [시나리오 저장 흐름](docs/scenario-save-flow.md)
 - [데모 검증 체크리스트](docs/demo-verification.md)
