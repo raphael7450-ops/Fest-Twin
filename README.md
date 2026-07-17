@@ -9,6 +9,8 @@
 - 최종 제출 패키지: [페스트트윈 최종 제출 패키지](docs/final-submission-package.md)
 - 제출 체크리스트: [페스트트윈 최종 제출 체크리스트](docs/final-submission-checklist.md)
 - 제출 zip: [fest-twin-submission-package.zip](artifacts/fest-twin-submission-package.zip)
+- GitHub Release: [Fest-Twin 제출 데모 v0.1.0](https://github.com/raphael7450-ops/Fest-Twin/releases/tag/v0.1.0-submission-demo)
+- Release zip 다운로드: [fest-twin-submission-package.zip](https://github.com/raphael7450-ops/Fest-Twin/releases/download/v0.1.0-submission-demo/fest-twin-submission-package.zip)
 - 제출 요약: [제출 요약서](docs/submission-summary.md)
 - 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
