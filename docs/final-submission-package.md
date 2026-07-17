@@ -1,0 +1,68 @@
+# 페스트트윈 최종 제출 패키지
+
+## 제출 기본 정보
+
+- 작품명: 페스트트윈(Fest-Twin)
+- 지정과제: 9번, 축제 수요 예측 실패 및 주관적 경험 의존형 기획으로 인한 예산 낭비·만족도 저하 문제
+- 공개 데모: https://cwserver.tail97dbc3.ts.net/
+- GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
+- 내부 데모: http://192.168.55.223:18080/
+
+## 제출 폼 입력용 문구
+
+### 한 줄 소개
+
+TourAPI 기반 축제 수요 근거와 혼잡 시뮬레이션을 활용해 지자체의 축제 예산 집행 전 리스크를 사전 진단하는 B2G SaaS MVP입니다.
+
+### 짧은 소개글
+
+페스트트윈은 축제 수요 예측 실패와 주관적 경험 의존형 기획으로 발생하는 예산 낭비, 관광객 쏠림, 만족도 저하 문제를 해결하기 위한 공공기관용 사전 진단 대시보드입니다. 지자체 담당자가 축제 기획안을 입력하면 TourAPI 기반 유사 축제·주변 관광지 근거, 시간대별 예상 방문객, 혼잡 히트맵, 예산·만족도 리스크, 기획 보완 리포트를 한 화면에서 확인할 수 있습니다.
+
+### 상세 소개글
+
+지정과제 9번은 축제 수요 예측 실패와 주관적 경험 의존형 기획으로 인한 예산 낭비, 대규모 관광객 쏠림에 따른 만족도 저하를 문제로 제시합니다. 페스트트윈은 이 문제를 축제 예산 집행 전 검토 가능한 B2G SaaS 대시보드로 풀어냈습니다.
+
+서비스는 축제명, 개최 지역, 행사 기간, 예산, 예상 수용 인원, 주요 프로그램을 입력받아 예상 방문객과 피크 시간대를 산정합니다. 이후 행사장 시설 정보를 기반으로 격자형 혼잡도 히트맵을 생성하고, 흥행 가능성, 밀집 위험, 예산 낭비 위험, 만족도 저하 위험을 점수화합니다. 마지막으로 공공기관 실무자가 바로 검토할 수 있는 기획 보완 리포트를 제공해 피크 프로그램 분산, 출입구 안내 인력 재배치, 먹거리 부스 동선 분리, 주변 관광지 연계 코스 운영 같은 실행 가능한 개선안을 제안합니다.
+
+TourAPI는 서버 프록시를 통해 안전하게 활용합니다. 브라우저에는 인증키를 노출하지 않고, 서버 런타임 환경변수로만 TourAPI 키를 주입합니다. 현재 MVP는 `areaCode2`, `searchFestival2`, `detailCommon2`, `locationBasedList2`를 사용해 지역 코드, 유사 축제, 상세 좌표, 주변 관광지를 조회합니다. 입력 기간에 직접 일치하는 축제 결과가 없으면 같은 지역의 연간 축제 데이터를 참고하고, 화면에는 `실제 TourAPI 일부 조회 및 샘플 보완` 상태와 기간 완화 사유를 표시합니다.
+
+MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, 결제정보, 개인별 위치 이력을 입력받지 않으며, 시나리오 저장 기능도 브라우저 로컬 저장소에 축제 기획안과 진단 시간대만 저장합니다. 또한 정부 디지털서비스 검토 관점에서 데이터 출처 표시, API 장애 시 샘플 보완, 접근 가능한 기본 입력 요소, 모바일 화면 검수, CSAP·SaaS 운영 보안의 향후 분리 검토를 문서와 화면에 반영했습니다.
+
+## 심사자 확인 순서
+
+1. 공개 데모 URL을 연다.
+2. 상단 `제출 데모 검증 현황` 패널에서 공개 URL, TourAPI 프록시, 보안, 제출 상태를 확인한다.
+3. `정부 지침 반영 현황`에서 공공기관 도입 검토 포인트를 확인한다.
+4. `데이터 근거`에서 TourAPI 실제 조회 및 샘플 보완 상태를 확인한다.
+5. 수요 예측, 혼잡도 시뮬레이션, 주요 리스크, 기획 보완 리포트를 순서대로 확인한다.
+6. 시나리오 저장과 리포트 인쇄 흐름을 확인한다.
+
+## 검증 요약
+
+- 공개 데모 HTTP 200 확인
+- Docker 이미지: `fest-twin-demo:20260717092936`
+- 자동 테스트: 10개 파일, 27개 항목 통과
+- 프로덕션 빌드: 정상 완료
+- 공개 URL TourAPI `festivals`, `detail` 응답 정상 확인
+- 데스크톱·모바일 렌더링에서 제출 검증 패널 표시 및 가로 넘침 없음
+- 실제 TourAPI 키, 서버 비밀번호, SSH 비밀번호는 Git과 문서에 기록하지 않음
+
+## 화면 증빙
+
+- `docs/assets/submission/desktop-full.png`
+- `docs/assets/submission/header.png`
+- `docs/assets/submission/submission-status.png`
+- `docs/assets/submission/dataBasis.png`
+- `docs/assets/submission/forecast.png`
+- `docs/assets/submission/heatmap.png`
+- `docs/assets/submission/report.png`
+- `docs/assets/submission/scenario.png`
+- `docs/assets/submission/mobile-viewport.png`
+
+## 함께 제출할 문서
+
+- `docs/contest-submission-copy.md`
+- `docs/submission-summary.md`
+- `docs/submission-demo-guide.md`
+- `docs/demo-verification.md`
+- `docs/public-demo-funnel.md`
