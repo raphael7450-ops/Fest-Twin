@@ -9,6 +9,10 @@
 - [ ] 모바일 화면에서 가로 넘침 없음
 - [ ] 제출 폼에 공개 데모 URL 입력
 - [ ] GitHub 저장소 URL 입력
+- [ ] GitHub Release URL 입력 또는 첨부 파일로 Release zip 사용
+- [ ] 지원 부문 `②-2 웹·앱 구현 부문` 확인
+- [ ] 선택 과제 `9번` 확인
+- [ ] 한국관광공사 OpenAPI 활용 내용 입력
 - [ ] 작품명 `페스트트윈(Fest-Twin)` 입력
 - [ ] 한 줄 소개 문구 입력
 - [ ] 짧은 소개글 또는 상세 소개글 입력
@@ -19,15 +23,22 @@
 
 - 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
+- GitHub Release: https://github.com/raphael7450-ops/Fest-Twin/releases/tag/v0.1.1-submission-final
+- Release zip: https://github.com/raphael7450-ops/Fest-Twin/releases/download/v0.1.1-submission-final/fest-twin-submission-package.zip
 - PR 이력:
   - https://github.com/raphael7450-ops/Fest-Twin/pull/1
   - https://github.com/raphael7450-ops/Fest-Twin/pull/2
   - https://github.com/raphael7450-ops/Fest-Twin/pull/3
   - https://github.com/raphael7450-ops/Fest-Twin/pull/4
+  - https://github.com/raphael7450-ops/Fest-Twin/pull/5
+  - https://github.com/raphael7450-ops/Fest-Twin/pull/6
+  - https://github.com/raphael7450-ops/Fest-Twin/pull/7
+  - https://github.com/raphael7450-ops/Fest-Twin/pull/8
 
 ## 첨부 추천 파일
 
 - `docs/final-submission-package.md`
+- `docs/contest-notice-response-matrix.md`
 - `docs/contest-submission-copy.md`
 - `docs/submission-summary.md`
 - `docs/submission-demo-guide.md`
