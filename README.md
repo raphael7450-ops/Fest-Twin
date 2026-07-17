@@ -2,16 +2,32 @@
 
 2026 관광데이터 활용 공모전 지정과제 9번을 위한 B2G SaaS 기획 프로젝트입니다.
 
-## 빠른 데모 확인
+## 제출 바로가기
 
 - 공개 데모: https://cwserver.tail97dbc3.ts.net/
-- 내부 데모: http://192.168.55.223:18080/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
-- 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
+- 최종 제출 패키지: [페스트트윈 최종 제출 패키지](docs/final-submission-package.md)
+- 제출 체크리스트: [페스트트윈 최종 제출 체크리스트](docs/final-submission-checklist.md)
+- 제출 zip: [fest-twin-submission-package.zip](artifacts/fest-twin-submission-package.zip)
 - 제출 요약: [제출 요약서](docs/submission-summary.md)
 - 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
-- 공개 데모 운영: [Tailscale Funnel 운영 문서](docs/public-demo-funnel.md)
+
+## 현재 공개 검증 상태
+
+- 공개 데모 HTTP 200 확인
+- TourAPI `festivals`, `detail` 프록시 응답 `resultCode=0000` 확인
+- Docker 이미지: `fest-twin-demo:20260717092936`
+- 최종 제출 zip은 `docs/...`와 `docs/assets/submission/...` 경로 구조 유지
+- GitHub 저장소 공개 접근 확인
+
+## 병합된 PR 이력
+
+- [PR #1: TourAPI 서버 프록시와 내부 Docker 배포](https://github.com/raphael7450-ops/Fest-Twin/pull/1)
+- [PR #2: 공개 데모 Funnel 문서화](https://github.com/raphael7450-ops/Fest-Twin/pull/2)
+- [PR #3: 제출 데모 검증 현황 패널](https://github.com/raphael7450-ops/Fest-Twin/pull/3)
+- [PR #4: 최종 제출 패키지](https://github.com/raphael7450-ops/Fest-Twin/pull/4)
+- [PR #5: 최종 제출 PR 이력 갱신](https://github.com/raphael7450-ops/Fest-Twin/pull/5)
 
 심사자는 첫 화면에서 정부 지침 기반 대시보드, 데이터 근거, 수요 예측, 혼잡 히트맵, 기획 보완 리포트를 순서대로 확인하면 됩니다.
 
