@@ -87,7 +87,7 @@ npm run dev
 - Git diff whitespace 검사: 정상 완료
 - 내부 데모 주소: `http://192.168.55.223:18080/`
 - Docker 컨테이너: `fest-twin-demo`
-- Docker 이미지: `fest-twin-demo:20260717040227`
+- Docker 이미지: `fest-twin-demo:20260717092936`
 - 내부 대시보드 HTTP 응답: `200 OK`
 - TourAPI 프록시 응답: `resultCode=0000`
 - 서울 연간 축제 조회 결과: `totalCount=2`, 첫 항목 `강남 미디어 윈터페스타`

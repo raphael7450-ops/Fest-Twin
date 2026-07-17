@@ -85,6 +85,7 @@ TourAPI 기반 축제 수요 근거와 혼잡 시뮬레이션을 활용해 지�
 
 - `docs/assets/submission/desktop-full.png`
 - `docs/assets/submission/header.png`
+- `docs/assets/submission/submission-status.png`
 - `docs/assets/submission/dataBasis.png`
 - `docs/assets/submission/forecast.png`
 - `docs/assets/submission/heatmap.png`
@@ -176,6 +177,7 @@ $files = @(
   "docs/public-demo-funnel.md",
   "docs/assets/submission/desktop-full.png",
   "docs/assets/submission/header.png",
+  "docs/assets/submission/submission-status.png",
   "docs/assets/submission/dataBasis.png",
   "docs/assets/submission/forecast.png",
   "docs/assets/submission/heatmap.png",
