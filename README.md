@@ -9,9 +9,10 @@
 - 최종 제출 패키지: [페스트트윈 최종 제출 패키지](docs/final-submission-package.md)
 - 제출 체크리스트: [페스트트윈 최종 제출 체크리스트](docs/final-submission-checklist.md)
 - 제출 zip: [fest-twin-submission-package.zip](artifacts/fest-twin-submission-package.zip)
-- GitHub Release: [Fest-Twin 제출 데모 v0.1.0](https://github.com/raphael7450-ops/Fest-Twin/releases/tag/v0.1.0-submission-demo)
-- Release zip 다운로드: [fest-twin-submission-package.zip](https://github.com/raphael7450-ops/Fest-Twin/releases/download/v0.1.0-submission-demo/fest-twin-submission-package.zip)
+- GitHub Release: [Fest-Twin 제출 최종 패키지 v0.1.1](https://github.com/raphael7450-ops/Fest-Twin/releases/tag/v0.1.1-submission-final)
+- Release zip 다운로드: [fest-twin-submission-package.zip](https://github.com/raphael7450-ops/Fest-Twin/releases/download/v0.1.1-submission-final/fest-twin-submission-package.zip)
 - 제출 요약: [제출 요약서](docs/submission-summary.md)
+- 공고 대응: [공고 대응 매트릭스](docs/contest-notice-response-matrix.md)
 - 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
 - 운영 안내: [공개 데모 운영 안내](docs/demo-operations-runbook.md)
@@ -24,6 +25,7 @@
 - Docker 이미지: `fest-twin-demo:20260717092936`
 - 최종 제출 zip은 `docs/...`와 `docs/assets/submission/...` 경로 구조 유지
 - GitHub 저장소 공개 접근 확인
+- 공고문 기준 ②-2 웹·앱 구현 부문, 9번 과제, 공사 OpenAPI 필수 활용 대응 정리 완료
 
 ## 병합된 PR 이력
 
@@ -115,6 +117,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [수요 예측·혼잡 진단·리포트 산정 기준](docs/forecast-simulation-report-method.md)
 - [정부용 대시보드 화면 흐름](docs/dashboard-service-flow.md)
 - [공모전 제출용 문구](docs/contest-submission-copy.md)
+- [공고 대응 매트릭스](docs/contest-notice-response-matrix.md)
 - [제출 요약서](docs/submission-summary.md)
 - [제출 시연 가이드](docs/submission-demo-guide.md)
 - [공개 데모 운영 안내](docs/demo-operations-runbook.md)

@@ -6,7 +6,26 @@
 - 지정과제: 9번, 축제 수요 예측 실패 및 주관적 경험 의존형 기획으로 인한 예산 낭비·만족도 저하 문제
 - 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
+- 최종 Release: https://github.com/raphael7450-ops/Fest-Twin/releases/tag/v0.1.1-submission-final
+- Release zip: https://github.com/raphael7450-ops/Fest-Twin/releases/download/v0.1.1-submission-final/fest-twin-submission-package.zip
 - 내부 데모: http://192.168.55.223:18080/
+
+## 공고문 기준 대응 요약
+
+- 지원 부문: `②-2 웹·앱 구현 부문`
+- 선택 과제: `9번`
+- 과제 문구: 축제 수요 예측 실패 및 주관적 경험 의존형 기획으로 인한 예산 낭비 리스크 존재 및 대규모 관광객 쏠림에 따른 축제 만족도 저하
+- 필수 요건: 한국관광공사 OpenAPI를 활용하여 구현 및 고도화한 관광 서비스
+- Fest-Twin 대응: TourAPI 기반 축제 수요 근거, 혼잡 시뮬레이션, 예산·만족도 리스크, 기획 보완 리포트를 제공하는 개발 완료 공개 데모
+
+## 1차 심사 기준 대응
+
+| 심사항목 | 배점 | 대응 |
+| --- | ---: | --- |
+| 서비스 구현성 | 30 | 공개 HTTPS 데모, Docker 배포, TourAPI 서버 프록시, 입력-진단-리포트 흐름 구현 |
+| 서비스 기획력 | 30 | 9번 과제의 예산 낭비·관광객 쏠림·만족도 저하 문제를 지자체 사전 검토 업무로 구체화 |
+| 데이터 활용 적절성 | 20 | `areaCode2`, `searchFestival2`, `detailCommon2`, `locationBasedList2`를 활용하고 데이터 근거 패널에 조회 상태 표시 |
+| 서비스 발전성 | 20 | 지자체·RTO·축제 위탁사의 반복 검토 업무, 안전 운영, 관광지 연계 코스, 보고 자동화로 확장 가능 |
 
 ## 제출 폼 입력용 문구
 
@@ -46,6 +65,7 @@ MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, �
 - 공개 URL TourAPI `festivals`, `detail` 응답 정상 확인
 - 데스크톱·모바일 렌더링에서 제출 검증 패널 표시 및 가로 넘침 없음
 - 실제 TourAPI 키, 서버 비밀번호, SSH 비밀번호는 Git과 문서에 기록하지 않음
+- 공고문 대응 매트릭스: `docs/contest-notice-response-matrix.md`
 
 ## 화면 증빙
 
@@ -62,6 +82,7 @@ MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, �
 ## 함께 제출할 문서
 
 - `docs/contest-submission-copy.md`
+- `docs/contest-notice-response-matrix.md`
 - `docs/submission-summary.md`
 - `docs/submission-demo-guide.md`
 - `docs/demo-verification.md`
