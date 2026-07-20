@@ -60,23 +60,23 @@ describe("public data adapters", () => {
       tourApiPayload([
         {
           contentid: "100",
-          title: "한강 K-POP 푸드 축제",
-          addr1: "서울특별시 영등포구",
-          eventstartdate: "20260918",
-          eventenddate: "20260920",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구",
+          eventstartdate: "20251219",
+          eventenddate: "20260103",
         },
       ]),
       tourApiPayload([
         {
           contentid: "100",
-          title: "한강 K-POP 푸드 축제",
-          addr1: "서울특별시 영등포구",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구",
           firstimage: "https://example.com/festival.jpg",
-          eventstartdate: "20260918",
-          eventenddate: "20260920",
-          overview: "한강 먹거리와 K-POP 공연이 함께 열리는 축제",
-          mapx: "126.92",
-          mapy: "37.52",
+          eventstartdate: "20251219",
+          eventenddate: "20260103",
+          overview: "강남 도심에서 미디어아트와 빛 연출이 함께 열리는 겨울 축제",
+          mapx: "127.0610",
+          mapy: "37.5103",
         },
       ]),
       tourApiPayload([
@@ -97,8 +97,8 @@ describe("public data adapters", () => {
     expect(tourism.provenance.sourceStatus).toBe("live");
     expect(tourism.similarFestivals[0]).toMatchObject({
       id: "100",
-      name: "한강 K-POP 푸드 축제",
-      region: "서울특별시 영등포구",
+      name: "강남 미디어 윈터페스타",
+      region: "서울특별시 강남구",
     });
     expect(tourism.nearbySpots[0]).toMatchObject({
       id: "200",
@@ -116,11 +116,11 @@ describe("public data adapters", () => {
     ]);
     expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
-    expect(urls[1].searchParams.get("eventStartDate")).toBe("20260918");
-    expect(urls[1].searchParams.get("eventEndDate")).toBe("20260920");
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
+    expect(urls[1].searchParams.get("eventEndDate")).toBe("20260103");
     expect(urls[2].searchParams.get("contentId")).toBe("100");
     expect(Array.from(urls[2].searchParams.keys()).sort()).toEqual(["contentId"]);
-    expect(urls[3].searchParams.get("mapX")).toBe("126.92");
+    expect(urls[3].searchParams.get("mapX")).toBe("127.0610");
     expect(urls[3].searchParams.get("radius")).toBe("5000");
   });
 
@@ -178,10 +178,10 @@ describe("public data adapters", () => {
       "/api/tour/detail",
       "/api/tour/nearby",
     ]);
-    expect(urls[1].searchParams.get("eventStartDate")).toBe("20260918");
-    expect(urls[1].searchParams.get("eventEndDate")).toBe("20260920");
-    expect(urls[2].searchParams.get("eventStartDate")).toBe("20260101");
-    expect(urls[2].searchParams.get("eventEndDate")).toBe("20261231");
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
+    expect(urls[1].searchParams.get("eventEndDate")).toBe("20260103");
+    expect(urls[2].searchParams.get("eventStartDate")).toBe("20250101");
+    expect(urls[2].searchParams.get("eventEndDate")).toBe("20251231");
     expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
   });
 
@@ -289,7 +289,7 @@ describe("public data adapters", () => {
     const keywords = trends.signals.map((signal) => signal.keyword);
 
     expect(trends.provenance.collectedPersonalData).toBe(false);
-    expect(keywords).toContain("K-POP");
+    expect(keywords).toContain("미디어아트");
     expect(keywords.every((keyword) => sampleFestivalPlan.keywords.includes(keyword))).toBe(true);
   });
 });

@@ -14,6 +14,7 @@
 - 제출 요약: [제출 요약서](docs/submission-summary.md)
 - 공고 대응: [공고 대응 매트릭스](docs/contest-notice-response-matrix.md)
 - 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
+- TourAPI 실제 예시: [강남 미디어 윈터페스타 조회 근거](docs/tourapi-recent-festival-example.md)
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
 - 운영 안내: [공개 데모 운영 안내](docs/demo-operations-runbook.md)
 - 최종 리허설: [최종 리허설 체크리스트](docs/final-rehearsal-checklist.md)
@@ -22,6 +23,7 @@
 
 - 공개 데모 HTTP 200 확인
 - TourAPI `festivals`, `detail` 프록시 응답 `resultCode=0000` 확인
+- 기본 데모 축제를 TourAPI 실제 조회 예시인 `강남 미디어 윈터페스타`로 갱신
 - Docker 이미지: `fest-twin-demo:20260717092936`
 - 최종 제출 zip은 `docs/...`와 `docs/assets/submission/...` 경로 구조 유지
 - GitHub 저장소 공개 접근 확인
@@ -36,6 +38,8 @@
 - [PR #5: 최종 제출 PR 이력 갱신](https://github.com/raphael7450-ops/Fest-Twin/pull/5)
 
 심사자는 첫 화면에서 정부 지침 기반 대시보드, 데이터 근거, 수요 예측, 혼잡 히트맵, 기획 보완 리포트를 순서대로 확인하면 됩니다.
+
+현재 기본 기획안은 공개 데모 TourAPI 프록시에서 확인한 `강남 미디어 윈터페스타`를 기준으로 구성했습니다. 조회 조건과 값은 [TourAPI 실제 축제 예시](docs/tourapi-recent-festival-example.md)에 정리되어 있습니다.
 
 ## 한 줄 정의
 

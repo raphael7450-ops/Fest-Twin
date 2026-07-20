@@ -12,6 +12,12 @@ export function PlanForm({ plan, onPlanChange }: PlanFormProps) {
         <h2>축제 기획안 입력</h2>
         <span>개인정보 미수집</span>
       </div>
+      <div className="tourapi-example-note">
+        <strong>TourAPI 실제 예시</strong>
+        <span>
+          2026년 서울 축제 조회 결과의 `강남 미디어 윈터페스타`를 기본 데모로 사용합니다.
+        </span>
+      </div>
       <div className="form-grid">
         <label>
           축제명

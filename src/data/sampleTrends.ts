@@ -11,10 +11,10 @@ export const sampleTrendContext: TrendContext = {
     collectedPersonalData: false,
   },
   signals: [
-    { keyword: "일상문화", interestScore: 88, sentimentScore: 76, mentions: 18400 },
-    { keyword: "먹거리", interestScore: 81, sentimentScore: 72, mentions: 15100 },
-    { keyword: "K-POP", interestScore: 96, sentimentScore: 84, mentions: 32800 },
-    { keyword: "한강", interestScore: 91, sentimentScore: 79, mentions: 27400 },
+    { keyword: "미디어아트", interestScore: 91, sentimentScore: 80, mentions: 24600 },
+    { keyword: "겨울축제", interestScore: 88, sentimentScore: 77, mentions: 22100 },
+    { keyword: "빛축제", interestScore: 93, sentimentScore: 82, mentions: 28600 },
+    { keyword: "강남", interestScore: 79, sentimentScore: 70, mentions: 17400 },
     { keyword: "가족", interestScore: 68, sentimentScore: 74, mentions: 9600 },
   ],
 };

@@ -28,6 +28,7 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByText("페스트트윈(Fest-Twin)")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
     expect(screen.getByText("정부 지침 반영 현황")).toBeInTheDocument();
     expect(screen.getByText("제출 데모 검증 현황")).toBeInTheDocument();
     expect(screen.getByText("공개 데모")).toBeInTheDocument();

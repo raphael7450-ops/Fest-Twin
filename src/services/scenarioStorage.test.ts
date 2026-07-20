@@ -17,7 +17,7 @@ describe("scenarioStorage", () => {
     expect(scenario.name).toContain(sampleFestivalPlan.name);
     expect(scenario.selectedHour).toBe(20);
     expect(loadScenarios()).toHaveLength(1);
-    expect(loadScenarios()[0].plan.totalBudgetMillionKrw).toBe(850);
+    expect(loadScenarios()[0].plan.totalBudgetMillionKrw).toBe(920);
   });
 
   it("clears saved scenarios", () => {
