@@ -15,6 +15,7 @@
 - 공고 대응: [공고 대응 매트릭스](docs/contest-notice-response-matrix.md)
 - 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
 - TourAPI 실제 예시: [강남 미디어 윈터페스타 조회 근거](docs/tourapi-recent-festival-example.md)
+- 네이버 지도 설정: [네이버 지도 API 설정](docs/naver-map-api-setup.md)
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
 - 운영 안내: [공개 데모 운영 안내](docs/demo-operations-runbook.md)
 - 최종 리허설: [최종 리허설 체크리스트](docs/final-rehearsal-checklist.md)
@@ -24,6 +25,7 @@
 - 공개 데모 HTTP 200 확인
 - TourAPI `festivals`, `detail` 프록시 응답 `resultCode=0000` 확인
 - 기본 데모 축제를 TourAPI 실제 조회 예시인 `강남 미디어 윈터페스타`로 갱신
+- 실제 행사장 지도 패널 추가, 네이버 지도 API 키 미설정 시 TourAPI 좌표 fallback 표시
 - Docker 이미지: `fest-twin-demo:20260717092936`
 - 최종 제출 zip은 `docs/...`와 `docs/assets/submission/...` 경로 구조 유지
 - GitHub 저장소 공개 접근 확인
@@ -100,6 +102,12 @@ React 앱은 같은 origin의 `/api/tour/*` 프록시만 호출합니다. 프록
 
 로컬에서 Vite 개발 서버만 실행하면 프록시가 없으므로 sample fallback으로 동작합니다. 실제 TourAPI를 로컬에서 검증하려면 `npm run build` 후 `TOUR_API_KEY`와 함께 `npm start`를 실행합니다.
 
+## 네이버 지도 표시
+
+실제 행사장 지도 패널은 NAVER Maps JavaScript API v3를 사용합니다. 로컬에서 실제 지도를 보려면 `.env.local`에 `VITE_NAVER_MAP_NCP_KEY_ID`를 설정합니다. 키가 없으면 앱은 지도를 요청하지 않고 TourAPI 좌표 기준 fallback 정보를 표시합니다.
+
+자세한 설정은 [네이버 지도 API 설정](docs/naver-map-api-setup.md)을 확인합니다.
+
 ## 정부 지침 기반 설계
 
 MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아니라, 다음 정부·공공 기준을 설계 출발점으로 둡니다.
@@ -122,6 +130,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [정부용 대시보드 화면 흐름](docs/dashboard-service-flow.md)
 - [공모전 제출용 문구](docs/contest-submission-copy.md)
 - [공고 대응 매트릭스](docs/contest-notice-response-matrix.md)
+- [네이버 지도 API 설정](docs/naver-map-api-setup.md)
 - [제출 요약서](docs/submission-summary.md)
 - [제출 시연 가이드](docs/submission-demo-guide.md)
 - [공개 데모 운영 안내](docs/demo-operations-runbook.md)

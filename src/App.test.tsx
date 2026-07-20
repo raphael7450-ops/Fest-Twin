@@ -38,6 +38,9 @@ describe("App", () => {
     expect(screen.getByText("데이터 근거")).toBeInTheDocument();
     expect(await screen.findByText("샘플 데이터 대체 사용")).toBeInTheDocument();
     expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
+    expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
+    expect(screen.getByText("네이버 지도 API 키 미설정")).toBeInTheDocument();
+    expect(screen.getByText("서울특별시 강남구 영동대로 511 (삼성동)")).toBeInTheDocument();
     expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();
     expect(screen.getByText("기획 보완 리포트")).toBeInTheDocument();
   });

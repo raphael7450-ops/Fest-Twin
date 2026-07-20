@@ -444,6 +444,62 @@ select {
   margin-bottom: 14px;
 }
 
+.venue-map-shell {
+  overflow: hidden;
+}
+
+.venue-map-canvas {
+  align-items: center;
+  background: #eef4fb;
+  border: 1px solid #d9e1ec;
+  border-radius: 7px;
+  display: flex;
+  min-height: 300px;
+  overflow: hidden;
+}
+
+.venue-map-fallback {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+}
+
+.venue-map-fallback strong,
+.venue-map-meta strong {
+  color: #17456f;
+}
+
+.venue-map-fallback span,
+.venue-map-meta span {
+  color: #344054;
+  line-height: 1.5;
+}
+
+.venue-map-meta {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.venue-map-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.venue-map-points li {
+  background: #f7fafc;
+  border: 1px solid #d9e1ec;
+  border-radius: 999px;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 9px;
+}
+
 .heat-cell {
   border-radius: 4px;
   min-height: 22px;

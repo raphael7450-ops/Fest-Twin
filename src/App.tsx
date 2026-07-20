@@ -11,6 +11,7 @@ import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
 import { SubmissionStatusPanel } from "./components/SubmissionStatusPanel";
 import { SummaryCards } from "./components/SummaryCards";
+import { VenueMapPanel } from "./components/VenueMapPanel";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrendContext } from "./data/sampleTrends";
@@ -111,6 +112,7 @@ export function App() {
         </aside>
         <section className="main-column">
           <ForecastChart forecast={forecast} />
+          <VenueMapPanel />
           <Heatmap plan={plan} simulation={simulation} />
         </section>
         <aside className="right-column">
