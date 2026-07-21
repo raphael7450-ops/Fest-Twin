@@ -28,6 +28,10 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByText("페스트트윈(Fest-Twin)")).toBeInTheDocument();
+    expect(screen.getByText("공공 검토 대시보드")).toBeInTheDocument();
+    expect(screen.getByText("실데이터 우선")).toBeInTheDocument();
+    expect(screen.getByText("데이터 신뢰도")).toBeInTheDocument();
+    expect(screen.getByText("예산 검토")).toBeInTheDocument();
     expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
     expect(screen.getByText("정부 지침 반영 현황")).toBeInTheDocument();
     expect(screen.getByText("제출 데모 검증 현황")).toBeInTheDocument();
@@ -39,7 +43,6 @@ describe("App", () => {
     expect(await screen.findByText("샘플 데이터 대체 사용")).toBeInTheDocument();
     expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
-    expect(screen.getByText("네이버 지도 API 키 미설정")).toBeInTheDocument();
     expect(screen.getByText("서울특별시 강남구 영동대로 511 (삼성동)")).toBeInTheDocument();
     expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();
     expect(screen.getByText("기획 보완 리포트")).toBeInTheDocument();

@@ -17,25 +17,25 @@ export function SummaryCards({ forecast, simulation, report }: SummaryCardsProps
 
   return (
     <section className="summary-grid" aria-label="핵심 진단 지표">
-      <article className="metric-card">
+      <article className="metric-card metric-card--primary">
         <span>예상 방문객</span>
         <strong>{forecast.expectedVisitors.toLocaleString("ko-KR")}명</strong>
-        <small>{forecast.peakHour}:00 피크 예상</small>
+        <small className="metric-trend">{forecast.peakHour}:00 피크 예상</small>
       </article>
-      <article className="metric-card">
+      <article className="metric-card metric-card--success">
         <span>흥행 가능성</span>
         <strong>{forecast.successScore}점</strong>
-        <small>공공데이터·샘플 프록시 기반</small>
+        <small className="metric-trend">데이터 신뢰도</small>
       </article>
-      <article className="metric-card">
+      <article className="metric-card metric-card--danger">
         <span>혼잡 위험도</span>
         <strong>{simulation.congestionScore}점</strong>
-        <small>병목 {simulation.bottlenecks.length}곳</small>
+        <small className="metric-trend">병목 {simulation.bottlenecks.length}곳</small>
       </article>
-      <article className="metric-card">
-        <span>예산 낭비 위험</span>
+      <article className="metric-card metric-card--warning">
+        <span>예산 검토</span>
         <strong>{budgetRisk?.score ?? 0}점</strong>
-        <small>{budgetRisk?.reason ?? "예산 진단 대기"}</small>
+        <small className="metric-trend">{budgetRisk?.reason ?? "예산 진단 대기"}</small>
       </article>
     </section>
   );
