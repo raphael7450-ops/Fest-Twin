@@ -32,6 +32,7 @@ describe("App", () => {
     expect(screen.getByText("실데이터 우선")).toBeInTheDocument();
     expect(screen.getByText("데이터 신뢰도")).toBeInTheDocument();
     expect(screen.getByText("예산 검토")).toBeInTheDocument();
+    expect(screen.getByLabelText("핵심 진단 지표")).toBeInTheDocument();
     expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
     expect(screen.getByText("정부 지침 반영 현황")).toBeInTheDocument();
     expect(screen.getByText("제출 데모 검증 현황")).toBeInTheDocument();
