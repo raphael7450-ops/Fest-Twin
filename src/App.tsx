@@ -2,14 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
-import { GovernmentReadinessPanel } from "./components/GovernmentReadinessPanel";
 import { Heatmap } from "./components/Heatmap";
 import { PlanForm } from "./components/PlanForm";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
 import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
-import { SubmissionStatusPanel } from "./components/SubmissionStatusPanel";
 import { SummaryCards } from "./components/SummaryCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
@@ -89,8 +87,6 @@ export function App() {
   return (
     <main className="app-shell">
       <GovernmentHeader />
-      <SubmissionStatusPanel />
-      <GovernmentReadinessPanel />
       <SummaryCards forecast={forecast} simulation={simulation} report={report} />
       <div className="workspace-grid">
         <aside className="left-column">
