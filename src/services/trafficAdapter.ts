@@ -131,9 +131,13 @@ function createTrafficSourceDetails({
 }
 
 export function createFallbackTrafficContext(plan: FestivalPlan, reason: string, hour?: number): TrafficContext {
+  const weekType = isWeekendPlan(plan) ? "weekend" : "weekday";
+  const time = normalizeTime(hour);
+
   return {
     ...sampleTrafficContext,
-    time: normalizeTime(hour),
+    weekType,
+    time,
     provenance: {
       ...sampleTrafficContext.provenance,
       fallbackReason: reason,
@@ -142,7 +146,11 @@ export function createFallbackTrafficContext(plan: FestivalPlan, reason: string,
     sourceDetails: sampleTrafficSourceDetails.map((detail) => ({
       ...detail,
       query: detail.query?.map((item) =>
-        item.label === "time" ? { ...item, value: normalizeTime(hour) } : item,
+        item.label === "time"
+          ? { ...item, value: time }
+          : item.label === "weekType"
+            ? { ...item, value: weekType }
+            : item,
       ),
       statusLabel: "샘플 교통량 사용",
       note: `${detail.note} 사유: ${reason}`,

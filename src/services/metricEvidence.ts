@@ -404,7 +404,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...layoutUserInputs, ...safetyStaffDetails, ...trafficDetails],
+      sourceDetails: [...layoutUserInputs, ...safetyStaffDetails],
       contributors: [
         {
           label: "피크 방문객",
@@ -429,7 +429,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...layoutUserInputs, ...medicalStaffDetails, ...trafficDetails],
+      sourceDetails: [...layoutUserInputs, ...medicalStaffDetails],
       contributors: [
         {
           label: "최고 밀집도",

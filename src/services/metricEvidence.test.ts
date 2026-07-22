@@ -22,7 +22,7 @@ const sampleSimulationResult = createSimulation(
 );
 
 describe("metricEvidence", () => {
-  it("includes KTDB traffic evidence for parking and safety metrics", () => {
+  it("includes KTDB traffic evidence for parking metrics only", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,
       sampleForecastResult,
@@ -35,11 +35,11 @@ describe("metricEvidence", () => {
     expect(JSON.stringify(evidence["parking-occupancy"].sourceDetails)).toContain(
       "KTDB/View-T",
     );
-    expect(JSON.stringify(evidence["safety-staff"].sourceDetails)).toContain(
-      "행사장 교통 위험도",
+    expect(JSON.stringify(evidence["safety-staff"].sourceDetails)).not.toContain(
+      "KTDB/View-T",
     );
-    expect(JSON.stringify(evidence["medical-staff"].sourceDetails)).toContain(
-      "행사장 교통 위험도",
+    expect(JSON.stringify(evidence["medical-staff"].sourceDetails)).not.toContain(
+      "KTDB/View-T",
     );
   });
 
