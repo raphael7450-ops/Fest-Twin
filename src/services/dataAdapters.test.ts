@@ -6,6 +6,7 @@ import {
   getTourApiAreaCodes,
   getTourismContext,
   mapTourApiItemsToTourismContext,
+  safeQueryFields,
 } from "./tourApiAdapter";
 import { getTrendContext } from "./trendAdapter";
 
@@ -286,9 +287,19 @@ describe("public data adapters", () => {
     const serialized = JSON.stringify(tourism.sourceDetails);
 
     expect(serialized).toContain("/api/tour/festivals");
-    expect(serialized).toContain("/api/tour/location");
+    expect(serialized).toContain("/api/tour/nearby");
     expect(serialized).toContain("contentid");
-    expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization/i);
+    expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
+  });
+
+  it("excludes sensitive query fields and raw secret-bearing URLs from source evidence", () => {
+    expect(
+      safeQueryFields({
+        category: "festival",
+        cookie: "session=secret",
+        callbackUrl: "https://example.com/callback?serviceKey=secret",
+      }),
+    ).toEqual([{ label: "category", value: "festival" }]);
   });
 
   it("broadens empty exact-period festival searches to annual same-region TourAPI data", async () => {
@@ -384,6 +395,14 @@ describe("public data adapters", () => {
     expect(tourism.provenance.fallbackReason).toContain("연간");
     expect(tourism.provenance.fallbackReason).toMatch(/부족|샘플.*보완/);
     expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(tourism.sourceDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpoint: "/api/tour/nearby",
+          statusLabel: "Not queried: festival coordinates unavailable",
+        }),
+      ]),
+    );
   });
 
   it("rejects unreliable live data and preserves full versus partial fallback semantics", async () => {

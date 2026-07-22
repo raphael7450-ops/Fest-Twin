@@ -69,15 +69,31 @@ type ValidNearbyItem = TourApiItem & {
 };
 
 const SENSITIVE_QUERY_KEYS = new Set([
-  "serviceKey",
-  "clientSecret",
+  "servicekey",
+  "clientsecret",
   "authorization",
   "cookie",
 ]);
 
-function safeQueryFields(params: Record<string, string | number | undefined>) {
+function isSecretBearingUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return Array.from(url.searchParams.keys()).some((key) =>
+      SENSITIVE_QUERY_KEYS.has(key.toLowerCase()),
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function safeQueryFields(params: Record<string, string | number | undefined>) {
   return Object.entries(params)
-    .filter(([key, value]) => value !== undefined && !SENSITIVE_QUERY_KEYS.has(key))
+    .filter(
+      ([key, value]) =>
+        value !== undefined &&
+        !SENSITIVE_QUERY_KEYS.has(key.toLowerCase()) &&
+        !(typeof value === "string" && isSecretBearingUrl(value)),
+    )
     .map(([label, value]) => ({ label, value: String(value) }));
 }
 
@@ -686,12 +702,18 @@ export async function getTourismContext(
     const nearbyLocationSource = createTourApiSourceDetail({
       sourceId: "tourapi-tourism-nearby",
       sourceName: "TourAPI 주변 관광지 조회",
-      endpoint: "/api/tour/location",
+      endpoint: "/api/tour/nearby",
       query: nearbyQueryParams,
       records: nearbyItems.slice(0, 5).map((item) => ({
         label: String(item.title ?? item.contentid ?? "주변 관광지"),
         fields: nearbySpotRecordFields(item),
       })),
+      statusLabel: firstLocatedItem
+        ? undefined
+        : "Not queried: festival coordinates unavailable",
+      note: firstLocatedItem
+        ? undefined
+        : "Nearby lookup was not requested because the festival detail response had no coordinates.",
     });
 
     return mapTourApiItemsToTourismContext(
