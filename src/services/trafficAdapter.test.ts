@@ -35,7 +35,8 @@ describe("trafficAdapter", () => {
       hour: 20,
     });
 
-    expect(traffic.status).toBe("live");
+    expect(traffic.status).toBe("mapped-sample");
+    expect(traffic.provenance.sourceStatus).toBe("partial-fallback");
     expect(traffic.year).toBe(2025);
     expect(traffic.weekType).toBe("weekend");
     expect(traffic.time).toBe("20");
@@ -73,6 +74,7 @@ describe("trafficAdapter", () => {
     expect(traffic.status).toBe("sample-fallback");
     expect(traffic.links.length).toBeGreaterThan(0);
     expect(traffic.sourceDetails[0].sourceType).toBe("sample");
+    expect(traffic.sourceDetails[0].query).toContainEqual({ label: "time", value: "14" });
     expect(JSON.stringify(traffic.sourceDetails)).toContain("샘플 교통량");
     expect(fetchImpl).not.toHaveBeenCalled();
   });

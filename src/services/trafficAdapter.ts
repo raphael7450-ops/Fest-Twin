@@ -141,6 +141,9 @@ export function createFallbackTrafficContext(plan: FestivalPlan, reason: string,
     },
     sourceDetails: sampleTrafficSourceDetails.map((detail) => ({
       ...detail,
+      query: detail.query?.map((item) =>
+        item.label === "time" ? { ...item, value: normalizeTime(hour) } : item,
+      ),
       statusLabel: "샘플 교통량 사용",
       note: `${detail.note} 사유: ${reason}`,
     })),
@@ -169,7 +172,7 @@ export async function getTrafficContext(plan: FestivalPlan, options: TrafficOpti
     if (links.length === 0) throw new Error("Traffic response did not include usable link records");
     const riskScore = calculateTrafficRisk(links, weekType, time);
     return {
-      status: "live",
+      status: "mapped-sample",
       year: DEFAULT_YEAR,
       weekType,
       time,
@@ -179,7 +182,7 @@ export async function getTrafficContext(plan: FestivalPlan, options: TrafficOpti
       provenance: {
         sourceName: "KTDB/View-T 선택 링크 교통량",
         sourceType: "public-data",
-        sourceStatus: "live",
+        sourceStatus: "partial-fallback",
         basisText: "KTDB/View-T 링크 교통량을 기준으로 행사장 접근 교통 리스크를 추정합니다.",
         fallbackText: "조회 실패 또는 링크 매핑 누락 시 샘플 교통량을 사용합니다.",
         retrievedAt: new Date().toISOString(),
