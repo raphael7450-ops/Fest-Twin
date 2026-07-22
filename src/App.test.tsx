@@ -54,8 +54,8 @@ describe("App", () => {
     expect(screen.getByText("페스트트윈(Fest-Twin)")).toBeInTheDocument();
     expect(screen.getByText("공공 검토 대시보드")).toBeInTheDocument();
     expect(screen.getByText("실데이터 우선")).toBeInTheDocument();
-    expect(screen.getByText("흥행 예측 지수")).toBeInTheDocument();
-    expect(screen.getByText("최고 밀집 위험도")).toBeInTheDocument();
+    expect(screen.getAllByText("흥행 예측 지수").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("최고 밀집 위험도").length).toBeGreaterThan(0);
     expect(screen.getByText("예산 효율성 점수")).toBeInTheDocument();
     expect(screen.getByText("지역 상권 유출 연계도")).toBeInTheDocument();
     expect(screen.getByLabelText("핵심 진단 지표")).toBeInTheDocument();
@@ -76,10 +76,10 @@ describe("App", () => {
     expect(screen.getByText("서울특별시 강남구 영동대로 511 (삼성동)")).toBeInTheDocument();
     expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();
     expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
-    expect(screen.getByText("안전관리 요원 추천 배치")).toBeInTheDocument();
-    expect(screen.getByText("의료/구급 인력 추천 배치")).toBeInTheDocument();
+    expect(screen.getAllByText("안전관리 요원 추천 배치").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("의료/구급 인력 추천 배치").length).toBeGreaterThan(0);
     expect(screen.getByText("주차 수용 차오름 비율")).toBeInTheDocument();
-    expect(screen.getByText("예산 대비 경제적 파급효과")).toBeInTheDocument();
+    expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
     expect(screen.getByText("총 투입 예산")).toBeInTheDocument();
     expect(screen.getByText("예상 지역 상권 소비 창출액")).toBeInTheDocument();
     expect(screen.getByText("기획 보완 리포트")).toBeInTheDocument();
