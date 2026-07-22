@@ -1116,7 +1116,7 @@ Expected: `main -> main`.
 
 - [ ] **Step 5: Deploy Docker demo**
 
-Create an archive from `HEAD`, upload it to `cwuser@100.104.94.112`, build with `NAVER_MAP_CLIENT_ID=5mcwlg6qwo`, and replace the `fest-twin-demo` container.
+Create an archive from `HEAD`, upload it to `cwuser@100.104.94.112`, build with `NAVER_MAP_CLIENT_ID=5mcwlg6qwo`, and replace the `fest-twin-demo` container. When `/home/cwuser/fest-twin-demo.env` exists, the replacement container must be started with `--env-file /home/cwuser/fest-twin-demo.env`; otherwise the server-side TourAPI proxy returns `TOUR_API_KEY_MISSING` and the region selector cannot load real area codes.
 
 Use the same deployment pattern already proven in this project:
 
@@ -1124,14 +1124,14 @@ Use the same deployment pattern already proven in this project:
 git archive -o tmp\fest-twin-demo.tar HEAD
 ```
 
-Then upload the archive and run the remote redeploy script with PuTTY tools:
+Then upload the archive and run the remote redeploy script with PuTTY tools. The remote script must preserve server-only runtime secrets by passing the env file into `docker run`.
 
 ```powershell
 & 'C:\Program Files (x86)\PuTTY\pscp.exe' -pw 'ckddnjsl' -batch tmp\fest-twin-demo.tar cwuser@100.104.94.112:/home/cwuser/fest-twin-demo.tar
 & 'C:\Program Files (x86)\PuTTY\plink.exe' -pw 'ckddnjsl' -batch cwuser@100.104.94.112 'bash /home/cwuser/redeploy-fest-twin-map-final.sh'
 ```
 
-Expected: container `fest-twin-demo` restarts and `curl http://127.0.0.1:18080/` returns 200.
+Expected: container `fest-twin-demo` restarts, `curl http://127.0.0.1:18080/` returns 200, and `curl http://127.0.0.1:18080/api/tour/area-code?numOfRows=3\&pageNo=1` returns a TourAPI `resultCode` of `0000` instead of `TOUR_API_KEY_MISSING`.
 
 - [ ] **Step 6: Verify public demo bundle**
 
