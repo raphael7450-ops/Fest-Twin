@@ -1363,3 +1363,49 @@ a:focus-visible {
 .contributor-risk strong {
   color: #b91c1c;
 }
+
+.report-evidence-summary {
+  margin-top: 1rem;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8fbff;
+}
+
+.report-evidence-summary h3 {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.report-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.report-evidence-grid article {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #ffffff;
+}
+
+.report-evidence-grid span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.report-evidence-grid strong {
+  display: block;
+  color: #0f172a;
+}
+
+.report-evidence-grid p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  line-height: 1.55;
+}

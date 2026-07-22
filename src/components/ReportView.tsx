@@ -1,16 +1,19 @@
 import type {
   FestivalPlan,
   ForecastResult,
+  MetricEvidence,
   MetricEvidenceId,
   PlanningReport,
 } from "../domain/types";
 import { PrintReportButton } from "./PrintReportButton";
+import { ReportEvidenceSummary } from "./ReportEvidenceSummary";
 import { RoiEconomicImpact } from "./RoiEconomicImpact";
 
 interface ReportViewProps {
   report: PlanningReport;
   plan: FestivalPlan;
   forecast: ForecastResult;
+  evidenceSet: Record<MetricEvidenceId, MetricEvidence>;
   onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
@@ -18,6 +21,7 @@ export function ReportView({
   report,
   plan,
   forecast,
+  evidenceSet,
   onOpenEvidence,
 }: ReportViewProps) {
   return (
@@ -34,6 +38,7 @@ export function ReportView({
         forecast={forecast}
         onOpenEvidence={onOpenEvidence}
       />
+      <ReportEvidenceSummary evidenceSet={evidenceSet} />
       <p className="report-summary">{report.summary}</p>
       <p className="muted">{report.governmentReviewNote}</p>
       <div className="score-table">

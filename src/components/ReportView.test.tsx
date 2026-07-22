@@ -1,15 +1,19 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ForecastResult, PlanningReport } from "../domain/types";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import { sampleTourismContext } from "../data/sampleTourApi";
+import { sampleTrendContext } from "../data/sampleTrends";
+import { createMetricEvidenceSet } from "../services/metricEvidence";
+import { createSimulation } from "../services/simulation";
 import { ReportView } from "./ReportView";
 
 const report: PlanningReport = {
-  summary: "한강 일상문화축제 사전 진단 요약입니다.",
+  summary: "시각 일상문화축제 사전 진단 요약입니다.",
   governmentReviewNote: "예산 집행 전 검토용 리포트입니다.",
   scores: [
     {
-      label: "예산 낭비 위험",
+      label: "예산 대비 위험",
       score: 42,
       level: "medium",
       reason: "예상 방문객 대비 예산 규모를 비교했습니다.",
@@ -38,7 +42,29 @@ const forecast: ForecastResult = {
   reasons: [],
 };
 
+function renderReportView() {
+  const simulation = createSimulation(sampleFestivalPlan, forecast, forecast.peakHour);
+  const evidenceSet = createMetricEvidenceSet(
+    sampleFestivalPlan,
+    forecast,
+    simulation,
+    sampleTourismContext,
+    sampleTrendContext,
+  );
+
+  return render(
+    <ReportView
+      report={report}
+      plan={sampleFestivalPlan}
+      forecast={forecast}
+      evidenceSet={evidenceSet}
+      onOpenEvidence={vi.fn()}
+    />,
+  );
+}
+
 afterEach(() => {
+  cleanup();
   vi.restoreAllMocks();
 });
 
@@ -46,16 +72,19 @@ describe("ReportView", () => {
   it("prints the planning report for public review", () => {
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => undefined);
 
-    render(
-      <ReportView
-        report={report}
-        plan={sampleFestivalPlan}
-        forecast={forecast}
-      />,
-    );
+    renderReportView();
 
     fireEvent.click(screen.getByRole("button", { name: "리포트 인쇄" }));
 
     expect(printSpy).toHaveBeenCalledOnce();
+  });
+
+  it("renders compact evidence summaries for submission review", () => {
+    renderReportView();
+
+    expect(screen.getByText("산출 근거 요약")).toBeInTheDocument();
+    expect(screen.getByText("흥행 예측 지수")).toBeInTheDocument();
+    expect(screen.getByText("최고 밀집 위험도")).toBeInTheDocument();
+    expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
   });
 });

@@ -281,6 +281,7 @@ export function App() {
         report={report}
         plan={plan}
         forecast={forecast}
+        evidenceSet={metricEvidence}
         onOpenEvidence={setSelectedEvidenceId}
       />
     </main>
