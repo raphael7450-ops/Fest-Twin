@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleTourismContext } from "./data/sampleTourApi";
@@ -139,6 +139,44 @@ describe("App", () => {
     expect(within(drawer).getAllByText(/contentid/, { selector: "dt" }).length).toBeGreaterThan(0);
     expect(within(drawer).getByText(/사용자 입력 기준/)).toBeInTheDocument();
     expect(within(drawer).getByText(/시스템 산출값/)).toBeInTheDocument();
+  });
+
+  it("redacts contaminated source detail values in the evidence drawer", async () => {
+    getTourismContextMock.mockResolvedValue({
+      ...sampleTourismContext,
+      sourceDetails: [
+        {
+          sourceId: "contaminated-source",
+          sourceName: "Contaminated source",
+          sourceType: "tourapi",
+          statusLabel: "Live",
+          endpoint: "https://data.example.test/events?serviceKey=drawer-endpoint-secret",
+          query: [
+            { label: "Authorization", value: "Bearer drawer-query-secret" },
+            { label: "Relative URL", value: "/events?clientSecret=drawer-relative-secret" },
+          ],
+          records: [
+            {
+              label: "Record",
+              fields: [{ label: "Cookie", value: "session=drawer-record-secret" }],
+            },
+          ],
+          calculationInputs: [
+            { label: "Credential", value: "clientSecret=drawer-calculation-secret" },
+          ],
+        },
+      ],
+    });
+
+    render(<App />);
+    await waitFor(() => expect(getTourismContextMock).toHaveBeenCalled());
+
+    fireEvent.click(screen.getAllByRole("button", { name: "근거 보기" })[0]);
+
+    const drawer = await screen.findByRole("dialog", { name: "지표 산출 근거" });
+    expect(within(drawer).getByText("Contaminated source")).toBeInTheDocument();
+    expect(within(drawer).queryByText(/drawer-(endpoint|query|relative|record|calculation)-secret/)).not.toBeInTheDocument();
+    expect(within(drawer).getAllByText("[비공개]").length).toBeGreaterThanOrEqual(5);
   });
 
   it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {

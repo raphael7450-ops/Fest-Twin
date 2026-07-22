@@ -6,6 +6,16 @@ interface MetricEvidenceDrawerProps {
   onClose: () => void;
 }
 
+const sensitiveEvidenceKeyPattern = /\b(?:servicekey|clientsecret|authorization|cookie)\b/i;
+
+function isSensitiveEvidenceValue(value: string, label?: string) {
+  return sensitiveEvidenceKeyPattern.test(`${label ?? ""} ${value}`);
+}
+
+function safeEvidenceText(value: string, label?: string) {
+  return isSensitiveEvidenceValue(value, label) ? "[비공개]" : value;
+}
+
 export function MetricEvidenceDrawer({
   evidence,
   isOpen,
@@ -56,7 +66,7 @@ export function MetricEvidenceDrawer({
                   <div className="source-detail-heading">
                     <div>
                       <strong>{source.sourceName}</strong>
-                      {source.endpoint ? <span>{source.endpoint}</span> : null}
+                      {source.endpoint ? <span>{safeEvidenceText(source.endpoint)}</span> : null}
                     </div>
                     <em className={`source-type source-type-${source.sourceType}`}>
                       {source.statusLabel}
@@ -72,7 +82,7 @@ export function MetricEvidenceDrawer({
                       {source.query.map((field) => (
                         <div key={`${source.sourceId}-query-${field.label}`}>
                           <dt>{field.label}</dt>
-                          <dd>{field.value}</dd>
+                          <dd>{safeEvidenceText(field.value, field.label)}</dd>
                         </div>
                       ))}
                     </dl>
@@ -85,7 +95,7 @@ export function MetricEvidenceDrawer({
                         {record.fields.map((field) => (
                           <div key={`${source.sourceId}-${record.label}-${field.label}`}>
                             <dt>{field.label}</dt>
-                            <dd>{field.value}</dd>
+                            <dd>{safeEvidenceText(field.value, field.label)}</dd>
                           </div>
                         ))}
                       </dl>
@@ -97,7 +107,7 @@ export function MetricEvidenceDrawer({
                       {source.calculationInputs.map((field) => (
                         <div key={`${source.sourceId}-input-${field.label}`}>
                           <dt>{field.label}</dt>
-                          <dd>{field.value}</dd>
+                          <dd>{safeEvidenceText(field.value, field.label)}</dd>
                         </div>
                       ))}
                     </dl>
