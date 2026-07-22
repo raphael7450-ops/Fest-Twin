@@ -547,6 +547,32 @@ h3 {
   line-height: 1.45;
 }
 
+.candidate-lookup-card {
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.candidate-lookup-card span,
+.candidate-lookup-card strong {
+  display: block;
+}
+
+.candidate-lookup-card span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.candidate-lookup-card strong {
+  color: var(--color-primary-strong);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
 label {
   color: #344054;
   display: grid;
@@ -693,6 +719,120 @@ a:focus-visible {
   font-size: 12px;
   font-weight: 850;
   padding: 6px 9px;
+}
+
+.candidate-drawer-layer {
+  inset: 0;
+  position: fixed;
+  z-index: 40;
+}
+
+.candidate-drawer-backdrop {
+  background: rgba(15, 23, 42, 0.34);
+  border: 0;
+  height: 100%;
+  inset: 0;
+  padding: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.candidate-drawer {
+  background: white;
+  border-left: 1px solid var(--color-border);
+  box-shadow: -18px 0 32px rgba(18, 58, 93, 0.16);
+  display: grid;
+  gap: 14px;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  margin-left: auto;
+  max-width: 520px;
+  overflow-y: auto;
+  padding: 18px;
+  position: relative;
+  width: min(520px, 92vw);
+}
+
+.candidate-drawer-heading {
+  align-items: start;
+  border-bottom: 1px solid #edf1f6;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding-bottom: 12px;
+}
+
+.candidate-drawer-heading .eyebrow {
+  color: var(--color-teal);
+}
+
+.candidate-drawer-state {
+  align-content: start;
+  background: #f8fafc;
+  border: 1px solid #edf1f6;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.candidate-drawer-state strong,
+.candidate-drawer-state span {
+  display: block;
+}
+
+.candidate-drawer-state strong {
+  color: var(--color-primary-strong);
+}
+
+.candidate-drawer-state span {
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.candidate-list {
+  align-content: start;
+  display: grid;
+  gap: 10px;
+}
+
+.candidate-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.candidate-card-selected {
+  border-color: var(--color-teal);
+  box-shadow: inset 4px 0 0 var(--color-teal);
+}
+
+.candidate-card span,
+.candidate-card h3,
+.candidate-card p,
+.candidate-card small {
+  display: block;
+}
+
+.candidate-card span {
+  color: var(--color-teal);
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.candidate-card p {
+  color: #344054;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.candidate-card small {
+  color: var(--color-muted);
 }
 
 .heat-cell {
@@ -1029,6 +1169,16 @@ a:focus-visible {
   .venue-map-canvas,
   .heatmap {
     min-height: 260px;
+  }
+
+  .candidate-drawer {
+    max-width: none;
+    width: 100%;
+  }
+
+  .candidate-drawer-heading {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .heatmap {

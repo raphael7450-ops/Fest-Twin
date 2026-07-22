@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import {
   createFallbackTourismContext,
+  getFestivalCandidates,
+  getTourApiAreaCodes,
   getTourismContext,
   mapTourApiItemsToTourismContext,
 } from "./tourApiAdapter";
@@ -122,6 +124,80 @@ describe("public data adapters", () => {
     expect(Array.from(urls[2].searchParams.keys()).sort()).toEqual(["contentId"]);
     expect(urls[3].searchParams.get("mapX")).toBe("127.0610");
     expect(urls[3].searchParams.get("radius")).toBe("5000");
+  });
+
+  it("returns region codes and festival candidates for the planning selector", async () => {
+    const areaFetchMock = vi.fn(async () =>
+      jsonResponse(
+        tourApiPayload([
+          { code: "1", name: "서울" },
+          { code: "6", name: "부산" },
+        ]),
+      ),
+    );
+
+    await expect(
+      getTourApiAreaCodes({ fetchImpl: areaFetchMock as unknown as typeof fetch }),
+    ).resolves.toEqual([
+      { code: "1", name: "서울" },
+      { code: "6", name: "부산" },
+    ]);
+
+    const candidateResponses = [
+      tourApiPayload([{ code: "1", name: "서울" }]),
+      tourApiPayload([
+        {
+          contentid: "100",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구 영동대로 511",
+          eventstartdate: "20251219",
+          eventenddate: "20260103",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "100",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구 영동대로 511",
+          firstimage: "https://example.com/festival.jpg",
+          eventstartdate: "20251219",
+          eventenddate: "20260103",
+          mapx: "127.0610512042",
+          mapy: "37.5103955843",
+        },
+      ]),
+    ];
+    const candidateFetchMock = vi.fn(async (_input: RequestInfo | URL) =>
+      jsonResponse(candidateResponses.shift()),
+    );
+
+    const candidates = await getFestivalCandidates(sampleFestivalPlan, {
+      fetchImpl: candidateFetchMock as unknown as typeof fetch,
+    });
+
+    expect(candidates).toEqual([
+      {
+        id: "100",
+        title: "강남 미디어 윈터페스타",
+        address: "서울특별시 강남구 영동대로 511",
+        startDate: "2025-12-19",
+        endDate: "2026-01-03",
+        mapX: "127.0610512042",
+        mapY: "37.5103955843",
+        imageUrl: "https://example.com/festival.jpg",
+        searchScope: "exact-period",
+      },
+    ]);
+
+    const urls = candidateFetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/api/tour/area-code",
+      "/api/tour/festivals",
+      "/api/tour/detail",
+    ]);
+    expect(urls[1].searchParams.get("areaCode")).toBe("1");
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
+    expect(urls[2].searchParams.get("contentId")).toBe("100");
   });
 
   it("broadens empty exact-period festival searches to annual same-region TourAPI data", async () => {

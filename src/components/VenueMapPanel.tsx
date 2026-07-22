@@ -1,19 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-
-const venue = {
-  name: "강남 미디어 윈터페스타",
-  address: "서울특별시 강남구 영동대로 511 (삼성동)",
-  latitude: 37.5103955843,
-  longitude: 127.0610512042,
-  points: [
-    { name: "행사장 중심", latitude: 37.5103955843, longitude: 127.0610512042 },
-    { name: "삼성역 출입구", latitude: 37.508844, longitude: 127.06316 },
-    { name: "코엑스 동문", latitude: 37.51152, longitude: 127.05945 },
-    { name: "미디어월 관람 구역", latitude: 37.51098, longitude: 127.06142 },
-  ],
-};
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { FestivalPlan } from "../domain/types";
+import type { FestivalCandidate } from "../services/tourApiAdapter";
 
 type MapStatus = "missing-key" | "loading" | "ready" | "failed";
+
+interface VenueMapPanelProps {
+  plan: FestivalPlan;
+  selectedCandidate?: FestivalCandidate | null;
+}
+
+const defaultVenue = {
+  latitude: 37.5103955843,
+  longitude: 127.0610512042,
+};
 
 const naverMapKeyId = import.meta.env.VITE_NAVER_MAP_NCP_KEY_ID?.trim();
 
@@ -49,15 +48,28 @@ function loadNaverMaps(keyId: string) {
   });
 }
 
-export function VenueMapPanel() {
+export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<MapStatus>(naverMapKeyId ? "loading" : "missing-key");
+  const venue = useMemo(() => {
+    const latitude = Number(selectedCandidate?.mapY);
+    const longitude = Number(selectedCandidate?.mapX);
+
+    return {
+      name: plan.name,
+      address: plan.venueAddress,
+      latitude: Number.isFinite(latitude) ? latitude : defaultVenue.latitude,
+      longitude: Number.isFinite(longitude) ? longitude : defaultVenue.longitude,
+      hasCandidateCoordinates: Number.isFinite(latitude) && Number.isFinite(longitude),
+    };
+  }, [plan.name, plan.venueAddress, selectedCandidate?.mapX, selectedCandidate?.mapY]);
 
   useEffect(() => {
     if (!naverMapKeyId) return;
 
     let cancelled = false;
 
+    setStatus("loading");
     loadNaverMaps(naverMapKeyId)
       .then(() => {
         if (cancelled || !mapContainerRef.current || !window.naver?.maps) return;
@@ -69,12 +81,10 @@ export function VenueMapPanel() {
           zoom: 16,
         });
 
-        venue.points.forEach((point) => {
-          new maps.Marker({
-            map,
-            position: new maps.LatLng(point.latitude, point.longitude),
-            title: point.name,
-          });
+        new maps.Marker({
+          map,
+          position,
+          title: venue.name,
         });
 
         setStatus("ready");
@@ -86,7 +96,7 @@ export function VenueMapPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [venue.latitude, venue.longitude, venue.name]);
 
   const statusText =
     status === "ready"
@@ -107,7 +117,7 @@ export function VenueMapPanel() {
         {status !== "ready" ? (
           <div className="venue-map-fallback">
             <strong>{statusText}</strong>
-            <span>지도 키가 없거나 로드에 실패해 TourAPI 좌표 기준 위치 정보를 표시합니다.</span>
+            <span>지도 키가 없거나 로드에 실패하면 TourAPI 좌표 기준 위치 정보를 표시합니다.</span>
           </div>
         ) : null}
       </div>
@@ -115,13 +125,12 @@ export function VenueMapPanel() {
         <strong>{venue.name}</strong>
         <span>{venue.address}</span>
         <span>
-          좌표는 TourAPI 조회값 기준: {venue.longitude}, {venue.latitude}
+          좌표는 {venue.hasCandidateCoordinates ? "선택 후보" : "기본 예시"} 기준:{" "}
+          {venue.longitude}, {venue.latitude}
         </span>
       </div>
       <ul className="venue-map-points">
-        {venue.points.map((point) => (
-          <li key={point.name}>{point.name}</li>
-        ))}
+        <li>{venue.name}</li>
       </ul>
     </section>
   );

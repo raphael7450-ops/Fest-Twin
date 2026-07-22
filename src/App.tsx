@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DataBasisPanel } from "./components/DataBasisPanel";
+import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
 import { Heatmap } from "./components/Heatmap";
@@ -17,11 +18,37 @@ import { sampleTrendContext } from "./data/sampleTrends";
 import { createForecast } from "./services/forecast";
 import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
-import { createFallbackTourismContext, getTourismContext } from "./services/tourApiAdapter";
+import {
+  createFallbackTourismContext,
+  getFestivalCandidates,
+  getTourApiAreaCodes,
+  getTourismContext,
+  type FestivalCandidate,
+  type TourApiAreaCode,
+} from "./services/tourApiAdapter";
 
 export function App() {
   const [plan, setPlan] = useState(sampleFestivalPlan);
   const [selectedHour, setSelectedHour] = useState(20);
+  const [areaCodes, setAreaCodes] = useState<TourApiAreaCode[]>([]);
+  const [isAreaLoading, setIsAreaLoading] = useState(true);
+  const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
+  const candidatePlanKey = JSON.stringify({
+    region: plan.region,
+    startDate: plan.startDate,
+    endDate: plan.endDate,
+  });
+  const [candidateState, setCandidateState] = useState<{
+    planKey: string;
+    candidates: FestivalCandidate[];
+    isLoading: boolean;
+    errorMessage?: string;
+  }>(() => ({
+    planKey: candidatePlanKey,
+    candidates: [],
+    isLoading: true,
+  }));
   const tourApiPlanKey = JSON.stringify({
     region: plan.region,
     venueAddress: plan.venueAddress,
@@ -44,6 +71,76 @@ export function App() {
   );
   const tourism =
     tourismState.planKey === tourApiPlanKey ? tourismState.context : pendingTourism;
+
+  const candidates =
+    candidateState.planKey === candidatePlanKey ? candidateState.candidates : [];
+  const isCandidateLoading =
+    candidateState.planKey !== candidatePlanKey || candidateState.isLoading;
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    getTourApiAreaCodes({ signal: controller.signal })
+      .then((nextAreaCodes) => {
+        if (!controller.signal.aborted) {
+          setAreaCodes(nextAreaCodes);
+          setIsAreaLoading(false);
+        }
+      })
+      .catch((error: unknown) => {
+        if (
+          !controller.signal.aborted &&
+          !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+        ) {
+          setIsAreaLoading(false);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const planSnapshot = plan;
+    const timeoutId = window.setTimeout(() => {
+      setCandidateState((current) => ({
+        planKey: candidatePlanKey,
+        candidates: current.planKey === candidatePlanKey ? current.candidates : [],
+        isLoading: true,
+      }));
+
+      getFestivalCandidates(planSnapshot, { signal: controller.signal })
+        .then((nextCandidates) => {
+          if (!controller.signal.aborted) {
+            setCandidateState({
+              planKey: candidatePlanKey,
+              candidates: nextCandidates,
+              isLoading: false,
+            });
+          }
+        })
+        .catch((error: unknown) => {
+          if (
+            !controller.signal.aborted &&
+            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+          ) {
+            setCandidateState({
+              planKey: candidatePlanKey,
+              candidates: [],
+              isLoading: false,
+              errorMessage: "TourAPI 후보 조회에 실패해 신규 기획안 입력을 유지합니다.",
+            });
+          }
+        });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [candidatePlanKey]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,6 +181,18 @@ export function App() {
     () => createPlanningReport(plan, forecast, simulation),
     [forecast, plan, simulation],
   );
+  const handleSelectCandidate = (candidate: FestivalCandidate) => {
+    setSelectedCandidate(candidate);
+    setPlan((currentPlan) => ({
+      ...currentPlan,
+      name: candidate.title,
+      venueAddress: candidate.address,
+      startDate: candidate.startDate || currentPlan.startDate,
+      endDate: candidate.endDate || currentPlan.endDate,
+      keywords: Array.from(new Set([candidate.title, ...currentPlan.keywords])).slice(0, 6),
+    }));
+    setIsCandidatePanelOpen(false);
+  };
 
   return (
     <main className="app-shell">
@@ -96,7 +205,25 @@ export function App() {
       />
       <div className="workspace-grid">
         <aside className="left-column">
-          <PlanForm plan={plan} onPlanChange={setPlan} />
+          <PlanForm
+            plan={plan}
+            onPlanChange={(nextPlan) => {
+              setPlan(nextPlan);
+              if (
+                nextPlan.region !== plan.region ||
+                nextPlan.startDate !== plan.startDate ||
+                nextPlan.endDate !== plan.endDate
+              ) {
+                setSelectedCandidate(null);
+              }
+            }}
+            areaCodes={areaCodes}
+            isAreaLoading={isAreaLoading}
+            isCandidateLoading={isCandidateLoading}
+            candidateCount={candidates.length}
+            selectedCandidateTitle={selectedCandidate?.title}
+            onOpenCandidates={() => setIsCandidatePanelOpen(true)}
+          />
           <ScenarioControls
             hours={plan.operatingHours}
             selectedHour={selectedHour}
@@ -114,7 +241,7 @@ export function App() {
         </aside>
         <section className="main-column">
           <ForecastChart forecast={forecast} />
-          <VenueMapPanel />
+          <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
           <Heatmap plan={plan} simulation={simulation} />
           <SafetyLogisticsPanel
             plan={plan}
@@ -126,6 +253,15 @@ export function App() {
           <RiskPanel report={report} />
         </aside>
       </div>
+      <FestivalCandidatePanel
+        isOpen={isCandidatePanelOpen}
+        candidates={candidates}
+        isLoading={isCandidateLoading}
+        errorMessage={candidateState.errorMessage}
+        selectedCandidateId={selectedCandidate?.id}
+        onClose={() => setIsCandidatePanelOpen(false)}
+        onSelectCandidate={handleSelectCandidate}
+      />
       <ReportView report={report} plan={plan} forecast={forecast} />
     </main>
   );

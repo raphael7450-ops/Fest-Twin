@@ -12,6 +12,23 @@ interface TourApiOptions {
   signal?: AbortSignal;
 }
 
+export interface TourApiAreaCode {
+  code: string;
+  name: string;
+}
+
+export interface FestivalCandidate {
+  id: string;
+  title: string;
+  address: string;
+  startDate: string;
+  endDate: string;
+  mapX?: string;
+  mapY?: string;
+  imageUrl?: string;
+  searchScope: FestivalSearchScope;
+}
+
 interface TourApiItem {
   code?: string | number;
   name?: string;
@@ -121,6 +138,14 @@ function createTourApiUrl(
 
 function formatDateForTourApi(date: string) {
   return date.replace(/-/g, "");
+}
+
+function formatTourApiDateForInput(date: string | number | undefined) {
+  const value = String(date ?? "");
+
+  if (!/^\d{8}$/.test(value)) return "";
+
+  return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
 }
 
 function buildExactFestivalSearchParams(plan: FestivalPlan, areaCode: string | number) {
@@ -401,6 +426,89 @@ async function resolveAreaCode(
   ));
 
   return items.find((item) => item.name && plan.region.includes(item.name))?.code;
+}
+
+export async function getTourApiAreaCodes(
+  options: TourApiOptions = {},
+): Promise<TourApiAreaCode[]> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const items = await fetchTourApiItems(
+    "area-code",
+    { numOfRows: 50, pageNo: 1 },
+    fetchImpl,
+    options.signal,
+  );
+
+  return items
+    .filter((item) => hasText(item.code) && hasText(item.name))
+    .map((item) => ({
+      code: String(item.code),
+      name: String(item.name),
+    }));
+}
+
+function mapFestivalCandidate(
+  item: TourApiItem,
+  searchScope: FestivalSearchScope,
+): FestivalCandidate | undefined {
+  if (!isValidFestivalItem(item)) return undefined;
+
+  return {
+    id: String(item.contentid),
+    title: item.title,
+    address: item.addr1,
+    startDate: formatTourApiDateForInput(item.eventstartdate),
+    endDate: formatTourApiDateForInput(item.eventenddate),
+    mapX: hasFiniteNumber(item.mapx) ? String(item.mapx) : undefined,
+    mapY: hasFiniteNumber(item.mapy) ? String(item.mapy) : undefined,
+    imageUrl: item.firstimage,
+    searchScope,
+  };
+}
+
+export async function getFestivalCandidates(
+  plan: FestivalPlan,
+  options: TourApiOptions = {},
+): Promise<FestivalCandidate[]> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
+
+  if (!areaCode) return [];
+
+  let festivalSearchScope: FestivalSearchScope = "exact-period";
+  let festivalItems = await fetchTourApiItems(
+    "festivals",
+    buildExactFestivalSearchParams(plan, areaCode),
+    fetchImpl,
+    options.signal,
+  );
+
+  if (festivalItems.length === 0) {
+    festivalSearchScope = "annual-region";
+    festivalItems = await fetchTourApiItems(
+      "festivals",
+      buildAnnualFestivalSearchParams(plan, areaCode),
+      fetchImpl,
+      options.signal,
+    );
+  }
+
+  const detailItems = await Promise.all(
+    festivalItems.slice(0, 8).map((item) =>
+      fetchTourApiItems(
+        "detail",
+        { contentId: item.contentid },
+        fetchImpl,
+        options.signal,
+      )
+        .then((items) => ({ ...item, ...items[0] }))
+        .catch(() => item),
+    ),
+  );
+
+  return detailItems
+    .map((item) => mapFestivalCandidate(item, festivalSearchScope))
+    .filter((item): item is FestivalCandidate => Boolean(item));
 }
 
 export async function getTourismContext(
