@@ -6,9 +6,10 @@ import { Heatmap } from "./components/Heatmap";
 import { PlanForm } from "./components/PlanForm";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
+import { SafetyLogisticsPanel } from "./components/SafetyLogisticsPanel";
 import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
-import { SummaryCards } from "./components/SummaryCards";
+import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleTourismContext } from "./data/sampleTourApi";
@@ -87,7 +88,12 @@ export function App() {
   return (
     <main className="app-shell">
       <GovernmentHeader />
-      <SummaryCards forecast={forecast} simulation={simulation} report={report} />
+      <SummaryKpiCards
+        plan={plan}
+        forecast={forecast}
+        simulation={simulation}
+        tourism={tourism}
+      />
       <div className="workspace-grid">
         <aside className="left-column">
           <PlanForm plan={plan} onPlanChange={setPlan} />
@@ -110,12 +116,17 @@ export function App() {
           <ForecastChart forecast={forecast} />
           <VenueMapPanel />
           <Heatmap plan={plan} simulation={simulation} />
+          <SafetyLogisticsPanel
+            plan={plan}
+            forecast={forecast}
+            simulation={simulation}
+          />
         </section>
         <aside className="right-column">
           <RiskPanel report={report} />
         </aside>
       </div>
-      <ReportView report={report} />
+      <ReportView report={report} plan={plan} forecast={forecast} />
     </main>
   );
 }

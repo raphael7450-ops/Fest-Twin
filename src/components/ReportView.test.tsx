@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PlanningReport } from "../domain/types";
+import type { ForecastResult, PlanningReport } from "../domain/types";
+import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import { ReportView } from "./ReportView";
 
 const report: PlanningReport = {
@@ -25,6 +26,18 @@ const report: PlanningReport = {
   ],
 };
 
+const forecast: ForecastResult = {
+  expectedVisitors: 30000,
+  visitorsByHour: [
+    { hour: 18, visitors: 9000 },
+    { hour: 20, visitors: 12000 },
+  ],
+  peakHour: 20,
+  successScore: 82,
+  confidence: "medium",
+  reasons: [],
+};
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -33,7 +46,13 @@ describe("ReportView", () => {
   it("prints the planning report for public review", () => {
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => undefined);
 
-    render(<ReportView report={report} />);
+    render(
+      <ReportView
+        report={report}
+        plan={sampleFestivalPlan}
+        forecast={forecast}
+      />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "리포트 인쇄" }));
 

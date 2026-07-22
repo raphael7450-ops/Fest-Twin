@@ -1,11 +1,14 @@
-import type { PlanningReport } from "../domain/types";
+import type { FestivalPlan, ForecastResult, PlanningReport } from "../domain/types";
 import { PrintReportButton } from "./PrintReportButton";
+import { RoiEconomicImpact } from "./RoiEconomicImpact";
 
 interface ReportViewProps {
   report: PlanningReport;
+  plan: FestivalPlan;
+  forecast: ForecastResult;
 }
 
-export function ReportView({ report }: ReportViewProps) {
+export function ReportView({ report, plan, forecast }: ReportViewProps) {
   return (
     <section className="panel report-panel">
       <div className="panel-heading">
@@ -15,6 +18,7 @@ export function ReportView({ report }: ReportViewProps) {
           <PrintReportButton />
         </div>
       </div>
+      <RoiEconomicImpact plan={plan} forecast={forecast} />
       <p className="report-summary">{report.summary}</p>
       <p className="muted">{report.governmentReviewNote}</p>
       <div className="score-table">
