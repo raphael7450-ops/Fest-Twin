@@ -21,6 +21,24 @@ const sampleSimulationResult = createSimulation(
 );
 
 describe("metricEvidence", () => {
+  it("separates user input and derived calculation evidence for budget and ROI metrics", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+
+    const budgetDetails = evidence["budget-efficiency"].sourceDetails;
+    const roiDetails = evidence["economic-roi"].sourceDetails;
+
+    expect(budgetDetails.some((item) => item.sourceType === "user-input")).toBe(true);
+    expect(budgetDetails.some((item) => item.sourceType === "derived")).toBe(true);
+    expect(roiDetails.some((item) => item.sourceName.includes("ROI"))).toBe(true);
+    expect(JSON.stringify(roiDetails)).toContain("諛⑸Ц媛?1?몃떦 ?됯퇏 ?뚮퉬");
+  });
+
   it("includes safe source details for public-data, user-input, and derived values", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,
@@ -45,7 +63,7 @@ describe("metricEvidence", () => {
     const serialized = JSON.stringify(demandEvidence.sourceDetails);
 
     expect(serialized).toContain("contentid");
-    expect(serialized).toContain("eventStartDate");
+    expect(serialized).toContain("eventstartdate");
     expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
   });
 

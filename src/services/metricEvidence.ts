@@ -67,6 +67,101 @@ function effectFromScore(score: number): MetricEvidence["contributors"][number][
   return "risk";
 }
 
+function planInputDetails(plan: FestivalPlan): MetricEvidence["sourceDetails"] {
+  return [
+    {
+      sourceId: "user-plan-inputs",
+      sourceName: "異뺤젣 湲고쉷???낅젰媛?",
+      sourceType: "user-input",
+      statusLabel: "?ъ슜???낅젰 湲곗?",
+      calculationInputs: [
+        { label: "異뺤젣紐?", value: plan.name },
+        { label: "吏??", value: plan.region },
+        { label: "?됱궗??", value: plan.venueAddress },
+        { label: "湲곌컙", value: `${plan.startDate} ~ ${plan.endDate}` },
+        {
+          label: "珥??덉궛",
+          value: `${plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}諛깅쭔??`,
+        },
+        {
+          label: "?섏슜 ?몄썝",
+          value: `${plan.expectedCapacity.toLocaleString("ko-KR")}紐?`,
+        },
+      ],
+    },
+  ];
+}
+
+function derivedForecastDetails(
+  forecast: ForecastResult,
+  simulation: SimulationResult,
+): MetricEvidence["sourceDetails"] {
+  const peakVisitors = Math.max(
+    ...forecast.visitorsByHour.map((item) => item.visitors),
+    0,
+  );
+
+  return [
+    {
+      sourceId: "derived-forecast-simulation",
+      sourceName: "?덉륫 諛??쒕??덉씠???곗텻媛?",
+      sourceType: "derived",
+      statusLabel: "?쒖뒪???곗텻媛?",
+      calculationInputs: [
+        {
+          label: "?덉긽 諛⑸Ц媛?",
+          value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}紐?`,
+        },
+        { label: "?쇳겕 ?쒓컙", value: `${forecast.peakHour}:00` },
+        {
+          label: "?쇳겕 ?쒓컙? 諛⑸Ц媛?",
+          value: `${peakVisitors.toLocaleString("ko-KR")}紐?`,
+        },
+        {
+          label: "?쇱옟??湲곗? ?쒓컙",
+          value: `${simulation.hour}:00`,
+        },
+        {
+          label: "蹂묐ぉ ?꾨낫",
+          value: `${simulation.bottlenecks.length.toLocaleString("ko-KR")}怨?`,
+        },
+      ],
+    },
+  ];
+}
+
+function economicDerivedDetails(
+  economy: ReturnType<typeof createEconomicImpactMetrics>,
+): MetricEvidence["sourceDetails"] {
+  return [
+    {
+      sourceId: "derived-economic-roi",
+      sourceName: "ROI 寃쎌젣?④낵 ?곗텻媛?",
+      sourceType: "derived",
+      statusLabel: "?쒖뒪???곗텻媛?",
+      calculationInputs: [
+        {
+          label: "珥??ъ엯 ?덉궛",
+          value: `${economy.totalBudgetKrw.toLocaleString("ko-KR")}??`,
+        },
+        {
+          label: "?덉긽 吏???뚮퉬 李쎌텻??",
+          value: `${economy.expectedLocalSpendingKrw.toLocaleString("ko-KR")}??`,
+        },
+        {
+          label: "諛⑸Ц媛?1?몃떦 ?됯퇏 ?뚮퉬",
+          value: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}??`,
+        },
+        {
+          label: "ROI",
+          value: `${economy.roiMultiplier.toFixed(1)}諛?`,
+        },
+      ],
+      note: "?됯퇏 ?뚮퉬 ?④????꾩옱 ?곕え??怨듦났?곗씠??湲곕컲 ?덉떆 媛?뺢컪?대ŉ, ?ㅼ젣 吏?먯껜 ?뚮퉬 ?곗씠?곌? ?곌껐?섎㈃ 援먯껜?????덉뒿?덈떎.",
+    },
+  ];
+}
+
 export function createMetricEvidenceSet(
   plan: FestivalPlan,
   forecast: ForecastResult,
@@ -79,6 +174,15 @@ export function createMetricEvidenceSet(
   const economy = createEconomicImpactMetrics(plan, forecast);
   const confidence = sourceConfidence(tourism, trends);
   const limitations = fallbackLimitations(tourism, trends);
+  const tourApiDetails = tourism.sourceDetails ?? [];
+  const userInputDetails = planInputDetails(plan);
+  const forecastDerivedDetails = derivedForecastDetails(forecast, simulation);
+  const roiDetails = economicDerivedDetails(economy);
+  const commonSourceDetails = [
+    ...tourApiDetails,
+    ...userInputDetails,
+    ...forecastDerivedDetails,
+  ];
   const peakVisitors = Math.max(
     ...forecast.visitorsByHour.map((item) => item.visitors),
     0,
@@ -104,6 +208,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: commonSourceDetails,
       contributors: forecast.reasons.map((reason) => ({
         label: reason.label,
         value: `${reason.impact.toLocaleString("ko-KR")}점`,
@@ -128,6 +233,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: commonSourceDetails,
       contributors: [
         { label: "피크 시간", value: `${simulation.hour}:00`, effect: "neutral" },
         {
@@ -152,6 +258,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: [...userInputDetails, ...forecastDerivedDetails],
       contributors: [
         {
           label: "총 예산",
@@ -178,6 +285,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: [...tourApiDetails, ...userInputDetails],
       contributors: [
         {
           label: "주변 관광지",
@@ -208,6 +316,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: commonSourceDetails,
       contributors: [
         {
           label: "피크 방문객",
@@ -232,6 +341,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: commonSourceDetails,
       contributors: [
         {
           label: "최고 밀집도",
@@ -260,6 +370,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: commonSourceDetails,
       contributors: [
         {
           label: "주차 차오름",
@@ -290,6 +401,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
+      sourceDetails: [...userInputDetails, ...forecastDerivedDetails, ...roiDetails],
       contributors: [
         {
           label: "예상 소비 창출액",
