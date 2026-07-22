@@ -3,6 +3,7 @@ import type {
   ForecastResult,
   SimulationResult,
   TourismContext,
+  TrafficContext,
 } from "../domain/types";
 
 export type DensityRiskStatus = "normal" | "caution" | "warning";
@@ -32,6 +33,10 @@ export interface SafetyLogisticsMetrics {
   safetyStaff: number;
   medicalStaff: number;
   parkingOccupancyRate: number;
+  trafficRiskScore: number;
+  trafficRiskLabel: "낮음" | "보통" | "높음";
+  trafficRoadName: string;
+  parkingBaseOccupancyRate: number;
   peakDensity: number;
   peakVisitors: number;
 }
@@ -149,6 +154,7 @@ export function createSafetyLogisticsMetrics(
   plan: FestivalPlan,
   forecast: ForecastResult,
   simulation: SimulationResult,
+  traffic?: TrafficContext,
 ): SafetyLogisticsMetrics {
   const peakVisitors = Math.max(
     ...forecast.visitorsByHour.map((item) => item.visitors),
@@ -175,14 +181,23 @@ export function createSafetyLogisticsMetrics(
     180,
     plan.expectedCapacity * 0.08 + highRiskCells * 8,
   );
-  const parkingOccupancyRate = Math.round(
+  const parkingBaseOccupancyRate = Math.round(
     clamp((estimatedCars / assumedParkingCapacity) * 100, 0, 100),
+  );
+  const trafficRiskScore = traffic?.riskScore ?? 0;
+  const trafficParkingAdjustment = Math.round(trafficRiskScore * 0.12);
+  const parkingOccupancyRate = Math.round(
+    clamp(parkingBaseOccupancyRate + trafficParkingAdjustment, 0, 100),
   );
 
   return {
     safetyStaff,
     medicalStaff,
     parkingOccupancyRate,
+    trafficRiskScore,
+    trafficRiskLabel: traffic?.riskLabel ?? "낮음",
+    trafficRoadName: traffic?.links[0]?.roadName ?? "교통량 기준 도로 없음",
+    parkingBaseOccupancyRate,
     peakDensity,
     peakVisitors,
   };

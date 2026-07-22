@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import { sampleTrafficContext } from "../data/sampleTraffic";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
 import { createForecast } from "./forecast";
@@ -21,6 +22,27 @@ const sampleSimulationResult = createSimulation(
 );
 
 describe("metricEvidence", () => {
+  it("includes KTDB traffic evidence for parking and safety metrics", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleTrafficContext,
+    );
+
+    expect(JSON.stringify(evidence["parking-occupancy"].sourceDetails)).toContain(
+      "KTDB/View-T",
+    );
+    expect(JSON.stringify(evidence["safety-staff"].sourceDetails)).toContain(
+      "행사장 교통 위험도",
+    );
+    expect(JSON.stringify(evidence["medical-staff"].sourceDetails)).toContain(
+      "행사장 교통 위험도",
+    );
+  });
+
   it("scopes user input evidence to fields used by each metric", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,

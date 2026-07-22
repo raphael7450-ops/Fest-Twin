@@ -5,6 +5,7 @@ import type {
   MetricEvidence,
   MetricEvidenceId,
   SimulationResult,
+  TrafficContext,
   TourismContext,
   TrendContext,
 } from "../domain/types";
@@ -129,19 +130,45 @@ function economicDerivedDetails(
   );
 }
 
+function trafficDerivedDetails(
+  traffic?: TrafficContext,
+): MetricEvidence["sourceDetails"] {
+  if (!traffic) return [];
+
+  return [
+    ...traffic.sourceDetails,
+    {
+      sourceId: "derived-traffic-risk",
+      sourceName: "행사장 교통 위험도 산출값",
+      sourceType: "derived",
+      statusLabel: "시스템 산출값",
+      calculationInputs: [
+        { label: "위험도", value: `${traffic.riskScore}점` },
+        { label: "위험 단계", value: traffic.riskLabel },
+        { label: "기준 도로", value: traffic.links[0]?.roadName ?? "-" },
+        { label: "기준 연도", value: `${traffic.year}년` },
+        { label: "시간 조건", value: traffic.time },
+      ],
+      note: "KTDB/View-T 기준연도 교통량을 이용한 행사장 리스크이며 실시간 교통정보가 아닙니다.",
+    },
+  ];
+}
+
 export function createMetricEvidenceSet(
   plan: FestivalPlan,
   forecast: ForecastResult,
   simulation: SimulationResult,
   tourism: TourismContext,
   trends: TrendContext,
+  traffic?: TrafficContext,
 ): Record<MetricEvidenceId, MetricEvidence> {
   const summary = createSummaryKpiMetrics(plan, forecast, simulation, tourism);
-  const safety = createSafetyLogisticsMetrics(plan, forecast, simulation);
+  const safety = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic);
   const economy = createEconomicImpactMetrics(plan, forecast);
   const confidence = sourceConfidence(tourism, trends);
   const limitations = fallbackLimitations(tourism, trends);
   const tourismDetails = tourism.sourceDetails ?? [];
+  const trafficDetails = trafficDerivedDetails(traffic);
   const nearbyTourismDetails = tourismDetails.filter(
     (detail) => detail.sourceId.includes("nearby") || detail.sourceId === "sample-nearby-spots",
   );
@@ -377,7 +404,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...layoutUserInputs, ...safetyStaffDetails],
+      sourceDetails: [...layoutUserInputs, ...safetyStaffDetails, ...trafficDetails],
       contributors: [
         {
           label: "피크 방문객",
@@ -402,7 +429,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...layoutUserInputs, ...medicalStaffDetails],
+      sourceDetails: [...layoutUserInputs, ...medicalStaffDetails, ...trafficDetails],
       contributors: [
         {
           label: "최고 밀집도",
@@ -431,7 +458,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...parkingUserInputs, ...parkingDetails],
+      sourceDetails: [...parkingUserInputs, ...parkingDetails, ...trafficDetails],
       contributors: [
         {
           label: "주차 차오름",
