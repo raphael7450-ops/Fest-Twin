@@ -3,6 +3,7 @@ import type {
   ForecastResult,
   MetricEvidenceId,
   SimulationResult,
+  TrafficContext,
 } from "../domain/types";
 import { createSafetyLogisticsMetrics } from "../services/impactMetrics";
 import { EvidenceButton } from "./EvidenceButton";
@@ -11,6 +12,7 @@ interface SafetyLogisticsPanelProps {
   plan: FestivalPlan;
   forecast: ForecastResult;
   simulation: SimulationResult;
+  traffic?: TrafficContext;
   onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
@@ -18,9 +20,10 @@ export function SafetyLogisticsPanel({
   plan,
   forecast,
   simulation,
+  traffic,
   onOpenEvidence,
 }: SafetyLogisticsPanelProps) {
-  const metrics = createSafetyLogisticsMetrics(plan, forecast, simulation);
+  const metrics = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic);
 
   return (
     <section className="panel safety-logistics-panel">
@@ -61,11 +64,30 @@ export function SafetyLogisticsPanel({
           </div>
         </article>
 
+        <article className="safety-metric">
+          <span className="safety-icon safety-icon-amber" aria-hidden="true">
+            ↕
+          </span>
+          <div>
+            <div className="metric-inline-heading">
+              <span>접근 교통 위험도</span>
+              <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
+            </div>
+            <strong>{metrics.trafficRiskLabel}</strong>
+            <small>
+              {metrics.trafficRoadName} · {metrics.trafficRiskScore}점 · 기준년도 교통량
+            </small>
+          </div>
+        </article>
+
         <article className="safety-metric safety-metric-wide">
           <div className="capacity-header">
             <span>주차 수용 차오름 비율</span>
             <div className="metric-inline-heading">
-              <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
+              <EvidenceButton
+                label="주차 수용 차오름 비율 근거 보기"
+                onClick={() => onOpenEvidence("parking-occupancy")}
+              />
               <strong>{metrics.parkingOccupancyRate}%</strong>
             </div>
           </div>

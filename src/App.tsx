@@ -15,12 +15,14 @@ import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleTourismContext } from "./data/sampleTourApi";
+import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleTrendContext } from "./data/sampleTrends";
 import type { MetricEvidenceId } from "./domain/types";
 import { createForecast } from "./services/forecast";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
 import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
+import { getTrafficContext } from "./services/trafficAdapter";
 import {
   createFallbackTourismContext,
   getFestivalCandidates,
@@ -75,6 +77,19 @@ export function App() {
   );
   const tourism =
     tourismState.planKey === tourApiPlanKey ? tourismState.context : pendingTourism;
+  const trafficPlanKey = JSON.stringify({
+    region: plan.region,
+    venueAddress: plan.venueAddress,
+    name: plan.name,
+    startDate: plan.startDate,
+    selectedHour,
+  });
+  const [trafficState, setTrafficState] = useState(() => ({
+    planKey: trafficPlanKey,
+    context: sampleTrafficContext,
+  }));
+  const traffic =
+    trafficState.planKey === trafficPlanKey ? trafficState.context : sampleTrafficContext;
 
   const candidates =
     candidateState.planKey === candidatePlanKey ? candidateState.candidates : [];
@@ -173,6 +188,35 @@ export function App() {
     // The serialized key intentionally excludes budget, capacity, facilities, and programs.
   }, [tourApiPlanKey]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const planSnapshot = plan;
+    const timeoutId = window.setTimeout(() => {
+      getTrafficContext(planSnapshot, {
+        signal: controller.signal,
+        hour: selectedHour,
+      })
+        .then((nextTraffic) => {
+          if (!controller.signal.aborted) {
+            setTrafficState({ planKey: trafficPlanKey, context: nextTraffic });
+          }
+        })
+        .catch((error: unknown) => {
+          if (
+            !controller.signal.aborted &&
+            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+          ) {
+            console.error("Traffic context loading failed", error);
+          }
+        });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [trafficPlanKey]);
+
   const forecast = useMemo(
     () => createForecast(plan, tourism, sampleTrendContext),
     [plan, tourism],
@@ -182,8 +226,8 @@ export function App() {
     [forecast, plan, selectedHour],
   );
   const metricEvidence = useMemo(
-    () => createMetricEvidenceSet(plan, forecast, simulation, tourism, sampleTrendContext),
-    [forecast, plan, simulation, tourism],
+    () => createMetricEvidenceSet(plan, forecast, simulation, tourism, sampleTrendContext, traffic),
+    [forecast, plan, simulation, tourism, traffic],
   );
   const report = useMemo(
     () => createPlanningReport(plan, forecast, simulation),
@@ -256,6 +300,7 @@ export function App() {
             plan={plan}
             forecast={forecast}
             simulation={simulation}
+            traffic={traffic}
             onOpenEvidence={setSelectedEvidenceId}
           />
         </section>

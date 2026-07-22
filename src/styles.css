@@ -903,6 +903,11 @@ a:focus-visible {
   color: var(--color-red);
 }
 
+.safety-icon-amber {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
 .safety-metric span,
 .safety-metric strong,
 .safety-metric small {
@@ -1381,6 +1386,11 @@ a:focus-visible {
 .source-type-sample {
   background: #fff7ed;
   color: #c2410c;
+}
+
+.source-type-ktdb {
+  background: #eef6ff;
+  color: #0369a1;
 }
 
 .source-type-user-input {

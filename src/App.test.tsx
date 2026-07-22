@@ -2,11 +2,18 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleTourismContext } from "./data/sampleTourApi";
+import { sampleTrafficContext } from "./data/sampleTraffic";
 
-const { getTourismContextMock, getTourApiAreaCodesMock, getFestivalCandidatesMock } = vi.hoisted(() => ({
+const {
+  getTourismContextMock,
+  getTourApiAreaCodesMock,
+  getFestivalCandidatesMock,
+  getTrafficContextMock,
+} = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
   getFestivalCandidatesMock: vi.fn(),
+  getTrafficContextMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -16,6 +23,11 @@ vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
   getFestivalCandidates: getFestivalCandidatesMock,
 }));
 
+vi.mock("./services/trafficAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/trafficAdapter")>()),
+  getTrafficContext: getTrafficContextMock,
+}));
+
 import { App } from "./App";
 
 describe("App", () => {
@@ -23,7 +35,9 @@ describe("App", () => {
     getTourismContextMock.mockReset();
     getTourApiAreaCodesMock.mockReset();
     getFestivalCandidatesMock.mockReset();
+    getTrafficContextMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
+    getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
     getTourApiAreaCodesMock.mockResolvedValue([
       { code: "1", name: "서울" },
       { code: "1-legacy", name: "서울시" },
@@ -123,6 +137,21 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "근거 닫기" }));
 
     expect(screen.queryByRole("dialog", { name: "지표 산출 근거" })).not.toBeInTheDocument();
+  });
+
+  it("shows KTDB access traffic risk in the safety logistics panel and evidence drawer", async () => {
+    render(<App />);
+
+    expect(await screen.findByText("접근 교통 위험도")).toBeInTheDocument();
+    expect(screen.getByText(/테헤란로|세종대로/)).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /주차 수용 차오름 비율 근거 보기/ }),
+    );
+
+    expect(await screen.findByText("사용 데이터 상세")).toBeInTheDocument();
+    expect(screen.getByText(/KTDB\/View-T/)).toBeInTheDocument();
+    expect(screen.getByText(/LINKID/)).toBeInTheDocument();
   });
 
   it("shows exact source detail records in the evidence drawer", async () => {
