@@ -71,20 +71,20 @@ function planInputDetails(plan: FestivalPlan): MetricEvidence["sourceDetails"] {
   return [
     {
       sourceId: "user-plan-inputs",
-      sourceName: "異뺤젣 湲고쉷???낅젰媛?",
+      sourceName: "축제 기획안 입력값",
       sourceType: "user-input",
-      statusLabel: "?ъ슜???낅젰 湲곗?",
+      statusLabel: "사용자 입력 기준",
       calculationInputs: [
-        { label: "異뺤젣紐?", value: plan.name },
-        { label: "吏??", value: plan.region },
-        { label: "?됱궗??", value: plan.venueAddress },
-        { label: "湲곌컙", value: `${plan.startDate} ~ ${plan.endDate}` },
+        { label: "축제명", value: plan.name },
+        { label: "지역", value: plan.region },
+        { label: "행사장", value: plan.venueAddress },
+        { label: "기간", value: `${plan.startDate} ~ ${plan.endDate}` },
         {
-          label: "珥??덉궛",
+          label: "총 예산",
           value: `${plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}諛깅쭔??`,
         },
         {
-          label: "?섏슜 ?몄썝",
+          label: "수용 인원",
           value: `${plan.expectedCapacity.toLocaleString("ko-KR")}紐?`,
         },
       ],
@@ -104,25 +104,25 @@ function derivedForecastDetails(
   return [
     {
       sourceId: "derived-forecast-simulation",
-      sourceName: "?덉륫 諛??쒕??덉씠???곗텻媛?",
+      sourceName: "예측 및 시뮬레이션 산출값",
       sourceType: "derived",
-      statusLabel: "?쒖뒪???곗텻媛?",
+      statusLabel: "시스템 산출값",
       calculationInputs: [
         {
-          label: "?덉긽 諛⑸Ц媛?",
+          label: "예상 방문객",
           value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}紐?`,
         },
-        { label: "?쇳겕 ?쒓컙", value: `${forecast.peakHour}:00` },
+        { label: "피크 시간", value: `${forecast.peakHour}:00` },
         {
-          label: "?쇳겕 ?쒓컙? 諛⑸Ц媛?",
+          label: "피크 시간대 방문객",
           value: `${peakVisitors.toLocaleString("ko-KR")}紐?`,
         },
         {
-          label: "?쇱옟??湲곗? ?쒓컙",
+          label: "혼잡도 기준 시간",
           value: `${simulation.hour}:00`,
         },
         {
-          label: "蹂묐ぉ ?꾨낫",
+          label: "병목 후보",
           value: `${simulation.bottlenecks.length.toLocaleString("ko-KR")}怨?`,
         },
       ],
@@ -136,20 +136,20 @@ function economicDerivedDetails(
   return [
     {
       sourceId: "derived-economic-roi",
-      sourceName: "ROI 寃쎌젣?④낵 ?곗텻媛?",
+      sourceName: "ROI 경제효과 산출값",
       sourceType: "derived",
-      statusLabel: "?쒖뒪???곗텻媛?",
+      statusLabel: "시스템 산출값",
       calculationInputs: [
         {
-          label: "珥??ъ엯 ?덉궛",
+          label: "총 투입 예산",
           value: `${economy.totalBudgetKrw.toLocaleString("ko-KR")}??`,
         },
         {
-          label: "?덉긽 吏???뚮퉬 李쎌텻??",
+          label: "예상 지역 소비 창출액",
           value: `${economy.expectedLocalSpendingKrw.toLocaleString("ko-KR")}??`,
         },
         {
-          label: "諛⑸Ц媛?1?몃떦 ?됯퇏 ?뚮퉬",
+          label: "방문객 1인당 평균 소비",
           value: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}??`,
         },
         {
@@ -157,7 +157,7 @@ function economicDerivedDetails(
           value: `${economy.roiMultiplier.toFixed(1)}諛?`,
         },
       ],
-      note: "?됯퇏 ?뚮퉬 ?④????꾩옱 ?곕え??怨듦났?곗씠??湲곕컲 ?덉떆 媛?뺢컪?대ŉ, ?ㅼ젣 吏?먯껜 ?뚮퉬 ?곗씠?곌? ?곌껐?섎㈃ 援먯껜?????덉뒿?덈떎.",
+      note: "방문객 1인당 평균 소비는 데모용 공공 데이터 기반 가정값이며, 실제 지역 소비 데이터와 연동하면 교체할 수 있습니다.",
     },
   ];
 }

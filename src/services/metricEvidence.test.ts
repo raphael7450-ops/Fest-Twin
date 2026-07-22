@@ -36,7 +36,7 @@ describe("metricEvidence", () => {
     expect(budgetDetails.some((item) => item.sourceType === "user-input")).toBe(true);
     expect(budgetDetails.some((item) => item.sourceType === "derived")).toBe(true);
     expect(roiDetails.some((item) => item.sourceName.includes("ROI"))).toBe(true);
-    expect(JSON.stringify(roiDetails)).toContain("諛⑸Ц媛?1?몃떦 ?됯퇏 ?뚮퉬");
+    expect(JSON.stringify(roiDetails)).toContain("방문객 1인당 평균 소비");
   });
 
   it("includes safe source details for public-data, user-input, and derived values", () => {
