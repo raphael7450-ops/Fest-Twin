@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
-    "build:sites": "npm run build && node scripts/prepare-sites-build.mjs",
     "start": "node server/index.js",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts"
