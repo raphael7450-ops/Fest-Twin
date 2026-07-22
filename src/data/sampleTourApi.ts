@@ -12,27 +12,47 @@ export const sampleTourismContext: TourismContext = {
   },
   sourceDetails: [
     {
-      sourceId: "sample-festival-detail",
-      sourceName: "TourAPI 異뺤젣 ?곸꽭 ?섑뵆",
-      sourceType: "tourapi",
-      statusLabel: "?섑뵆 ?곗씠???ъ슜",
-      retrievedAt: "?섑뵆 湲곗?",
-      endpoint: "/api/tour/detail",
-      query: [{ label: "contentid", value: "sample-festival" }],
+      sourceId: "sample-nearby-spots",
+      sourceName: "샘플 주변 관광지",
+      sourceType: "sample",
+      statusLabel: "샘플 보완 데이터",
+      records: [
+        { label: "코엑스", fields: [{ label: "매력도 점수", value: "92점" }] },
+        { label: "스타필드 코엑스몰", fields: [{ label: "매력도 점수", value: "86점" }] },
+        { label: "봉은사", fields: [{ label: "매력도 점수", value: "78점" }] },
+        { label: "무역센터 일대", fields: [{ label: "매력도 점수", value: "74점" }] },
+      ],
+      note: "TourAPI 주변 관광지 조회를 사용할 수 없을 때 계산에 사용하는 비개인 샘플입니다.",
+    },
+    {
+      sourceId: "sample-similar-festivals",
+      sourceName: "샘플 유사 축제",
+      sourceType: "sample",
+      statusLabel: "샘플 보완 데이터",
       records: [
         {
-          label: "?섑뵆 異뺤젣",
+          label: "강남 미디어 윈터페스타",
           fields: [
-            { label: "contentid", value: "sample-festival" },
-            { label: "title", value: "?쒖슱鍮쏆큹濡깆텞???덉떆" },
-            { label: "addr1", value: "?쒖슱?밸퀎??醫낅줈援??몄쥌?濡??쇰?" },
-            { label: "eventstartdate", value: "2026-12-01" },
-            { label: "eventenddate", value: "2026-12-31" },
-            { label: "mapx/mapy", value: "126.9769, 37.5759" },
+            { label: "추정 방문객", value: "54,000명" },
+            { label: "주제 유사도", value: "0.96" },
+          ],
+        },
+        {
+          label: "서울라이트 광화문",
+          fields: [
+            { label: "추정 방문객", value: "61,000명" },
+            { label: "주제 유사도", value: "0.82" },
+          ],
+        },
+        {
+          label: "도심 미디어아트 축제",
+          fields: [
+            { label: "추정 방문객", value: "32,000명" },
+            { label: "주제 유사도", value: "0.68" },
           ],
         },
       ],
-      note: "TourAPI ?곌껐??遺덇??ν븳 ?섍꼍?먯꽌???곕え ?먮쫫???뺤씤?섍린 ?꾪븳 ?섑뵆 洹쇨굅?낅땲??",
+      note: "TourAPI 유사 축제 조회를 사용할 수 없을 때 수요 계산에 사용하는 비개인 샘플입니다.",
     },
   ],
   nearbySpots: [

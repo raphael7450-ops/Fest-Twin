@@ -126,6 +126,22 @@ describe("App", () => {
   });
 
   it("shows exact source detail records in the evidence drawer", async () => {
+    getTourismContextMock.mockResolvedValue({
+      ...sampleTourismContext,
+      sourceDetails: [
+        ...(sampleTourismContext.sourceDetails ?? []),
+        {
+          sourceId: "six-used-records",
+          sourceName: "계산 사용 레코드",
+          sourceType: "sample",
+          statusLabel: "샘플 계산 입력",
+          records: Array.from({ length: 6 }, (_, index) => ({
+            label: `근거 레코드 ${index + 1}`,
+            fields: [{ label: "값", value: String(index + 1) }],
+          })),
+        },
+      ],
+    });
     render(<App />);
 
     await screen.findByText(/축제 기획안 입력/);
@@ -135,10 +151,11 @@ describe("App", () => {
     const drawer = await screen.findByRole("dialog", { name: "지표 산출 근거" });
 
     expect(within(drawer).getByText("사용 데이터 상세")).toBeInTheDocument();
-    expect(within(drawer).getByText(/TourAPI/, { selector: "strong" })).toBeInTheDocument();
-    expect(within(drawer).getAllByText(/contentid/, { selector: "dt" }).length).toBeGreaterThan(0);
+    expect(within(drawer).getByText("샘플 주변 관광지", { selector: "strong" })).toBeInTheDocument();
+    expect(within(drawer).getAllByText("매력도 점수", { selector: "dt" }).length).toBeGreaterThan(0);
     expect(within(drawer).getByText(/사용자 입력 기준/)).toBeInTheDocument();
     expect(within(drawer).getByText(/시스템 산출값/)).toBeInTheDocument();
+    expect(await within(drawer).findByText("근거 레코드 6")).toBeInTheDocument();
   });
 
   it("redacts contaminated source detail values in the evidence drawer", async () => {
@@ -147,23 +164,30 @@ describe("App", () => {
       sourceDetails: [
         {
           sourceId: "contaminated-source",
-          sourceName: "Contaminated source",
+          sourceName: "serviceKey drawer-source-name-secret",
           sourceType: "tourapi",
-          statusLabel: "Live",
-          endpoint: "https://data.example.test/events?serviceKey=drawer-endpoint-secret",
+          statusLabel: "clientSecret drawer-status-secret",
+          retrievedAt: "Authorization drawer-retrieved-secret",
+          endpoint: "https://data.example.test/events?Cookie=drawer-endpoint-secret",
           query: [
-            { label: "Authorization", value: "Bearer drawer-query-secret" },
+            { label: "Authorization drawer-query-label-secret", value: "drawer-query-secret" },
             { label: "Relative URL", value: "/events?clientSecret=drawer-relative-secret" },
           ],
           records: [
             {
-              label: "Record",
-              fields: [{ label: "Cookie", value: "session=drawer-record-secret" }],
+              label: "serviceKey drawer-record-label-secret",
+              fields: [
+                { label: "Cookie drawer-field-label-secret", value: "drawer-record-secret" },
+              ],
             },
           ],
           calculationInputs: [
-            { label: "Credential", value: "clientSecret=drawer-calculation-secret" },
+            {
+              label: "Authorization drawer-calculation-label-secret",
+              value: "drawer-calculation-secret",
+            },
           ],
+          note: "Cookie drawer-note-secret",
         },
       ],
     });
@@ -174,9 +198,8 @@ describe("App", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "근거 보기" })[0]);
 
     const drawer = await screen.findByRole("dialog", { name: "지표 산출 근거" });
-    expect(within(drawer).getByText("Contaminated source")).toBeInTheDocument();
-    expect(within(drawer).queryByText(/drawer-(endpoint|query|relative|record|calculation)-secret/)).not.toBeInTheDocument();
-    expect(within(drawer).getAllByText("[비공개]").length).toBeGreaterThanOrEqual(5);
+    expect(within(drawer).queryByText(/drawer-[a-z-]+-secret/)).not.toBeInTheDocument();
+    expect(within(drawer).getAllByText("[비공개]").length).toBeGreaterThanOrEqual(12);
   });
 
   it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {

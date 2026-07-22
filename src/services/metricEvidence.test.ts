@@ -21,7 +21,7 @@ const sampleSimulationResult = createSimulation(
 );
 
 describe("metricEvidence", () => {
-  it("separates user input and derived calculation evidence for budget and ROI metrics", () => {
+  it("scopes user input evidence to fields used by each metric", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,
       sampleForecastResult,
@@ -30,16 +30,34 @@ describe("metricEvidence", () => {
       sampleTrendContext,
     );
 
-    const budgetDetails = evidence["budget-efficiency"].sourceDetails;
-    const roiDetails = evidence["economic-roi"].sourceDetails;
+    const userInputLabels = (metricId: keyof typeof evidence) =>
+      evidence[metricId].sourceDetails
+        .filter((item) => item.sourceType === "user-input")
+        .flatMap((item) => item.calculationInputs?.map((field) => field.label) ?? []);
 
-    expect(budgetDetails.some((item) => item.sourceType === "user-input")).toBe(true);
-    expect(budgetDetails.some((item) => item.sourceType === "derived")).toBe(true);
-    expect(roiDetails.some((item) => item.sourceName.includes("ROI"))).toBe(true);
-    expect(JSON.stringify(roiDetails)).toContain("방문객 1인당 평균 소비");
+    expect(userInputLabels("budget-efficiency")).toEqual(["총 예산"]);
+    expect(userInputLabels("economic-roi")).toEqual(["총 예산"]);
+    expect(userInputLabels("commercial-spillover")).toEqual(["지역", "행사장"]);
+    expect(userInputLabels("parking-occupancy")).toEqual([
+      "수용 인원",
+      "격자 크기",
+      "시설 수",
+    ]);
+    expect(userInputLabels("demand-index")).toEqual([
+      "지역",
+      "기간",
+      "주제 키워드",
+      "총 예산",
+      "수용 인원",
+      "프로그램 매력도",
+      "출입구 수",
+    ]);
+    expect(JSON.stringify(evidence["economic-roi"].sourceDetails)).toContain(
+      "방문객 1인당 평균 소비",
+    );
   });
 
-  it("includes safe source details for public-data, user-input, and derived values", () => {
+  it("includes safe source details for sample, user-input, and derived values", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,
       sampleForecastResult,
@@ -50,9 +68,7 @@ describe("metricEvidence", () => {
 
     const demandEvidence = evidence["demand-index"];
 
-    expect(demandEvidence.sourceDetails.map((item) => item.sourceType)).toContain(
-      "tourapi",
-    );
+    expect(demandEvidence.sourceDetails.map((item) => item.sourceType)).toContain("sample");
     expect(demandEvidence.sourceDetails.map((item) => item.sourceType)).toContain(
       "user-input",
     );
@@ -62,8 +78,11 @@ describe("metricEvidence", () => {
 
     const serialized = JSON.stringify(demandEvidence.sourceDetails);
 
-    expect(serialized).toContain("contentid");
-    expect(serialized).toContain("eventstartdate");
+    expect(serialized).toContain("샘플 주변 관광지");
+    expect(serialized).toContain("샘플 유사 축제");
+    expect(serialized).toContain("백만원");
+    expect(serialized).toContain("명");
+    expect(serialized).not.toMatch(/諛깅쭔|紐|怨\?|異뺤|\uFFFD/);
     expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
   });
 

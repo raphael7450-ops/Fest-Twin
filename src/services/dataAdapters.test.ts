@@ -55,6 +55,23 @@ describe("public data adapters", () => {
     expect(tourism.provenance.basisText).toContain("샘플");
     expect(tourism.provenance.fallbackReason).toBe("테스트 실패");
     expect(tourism.nearbySpots.every((spot) => spot.category.includes("서울"))).toBe(true);
+    expect(tourism.sourceDetails?.every((detail) => detail.sourceType === "sample")).toBe(true);
+    expect(tourism.sourceDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceId: "sample-nearby-spots",
+          records: expect.arrayContaining([
+            expect.objectContaining({ label: tourism.nearbySpots[0].name }),
+          ]),
+        }),
+        expect.objectContaining({
+          sourceId: "sample-similar-festivals",
+          records: expect.arrayContaining([
+            expect.objectContaining({ label: tourism.similarFestivals[0].name }),
+          ]),
+        }),
+      ]),
+    );
   });
 
   it("orchestrates all four TourAPI proxy endpoints without exposing a browser service key", async () => {
@@ -201,31 +218,20 @@ describe("public data adapters", () => {
     expect(urls[2].searchParams.get("contentId")).toBe("100");
   });
 
-  it("attaches safe source details to festival candidates", async () => {
+  it("attaches every processed candidate record with separate search and detail attribution", async () => {
+    const festivalItems = Array.from({ length: 8 }, (_, index) => ({
+      contentid: String(3439947 + index),
+      title: `축제 후보 ${index + 1}`,
+      addr1: "서울특별시 강남구",
+      eventstartdate: "20261201",
+      eventenddate: "20261231",
+      mapx: "127.0276",
+      mapy: "37.4979",
+    }));
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),
-      tourApiPayload([
-        {
-          contentid: "3439947",
-          title: "강남 미디어 윈터페스타",
-          addr1: "서울특별시 강남구",
-          eventstartdate: "20261201",
-          eventenddate: "20261231",
-          mapx: "127.0276",
-          mapy: "37.4979",
-        },
-      ]),
-      tourApiPayload([
-        {
-          contentid: "3439947",
-          title: "강남 미디어 윈터페스타",
-          addr1: "서울특별시 강남구",
-          eventstartdate: "20261201",
-          eventenddate: "20261231",
-          mapx: "127.0276",
-          mapy: "37.4979",
-        },
-      ]),
+      tourApiPayload(festivalItems),
+      ...festivalItems.map((item) => tourApiPayload([{ ...item, overview: "상세 설명" }])),
     ];
     const fetchImpl = vi.fn(async () => jsonResponse(responses.shift()));
 
@@ -233,14 +239,27 @@ describe("public data adapters", () => {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
-    expect(candidates[0].sourceDetails?.[0]).toMatchObject({
+    const sourceDetails = candidates[0].sourceDetails ?? [];
+    const searchDetail = sourceDetails.find(
+      (detail) => detail.endpoint === "/api/tour/festivals",
+    );
+    const festivalDetails = sourceDetails.filter(
+      (detail) => detail.endpoint === "/api/tour/detail",
+    );
+
+    expect(candidates).toHaveLength(8);
+    expect(searchDetail).toMatchObject({
       sourceName: "TourAPI 축제 정보 조회",
       sourceType: "tourapi",
       endpoint: "/api/tour/festivals",
     });
-    expect(JSON.stringify(candidates[0].sourceDetails)).toContain("3439947");
-    expect(JSON.stringify(candidates[0].sourceDetails)).toContain("eventStartDate");
-    expect(JSON.stringify(candidates[0].sourceDetails)).not.toMatch(/serviceKey/i);
+    expect(searchDetail?.records).toHaveLength(8);
+    expect(festivalDetails).toHaveLength(8);
+    expect(
+      festivalDetails.map((detail) => detail.query?.find((field) => field.label === "contentId")?.value),
+    ).toEqual(festivalItems.map((item) => item.contentid));
+    expect(JSON.stringify(sourceDetails)).toContain("eventStartDate");
+    expect(JSON.stringify(sourceDetails)).not.toMatch(/serviceKey/i);
   });
 
   it("keeps source details on live tourism context lookup", async () => {
@@ -266,17 +285,17 @@ describe("public data adapters", () => {
           mapy: "37.4979",
         },
       ]),
-      tourApiPayload([
-        {
-          contentid: "200",
-          title: "코엑스",
+      tourApiPayload(
+        Array.from({ length: 6 }, (_, index) => ({
+          contentid: String(200 + index),
+          title: `주변 관광지 ${index + 1}`,
           contenttypeid: "12",
           addr1: "서울특별시 강남구 영동대로",
-          dist: "750",
+          dist: String(750 + index * 100),
           mapx: "127.0588",
           mapy: "37.5126",
-        },
-      ]),
+        })),
+      ),
     ];
     const fetchImpl = vi.fn(async () => jsonResponse(responses.shift()));
 
@@ -285,9 +304,24 @@ describe("public data adapters", () => {
     });
 
     const serialized = JSON.stringify(tourism.sourceDetails);
+    const festivalSearch = tourism.sourceDetails?.find(
+      (detail) => detail.endpoint === "/api/tour/festivals",
+    );
+    const festivalDetail = tourism.sourceDetails?.find(
+      (detail) => detail.endpoint === "/api/tour/detail",
+    );
+    const nearbyDetail = tourism.sourceDetails?.find(
+      (detail) => detail.endpoint === "/api/tour/nearby",
+    );
 
     expect(serialized).toContain("/api/tour/festivals");
+    expect(festivalSearch?.query).toEqual(
+      expect.arrayContaining([{ label: "eventStartDate", value: "20251219" }]),
+    );
+    expect(festivalDetail?.query).toEqual([{ label: "contentId", value: "3439947" }]);
     expect(serialized).toContain("/api/tour/nearby");
+    expect(nearbyDetail?.records).toHaveLength(6);
+    expect(tourism.nearbySpots).toHaveLength(6);
     expect(serialized).toContain("contentid");
     expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
   });
@@ -400,8 +434,14 @@ describe("public data adapters", () => {
       expect.arrayContaining([
         expect.objectContaining({
           endpoint: "/api/tour/nearby",
-          statusLabel: "Not queried: festival coordinates unavailable",
+          statusLabel: "조회하지 않음: 축제 좌표 없음",
         }),
+        expect.objectContaining({ sourceId: "sample-nearby-spots" }),
+      ]),
+    );
+    expect(tourism.sourceDetails).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ sourceId: "sample-similar-festivals" }),
       ]),
     );
   });

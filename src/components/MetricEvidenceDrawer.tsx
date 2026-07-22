@@ -65,36 +65,38 @@ export function MetricEvidenceDrawer({
                 <article className="source-detail-card" key={source.sourceId}>
                   <div className="source-detail-heading">
                     <div>
-                      <strong>{source.sourceName}</strong>
+                      <strong>{safeEvidenceText(source.sourceName)}</strong>
                       {source.endpoint ? <span>{safeEvidenceText(source.endpoint)}</span> : null}
                     </div>
                     <em className={`source-type source-type-${source.sourceType}`}>
-                      {source.statusLabel}
+                      {safeEvidenceText(source.statusLabel)}
                     </em>
                   </div>
 
                   {source.retrievedAt ? (
-                    <p className="source-detail-meta">조회 기준: {source.retrievedAt}</p>
+                    <p className="source-detail-meta">
+                      조회 기준: {safeEvidenceText(source.retrievedAt)}
+                    </p>
                   ) : null}
 
                   {source.query && source.query.length > 0 ? (
                     <dl className="source-detail-grid">
                       {source.query.map((field) => (
                         <div key={`${source.sourceId}-query-${field.label}`}>
-                          <dt>{field.label}</dt>
+                          <dt>{safeEvidenceText(field.label)}</dt>
                           <dd>{safeEvidenceText(field.value, field.label)}</dd>
                         </div>
                       ))}
                     </dl>
                   ) : null}
 
-                  {source.records?.slice(0, 5).map((record) => (
+                  {source.records?.map((record) => (
                     <div className="source-record" key={`${source.sourceId}-${record.label}`}>
-                      <b>{record.label}</b>
+                      <b>{safeEvidenceText(record.label)}</b>
                       <dl className="source-detail-grid">
                         {record.fields.map((field) => (
                           <div key={`${source.sourceId}-${record.label}-${field.label}`}>
-                            <dt>{field.label}</dt>
+                            <dt>{safeEvidenceText(field.label)}</dt>
                             <dd>{safeEvidenceText(field.value, field.label)}</dd>
                           </div>
                         ))}
@@ -106,14 +108,16 @@ export function MetricEvidenceDrawer({
                     <dl className="source-detail-grid">
                       {source.calculationInputs.map((field) => (
                         <div key={`${source.sourceId}-input-${field.label}`}>
-                          <dt>{field.label}</dt>
+                          <dt>{safeEvidenceText(field.label)}</dt>
                           <dd>{safeEvidenceText(field.value, field.label)}</dd>
                         </div>
                       ))}
                     </dl>
                   ) : null}
 
-                  {source.note ? <p className="source-detail-note">{source.note}</p> : null}
+                  {source.note ? (
+                    <p className="source-detail-note">{safeEvidenceText(source.note)}</p>
+                  ) : null}
                 </article>
               ))}
             </div>

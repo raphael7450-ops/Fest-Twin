@@ -68,6 +68,10 @@ type ValidNearbyItem = TourApiItem & {
   dist: string | number;
 };
 
+const MAX_FESTIVAL_CANDIDATES = 8;
+const MAX_SIMILAR_FESTIVALS = 5;
+const MAX_NEARBY_SPOTS = 6;
+
 const SENSITIVE_QUERY_KEYS = new Set([
   "servicekey",
   "clientsecret",
@@ -151,6 +155,39 @@ function nearbySpotRecordFields(item: TourApiItem) {
     { label: "dist", value: item.dist ? `${item.dist}m` : "-" },
     { label: "mapx/mapy", value: `${item.mapx ?? "-"}, ${item.mapy ?? "-"}` },
   ];
+}
+
+function sampleSourceDetails(sourceIds: string[]) {
+  return (sampleTourismContext.sourceDetails ?? []).filter((detail) =>
+    sourceIds.includes(detail.sourceId),
+  );
+}
+
+function createFestivalDetailSources(
+  sourceIdPrefix: string,
+  items: TourApiItem[],
+  statuses?: boolean[],
+) {
+  return items.map((item, index) => {
+    const succeeded = statuses?.[index] ?? true;
+
+    return createTourApiSourceDetail({
+      sourceId: `${sourceIdPrefix}-${String(item.contentid ?? index)}`,
+      sourceName: "TourAPI 축제 상세 조회",
+      endpoint: "/api/tour/detail",
+      query: { contentId: item.contentid },
+      records: [
+        {
+          label: String(item.title ?? item.contentid ?? "축제 상세"),
+          fields: festivalRecordFields(item),
+        },
+      ],
+      statusLabel: succeeded ? "실시간 조회 성공" : "상세 조회 실패: 검색 결과 사용",
+      note: succeeded
+        ? undefined
+        : "상세 조회에 실패해 축제 검색 응답의 공개 필드만 후보에 사용했습니다.",
+    });
+  });
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -416,10 +453,13 @@ export function mapTourApiItemsToTourismContext(
     sourceDetails?: MetricEvidenceSourceDetail[];
   } = {},
 ): TourismContext {
-  const nearbySpots = nearbyItems.filter(isValidNearbyItem).slice(0, 6).map(mapNearbySpot);
+  const nearbySpots = nearbyItems
+    .filter(isValidNearbyItem)
+    .slice(0, MAX_NEARBY_SPOTS)
+    .map(mapNearbySpot);
   const similarFestivals = festivalItems
     .filter(isValidFestivalItem)
-    .slice(0, 5)
+    .slice(0, MAX_SIMILAR_FESTIVALS)
     .map((item) => mapSimilarFestival(plan, item, nearbySpots.length));
 
   if (nearbySpots.length === 0 && similarFestivals.length === 0) {
@@ -465,7 +505,10 @@ export function mapTourApiItemsToTourismContext(
           : sampleTourismContext.similarFestivals,
       sourceDetails: [
         ...(options.sourceDetails ?? []),
-        ...(sampleTourismContext.sourceDetails ?? []),
+        ...sampleSourceDetails([
+          ...(nearbySpots.length === 0 ? ["sample-nearby-spots"] : []),
+          ...(similarFestivals.length === 0 ? ["sample-similar-festivals"] : []),
+        ]),
       ],
     };
   }
@@ -546,7 +589,7 @@ export async function getTourApiAreaCodes(
 function mapFestivalCandidate(
   item: TourApiItem,
   searchScope: FestivalSearchScope,
-  sourceDetail: MetricEvidenceSourceDetail,
+  sourceDetails: MetricEvidenceSourceDetail[],
 ): FestivalCandidate | undefined {
   if (!isValidFestivalItem(item)) return undefined;
 
@@ -560,7 +603,7 @@ function mapFestivalCandidate(
     mapY: hasFiniteNumber(item.mapy) ? String(item.mapy) : undefined,
     imageUrl: item.firstimage,
     searchScope,
-    sourceDetails: [sourceDetail],
+    sourceDetails,
   };
 }
 
@@ -593,32 +636,40 @@ export async function getFestivalCandidates(
     );
   }
 
-  const detailItems = await Promise.all(
-    festivalItems.slice(0, 8).map((item) =>
+  const candidateItems = festivalItems.slice(0, MAX_FESTIVAL_CANDIDATES);
+  const detailLookups = await Promise.all(
+    candidateItems.map((item) =>
       fetchTourApiItems(
         "detail",
         { contentId: item.contentid },
         fetchImpl,
         options.signal,
       )
-        .then((items) => ({ ...item, ...items[0] }))
-        .catch(() => item),
+        .then((items) => ({ item: { ...item, ...items[0] }, succeeded: true }))
+        .catch(() => ({ item, succeeded: false })),
     ),
   );
+  const detailItems = detailLookups.map((lookup) => lookup.item);
 
-  const sourceDetail = createTourApiSourceDetail({
+  const searchSourceDetail = createTourApiSourceDetail({
     sourceId: "tourapi-festival-candidates",
     sourceName: "TourAPI 축제 정보 조회",
     endpoint: "/api/tour/festivals",
     query: festivalQueryParams,
-    records: detailItems.slice(0, 5).map((item) => ({
+    records: candidateItems.map((item) => ({
       label: String(item.title ?? item.contentid ?? "축제 정보"),
       fields: festivalRecordFields(item),
     })),
   });
+  const detailSourceDetails = createFestivalDetailSources(
+    "tourapi-festival-candidate-detail",
+    detailItems,
+    detailLookups.map((lookup) => lookup.succeeded),
+  );
+  const sourceDetails = [searchSourceDetail, ...detailSourceDetails];
 
   return detailItems
-    .map((item) => mapFestivalCandidate(item, festivalSearchScope, sourceDetail))
+    .map((item) => mapFestivalCandidate(item, festivalSearchScope, sourceDetails))
     .filter((item): item is FestivalCandidate => Boolean(item));
 }
 
@@ -658,8 +709,9 @@ export async function getTourismContext(
       );
     }
 
+    const usedFestivalItems = festivalItems.slice(0, MAX_SIMILAR_FESTIVALS);
     const detailItems = await Promise.all(
-      festivalItems.slice(0, 5).map((item) =>
+      usedFestivalItems.map((item) =>
         fetchTourApiItems(
           "detail",
           {
@@ -694,26 +746,33 @@ export async function getTourismContext(
       sourceName: "TourAPI 축제 정보 조회",
       endpoint: "/api/tour/festivals",
       query: festivalQueryParams,
-      records: detailItems.slice(0, 5).map((item) => ({
+      records: usedFestivalItems.map((item) => ({
         label: String(item.title ?? item.contentid ?? "축제 정보"),
         fields: festivalRecordFields(item),
       })),
     });
+    const festivalDetailSources = createFestivalDetailSources(
+      "tourapi-tourism-detail",
+      detailItems,
+    );
+    const usedNearbyItems = nearbyItems
+      .filter(isValidNearbyItem)
+      .slice(0, MAX_NEARBY_SPOTS);
     const nearbyLocationSource = createTourApiSourceDetail({
       sourceId: "tourapi-tourism-nearby",
       sourceName: "TourAPI 주변 관광지 조회",
       endpoint: "/api/tour/nearby",
       query: nearbyQueryParams,
-      records: nearbyItems.slice(0, 5).map((item) => ({
+      records: usedNearbyItems.map((item) => ({
         label: String(item.title ?? item.contentid ?? "주변 관광지"),
         fields: nearbySpotRecordFields(item),
       })),
       statusLabel: firstLocatedItem
         ? undefined
-        : "Not queried: festival coordinates unavailable",
+        : "조회하지 않음: 축제 좌표 없음",
       note: firstLocatedItem
         ? undefined
-        : "Nearby lookup was not requested because the festival detail response had no coordinates.",
+        : "축제 상세 응답에 좌표가 없어 주변 관광지 조회를 요청하지 않았습니다.",
     });
 
     return mapTourApiItemsToTourismContext(
@@ -723,7 +782,11 @@ export async function getTourismContext(
       new Date().toISOString(),
       {
         festivalSearchScope,
-        sourceDetails: [festivalDetailSource, nearbyLocationSource],
+        sourceDetails: [
+          festivalDetailSource,
+          ...festivalDetailSources,
+          nearbyLocationSource,
+        ],
       },
     );
   } catch (error) {

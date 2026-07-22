@@ -1,4 +1,5 @@
 import type {
+  EvidenceField,
   FestivalPlan,
   ForecastResult,
   MetricEvidence,
@@ -67,65 +68,35 @@ function effectFromScore(score: number): MetricEvidence["contributors"][number][
   return "risk";
 }
 
-function planInputDetails(plan: FestivalPlan): MetricEvidence["sourceDetails"] {
+function userInputDetails(
+  sourceId: string,
+  calculationInputs: EvidenceField[],
+): MetricEvidence["sourceDetails"] {
   return [
     {
-      sourceId: "user-plan-inputs",
+      sourceId,
       sourceName: "축제 기획안 입력값",
       sourceType: "user-input",
       statusLabel: "사용자 입력 기준",
-      calculationInputs: [
-        { label: "축제명", value: plan.name },
-        { label: "지역", value: plan.region },
-        { label: "행사장", value: plan.venueAddress },
-        { label: "기간", value: `${plan.startDate} ~ ${plan.endDate}` },
-        {
-          label: "총 예산",
-          value: `${plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}諛깅쭔??`,
-        },
-        {
-          label: "수용 인원",
-          value: `${plan.expectedCapacity.toLocaleString("ko-KR")}紐?`,
-        },
-      ],
+      calculationInputs,
     },
   ];
 }
 
-function derivedForecastDetails(
-  forecast: ForecastResult,
-  simulation: SimulationResult,
+function derivedDetails(
+  sourceId: string,
+  sourceName: string,
+  calculationInputs: EvidenceField[],
+  note?: string,
 ): MetricEvidence["sourceDetails"] {
-  const peakVisitors = Math.max(
-    ...forecast.visitorsByHour.map((item) => item.visitors),
-    0,
-  );
-
   return [
     {
-      sourceId: "derived-forecast-simulation",
-      sourceName: "예측 및 시뮬레이션 산출값",
+      sourceId,
+      sourceName,
       sourceType: "derived",
       statusLabel: "시스템 산출값",
-      calculationInputs: [
-        {
-          label: "예상 방문객",
-          value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}紐?`,
-        },
-        { label: "피크 시간", value: `${forecast.peakHour}:00` },
-        {
-          label: "피크 시간대 방문객",
-          value: `${peakVisitors.toLocaleString("ko-KR")}紐?`,
-        },
-        {
-          label: "혼잡도 기준 시간",
-          value: `${simulation.hour}:00`,
-        },
-        {
-          label: "병목 후보",
-          value: `${simulation.bottlenecks.length.toLocaleString("ko-KR")}怨?`,
-        },
-      ],
+      calculationInputs,
+      note,
     },
   ];
 }
@@ -133,33 +104,29 @@ function derivedForecastDetails(
 function economicDerivedDetails(
   economy: ReturnType<typeof createEconomicImpactMetrics>,
 ): MetricEvidence["sourceDetails"] {
-  return [
-    {
-      sourceId: "derived-economic-roi",
-      sourceName: "ROI 경제효과 산출값",
-      sourceType: "derived",
-      statusLabel: "시스템 산출값",
-      calculationInputs: [
-        {
-          label: "총 투입 예산",
-          value: `${economy.totalBudgetKrw.toLocaleString("ko-KR")}??`,
-        },
-        {
-          label: "예상 지역 소비 창출액",
-          value: `${economy.expectedLocalSpendingKrw.toLocaleString("ko-KR")}??`,
-        },
-        {
-          label: "방문객 1인당 평균 소비",
-          value: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}??`,
-        },
-        {
-          label: "ROI",
-          value: `${economy.roiMultiplier.toFixed(1)}諛?`,
-        },
-      ],
-      note: "방문객 1인당 평균 소비는 데모용 공공 데이터 기반 가정값이며, 실제 지역 소비 데이터와 연동하면 교체할 수 있습니다.",
-    },
-  ];
+  return derivedDetails(
+    "derived-economic-roi",
+    "ROI 경제효과 산출값",
+    [
+      {
+        label: "총 투입 예산",
+        value: `${economy.totalBudgetKrw.toLocaleString("ko-KR")}원`,
+      },
+      {
+        label: "예상 지역 소비 창출액",
+        value: `${economy.expectedLocalSpendingKrw.toLocaleString("ko-KR")}원`,
+      },
+      {
+        label: "방문객 1인당 평균 소비",
+        value: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원`,
+      },
+      {
+        label: "ROI",
+        value: `${economy.roiMultiplier.toFixed(1)}배`,
+      },
+    ],
+    "방문객 1인당 평균 소비는 데모용 공공 데이터 기반 가정값이며, 실제 지역 소비 데이터와 연동하면 교체할 수 있습니다.",
+  );
 }
 
 export function createMetricEvidenceSet(
@@ -174,19 +141,109 @@ export function createMetricEvidenceSet(
   const economy = createEconomicImpactMetrics(plan, forecast);
   const confidence = sourceConfidence(tourism, trends);
   const limitations = fallbackLimitations(tourism, trends);
-  const tourApiDetails = tourism.sourceDetails ?? [];
-  const userInputDetails = planInputDetails(plan);
-  const forecastDerivedDetails = derivedForecastDetails(forecast, simulation);
-  const roiDetails = economicDerivedDetails(economy);
-  const commonSourceDetails = [
-    ...tourApiDetails,
-    ...userInputDetails,
-    ...forecastDerivedDetails,
-  ];
+  const tourismDetails = tourism.sourceDetails ?? [];
+  const nearbyTourismDetails = tourismDetails.filter(
+    (detail) => detail.sourceId.includes("nearby") || detail.sourceId === "sample-nearby-spots",
+  );
   const peakVisitors = Math.max(
     ...forecast.visitorsByHour.map((item) => item.visitors),
     0,
   );
+  const criticalCells = simulation.cells.filter((cell) => cell.level === "critical").length;
+  const highRiskCells = simulation.cells.filter(
+    (cell) => cell.level === "high" || cell.level === "critical",
+  ).length;
+  const demandUserInputs = userInputDetails("user-demand-inputs", [
+    { label: "지역", value: plan.region },
+    { label: "기간", value: `${plan.startDate} ~ ${plan.endDate}` },
+    { label: "주제 키워드", value: plan.keywords.join(", ") },
+    {
+      label: "총 예산",
+      value: `${plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}백만원`,
+    },
+    {
+      label: "수용 인원",
+      value: `${plan.expectedCapacity.toLocaleString("ko-KR")}명`,
+    },
+    {
+      label: "프로그램 매력도",
+      value: plan.programs.map((program) => `${program.expectedDraw}점`).join(", "),
+    },
+    {
+      label: "출입구 수",
+      value: `${plan.facilities.filter((facility) => facility.type === "entrance").length}곳`,
+    },
+  ]);
+  const layoutUserInputs = userInputDetails("user-layout-inputs", [
+    { label: "격자 크기", value: `${plan.gridWidth} × ${plan.gridHeight}` },
+    { label: "시설 수", value: `${plan.facilities.length}곳` },
+  ]);
+  const budgetUserInputs = userInputDetails("user-budget-inputs", [
+    {
+      label: "총 예산",
+      value: `${plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}백만원`,
+    },
+  ]);
+  const commercialUserInputs = userInputDetails("user-commercial-location", [
+    { label: "지역", value: plan.region },
+    { label: "행사장", value: plan.venueAddress },
+  ]);
+  const parkingUserInputs = userInputDetails("user-parking-inputs", [
+    {
+      label: "수용 인원",
+      value: `${plan.expectedCapacity.toLocaleString("ko-KR")}명`,
+    },
+    { label: "격자 크기", value: `${plan.gridWidth} × ${plan.gridHeight}` },
+    { label: "시설 수", value: `${plan.facilities.length}곳` },
+  ]);
+  const expectedVisitorsDetails = derivedDetails(
+    "derived-expected-visitors",
+    "예상 방문객 산출값",
+    [
+      {
+        label: "예상 방문객",
+        value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+      },
+    ],
+  );
+  const peakDensityDetails = derivedDetails(
+    "derived-peak-density",
+    "혼잡도 시뮬레이션 산출값",
+    [
+      { label: "혼잡도 기준 시간", value: `${simulation.hour}:00` },
+      {
+        label: "최고 밀집도",
+        value: `${summary.peakDensity.peoplePerSquareMeter}명/m²`,
+      },
+    ],
+  );
+  const safetyStaffDetails = derivedDetails(
+    "derived-safety-staff",
+    "안전 인력 산출값",
+    [
+      { label: "피크 방문객", value: `${peakVisitors.toLocaleString("ko-KR")}명` },
+      { label: "최고 밀집도", value: `${safety.peakDensity}명/m²` },
+      { label: "병목 후보", value: `${simulation.bottlenecks.length}곳` },
+    ],
+  );
+  const medicalStaffDetails = derivedDetails(
+    "derived-medical-staff",
+    "의료 인력 산출값",
+    [
+      { label: "피크 방문객", value: `${peakVisitors.toLocaleString("ko-KR")}명` },
+      { label: "임계 혼잡 격자", value: `${criticalCells}곳` },
+    ],
+  );
+  const parkingDetails = derivedDetails(
+    "derived-parking-occupancy",
+    "주차 수용률 산출값",
+    [
+      { label: "피크 방문객", value: `${peakVisitors.toLocaleString("ko-KR")}명` },
+      { label: "고위험 격자", value: `${highRiskCells}곳` },
+      { label: "주차 수용률", value: `${safety.parkingOccupancyRate}%` },
+    ],
+  );
+  const roiDetails = economicDerivedDetails(economy);
 
   return {
     "demand-index": {
@@ -208,7 +265,11 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: commonSourceDetails,
+      sourceDetails: [
+        ...tourismDetails,
+        ...demandUserInputs,
+        ...expectedVisitorsDetails,
+      ],
       contributors: forecast.reasons.map((reason) => ({
         label: reason.label,
         value: `${reason.impact.toLocaleString("ko-KR")}점`,
@@ -233,7 +294,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: commonSourceDetails,
+      sourceDetails: [...layoutUserInputs, ...peakDensityDetails],
       contributors: [
         { label: "피크 시간", value: `${simulation.hour}:00`, effect: "neutral" },
         {
@@ -258,7 +319,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...userInputDetails, ...forecastDerivedDetails],
+      sourceDetails: [...budgetUserInputs, ...expectedVisitorsDetails],
       contributors: [
         {
           label: "총 예산",
@@ -285,7 +346,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...tourApiDetails, ...userInputDetails],
+      sourceDetails: [...nearbyTourismDetails, ...commercialUserInputs],
       contributors: [
         {
           label: "주변 관광지",
@@ -316,7 +377,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: commonSourceDetails,
+      sourceDetails: [...layoutUserInputs, ...safetyStaffDetails],
       contributors: [
         {
           label: "피크 방문객",
@@ -341,7 +402,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: commonSourceDetails,
+      sourceDetails: [...layoutUserInputs, ...medicalStaffDetails],
       contributors: [
         {
           label: "최고 밀집도",
@@ -370,7 +431,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: commonSourceDetails,
+      sourceDetails: [...parkingUserInputs, ...parkingDetails],
       contributors: [
         {
           label: "주차 차오름",
@@ -401,7 +462,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...userInputDetails, ...forecastDerivedDetails, ...roiDetails],
+      sourceDetails: [...budgetUserInputs, ...expectedVisitorsDetails, ...roiDetails],
       contributors: [
         {
           label: "예상 소비 창출액",
