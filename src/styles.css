@@ -1218,3 +1218,136 @@ a:focus-visible {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.evidence-button {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e3a8a;
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.evidence-button:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.evidence-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.evidence-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.32);
+}
+
+.evidence-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(440px, 100%);
+  overflow-y: auto;
+  background: #ffffff;
+  border-left: 1px solid #cbd5e1;
+  padding: 1.25rem;
+  box-shadow: -12px 0 28px rgba(15, 23, 42, 0.18);
+}
+
+.evidence-drawer-heading,
+.evidence-source-status {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.evidence-drawer-heading h2 {
+  margin: 0.45rem 0 0;
+  font-size: 1.2rem;
+}
+
+.evidence-drawer-heading button {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+}
+
+.confidence-badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.confidence-badge-high {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.confidence-badge-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.confidence-badge-low {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.evidence-summary,
+.evidence-section p,
+.evidence-section li {
+  color: #334155;
+  line-height: 1.6;
+}
+
+.evidence-section {
+  margin-top: 1.1rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1rem;
+}
+
+.evidence-section h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.contributor-list {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0;
+  list-style: none;
+}
+
+.contributor {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 6px;
+  padding: 0.55rem 0.65rem;
+  background: #f8fafc;
+}
+
+.contributor-positive strong {
+  color: #047857;
+}
+
+.contributor-neutral strong {
+  color: #1e3a8a;
+}
+
+.contributor-risk strong {
+  color: #b91c1c;
+}
