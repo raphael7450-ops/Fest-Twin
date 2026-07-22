@@ -1,9 +1,15 @@
-import type { FestivalPlan, ForecastResult } from "../domain/types";
+import type {
+  FestivalPlan,
+  ForecastResult,
+  MetricEvidenceId,
+} from "../domain/types";
 import { createEconomicImpactMetrics } from "../services/impactMetrics";
+import { EvidenceButton } from "./EvidenceButton";
 
 interface RoiEconomicImpactProps {
   plan: FestivalPlan;
   forecast: ForecastResult;
+  onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
 function formatKrw(value: number) {
@@ -16,7 +22,11 @@ function formatKrw(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-export function RoiEconomicImpact({ plan, forecast }: RoiEconomicImpactProps) {
+export function RoiEconomicImpact({
+  plan,
+  forecast,
+  onOpenEvidence,
+}: RoiEconomicImpactProps) {
   const metrics = createEconomicImpactMetrics(plan, forecast);
   const maxValue = Math.max(
     metrics.totalBudgetKrw,
@@ -39,7 +49,10 @@ export function RoiEconomicImpact({ plan, forecast }: RoiEconomicImpactProps) {
             시연 값입니다.
           </p>
         </div>
-        <strong>{metrics.roiMultiplier.toFixed(1)}배 창출 예상</strong>
+        <div className="metric-inline-heading">
+          <EvidenceButton onClick={() => onOpenEvidence("economic-roi")} />
+          <strong>{metrics.roiMultiplier.toFixed(1)}배 창출 예상</strong>
+        </div>
       </div>
 
       <div className="roi-bars">

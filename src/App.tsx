@@ -4,6 +4,7 @@ import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
 import { Heatmap } from "./components/Heatmap";
+import { MetricEvidenceDrawer } from "./components/MetricEvidenceDrawer";
 import { PlanForm } from "./components/PlanForm";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
@@ -15,7 +16,9 @@ import { VenueMapPanel } from "./components/VenueMapPanel";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrendContext } from "./data/sampleTrends";
+import type { MetricEvidenceId } from "./domain/types";
 import { createForecast } from "./services/forecast";
+import { createMetricEvidenceSet } from "./services/metricEvidence";
 import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
 import {
@@ -34,6 +37,7 @@ export function App() {
   const [isAreaLoading, setIsAreaLoading] = useState(true);
   const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
+  const [selectedEvidenceId, setSelectedEvidenceId] = useState<MetricEvidenceId | null>(null);
   const candidatePlanKey = JSON.stringify({
     region: plan.region,
     startDate: plan.startDate,
@@ -177,6 +181,10 @@ export function App() {
     () => createSimulation(plan, forecast, selectedHour),
     [forecast, plan, selectedHour],
   );
+  const metricEvidence = useMemo(
+    () => createMetricEvidenceSet(plan, forecast, simulation, tourism, sampleTrendContext),
+    [forecast, plan, simulation, tourism],
+  );
   const report = useMemo(
     () => createPlanningReport(plan, forecast, simulation),
     [forecast, plan, simulation],
@@ -202,6 +210,7 @@ export function App() {
         forecast={forecast}
         simulation={simulation}
         tourism={tourism}
+        onOpenEvidence={setSelectedEvidenceId}
       />
       <div className="workspace-grid">
         <aside className="left-column">
@@ -247,6 +256,7 @@ export function App() {
             plan={plan}
             forecast={forecast}
             simulation={simulation}
+            onOpenEvidence={setSelectedEvidenceId}
           />
         </section>
         <aside className="right-column">
@@ -262,7 +272,17 @@ export function App() {
         onClose={() => setIsCandidatePanelOpen(false)}
         onSelectCandidate={handleSelectCandidate}
       />
-      <ReportView report={report} plan={plan} forecast={forecast} />
+      <MetricEvidenceDrawer
+        evidence={selectedEvidenceId ? metricEvidence[selectedEvidenceId] : undefined}
+        isOpen={selectedEvidenceId !== null}
+        onClose={() => setSelectedEvidenceId(null)}
+      />
+      <ReportView
+        report={report}
+        plan={plan}
+        forecast={forecast}
+        onOpenEvidence={setSelectedEvidenceId}
+      />
     </main>
   );
 }

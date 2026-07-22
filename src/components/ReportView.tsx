@@ -1,4 +1,9 @@
-import type { FestivalPlan, ForecastResult, PlanningReport } from "../domain/types";
+import type {
+  FestivalPlan,
+  ForecastResult,
+  MetricEvidenceId,
+  PlanningReport,
+} from "../domain/types";
 import { PrintReportButton } from "./PrintReportButton";
 import { RoiEconomicImpact } from "./RoiEconomicImpact";
 
@@ -6,9 +11,15 @@ interface ReportViewProps {
   report: PlanningReport;
   plan: FestivalPlan;
   forecast: ForecastResult;
+  onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
-export function ReportView({ report, plan, forecast }: ReportViewProps) {
+export function ReportView({
+  report,
+  plan,
+  forecast,
+  onOpenEvidence,
+}: ReportViewProps) {
   return (
     <section className="panel report-panel">
       <div className="panel-heading">
@@ -18,7 +29,11 @@ export function ReportView({ report, plan, forecast }: ReportViewProps) {
           <PrintReportButton />
         </div>
       </div>
-      <RoiEconomicImpact plan={plan} forecast={forecast} />
+      <RoiEconomicImpact
+        plan={plan}
+        forecast={forecast}
+        onOpenEvidence={onOpenEvidence}
+      />
       <p className="report-summary">{report.summary}</p>
       <p className="muted">{report.governmentReviewNote}</p>
       <div className="score-table">

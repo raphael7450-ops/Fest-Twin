@@ -13,30 +13,30 @@ function statusLabel(status: DataSourceStatus | undefined) {
 
 export function DataBasisPanel({ tourism, trends }: DataBasisPanelProps) {
   return (
-    <section className="panel">
+    <section className="panel data-basis-panel">
       <div className="panel-heading">
-        <h2>데이터 근거</h2>
+        <h2>데이터 신뢰도</h2>
         <span>{statusLabel(tourism.provenance.sourceStatus)}</span>
       </div>
+      <div className="evidence-source-status">
+        <strong>{tourism.provenance.sourceName}</strong>
+        <span>
+          {tourism.provenance.retrievedAt
+            ? new Date(tourism.provenance.retrievedAt).toLocaleString("ko-KR")
+            : "샘플 기준"}
+        </span>
+      </div>
       <ul className="evidence-list">
-        <li>
-          {tourism.provenance.sourceName}: {tourism.provenance.basisText}
-        </li>
-        <li>TourAPI 상태: {statusLabel(tourism.provenance.sourceStatus)}</li>
-        {tourism.provenance.retrievedAt ? (
-          <li>
-            데이터 기준 시점:{" "}
-            {new Date(tourism.provenance.retrievedAt).toLocaleString("ko-KR")}
-          </li>
-        ) : null}
+        <li>{tourism.provenance.basisText}</li>
         <li>{tourism.provenance.fallbackText}</li>
         {tourism.provenance.fallbackReason ? (
-          <li>대체 사유: {tourism.provenance.fallbackReason}</li>
+          <li>보완 사유: {tourism.provenance.fallbackReason}</li>
         ) : null}
         <li>
           {trends.provenance.sourceName}: {trends.provenance.basisText}
         </li>
         <li>개인정보 수집 여부: 수집하지 않음</li>
+        <li>예측값 성격: 실제 집계값이 아닌 사전 의사결정용 추정값</li>
       </ul>
     </section>
   );

@@ -1,20 +1,24 @@
 import type {
   FestivalPlan,
   ForecastResult,
+  MetricEvidenceId,
   SimulationResult,
 } from "../domain/types";
 import { createSafetyLogisticsMetrics } from "../services/impactMetrics";
+import { EvidenceButton } from "./EvidenceButton";
 
 interface SafetyLogisticsPanelProps {
   plan: FestivalPlan;
   forecast: ForecastResult;
   simulation: SimulationResult;
+  onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
 export function SafetyLogisticsPanel({
   plan,
   forecast,
   simulation,
+  onOpenEvidence,
 }: SafetyLogisticsPanelProps) {
   const metrics = createSafetyLogisticsMetrics(plan, forecast, simulation);
 
@@ -31,7 +35,10 @@ export function SafetyLogisticsPanel({
             !
           </span>
           <div>
-            <span>안전관리 요원 추천 배치</span>
+            <div className="metric-inline-heading">
+              <span>안전관리 요원 추천 배치</span>
+              <EvidenceButton onClick={() => onOpenEvidence("safety-staff")} />
+            </div>
             <strong>{metrics.safetyStaff}명</strong>
             <small>
               피크 {metrics.peakVisitors.toLocaleString("ko-KR")}명, 병목 구역{" "}
@@ -45,7 +52,10 @@ export function SafetyLogisticsPanel({
             +
           </span>
           <div>
-            <span>의료/구급 인력 추천 배치</span>
+            <div className="metric-inline-heading">
+              <span>의료/구급 인력 추천 배치</span>
+              <EvidenceButton onClick={() => onOpenEvidence("medical-staff")} />
+            </div>
             <strong>{metrics.medicalStaff}명</strong>
             <small>최고 밀집도 {metrics.peakDensity}명/m² 기준</small>
           </div>
@@ -54,7 +64,10 @@ export function SafetyLogisticsPanel({
         <article className="safety-metric safety-metric-wide">
           <div className="capacity-header">
             <span>주차 수용 차오름 비율</span>
-            <strong>{metrics.parkingOccupancyRate}%</strong>
+            <div className="metric-inline-heading">
+              <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
+              <strong>{metrics.parkingOccupancyRate}%</strong>
+            </div>
           </div>
           <div
             className="capacity-gauge"

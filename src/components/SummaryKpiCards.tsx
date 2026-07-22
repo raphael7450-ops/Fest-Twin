@@ -1,16 +1,19 @@
 import type {
   FestivalPlan,
   ForecastResult,
+  MetricEvidenceId,
   SimulationResult,
   TourismContext,
 } from "../domain/types";
 import { createSummaryKpiMetrics } from "../services/impactMetrics";
+import { EvidenceButton } from "./EvidenceButton";
 
 interface SummaryKpiCardsProps {
   plan: FestivalPlan;
   forecast: ForecastResult;
   simulation: SimulationResult;
   tourism: TourismContext;
+  onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
 function formatKrw(value: number) {
@@ -22,6 +25,7 @@ export function SummaryKpiCards({
   forecast,
   simulation,
   tourism,
+  onOpenEvidence,
 }: SummaryKpiCardsProps) {
   const metrics = createSummaryKpiMetrics(plan, forecast, simulation, tourism);
   const demandTone =
@@ -36,9 +40,12 @@ export function SummaryKpiCards({
       <article className="metric-card metric-card--primary">
         <div className="kpi-title-row">
           <span>흥행 예측 지수</span>
-          <em className={`kpi-badge kpi-badge-${demandTone}`}>
-            {metrics.demandIndex.grade}
-          </em>
+          <div className="kpi-actions">
+            <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
+            <em className={`kpi-badge kpi-badge-${demandTone}`}>
+              {metrics.demandIndex.grade}
+            </em>
+          </div>
         </div>
         <strong>{metrics.demandIndex.percent}%</strong>
         <small className="metric-trend">{metrics.demandIndex.description}</small>
@@ -47,9 +54,12 @@ export function SummaryKpiCards({
       <article className="metric-card metric-card--danger">
         <div className="kpi-title-row">
           <span>최고 밀집 위험도</span>
-          <em className={`risk-badge risk-badge-${metrics.peakDensity.status}`}>
-            {metrics.peakDensity.label}
-          </em>
+          <div className="kpi-actions">
+            <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
+            <em className={`risk-badge risk-badge-${metrics.peakDensity.status}`}>
+              {metrics.peakDensity.label}
+            </em>
+          </div>
         </div>
         <strong>{metrics.peakDensity.peoplePerSquareMeter}명/m²</strong>
         <small className="metric-trend">
@@ -58,13 +68,19 @@ export function SummaryKpiCards({
       </article>
 
       <article className="metric-card metric-card--warning">
-        <span>예산 효율성 점수</span>
+        <div className="kpi-title-row">
+          <span>예산 효율성 점수</span>
+          <EvidenceButton onClick={() => onOpenEvidence("budget-efficiency")} />
+        </div>
         <strong>{formatKrw(metrics.budgetEfficiency.costPerVisitorKrw)}</strong>
         <small className="metric-trend">{metrics.budgetEfficiency.description}</small>
       </article>
 
       <article className="metric-card metric-card--success">
-        <span>지역 상권 유출 연계도</span>
+        <div className="kpi-title-row">
+          <span>지역 상권 유출 연계도</span>
+          <EvidenceButton onClick={() => onOpenEvidence("commercial-spillover")} />
+        </div>
         <strong>{metrics.spillover.nearbyInflowRate}%</strong>
         <small className="metric-trend">{metrics.spillover.description}</small>
       </article>

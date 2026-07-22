@@ -69,7 +69,7 @@ describe("App", () => {
     expect(screen.getByLabelText("시작일")).toBeInTheDocument();
     expect(screen.getByLabelText("종료일")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 후보 보기")).toBeInTheDocument();
-    expect(screen.getByText("데이터 근거")).toBeInTheDocument();
+    expect(screen.getByText("데이터 신뢰도")).toBeInTheDocument();
     expect(await screen.findByText("샘플 데이터 대체 사용")).toBeInTheDocument();
     expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
@@ -107,6 +107,21 @@ describe("App", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("opens a metric evidence drawer from the dashboard", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "근거 보기" })[0]);
+
+    expect(screen.getByRole("dialog", { name: "지표 산출 근거" })).toBeInTheDocument();
+    expect(screen.getByText("사용 데이터")).toBeInTheDocument();
+    expect(screen.getByText("산출 방식")).toBeInTheDocument();
+    expect(screen.getByText("해석 시 주의사항")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "근거 닫기" }));
+
+    expect(screen.queryByRole("dialog", { name: "지표 산출 근거" })).not.toBeInTheDocument();
   });
 
   it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {

@@ -1236,6 +1236,18 @@ a:focus-visible {
   background: #eff6ff;
 }
 
+.kpi-actions,
+.metric-inline-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.metric-inline-heading {
+  justify-content: space-between;
+  width: 100%;
+}
+
 .evidence-drawer {
   position: fixed;
   inset: 0;
