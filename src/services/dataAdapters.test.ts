@@ -298,6 +298,7 @@ describe("public data adapters", () => {
         category: "festival",
         cookie: "session=secret",
         callbackUrl: "https://example.com/callback?serviceKey=secret",
+        redirect: "/callback?serviceKey=secret",
       }),
     ).toEqual([{ label: "category", value: "festival" }]);
   });

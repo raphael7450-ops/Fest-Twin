@@ -77,7 +77,7 @@ const SENSITIVE_QUERY_KEYS = new Set([
 
 function isSecretBearingUrl(value: string) {
   try {
-    const url = new URL(value);
+    const url = new URL(value, "http://localhost");
     return Array.from(url.searchParams.keys()).some((key) =>
       SENSITIVE_QUERY_KEYS.has(key.toLowerCase()),
     );
