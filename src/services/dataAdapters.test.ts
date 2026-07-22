@@ -175,7 +175,7 @@ describe("public data adapters", () => {
       fetchImpl: candidateFetchMock as unknown as typeof fetch,
     });
 
-    expect(candidates).toEqual([
+    expect(candidates).toMatchObject([
       {
         id: "100",
         title: "강남 미디어 윈터페스타",
@@ -198,6 +198,97 @@ describe("public data adapters", () => {
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
     expect(urls[2].searchParams.get("contentId")).toBe("100");
+  });
+
+  it("attaches safe source details to festival candidates", async () => {
+    const responses = [
+      tourApiPayload([{ code: "1", name: "서울" }]),
+      tourApiPayload([
+        {
+          contentid: "3439947",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구",
+          eventstartdate: "20261201",
+          eventenddate: "20261231",
+          mapx: "127.0276",
+          mapy: "37.4979",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "3439947",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구",
+          eventstartdate: "20261201",
+          eventenddate: "20261231",
+          mapx: "127.0276",
+          mapy: "37.4979",
+        },
+      ]),
+    ];
+    const fetchImpl = vi.fn(async () => jsonResponse(responses.shift()));
+
+    const candidates = await getFestivalCandidates(sampleFestivalPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(candidates[0].sourceDetails?.[0]).toMatchObject({
+      sourceName: "TourAPI 축제 정보 조회",
+      sourceType: "tourapi",
+      endpoint: "/api/tour/festivals",
+    });
+    expect(JSON.stringify(candidates[0].sourceDetails)).toContain("3439947");
+    expect(JSON.stringify(candidates[0].sourceDetails)).toContain("eventStartDate");
+    expect(JSON.stringify(candidates[0].sourceDetails)).not.toMatch(/serviceKey/i);
+  });
+
+  it("keeps source details on live tourism context lookup", async () => {
+    const responses = [
+      tourApiPayload([{ code: "1", name: "서울" }]),
+      tourApiPayload([
+        {
+          contentid: "3439947",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구",
+          eventstartdate: "20261201",
+          eventenddate: "20261231",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "3439947",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구",
+          eventstartdate: "20261201",
+          eventenddate: "20261231",
+          mapx: "127.0276",
+          mapy: "37.4979",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "200",
+          title: "코엑스",
+          contenttypeid: "12",
+          addr1: "서울특별시 강남구 영동대로",
+          dist: "750",
+          mapx: "127.0588",
+          mapy: "37.5126",
+        },
+      ]),
+    ];
+    const fetchImpl = vi.fn(async () => jsonResponse(responses.shift()));
+
+    const tourism = await getTourismContext(sampleFestivalPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const serialized = JSON.stringify(tourism.sourceDetails);
+
+    expect(serialized).toContain("/api/tour/festivals");
+    expect(serialized).toContain("/api/tour/location");
+    expect(serialized).toContain("contentid");
+    expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization/i);
   });
 
   it("broadens empty exact-period festival searches to annual same-region TourAPI data", async () => {
