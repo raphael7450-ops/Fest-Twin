@@ -172,3 +172,34 @@ export interface PlanningReport {
   recommendations: Recommendation[];
   governmentReviewNote: string;
 }
+
+export type MetricEvidenceId =
+  | "demand-index"
+  | "peak-density"
+  | "budget-efficiency"
+  | "commercial-spillover"
+  | "safety-staff"
+  | "medical-staff"
+  | "parking-occupancy"
+  | "economic-roi";
+
+export type MetricEvidenceConfidence = "high" | "medium" | "low";
+
+export interface MetricEvidenceContributor {
+  label: string;
+  value: string;
+  effect: "positive" | "neutral" | "risk";
+}
+
+export interface MetricEvidence {
+  metricId: MetricEvidenceId;
+  title: string;
+  summary: string;
+  dataSources: string[];
+  formulaSummary: string;
+  assumptions: string[];
+  confidence: MetricEvidenceConfidence;
+  confidenceLabel: "높음" | "보통" | "낮음";
+  limitations: string[];
+  contributors: MetricEvidenceContributor[];
+}
