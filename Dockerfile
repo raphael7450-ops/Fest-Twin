@@ -6,6 +6,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+ARG VITE_NAVER_MAP_NCP_KEY_ID
+ENV VITE_NAVER_MAP_NCP_KEY_ID=$VITE_NAVER_MAP_NCP_KEY_ID
 RUN npm run build
 
 FROM node:20-alpine AS runtime
