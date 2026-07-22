@@ -10,6 +10,31 @@ export const sampleTourismContext: TourismContext = {
       "실제 API 키가 없거나 호출에 실패하면 TourAPI 형태의 샘플 데이터를 사용합니다.",
     collectedPersonalData: false,
   },
+  sourceDetails: [
+    {
+      sourceId: "sample-festival-detail",
+      sourceName: "TourAPI 異뺤젣 ?곸꽭 ?섑뵆",
+      sourceType: "tourapi",
+      statusLabel: "?섑뵆 ?곗씠???ъ슜",
+      retrievedAt: "?섑뵆 湲곗?",
+      endpoint: "/api/tour/detail",
+      query: [{ label: "contentid", value: "sample-festival" }],
+      records: [
+        {
+          label: "?섑뵆 異뺤젣",
+          fields: [
+            { label: "contentid", value: "sample-festival" },
+            { label: "title", value: "?쒖슱鍮쏆큹濡깆텞???덉떆" },
+            { label: "addr1", value: "?쒖슱?밸퀎??醫낅줈援??몄쥌?濡??쇰?" },
+            { label: "eventstartdate", value: "2026-12-01" },
+            { label: "eventenddate", value: "2026-12-31" },
+            { label: "mapx/mapy", value: "126.9769, 37.5759" },
+          ],
+        },
+      ],
+      note: "TourAPI ?곌껐??遺덇??ν븳 ?섍꼍?먯꽌???곕え ?먮쫫???뺤씤?섍린 ?꾪븳 ?섑뵆 洹쇨굅?낅땲??",
+    },
+  ],
   nearbySpots: [
     { id: "t1", name: "코엑스", category: "관광지", distanceKm: 0.1, appealScore: 92 },
     { id: "t2", name: "스타필드 코엑스몰", category: "쇼핑", distanceKm: 0.3, appealScore: 86 },

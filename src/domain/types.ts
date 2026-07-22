@@ -99,6 +99,7 @@ export interface TourismContext {
   nearbySpots: TourismSpot[];
   similarFestivals: SimilarFestival[];
   provenance: DataProvenance;
+  sourceDetails?: MetricEvidenceSourceDetail[];
 }
 
 export interface TrendSignal {
@@ -191,11 +192,37 @@ export interface MetricEvidenceContributor {
   effect: "positive" | "neutral" | "risk";
 }
 
+export type EvidenceSourceType = "tourapi" | "user-input" | "derived" | "sample";
+
+export interface EvidenceField {
+  label: string;
+  value: string;
+}
+
+export interface MetricEvidenceSourceRecord {
+  label: string;
+  fields: EvidenceField[];
+}
+
+export interface MetricEvidenceSourceDetail {
+  sourceId: string;
+  sourceName: string;
+  sourceType: EvidenceSourceType;
+  statusLabel: string;
+  retrievedAt?: string;
+  endpoint?: string;
+  query?: EvidenceField[];
+  records?: MetricEvidenceSourceRecord[];
+  calculationInputs?: EvidenceField[];
+  note?: string;
+}
+
 export interface MetricEvidence {
   metricId: MetricEvidenceId;
   title: string;
   summary: string;
   dataSources: string[];
+  sourceDetails: MetricEvidenceSourceDetail[];
   formulaSummary: string;
   assumptions: string[];
   confidence: MetricEvidenceConfidence;

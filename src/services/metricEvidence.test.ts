@@ -9,7 +9,46 @@ import {
   createReportEvidenceSummaries,
 } from "./metricEvidence";
 
+const sampleForecastResult = createForecast(
+  sampleFestivalPlan,
+  sampleTourismContext,
+  sampleTrendContext,
+);
+const sampleSimulationResult = createSimulation(
+  sampleFestivalPlan,
+  sampleForecastResult,
+  sampleForecastResult.peakHour,
+);
+
 describe("metricEvidence", () => {
+  it("includes safe source details for public-data, user-input, and derived values", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+
+    const demandEvidence = evidence["demand-index"];
+
+    expect(demandEvidence.sourceDetails.map((item) => item.sourceType)).toContain(
+      "tourapi",
+    );
+    expect(demandEvidence.sourceDetails.map((item) => item.sourceType)).toContain(
+      "user-input",
+    );
+    expect(demandEvidence.sourceDetails.map((item) => item.sourceType)).toContain(
+      "derived",
+    );
+
+    const serialized = JSON.stringify(demandEvidence.sourceDetails);
+
+    expect(serialized).toContain("contentid");
+    expect(serialized).toContain("eventStartDate");
+    expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
+  });
+
   it("creates evidence for every persuasive dashboard metric", () => {
     const forecast = createForecast(
       sampleFestivalPlan,
