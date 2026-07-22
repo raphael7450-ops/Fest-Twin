@@ -192,7 +192,7 @@ export interface MetricEvidenceContributor {
   effect: "positive" | "neutral" | "risk";
 }
 
-export type EvidenceSourceType = "tourapi" | "user-input" | "derived" | "sample";
+export type EvidenceSourceType = "tourapi" | "ktdb" | "user-input" | "derived" | "sample";
 
 export interface EvidenceField {
   label: string;
@@ -215,6 +215,31 @@ export interface MetricEvidenceSourceDetail {
   records?: MetricEvidenceSourceRecord[];
   calculationInputs?: EvidenceField[];
   note?: string;
+}
+
+export type TrafficSourceStatus = "live" | "mapped-sample" | "sample-fallback";
+export type TrafficRiskLabel = "낮음" | "보통" | "높음";
+
+export interface TrafficLinkRecord {
+  linkId: string;
+  roadName: string;
+  roadRank?: string;
+  lanes?: number;
+  inboundVolume: number;
+  outboundVolume: number;
+  totalVolume: number;
+}
+
+export interface TrafficContext {
+  status: TrafficSourceStatus;
+  year: number;
+  weekType: "weekday" | "weekend";
+  time: string;
+  riskScore: number;
+  riskLabel: TrafficRiskLabel;
+  links: TrafficLinkRecord[];
+  provenance: DataProvenance;
+  sourceDetails: MetricEvidenceSourceDetail[];
 }
 
 export interface MetricEvidence {
