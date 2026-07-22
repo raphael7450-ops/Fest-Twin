@@ -1336,6 +1336,97 @@ a:focus-visible {
   color: #0f172a;
 }
 
+.source-detail-list {
+  display: grid;
+  gap: 10px;
+}
+
+.source-detail-card {
+  border: 1px solid #d8e3f2;
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 12px;
+}
+
+.source-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.source-detail-heading strong {
+  display: block;
+  color: #14365d;
+  font-size: 0.9rem;
+}
+
+.source-detail-heading span,
+.source-detail-meta,
+.source-detail-note {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.source-type {
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #e8f1ff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.source-type-sample {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.source-type-user-input {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.source-type-derived {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.source-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.source-detail-grid div {
+  min-width: 0;
+}
+
+.source-detail-grid dt {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.source-detail-grid dd {
+  margin: 2px 0 0;
+  color: #0f172a;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.source-record {
+  margin-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+}
+
+.source-record b {
+  color: #1e293b;
+  font-size: 0.82rem;
+}
+
 .contributor-list {
   display: grid;
   gap: 0.45rem;

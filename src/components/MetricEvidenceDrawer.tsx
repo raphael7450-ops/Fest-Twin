@@ -47,6 +47,69 @@ export function MetricEvidenceDrawer({
           </ul>
         </div>
 
+        {evidence.sourceDetails.length > 0 ? (
+          <div className="evidence-section">
+            <h3>사용 데이터 상세</h3>
+            <div className="source-detail-list">
+              {evidence.sourceDetails.map((source) => (
+                <article className="source-detail-card" key={source.sourceId}>
+                  <div className="source-detail-heading">
+                    <div>
+                      <strong>{source.sourceName}</strong>
+                      {source.endpoint ? <span>{source.endpoint}</span> : null}
+                    </div>
+                    <em className={`source-type source-type-${source.sourceType}`}>
+                      {source.statusLabel}
+                    </em>
+                  </div>
+
+                  {source.retrievedAt ? (
+                    <p className="source-detail-meta">조회 기준: {source.retrievedAt}</p>
+                  ) : null}
+
+                  {source.query && source.query.length > 0 ? (
+                    <dl className="source-detail-grid">
+                      {source.query.map((field) => (
+                        <div key={`${source.sourceId}-query-${field.label}`}>
+                          <dt>{field.label}</dt>
+                          <dd>{field.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+
+                  {source.records?.slice(0, 5).map((record) => (
+                    <div className="source-record" key={`${source.sourceId}-${record.label}`}>
+                      <b>{record.label}</b>
+                      <dl className="source-detail-grid">
+                        {record.fields.map((field) => (
+                          <div key={`${source.sourceId}-${record.label}-${field.label}`}>
+                            <dt>{field.label}</dt>
+                            <dd>{field.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  ))}
+
+                  {source.calculationInputs && source.calculationInputs.length > 0 ? (
+                    <dl className="source-detail-grid">
+                      {source.calculationInputs.map((field) => (
+                        <div key={`${source.sourceId}-input-${field.label}`}>
+                          <dt>{field.label}</dt>
+                          <dd>{field.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+
+                  {source.note ? <p className="source-detail-note">{source.note}</p> : null}
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="evidence-section">
           <h3>산출 방식</h3>
           <p>{evidence.formulaSummary}</p>

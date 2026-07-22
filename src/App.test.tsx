@@ -1,4 +1,5 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleTourismContext } from "./data/sampleTourApi";
 
@@ -122,6 +123,22 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "근거 닫기" }));
 
     expect(screen.queryByRole("dialog", { name: "지표 산출 근거" })).not.toBeInTheDocument();
+  });
+
+  it("shows exact source detail records in the evidence drawer", async () => {
+    render(<App />);
+
+    await screen.findByText(/축제 기획안 입력/);
+
+    await userEvent.click(screen.getAllByRole("button", { name: /근거 보기/ })[0]);
+
+    const drawer = await screen.findByRole("dialog", { name: "지표 산출 근거" });
+
+    expect(within(drawer).getByText("사용 데이터 상세")).toBeInTheDocument();
+    expect(within(drawer).getByText(/TourAPI/, { selector: "strong" })).toBeInTheDocument();
+    expect(within(drawer).getAllByText(/contentid/, { selector: "dt" }).length).toBeGreaterThan(0);
+    expect(within(drawer).getByText(/사용자 입력 기준/)).toBeInTheDocument();
+    expect(within(drawer).getByText(/시스템 산출값/)).toBeInTheDocument();
   });
 
   it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {
