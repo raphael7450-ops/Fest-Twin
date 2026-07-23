@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import { sampleSpendingContext } from "../data/sampleSpending";
 import { sampleTrafficContext } from "../data/sampleTraffic";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
@@ -40,6 +41,28 @@ describe("metricEvidence", () => {
     );
     expect(JSON.stringify(evidence["medical-staff"].sourceDetails)).not.toContain(
       "KTDB/View-T",
+    );
+  });
+
+  it("includes tourism spending backdata for economic ROI", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      undefined,
+      sampleSpendingContext,
+    );
+
+    expect(evidence["economic-roi"].dataSources).toContain(
+      "한국관광공사 지역별 관광 수요 강도",
+    );
+    expect(JSON.stringify(evidence["economic-roi"].sourceDetails)).toContain(
+      "58,400원",
+    );
+    expect(JSON.stringify(evidence["economic-roi"].assumptions)).not.toContain(
+      "62,000",
     );
   });
 

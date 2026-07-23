@@ -4,6 +4,7 @@ import type {
   MetricEvidence,
   MetricEvidenceId,
   PlanningReport,
+  SpendingContext,
 } from "../domain/types";
 import { PrintReportButton } from "./PrintReportButton";
 import { ReportEvidenceSummary } from "./ReportEvidenceSummary";
@@ -13,6 +14,7 @@ interface ReportViewProps {
   report: PlanningReport;
   plan: FestivalPlan;
   forecast: ForecastResult;
+  spending?: SpendingContext;
   evidenceSet: Record<MetricEvidenceId, MetricEvidence>;
   onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
@@ -21,6 +23,7 @@ export function ReportView({
   report,
   plan,
   forecast,
+  spending,
   evidenceSet,
   onOpenEvidence,
 }: ReportViewProps) {
@@ -36,6 +39,7 @@ export function ReportView({
       <RoiEconomicImpact
         plan={plan}
         forecast={forecast}
+        spending={spending}
         onOpenEvidence={onOpenEvidence}
       />
       <ReportEvidenceSummary evidenceSet={evidenceSet} />

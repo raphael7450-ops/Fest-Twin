@@ -14,6 +14,7 @@ import { ScenarioControls } from "./components/ScenarioControls";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
+import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleTrendContext } from "./data/sampleTrends";
@@ -226,7 +227,15 @@ export function App() {
     [forecast, plan, selectedHour],
   );
   const metricEvidence = useMemo(
-    () => createMetricEvidenceSet(plan, forecast, simulation, tourism, sampleTrendContext, traffic),
+    () => createMetricEvidenceSet(
+      plan,
+      forecast,
+      simulation,
+      tourism,
+      sampleTrendContext,
+      traffic,
+      sampleSpendingContext,
+    ),
     [forecast, plan, simulation, tourism, traffic],
   );
   const report = useMemo(
@@ -326,6 +335,7 @@ export function App() {
         report={report}
         plan={plan}
         forecast={forecast}
+        spending={sampleSpendingContext}
         evidenceSet={metricEvidence}
         onOpenEvidence={setSelectedEvidenceId}
       />

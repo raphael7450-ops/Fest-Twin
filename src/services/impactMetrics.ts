@@ -2,6 +2,7 @@ import type {
   FestivalPlan,
   ForecastResult,
   SimulationResult,
+  SpendingContext,
   TourismContext,
   TrafficContext,
 } from "../domain/types";
@@ -48,9 +49,12 @@ export interface EconomicImpactMetrics {
   expectedLocalSpendingKrw: number;
   averageSpendPerVisitorKrw: number;
   roiMultiplier: number;
+  spendingBasisLabel: string;
+  spendingSourceName: string;
+  spendingConfidence: "high" | "medium" | "low";
 }
 
-const AVERAGE_SPEND_PER_VISITOR_KRW = 62000;
+const FALLBACK_SPEND_PER_VISITOR_KRW = 58400;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -211,17 +215,23 @@ export function createSafetyLogisticsMetrics(
 export function createEconomicImpactMetrics(
   plan: FestivalPlan,
   forecast: ForecastResult,
+  spending?: SpendingContext,
 ): EconomicImpactMetrics {
   const totalBudgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+  const averageSpendPerVisitorKrw =
+    spending?.averageSpendPerVisitorKrw ?? FALLBACK_SPEND_PER_VISITOR_KRW;
   const expectedLocalSpendingKrw =
-    forecast.expectedVisitors * AVERAGE_SPEND_PER_VISITOR_KRW;
+    forecast.expectedVisitors * averageSpendPerVisitorKrw;
 
   return {
     totalBudgetKrw,
     expectedLocalSpendingKrw,
-    averageSpendPerVisitorKrw: AVERAGE_SPEND_PER_VISITOR_KRW,
+    averageSpendPerVisitorKrw,
     roiMultiplier:
       Math.round((expectedLocalSpendingKrw / Math.max(totalBudgetKrw, 1)) * 10) /
       10,
+    spendingBasisLabel: spending?.basisLabel ?? "공공데이터 구조 기반 샘플",
+    spendingSourceName: spending?.sourceName ?? "한국관광공사 관광 소비 백데이터 샘플",
+    spendingConfidence: spending?.confidence ?? "low",
   };
 }

@@ -114,6 +114,27 @@ export interface TrendContext {
   provenance: DataProvenance;
 }
 
+export type SpendingBasis =
+  | "tourism-demand-intensity"
+  | "tourism-diversity"
+  | "similar-region"
+  | "fallback";
+
+export type SpendingConfidence = "high" | "medium" | "low";
+
+export interface SpendingContext {
+  averageSpendPerVisitorKrw: number;
+  basis: SpendingBasis;
+  basisLabel: string;
+  confidence: SpendingConfidence;
+  sourceName: string;
+  sourceStatus: DataSourceStatus;
+  region: string;
+  retrievedAt: string;
+  note: string;
+  sourceDetails: MetricEvidenceSourceDetail[];
+}
+
 export interface ForecastReason {
   label: string;
   impact: number;

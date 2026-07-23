@@ -5,6 +5,7 @@ import type {
   MetricEvidence,
   MetricEvidenceId,
   SimulationResult,
+  SpendingContext,
   TrafficContext,
   TourismContext,
   TrendContext,
@@ -161,14 +162,16 @@ export function createMetricEvidenceSet(
   tourism: TourismContext,
   trends: TrendContext,
   traffic?: TrafficContext,
+  spending?: SpendingContext,
 ): Record<MetricEvidenceId, MetricEvidence> {
   const summary = createSummaryKpiMetrics(plan, forecast, simulation, tourism);
   const safety = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic);
-  const economy = createEconomicImpactMetrics(plan, forecast);
+  const economy = createEconomicImpactMetrics(plan, forecast, spending);
   const confidence = sourceConfidence(tourism, trends);
   const limitations = fallbackLimitations(tourism, trends);
   const tourismDetails = tourism.sourceDetails ?? [];
   const trafficDetails = trafficDerivedDetails(traffic);
+  const spendingDetails = spending?.sourceDetails ?? [];
   const nearbyTourismDetails = tourismDetails.filter(
     (detail) => detail.sourceId.includes("nearby") || detail.sourceId === "sample-nearby-spots",
   );
@@ -479,17 +482,17 @@ export function createMetricEvidenceSet(
       dataSources: [
         "예상 방문객",
         "사용자 입력 총 예산",
-        "방문객 1인당 평균 소비 단가 가정",
+        economy.spendingSourceName,
       ],
       formulaSummary:
         "예상 지역 소비 창출액 = 예상 방문객 × 1인당 평균 소비 단가, ROI = 예상 소비 창출액 / 총 예산",
       assumptions: [
-        `방문객 1인당 평균 소비 단가는 ${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원으로 둡니다.`,
+        `방문객 1인당 평균 소비 단가는 ${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원이며, ${economy.spendingBasisLabel}으로 적용합니다.`,
       ],
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...budgetUserInputs, ...expectedVisitorsDetails, ...roiDetails],
+      sourceDetails: [...budgetUserInputs, ...expectedVisitorsDetails, ...spendingDetails, ...roiDetails],
       contributors: [
         {
           label: "예상 소비 창출액",

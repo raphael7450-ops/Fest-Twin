@@ -2,6 +2,7 @@ import type {
   FestivalPlan,
   ForecastResult,
   MetricEvidenceId,
+  SpendingContext,
 } from "../domain/types";
 import { createEconomicImpactMetrics } from "../services/impactMetrics";
 import { EvidenceButton } from "./EvidenceButton";
@@ -9,6 +10,7 @@ import { EvidenceButton } from "./EvidenceButton";
 interface RoiEconomicImpactProps {
   plan: FestivalPlan;
   forecast: ForecastResult;
+  spending?: SpendingContext;
   onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
@@ -25,9 +27,10 @@ function formatKrw(value: number) {
 export function RoiEconomicImpact({
   plan,
   forecast,
+  spending,
   onOpenEvidence,
 }: RoiEconomicImpactProps) {
-  const metrics = createEconomicImpactMetrics(plan, forecast);
+  const metrics = createEconomicImpactMetrics(plan, forecast, spending);
   const maxValue = Math.max(
     metrics.totalBudgetKrw,
     metrics.expectedLocalSpendingKrw,
@@ -45,8 +48,8 @@ export function RoiEconomicImpact({
           <h3>예산 대비 경제적 파급효과</h3>
           <p>
             방문객 1인당 평균 소비 단가{" "}
-            {metrics.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원 기준
-            시연 값입니다.
+            {metrics.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원 기준 ·{" "}
+            {metrics.spendingBasisLabel}
           </p>
         </div>
         <div className="metric-inline-heading">
