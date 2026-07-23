@@ -23,6 +23,7 @@ import { createForecast } from "./services/forecast";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
 import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
+import { getSpendingContext } from "./services/spendingAdapter";
 import { getTrafficContext } from "./services/trafficAdapter";
 import {
   createFallbackTourismContext,
@@ -91,6 +92,16 @@ export function App() {
   }));
   const traffic =
     trafficState.planKey === trafficPlanKey ? trafficState.context : sampleTrafficContext;
+  const spendingPlanKey = JSON.stringify({
+    region: plan.region,
+    startDate: plan.startDate,
+  });
+  const [spendingState, setSpendingState] = useState(() => ({
+    planKey: spendingPlanKey,
+    context: sampleSpendingContext,
+  }));
+  const spending =
+    spendingState.planKey === spendingPlanKey ? spendingState.context : sampleSpendingContext;
 
   const candidates =
     candidateState.planKey === candidatePlanKey ? candidateState.candidates : [];
@@ -218,6 +229,32 @@ export function App() {
     };
   }, [trafficPlanKey]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const planSnapshot = plan;
+    const timeoutId = window.setTimeout(() => {
+      getSpendingContext(planSnapshot, { signal: controller.signal })
+        .then((nextSpending) => {
+          if (!controller.signal.aborted) {
+            setSpendingState({ planKey: spendingPlanKey, context: nextSpending });
+          }
+        })
+        .catch((error: unknown) => {
+          if (
+            !controller.signal.aborted &&
+            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+          ) {
+            console.error("Spending context loading failed", error);
+          }
+        });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [spendingPlanKey]);
+
   const forecast = useMemo(
     () => createForecast(plan, tourism, sampleTrendContext),
     [plan, tourism],
@@ -234,9 +271,9 @@ export function App() {
       tourism,
       sampleTrendContext,
       traffic,
-      sampleSpendingContext,
+      spending,
     ),
-    [forecast, plan, simulation, tourism, traffic],
+    [forecast, plan, simulation, tourism, traffic, spending],
   );
   const report = useMemo(
     () => createPlanningReport(plan, forecast, simulation),
@@ -335,7 +372,7 @@ export function App() {
         report={report}
         plan={plan}
         forecast={forecast}
-        spending={sampleSpendingContext}
+        spending={spending}
         evidenceSet={metricEvidence}
         onOpenEvidence={setSelectedEvidenceId}
       />

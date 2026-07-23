@@ -1,6 +1,7 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createSpendingProxyRouter } from "./spendingProxy.js";
 import { createTrafficProxyRouter } from "./trafficProxy.js";
 import { createTourProxyRouter } from "./tourProxy.js";
 
@@ -22,6 +23,13 @@ export function createApp(options = {}) {
     "/api/traffic",
     createTrafficProxyRouter({
       fetchImpl: options.fetchImpl,
+    }),
+  );
+  app.use(
+    "/api/spending",
+    createSpendingProxyRouter({
+      fetchImpl: options.fetchImpl,
+      apiKey: options.apiKey,
     }),
   );
   app.use(express.static(staticDir));

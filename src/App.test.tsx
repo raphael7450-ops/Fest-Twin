@@ -3,17 +3,20 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
+import { sampleSpendingContext } from "./data/sampleSpending";
 
 const {
   getTourismContextMock,
   getTourApiAreaCodesMock,
   getFestivalCandidatesMock,
   getTrafficContextMock,
+  getSpendingContextMock,
 } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
   getFestivalCandidatesMock: vi.fn(),
   getTrafficContextMock: vi.fn(),
+  getSpendingContextMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -28,6 +31,11 @@ vi.mock("./services/trafficAdapter", async (importOriginal) => ({
   getTrafficContext: getTrafficContextMock,
 }));
 
+vi.mock("./services/spendingAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/spendingAdapter")>()),
+  getSpendingContext: getSpendingContextMock,
+}));
+
 import { App } from "./App";
 
 describe("App", () => {
@@ -36,8 +44,10 @@ describe("App", () => {
     getTourApiAreaCodesMock.mockReset();
     getFestivalCandidatesMock.mockReset();
     getTrafficContextMock.mockReset();
+    getSpendingContextMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
     getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
+    getSpendingContextMock.mockResolvedValue(sampleSpendingContext);
     getTourApiAreaCodesMock.mockResolvedValue([
       { code: "1", name: "서울" },
       { code: "1-legacy", name: "서울시" },
