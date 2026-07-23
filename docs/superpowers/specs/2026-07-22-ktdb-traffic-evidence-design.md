@@ -102,6 +102,8 @@ https://viewt.ktdb.go.kr/cong/api/moveAPI.do?url=detail_selectedLink_road&LINKID
 - `year`: 2019~2025 사이만 허용
 - `weekType`: `weekday`, `weekend`만 허용하고 내부적으로 View-T의 `WEEKTYPE` 값으로 변환
 - `time`: `ALL` 또는 0~23시만 허용
+
+2026-07-23 확인 결과, View-T 문서상 예시 링크(`LINKID=1000001`)는 `YEAR=2025` 조건에서 서버 오류가 발생하고 `YEAR=2024` 조건에서 JSON 응답이 정상 반환된다. 따라서 데모의 기본 KTDB 조회 기준년도는 검증 가능한 최신 정상 응답 기준인 `2024`로 둔다. 화면과 근거 문구에서는 이 값을 `기준년도 교통량`으로 명시한다.
 - 빈 값, `Infinity`, `NaN`, 임의 URL, 인증 관련 키는 거부
 
 이 API는 별도 개인 인증키를 요구하지 않는 공개 문서형 API로 시작한다. 만약 향후 키가 필요해지면 TourAPI처럼 서버 환경변수로만 관리한다.
@@ -192,7 +194,7 @@ interface TrafficLinkMapping {
 - View-T 응답 실패: `sample-fallback`
 - 링크 매핑 없음: `mapped-sample`
 - 일부 필드 누락: 가능한 필드는 사용하고 누락 필드는 `-`로 표시
-- 데이터 기준년도 없음: 2025년으로 제한하고 화면에 기준년도 표시
+- 데이터 기준년도 없음: 2024년을 기본 조회 기준으로 사용하고 화면에 기준년도 표시
 
 fallback 상태에서도 `sourceDetails`를 비워두지 않는다. 어떤 샘플 링크와 어떤 가정을 사용했는지 표시한다.
 

@@ -16,13 +16,20 @@ interface TrafficOptions {
 interface ViewTRecord {
   LINKID?: string | number;
   ROAD_NAME?: string;
+  LINKNAME?: string;
   ROAD_RANK?: string;
+  LINKRANK?: string;
   LANES?: string | number;
+  LINKLINECNT?: string | number;
   VALUE_IN?: string | number;
   VALUE_OUT?: string | number;
+  VALUE?: {
+    IN?: string | number;
+    OUT?: string | number;
+  };
 }
 
-const DEFAULT_YEAR = 2025;
+const DEFAULT_YEAR = 2024;
 
 function isWeekendPlan(plan: FestivalPlan) {
   const start = new Date(`${plan.startDate}T00:00:00Z`);
@@ -70,13 +77,13 @@ function calculateTrafficRisk(links: TrafficLinkRecord[], weekType: "weekday" | 
 
 function normalizeViewTRecords(records: ViewTRecord[], fallbackRoadName: string): TrafficLinkRecord[] {
   return records.map((record) => {
-    const inboundVolume = numberValue(record.VALUE_IN);
-    const outboundVolume = numberValue(record.VALUE_OUT);
+    const inboundVolume = numberValue(record.VALUE_IN ?? record.VALUE?.IN);
+    const outboundVolume = numberValue(record.VALUE_OUT ?? record.VALUE?.OUT);
     return {
       linkId: String(record.LINKID ?? "-"),
-      roadName: record.ROAD_NAME ?? fallbackRoadName,
-      roadRank: record.ROAD_RANK,
-      lanes: numberValue(record.LANES) || undefined,
+      roadName: record.ROAD_NAME ?? record.LINKNAME ?? fallbackRoadName,
+      roadRank: record.ROAD_RANK ?? record.LINKRANK,
+      lanes: numberValue(record.LANES ?? record.LINKLINECNT) || undefined,
       inboundVolume,
       outboundVolume,
       totalVolume: inboundVolume + outboundVolume,
@@ -174,8 +181,13 @@ export async function getTrafficContext(plan: FestivalPlan, options: TrafficOpti
     url.searchParams.set("time", time);
     const response = await fetchImpl(`${url.pathname}${url.search}`, { signal: options.signal });
     if (!response.ok) throw new Error(`Traffic proxy HTTP ${response.status}`);
-    const payload = await response.json() as { result?: ViewTRecord[] };
-    const links = normalizeViewTRecords(Array.isArray(payload.result) ? payload.result : [], mapping.roadName)
+    const payload = await response.json() as { result?: ViewTRecord[]; RESULT?: ViewTRecord[] };
+    const records = Array.isArray(payload.result)
+      ? payload.result
+      : Array.isArray(payload.RESULT)
+        ? payload.RESULT
+        : [];
+    const links = normalizeViewTRecords(records, mapping.roadName)
       .filter((link) => link.totalVolume > 0);
     if (links.length === 0) throw new Error("Traffic response did not include usable link records");
     const riskScore = calculateTrafficRisk(links, weekType, time);

@@ -37,7 +37,7 @@ describe("trafficAdapter", () => {
 
     expect(traffic.status).toBe("mapped-sample");
     expect(traffic.provenance.sourceStatus).toBe("partial-fallback");
-    expect(traffic.year).toBe(2025);
+    expect(traffic.year).toBe(2024);
     expect(traffic.weekType).toBe("weekend");
     expect(traffic.time).toBe("20");
     expect(traffic.links[0]).toMatchObject({
@@ -53,7 +53,7 @@ describe("trafficAdapter", () => {
     const requestUrl = new URL(String(fetchImpl.mock.calls[0][0]), "http://localhost");
     expect(requestUrl.pathname).toBe("/api/traffic/selected-link");
     expect(requestUrl.searchParams.get("linkId")).toBe("TEHERAN-001");
-    expect(requestUrl.searchParams.get("year")).toBe("2025");
+    expect(requestUrl.searchParams.get("year")).toBe("2024");
     expect(requestUrl.searchParams.get("weekType")).toBe("weekend");
     expect(requestUrl.searchParams.get("time")).toBe("20");
   });

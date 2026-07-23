@@ -1,6 +1,6 @@
 import express from "express";
 
-const VIEWT_BASE_URL = "https://viewt.ktdb.go.kr/cong/api/moveAPI.do";
+const VIEWT_BASE_URL = "https://viewt.ktdb.go.kr/cong/api/selectedLink_road.do";
 const ALLOWED_QUERY_KEYS = new Set(["linkId", "year", "weekType", "time"]);
 const YEAR_MIN = 2019;
 const YEAR_MAX = 2025;
@@ -16,7 +16,7 @@ function isScalar(value) {
 }
 
 function isSafeLinkId(value) {
-  return typeof value === "string" && /^[A-Za-z0-9_-]+$/.test(value);
+  return typeof value === "string" && /^\d{7}$/.test(value);
 }
 
 function isValidYear(value) {
@@ -65,19 +65,53 @@ function validateQuery(query) {
 }
 
 function weekTypeToViewT(value) {
-  return value === "weekend" ? "2" : "1";
+  return value === "weekend" ? "1" : "0";
 }
 
 function buildViewTUrl(query) {
   const url = new URL(VIEWT_BASE_URL);
 
-  url.searchParams.set("url", "detail_selectedLink_road");
   url.searchParams.set("LINKID", String(query.linkId));
   url.searchParams.set("YEAR", String(query.year));
   url.searchParams.set("WEEKTYPE", weekTypeToViewT(query.weekType));
-  url.searchParams.set("TIME", String(query.time));
+  url.searchParams.set("TIME", String(query.time).toUpperCase());
 
   return url;
+}
+
+function valueFrom(record, ...keys) {
+  for (const key of keys) {
+    if (record?.[key] !== undefined && record?.[key] !== null) return record[key];
+  }
+  return undefined;
+}
+
+function normalizeTrafficRecord(record) {
+  const value = record?.VALUE && typeof record.VALUE === "object" ? record.VALUE : {};
+  return {
+    LINKID: valueFrom(record, "LINKID"),
+    ROAD_NAME: valueFrom(record, "ROAD_NAME", "LINKNAME"),
+    ROAD_RANK: valueFrom(record, "ROAD_RANK", "LINKRANK"),
+    LANES: valueFrom(record, "LANES", "LINKLINECNT"),
+    VALUE_IN: valueFrom(record, "VALUE_IN") ?? valueFrom(value, "IN"),
+    VALUE_OUT: valueFrom(record, "VALUE_OUT") ?? valueFrom(value, "OUT"),
+  };
+}
+
+function normalizeViewTPayload(payload) {
+  const records = Array.isArray(payload?.result)
+    ? payload.result
+    : Array.isArray(payload?.RESULT)
+      ? payload.RESULT
+      : [];
+
+  return {
+    state: valueFrom(payload, "state", "STATE"),
+    msg: valueFrom(payload, "msg", "MSG"),
+    count: valueFrom(payload, "count", "CNT"),
+    linkId: valueFrom(payload, "linkId", "LINKID"),
+    result: records.map(normalizeTrafficRecord),
+  };
 }
 
 export function createTrafficProxyRouter(options = {}) {
@@ -101,7 +135,7 @@ export function createTrafficProxyRouter(options = {}) {
         );
       }
 
-      return response.status(200).json(await upstreamResponse.json());
+      return response.status(200).json(normalizeViewTPayload(await upstreamResponse.json()));
     } catch (error) {
       const code = error instanceof SyntaxError
         ? "TRAFFIC_INVALID_RESPONSE"
