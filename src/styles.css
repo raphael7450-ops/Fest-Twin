@@ -935,10 +935,24 @@ a:focus-visible {
 }
 
 .capacity-header {
-  align-items: center;
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.capacity-header > .metric-inline-heading {
   display: flex;
   gap: 10px;
   justify-content: space-between;
+  min-width: 0;
+  width: 100%;
+}
+
+.capacity-header .evidence-button {
+  min-width: 0;
+  white-space: normal;
+  word-break: keep-all;
 }
 
 .capacity-gauge {
