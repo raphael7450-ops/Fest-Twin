@@ -20,9 +20,10 @@ describe("spendingAdapter", () => {
               item: [
                 {
                   areaNm: "Seoul",
-                  baseYm: "202512",
-                  visitorCnt: "10000",
-                  outRegionSpendAmount: "720000000",
+                  baseYm: "202509",
+                  tarExpDsIxCd: "2203",
+                  tarExpDsIxNm: "visitor spend per visit",
+                  tarExpDsIxVal: "72000",
                 },
               ],
             },
@@ -42,6 +43,8 @@ describe("spendingAdapter", () => {
     const calls = fetchImpl.mock.calls as unknown as Array<[RequestInfo | URL]>;
     const requestUrl = new URL(String(calls[0][0]), "http://localhost");
     expect(requestUrl.pathname).toBe("/api/spending/consumer-strength");
+    expect(requestUrl.searchParams.get("areaCd")).toBe("11");
+    expect(requestUrl.searchParams.get("tarExpDsIxCd")).toBe("2203");
   });
 
   it("falls back to the sample spending context when live data is unavailable", async () => {

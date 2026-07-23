@@ -37,7 +37,7 @@ describe("tourism spending server proxy", () => {
     );
 
     const { response, body } = await request(
-      "/api/spending/consumer-strength?areaNm=Seoul&baseYm=202512",
+      "/api/spending/consumer-strength?areaCd=11&baseYm=202509&tarExpDsIxCd=2203",
       fetchMock as unknown as typeof fetch,
     );
 
@@ -48,7 +48,11 @@ describe("tourism spending server proxy", () => {
     expect(upstreamUrl.pathname).toContain("/B551011/AreaTarDemDsService/");
     expect(upstreamUrl.searchParams.get("serviceKey")).toBe("server-key+/=");
     expect(upstreamUrl.searchParams.get("_type")).toBe("json");
-    expect(upstreamUrl.searchParams.get("areaNm")).toBe("Seoul");
+    expect(upstreamUrl.pathname.endsWith("/areaTarExpDsList")).toBe(true);
+    expect(upstreamUrl.searchParams.get("MobileOS")).toBe("ETC");
+    expect(upstreamUrl.searchParams.get("MobileApp")).toBe("FestTwin");
+    expect(upstreamUrl.searchParams.get("areaCd")).toBe("11");
+    expect(upstreamUrl.searchParams.get("tarExpDsIxCd")).toBe("2203");
   });
 
   it("rejects client-supplied keys and unsupported parameters", async () => {

@@ -30,6 +30,7 @@ const TOTAL_SPEND_KEYS = [
   "csAmt",
 ];
 const AVERAGE_SPEND_KEYS = [
+  "tarExpDsIxVal",
   "avgSpendPerVisitorKrw",
   "avgSpendPerVisitor",
   "visitAmountPerPerson",
@@ -69,14 +70,38 @@ function normalizeAreaName(region: string) {
   return region.replace(/특별시|광역시|특별자치시|특별자치도|도|시|군|구/g, "").trim() || region;
 }
 
+function areaCodeFromRegion(region: string) {
+  if (region.includes("서울")) return "11";
+  if (region.includes("부산")) return "26";
+  if (region.includes("대구")) return "27";
+  if (region.includes("인천")) return "28";
+  if (region.includes("광주")) return "29";
+  if (region.includes("대전")) return "30";
+  if (region.includes("울산")) return "31";
+  if (region.includes("세종")) return "36";
+  if (region.includes("경기")) return "41";
+  if (region.includes("강원")) return "51";
+  if (region.includes("충북")) return "43";
+  if (region.includes("충남")) return "44";
+  if (region.includes("전북")) return "52";
+  if (region.includes("전남")) return "46";
+  if (region.includes("경북")) return "47";
+  if (region.includes("경남")) return "48";
+  if (region.includes("제주")) return "50";
+  return "11";
+}
+
 function baseYmFromPlan(plan: FestivalPlan) {
-  return plan.startDate.slice(0, 7).replace("-", "");
+  const planYm = Number(plan.startDate.slice(0, 7).replace("-", ""));
+  const fallbackYm = 202509;
+  return String(planYm > fallbackYm ? fallbackYm : planYm);
 }
 
 function buildSpendingUrl(plan: FestivalPlan) {
   const url = new URL("/api/spending/consumer-strength", window.location.origin);
-  url.searchParams.set("areaNm", normalizeAreaName(plan.region));
+  url.searchParams.set("areaCd", areaCodeFromRegion(plan.region));
   url.searchParams.set("baseYm", baseYmFromPlan(plan));
+  url.searchParams.set("tarExpDsIxCd", "2203");
   return url;
 }
 
@@ -97,13 +122,15 @@ function createSourceDetails(
     retrievedAt: new Date().toISOString(),
     endpoint: "/api/spending/consumer-strength",
     query: [
-      { label: "areaNm", value: normalizeAreaName(plan.region) },
+      { label: "areaCd", value: areaCodeFromRegion(plan.region) },
       { label: "baseYm", value: baseYm },
+      { label: "tarExpDsIxCd", value: "2203" },
     ],
     records: [{
       label: `${plan.region} 관광 소비 강도`,
       fields: [
         { label: "방문객 1인당 평균 소비", value: `${averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원` },
+        { label: "관광 소비 강도 지표", value: String(record.tarExpDsIxNm ?? "방문량 대비 방문 소비액") },
         { label: "외지인 소비액", value: totalSpend ? `${Math.round(totalSpend).toLocaleString("ko-KR")}원` : "-" },
         { label: "방문량", value: visitorCount ? `${Math.round(visitorCount).toLocaleString("ko-KR")}명` : "-" },
       ],

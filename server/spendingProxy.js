@@ -1,17 +1,16 @@
 import express from "express";
 
 const SPENDING_API_BASE_URL = "https://apis.data.go.kr/B551011/AreaTarDemDsService";
-const DEFAULT_OPERATION = "areaTarDemCsList";
+const DEFAULT_OPERATION = "areaTarExpDsList";
 const ALLOWED_QUERY_KEYS = new Set([
   "numOfRows",
   "pageNo",
-  "areaNm",
-  "signguNm",
   "baseYm",
-  "areaCode",
-  "sigunguCode",
+  "areaCd",
+  "signguCd",
+  "tarExpDsIxCd",
 ]);
-const NUMERIC_QUERY_KEYS = new Set(["numOfRows", "pageNo", "baseYm", "areaCode", "sigunguCode"]);
+const NUMERIC_QUERY_KEYS = new Set(["numOfRows", "pageNo", "baseYm", "areaCd", "signguCd", "tarExpDsIxCd"]);
 
 function errorResponse(response, status, code, message) {
   return response.status(status).json({
@@ -44,6 +43,8 @@ function buildSpendingApiUrl(apiKey, query) {
   const url = new URL(`${SPENDING_API_BASE_URL}/${operation}`);
 
   url.searchParams.set("serviceKey", apiKey);
+  url.searchParams.set("MobileOS", "ETC");
+  url.searchParams.set("MobileApp", "FestTwin");
   url.searchParams.set("_type", "json");
   url.searchParams.set("numOfRows", "20");
   url.searchParams.set("pageNo", "1");
