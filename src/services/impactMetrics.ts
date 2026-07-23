@@ -36,6 +36,8 @@ export interface SafetyLogisticsMetrics {
   trafficRiskScore: number;
   trafficRiskLabel: "낮음" | "보통" | "높음";
   trafficRoadName: string;
+  trafficSourceLabel: string;
+  trafficSourceStatusLabel: string;
   parkingBaseOccupancyRate: number;
   peakDensity: number;
   peakVisitors: number;
@@ -197,6 +199,9 @@ export function createSafetyLogisticsMetrics(
     trafficRiskScore,
     trafficRiskLabel: traffic?.riskLabel ?? "낮음",
     trafficRoadName: traffic?.links[0]?.roadName ?? "교통량 기준 도로 없음",
+    trafficSourceLabel: traffic?.provenance.sourceName ?? "KTDB/View-T 교통량",
+    trafficSourceStatusLabel:
+      traffic?.status === "sample-fallback" ? "샘플 대체" : `${traffic?.year ?? 2024}년 기준`,
     parkingBaseOccupancyRate,
     peakDensity,
     peakVisitors,

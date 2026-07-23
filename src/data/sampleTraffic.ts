@@ -14,17 +14,17 @@ export const trafficLinkMappings: TrafficLinkMapping[] = [
     id: "gangnam-teheran",
     regionKeyword: "서울",
     venueKeyword: "강남",
-    linkId: "TEHERAN-001",
-    roadName: "테헤란로",
-    note: "강남권 축제 인근 대표 간선도로의 샘플 링크입니다.",
+    linkId: "1000001",
+    roadName: "View-T 공식 예시 링크",
+    note: "View-T 공식 문서에서 정상 조회를 확인한 7자리 링크입니다. 행사장 인접 도로 자동 매칭 전까지 실 API 연동 검증용으로 사용합니다.",
   },
   {
     id: "gwanghwamun-sejong",
     regionKeyword: "서울",
     venueKeyword: "광화문",
-    linkId: "SEJONG-001",
-    roadName: "세종대로",
-    note: "광화문권 축제 인근 대표 간선도로의 샘플 링크입니다.",
+    linkId: "1000001",
+    roadName: "View-T 공식 예시 링크",
+    note: "View-T 공식 문서에서 정상 조회를 확인한 7자리 링크입니다. 행사장 인접 도로 자동 매칭 전까지 실 API 연동 검증용으로 사용합니다.",
   },
 ];
 
@@ -36,8 +36,8 @@ export const sampleTrafficSourceDetails: MetricEvidenceSourceDetail[] = [
     statusLabel: "샘플 교통량 사용",
     endpoint: "/api/traffic/selected-link",
     query: [
-      { label: "linkId", value: "TEHERAN-001" },
-      { label: "year", value: "2025" },
+      { label: "linkId", value: "1000001" },
+      { label: "year", value: "2024" },
       { label: "weekType", value: "weekend" },
       { label: "time", value: "20" },
     ],
@@ -45,7 +45,7 @@ export const sampleTrafficSourceDetails: MetricEvidenceSourceDetail[] = [
       {
         label: "테헤란로",
         fields: [
-          { label: "LINKID", value: "TEHERAN-001" },
+          { label: "LINKID", value: "1000001" },
           { label: "도로명", value: "테헤란로" },
           { label: "도로등급", value: "주간선도로" },
           { label: "차로수", value: "6" },
@@ -61,14 +61,14 @@ export const sampleTrafficSourceDetails: MetricEvidenceSourceDetail[] = [
 
 export const sampleTrafficContext: TrafficContext = {
   status: "sample-fallback",
-  year: 2025,
+  year: 2024,
   weekType: "weekend",
   time: "20",
   riskScore: 68,
   riskLabel: "보통",
   links: [
     {
-      linkId: "TEHERAN-001",
+      linkId: "1000001",
       roadName: "테헤란로",
       roadRank: "주간선도로",
       lanes: 6,

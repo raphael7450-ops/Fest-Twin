@@ -19,9 +19,9 @@ describe("trafficAdapter", () => {
       jsonResponse({
         result: [
           {
-            LINKID: "TEHERAN-001",
-            ROAD_NAME: "테헤란로",
-            ROAD_RANK: "주간선도로",
+            LINKID: "1000001",
+            ROAD_NAME: "동문로",
+            ROAD_RANK: "시군도",
             LANES: "6",
             VALUE_IN: "3200",
             VALUE_OUT: "2800",
@@ -41,8 +41,8 @@ describe("trafficAdapter", () => {
     expect(traffic.weekType).toBe("weekend");
     expect(traffic.time).toBe("20");
     expect(traffic.links[0]).toMatchObject({
-      linkId: "TEHERAN-001",
-      roadName: "테헤란로",
+      linkId: "1000001",
+      roadName: "동문로",
       inboundVolume: 3200,
       outboundVolume: 2800,
       totalVolume: 6000,
@@ -52,7 +52,7 @@ describe("trafficAdapter", () => {
 
     const requestUrl = new URL(String(fetchImpl.mock.calls[0][0]), "http://localhost");
     expect(requestUrl.pathname).toBe("/api/traffic/selected-link");
-    expect(requestUrl.searchParams.get("linkId")).toBe("TEHERAN-001");
+    expect(requestUrl.searchParams.get("linkId")).toBe("1000001");
     expect(requestUrl.searchParams.get("year")).toBe("2024");
     expect(requestUrl.searchParams.get("weekType")).toBe("weekend");
     expect(requestUrl.searchParams.get("time")).toBe("20");

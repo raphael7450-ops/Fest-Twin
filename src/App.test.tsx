@@ -143,14 +143,16 @@ describe("App", () => {
     render(<App />);
 
     expect(await screen.findByText("접근 교통 위험도")).toBeInTheDocument();
-    expect(screen.getByText(/테헤란로|세종대로/)).toBeInTheDocument();
+    expect(screen.getByText("KTDB/View-T 교통량 샘플")).toBeInTheDocument();
+    expect(screen.getByText("샘플 대체")).toBeInTheDocument();
+    expect(screen.getByText(/테헤란로|세종대로|동문로|View-T 공식 예시 링크/)).toBeInTheDocument();
 
     await userEvent.click(
       screen.getByRole("button", { name: /주차 수용 차오름 비율 근거 보기/ }),
     );
 
     expect(await screen.findByText("사용 데이터 상세")).toBeInTheDocument();
-    expect(screen.getByText(/KTDB\/View-T/)).toBeInTheDocument();
+    expect(screen.getAllByText(/KTDB\/View-T/).length).toBeGreaterThan(0);
     expect(screen.getByText(/LINKID/)).toBeInTheDocument();
   });
 

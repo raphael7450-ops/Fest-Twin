@@ -934,6 +934,37 @@ a:focus-visible {
   line-height: 1.45;
 }
 
+.traffic-source-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.traffic-source-badge,
+.traffic-source-status {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.2;
+  padding: 4px 8px;
+  word-break: keep-all;
+}
+
+.traffic-source-badge {
+  background: #e8f0ff;
+  border: 1px solid #bfd0ff;
+  color: #1e3a8a;
+}
+
+.traffic-source-status {
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #047857;
+}
+
 .capacity-header {
   align-items: start;
   display: grid;
