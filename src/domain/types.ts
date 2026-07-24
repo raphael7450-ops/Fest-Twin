@@ -2,6 +2,7 @@ export type ReadinessStatus = "반영" | "준비" | "향후";
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 export type DataSourceStatus =
   | "live"
+  | "file-normalized"
   | "partial-fallback"
   | "sample-fallback";
 
@@ -132,6 +133,41 @@ export interface SpendingContext {
   region: string;
   retrievedAt: string;
   note: string;
+  sourceDetails: MetricEvidenceSourceDetail[];
+}
+
+export type DemandBackdataStatus =
+  | "live"
+  | "file-normalized"
+  | "partial-fallback"
+  | "sample-fallback";
+
+export interface DemandBackdataSimilarFestival {
+  id: string;
+  name: string;
+  region: string;
+  type: string;
+  periodLabel: string;
+  budgetMillionKrw?: number;
+  visitors?: number;
+  similarityScore: number;
+  sourceName: string;
+}
+
+export interface DemandBackdataContext {
+  status: DemandBackdataStatus;
+  regionBaseline?: {
+    region: string;
+    basePeriod: string;
+    visitorCount: number;
+    sourceName: string;
+  };
+  similarFestivalBaselines: DemandBackdataSimilarFestival[];
+  seasonality?: {
+    label: string;
+    concentrationIndex: number;
+    sourceName: string;
+  };
   sourceDetails: MetricEvidenceSourceDetail[];
 }
 
