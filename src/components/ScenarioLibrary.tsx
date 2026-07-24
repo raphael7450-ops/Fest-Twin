@@ -136,7 +136,7 @@ export function ScenarioLibrary({
                     title="부서 공유 링크 복사"
                     onClick={(e) => handleCopyShareLink(scenario, e)}
                   >
-                    🔗 공유 링크
+                    공유 링크
                   </button>
                   <button
                     className="text-button danger-text"

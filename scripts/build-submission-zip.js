@@ -20,7 +20,7 @@ if (fs.existsSync(zipPath)) {
   fs.unlinkSync(zipPath);
 }
 
-console.log("📦 Building complete Fest-Twin submission zip package...");
+console.log("[BUILD] Building complete Fest-Twin submission zip package...");
 
 try {
   const itemsToInclude = [
@@ -46,8 +46,8 @@ try {
   const psCommand = `powershell -Command "Compress-Archive -Path ${itemsString} -DestinationPath '${zipPath}' -Force"`;
 
   execSync(psCommand, { stdio: "inherit" });
-  console.log(`✅ Submission zip successfully created at: ${zipPath}`);
+  console.log(`[SUCCESS] Submission zip successfully created at: ${zipPath}`);
 } catch (error) {
-  console.error("❌ Failed to create submission zip archive:", error);
+  console.error("[FAIL] Failed to create submission zip archive:", error);
   process.exit(1);
 }

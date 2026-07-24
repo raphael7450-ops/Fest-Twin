@@ -40,24 +40,24 @@ function checkEndpoint(endpoint) {
 }
 
 async function runDeployCheck() {
-  console.log(`🔍 Checking deployment health on http://${TARGET_HOST}:${TARGET_PORT}...`);
+  console.log(`[CHECK] Checking deployment health on http://${TARGET_HOST}:${TARGET_PORT}...`);
   let successCount = 0;
 
   for (const endpoint of ENDPOINTS) {
     try {
       const result = await checkEndpoint(endpoint);
-      console.log(`  ✅ ${result.endpoint} -> HTTP ${result.statusCode} (${result.bytes} bytes)`);
+      console.log(`  [OK] ${result.endpoint} -> HTTP ${result.statusCode} (${result.bytes} bytes)`);
       successCount += 1;
     } catch (error) {
-      console.error(`  ❌ ${error.message}`);
+      console.error(`  [FAIL] ${error.message}`);
     }
   }
 
   if (successCount === ENDPOINTS.length) {
-    console.log(`\n🎉 All ${ENDPOINTS.length} deployment health checks PASSED successfully!`);
+    console.log(`\n[SUCCESS] All ${ENDPOINTS.length} deployment health checks PASSED successfully!`);
     process.exit(0);
   } else {
-    console.error(`\n⚠️ Health check failed (${successCount}/${ENDPOINTS.length} endpoints passed).`);
+    console.error(`\n[WARNING] Health check failed (${successCount}/${ENDPOINTS.length} endpoints passed).`);
     process.exit(1);
   }
 }

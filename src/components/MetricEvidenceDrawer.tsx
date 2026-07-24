@@ -168,7 +168,7 @@ export function MetricEvidenceDrawer({
                       <strong className="subtotal-val">{safeEvidenceText(step.subtotal)}</strong>
                     </div>
                   </div>
-                  {step.note ? <p className="step-note">💡 {safeEvidenceText(step.note)}</p> : null}
+                  {step.note ? <p className="step-note">{safeEvidenceText(step.note)}</p> : null}
                 </div>
               ))}
             </div>

@@ -18,7 +18,7 @@ flowchart TD
     E --> F[git pull & docker build]
     F --> G[Stop Old Container & Start New Container 18080:80]
     G --> H[Health Check: GET /api/scenarios]
-    H -- HTTP 200 OK -- I[🎉 Deployment Successful]
+    H -- HTTP 200 OK -- I[Deployment Successful]
 ```
 
 ---
