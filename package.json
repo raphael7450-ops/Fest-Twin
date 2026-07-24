@@ -9,6 +9,7 @@
     "start": "node server/index.js",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
+    "deploy:check": "node scripts/deploy-check.js",
     "build:zip": "node scripts/build-submission-zip.js"
   },
   "dependencies": {

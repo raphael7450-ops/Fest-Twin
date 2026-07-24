@@ -1,0 +1,77 @@
+name: Fest-Twin CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    name: 🧪 CI: Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Check out repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run Vitest test suite
+        run: npm test
+
+      - name: 🛠️ Build production bundle
+        env:
+          VITE_NAVER_MAP_NCP_KEY_ID: ${{ secrets.NAVER_MAP_CLIENT_ID || '5mcwlg6qwo' }}
+        run: npm run build
+
+  deploy:
+    name: 🚀 CD: Remote Docker Deploy
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🌐 Deploy container on remote Docker server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.REMOTE_HOST || '192.168.55.223' }}
+          username: ${{ secrets.REMOTE_USER || 'cwuser' }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            echo "==> Pulling latest changes from main branch..."
+            cd ~/fest-twin-demo || (git clone https://github.com/raphael7450-ops/Fest-Twin.git ~/fest-twin-demo && cd ~/fest-twin-demo)
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "==> Building Docker image..."
+            NAVER_KEY="${{ secrets.NAVER_MAP_CLIENT_ID || '5mcwlg6qwo' }}"
+            docker build --build-arg NAVER_MAP_CLIENT_ID="$NAVER_KEY" -t fest-twin-demo:latest .
+
+            echo "==> Stopping old container..."
+            if [ "$(docker ps -aq -f name=^fest-twin-demo$)" ]; then
+              docker stop fest-twin-demo || true
+              docker rm fest-twin-demo || true
+            fi
+
+            echo "==> Starting new container..."
+            ENV_ARGS=()
+            if [ -f "$HOME/fest-twin-demo.env" ]; then
+              ENV_ARGS=(--env-file "$HOME/fest-twin-demo.env")
+            fi
+            docker run -d --name fest-twin-demo "${ENV_ARGS[@]}" --restart unless-stopped -p 18080:80 fest-twin-demo:latest
+
+            echo "==> Performing deployment health check..."
+            sleep 3
+            curl -f -s http://localhost:18080/api/scenarios > /dev/null || (echo "Health check failed!" && exit 1)
+            echo "🎉 Deployment successful!"
