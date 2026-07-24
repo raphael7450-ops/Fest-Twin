@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import { sampleDemandBackdataContext } from "../data/sampleDemandBackdata";
 import { sampleSpendingContext } from "../data/sampleSpending";
 import { sampleTrafficContext } from "../data/sampleTraffic";
 import { sampleTourismContext } from "../data/sampleTourApi";
@@ -63,6 +64,36 @@ describe("metricEvidence", () => {
     );
     expect(JSON.stringify(evidence["economic-roi"].assumptions)).not.toContain(
       "62,000",
+    );
+  });
+
+  it("includes regional festival visitor records in demand-index evidence", () => {
+    const forecast = createForecast(
+      sampleFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleDemandBackdataContext,
+    );
+    const simulation = createSimulation(sampleFestivalPlan, forecast, forecast.peakHour);
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      forecast,
+      simulation,
+      sampleTourismContext,
+      sampleTrendContext,
+      undefined,
+      undefined,
+      sampleDemandBackdataContext,
+    );
+
+    expect(evidence["demand-index"].dataSources).toContain(
+      "문화체육관광부_지역축제 정보",
+    );
+    expect(JSON.stringify(evidence["demand-index"].sourceDetails)).toContain(
+      "방문객 수",
+    );
+    expect(JSON.stringify(evidence["demand-index"].sourceDetails)).not.toMatch(
+      /serviceKey|clientSecret|Authorization|Cookie/i,
     );
   });
 

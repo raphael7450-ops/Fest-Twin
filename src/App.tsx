@@ -19,6 +19,7 @@ import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleTrendContext } from "./data/sampleTrends";
 import type { MetricEvidenceId } from "./domain/types";
+import { getDemandBackdataContext } from "./services/demandBackdataAdapter";
 import { createForecast } from "./services/forecast";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
 import { createPlanningReport } from "./services/report";
@@ -102,6 +103,10 @@ export function App() {
   }));
   const spending =
     spendingState.planKey === spendingPlanKey ? spendingState.context : sampleSpendingContext;
+  const demandBackdata = useMemo(
+    () => getDemandBackdataContext(plan),
+    [plan.region, plan.name, plan.startDate, plan.totalBudgetMillionKrw, plan.keywords],
+  );
 
   const candidates =
     candidateState.planKey === candidatePlanKey ? candidateState.candidates : [];
@@ -256,8 +261,8 @@ export function App() {
   }, [spendingPlanKey]);
 
   const forecast = useMemo(
-    () => createForecast(plan, tourism, sampleTrendContext),
-    [plan, tourism],
+    () => createForecast(plan, tourism, sampleTrendContext, demandBackdata),
+    [plan, tourism, demandBackdata],
   );
   const simulation = useMemo(
     () => createSimulation(plan, forecast, selectedHour),
@@ -272,8 +277,9 @@ export function App() {
       sampleTrendContext,
       traffic,
       spending,
+      demandBackdata,
     ),
-    [forecast, plan, simulation, tourism, traffic, spending],
+    [forecast, plan, simulation, tourism, traffic, spending, demandBackdata],
   );
   const report = useMemo(
     () => createPlanningReport(plan, forecast, simulation),

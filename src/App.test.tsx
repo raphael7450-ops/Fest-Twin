@@ -145,6 +145,7 @@ describe("App", () => {
     expect(screen.getByText("사용 데이터")).toBeInTheDocument();
     expect(screen.getByText("산출 방식")).toBeInTheDocument();
     expect(screen.getByText("해석 시 주의사항")).toBeInTheDocument();
+    expect(screen.getAllByText("문화체육관광부_지역축제 정보").length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole("button", { name: "근거 닫기" }));
 

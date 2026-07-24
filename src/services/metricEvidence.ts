@@ -1,4 +1,5 @@
 import type {
+  DemandBackdataContext,
   EvidenceField,
   FestivalPlan,
   ForecastResult,
@@ -163,6 +164,7 @@ export function createMetricEvidenceSet(
   trends: TrendContext,
   traffic?: TrafficContext,
   spending?: SpendingContext,
+  demandBackdata?: DemandBackdataContext,
 ): Record<MetricEvidenceId, MetricEvidence> {
   const summary = createSummaryKpiMetrics(plan, forecast, simulation, tourism);
   const safety = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic);
@@ -172,6 +174,7 @@ export function createMetricEvidenceSet(
   const tourismDetails = tourism.sourceDetails ?? [];
   const trafficDetails = trafficDerivedDetails(traffic);
   const spendingDetails = spending?.sourceDetails ?? [];
+  const demandBackdataDetails = demandBackdata?.sourceDetails ?? [];
   const nearbyTourismDetails = tourismDetails.filter(
     (detail) => detail.sourceId.includes("nearby") || detail.sourceId === "sample-nearby-spots",
   );
@@ -283,6 +286,7 @@ export function createMetricEvidenceSet(
       dataSources: [
         "TourAPI 주변 관광지 매력도",
         "TourAPI 유사 축제 후보",
+        ...(demandBackdata ? ["문화체육관광부_지역축제 정보"] : []),
         "소셜 트렌드 관심도",
         "사용자 입력 수용 인원",
       ],
@@ -291,12 +295,16 @@ export function createMetricEvidenceSet(
       assumptions: [
         "유사 축제 방문 수요는 주제 유사도에 따라 보정합니다.",
         "18~20시 프로그램은 피크 시간대 가중치를 적용합니다.",
+        ...(demandBackdata
+          ? ["지역축제 정보의 방문객 수는 유사 축제 기준선이며, 현재 기획안의 확정 방문객 수가 아닙니다."]
+          : []),
       ],
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
       sourceDetails: [
         ...tourismDetails,
+        ...demandBackdataDetails,
         ...demandUserInputs,
         ...expectedVisitorsDetails,
       ],
