@@ -1612,3 +1612,97 @@ a:focus-visible {
   cursor: pointer;
 }
 
+/* calculation-flow-section styles */
+.calculation-step-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.calculation-step-card {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.step-badge {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.step-title {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.step-formula-box {
+  background: #0f172a;
+  color: #38bdf8;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+  overflow-x: auto;
+}
+
+.step-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  background: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.step-details-grid small {
+  display: block;
+  color: #64748b;
+  font-size: 0.72rem;
+  margin-bottom: 2px;
+}
+
+.step-details-grid span {
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.badge-coeff {
+  display: inline-block;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700 !important;
+}
+
+.subtotal-val {
+  color: #0284c7;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.step-note {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+

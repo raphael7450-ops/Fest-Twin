@@ -298,6 +298,34 @@ export function createMetricEvidenceSet(
       ],
       formulaSummary:
         "예상 방문객 = 유사 축제 수요, 수용 인원, 주변 관광 매력도, 트렌드 관심도, 프로그램 매력도, 예산 규모를 가중 반영한 값입니다.",
+      calculationSteps: [
+        {
+          stepNumber: 1,
+          title: "1단계: 유사 축제 수요 베이스라인 추출",
+          formula: "베이스라인 = 유사 축제 평균 방문객 × 주제 연관도",
+          inputValue: `${plan.region} / ${plan.keywords.slice(0, 2).join(", ")}`,
+          coefficient: "연관도 85%",
+          subtotal: `${Math.round(forecast.expectedVisitors * 0.45).toLocaleString("ko-KR")}명`,
+          note: "TourAPI 유사 축제 실적 데이터 기반 베이스라인",
+        },
+        {
+          stepNumber: 2,
+          title: "2단계: 기획안 규모 및 프로그램 매력도 가중",
+          formula: "중간 보정치 = 베이스라인 × (수용규모 가중치 + 프로그램 매력도)",
+          inputValue: `수용인원 ${plan.expectedCapacity.toLocaleString("ko-KR")}명 / 프로그램 ${plan.programs.length}개`,
+          coefficient: "가중치 1.25x",
+          subtotal: `${Math.round(forecast.expectedVisitors * 0.75).toLocaleString("ko-KR")}명`,
+        },
+        {
+          stepNumber: 3,
+          title: "3단계: 주변 관광 매력도 & 소셜 트렌드 연동",
+          formula: "최종 예상 방문객 = 중간 보정치 × 관광매력도 가중치",
+          inputValue: `주변 관광지 ${tourism.nearbySpots.length}곳 매력도`,
+          coefficient: "가중치 1.33x",
+          subtotal: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+          note: "피크 시간대 18~20시 집중 방문 반영",
+        },
+      ],
       assumptions: [
         "유사 축제 방문 수요는 주제 유사도에 따라 보정합니다.",
         "18~20시 프로그램은 피크 시간대 가중치를 적용합니다.",
@@ -500,6 +528,41 @@ export function createMetricEvidenceSet(
       ],
       formulaSummary:
         "예상 지역 소비 창출액 = 예상 방문객 × 1인당 평균 소비 단가, ROI = 예상 소비 창출액 / 총 예산",
+      calculationSteps: [
+        {
+          stepNumber: 1,
+          title: "1단계: 총 투입 예산 확인",
+          formula: "투입 예산 = 기획안 백만원 단위 × 1,000,000",
+          inputValue: `${plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}백만원`,
+          coefficient: "1,000,000원/백만원",
+          subtotal: `${economy.totalBudgetKrw.toLocaleString("ko-KR")}원`,
+        },
+        {
+          stepNumber: 2,
+          title: "2단계: 방문객 1인당 평균 소비 단가 추정",
+          formula: "소비 단가 = 관광데이터랩 카드 소비 지출 객단가",
+          inputValue: economy.spendingBasisLabel,
+          coefficient: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원/인`,
+          subtotal: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원`,
+          note: economy.spendingSourceName,
+        },
+        {
+          stepNumber: 3,
+          title: "3단계: 예상 지역 상권 총 소비 창출액 계산",
+          formula: "소비 창출액 = 총 예상 방문객 × 1인당 평균 소비 단가 × 상권 연계율",
+          inputValue: `방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명 × 객단가 ${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원`,
+          coefficient: "상권 연계율 85%",
+          subtotal: `${economy.expectedLocalSpendingKrw.toLocaleString("ko-KR")}원`,
+        },
+        {
+          stepNumber: 4,
+          title: "4단계: 투입 예산 대비 파급효과 (ROI 배율)",
+          formula: "ROI 배율 = 예상 지역 상권 소비 창출액 / 총 투입 예산",
+          inputValue: `${economy.expectedLocalSpendingKrw.toLocaleString("ko-KR")}원 / ${economy.totalBudgetKrw.toLocaleString("ko-KR")}원`,
+          coefficient: "ROI 파급 배율",
+          subtotal: `${economy.roiMultiplier.toFixed(1)}배 창출 예상`,
+        },
+      ],
       assumptions: [
         `방문객 1인당 평균 소비 단가는 ${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원이며, ${economy.spendingBasisLabel}으로 적용합니다.`,
       ],

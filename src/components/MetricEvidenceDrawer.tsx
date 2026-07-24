@@ -141,6 +141,40 @@ export function MetricEvidenceDrawer({
           <p>{evidence.formulaSummary}</p>
         </div>
 
+        {evidence.calculationSteps && evidence.calculationSteps.length > 0 ? (
+          <div className="evidence-section calculation-flow-section">
+            <h3>단계별 연산 흐름도 (Step-by-Step Breakdown)</h3>
+            <div className="calculation-step-flow">
+              {evidence.calculationSteps.map((step) => (
+                <div key={step.stepNumber} className="calculation-step-card">
+                  <div className="step-header">
+                    <span className="step-badge">Step {step.stepNumber}</span>
+                    <strong className="step-title">{safeEvidenceText(step.title)}</strong>
+                  </div>
+                  <div className="step-formula-box">
+                    <code>{safeEvidenceText(step.formula)}</code>
+                  </div>
+                  <div className="step-details-grid">
+                    <div>
+                      <small>입력/기준 데이터</small>
+                      <span>{safeEvidenceText(step.inputValue)}</span>
+                    </div>
+                    <div>
+                      <small>가중치 계수</small>
+                      <span className="badge-coeff">{safeEvidenceText(step.coefficient)}</span>
+                    </div>
+                    <div>
+                      <small>중간/최종 산출값</small>
+                      <strong className="subtotal-val">{safeEvidenceText(step.subtotal)}</strong>
+                    </div>
+                  </div>
+                  {step.note ? <p className="step-note">💡 {safeEvidenceText(step.note)}</p> : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="evidence-section">
           <h3>주요 영향 요인</h3>
           <ul className="contributor-list">

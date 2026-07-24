@@ -255,6 +255,16 @@ export interface MetricEvidenceContributor {
   effect: "positive" | "neutral" | "risk";
 }
 
+export interface MetricEvidenceStep {
+  stepNumber: number;
+  title: string;
+  formula: string;
+  inputValue: string;
+  coefficient: string;
+  subtotal: string;
+  note?: string;
+}
+
 export type EvidenceSourceType = "tourapi" | "ktdb" | "user-input" | "derived" | "sample";
 
 export interface EvidenceField {
@@ -312,6 +322,7 @@ export interface MetricEvidence {
   dataSources: string[];
   sourceDetails: MetricEvidenceSourceDetail[];
   formulaSummary: string;
+  calculationSteps?: MetricEvidenceStep[];
   assumptions: string[];
   confidence: MetricEvidenceConfidence;
   confidenceLabel: "높음" | "보통" | "낮음";

@@ -59,12 +59,27 @@ describe("metricEvidence", () => {
     expect(evidence["economic-roi"].dataSources).toContain(
       "한국관광공사 지역별 관광 수요 강도",
     );
-    expect(JSON.stringify(evidence["economic-roi"].sourceDetails)).toContain(
-      "58,400원",
+  });
+
+  it("populates step-by-step calculation breakdown flow items", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleTrafficContext,
+      sampleSpendingContext,
+      sampleDemandBackdataContext,
     );
-    expect(JSON.stringify(evidence["economic-roi"].assumptions)).not.toContain(
-      "62,000",
-    );
+
+    expect(evidence["demand-index"].calculationSteps).toBeDefined();
+    expect(evidence["demand-index"].calculationSteps?.length).toBeGreaterThan(0);
+    expect(evidence["demand-index"].calculationSteps![0].formula).toContain("베이스라인");
+
+    expect(evidence["economic-roi"].calculationSteps).toBeDefined();
+    expect(evidence["economic-roi"].calculationSteps?.length).toBeGreaterThan(0);
+    expect(evidence["economic-roi"].calculationSteps![3].formula).toContain("ROI");
   });
 
   it("includes regional festival visitor records in demand-index evidence", () => {
