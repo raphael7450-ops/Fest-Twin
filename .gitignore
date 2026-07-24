@@ -11,3 +11,4 @@ vitest.config.d.ts
 .DS_Store
 Thumbs.db
 tmp/
+*.tar

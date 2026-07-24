@@ -130,7 +130,10 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
         </span>
       </div>
       <ul className="venue-map-points">
-        <li>{venue.name}</li>
+        <li>📍 행사장 중심 구역: {venue.name}</li>
+        <li>🚨 주요 진출입 병목: 삼성역 5·6번 출입구 및 영동대로 진입로</li>
+        <li>🔥 피크 밀집 예상: COEX 동문 광장 & K-POP 미디어월 관람 구역</li>
+        <li>🛍️ 상권 연계 분산: 먹거리 부스 & 주변 상업 시설 연계 동선</li>
       </ul>
     </section>
   );
