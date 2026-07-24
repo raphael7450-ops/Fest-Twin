@@ -1,7 +1,7 @@
 /**
  * 파일 : src/services/scenarioStorage.ts
- * 내용 : 축제 기획안 시나리오 브라우저 LocalStorage 기반 보관/복원/삭제 저장소 서비스
- * 수정 : 2026-07-24. 개인정보 수집 없는 로컬 저장소 시나리오 저장 관리자 구현
+ * 내용 : SQLite REST API 영속 저장소 동기화 및 브라우저 LocalStorage Graceful Fallback 서비스
+ * 수정 : 2026-07-24. REST API 연동, share_token 공유 링크 복사 지원 및 하이브리드 동기화 구현
  */
 
 import type { FestivalPlan } from "../domain/types";
@@ -14,6 +14,7 @@ export interface SavedScenario {
   savedAt: string;
   selectedHour: number;
   plan: FestivalPlan;
+  shareToken?: string;
 }
 
 function readRawScenarios(): SavedScenario[] {
@@ -33,6 +34,110 @@ function writeScenarios(scenarios: SavedScenario[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
 }
 
+function createApiUrl(path: string) {
+  if (typeof window !== "undefined" && window.location?.origin && window.location.origin !== "null" && window.location.origin !== "http://localhost") {
+    return new URL(path, window.location.origin).toString();
+  }
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return new URL(path, window.location.origin).toString();
+  }
+  return path;
+}
+
+// 1. 서버 REST API 시나리오 목록 조회 (실패 시 LocalStorage Fallback)
+export async function fetchServerScenarios(): Promise<SavedScenario[]> {
+  try {
+    const response = await fetch(createApiUrl("/api/scenarios"));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+
+    if (Array.isArray(data.scenarios)) {
+      const mapped: SavedScenario[] = data.scenarios.map((item: any) => ({
+        id: item.id,
+        name: item.title ?? `${item.parameters?.plan?.name ?? "시나리오"}`,
+        savedAt: item.created_at ?? new Date().toISOString(),
+        selectedHour: item.parameters?.selectedHour ?? 20,
+        plan: item.parameters?.plan,
+        shareToken: item.share_token,
+      }));
+
+      // 서버 응답 성공 시 LocalStorage에도 최신화
+      writeScenarios(mapped);
+      return mapped;
+    }
+  } catch {
+    // 백엔드 미가동 또는 쿨다운 시 조용히 LocalStorage 반환
+  }
+
+  return readRawScenarios();
+}
+
+// 2. 서버 REST API 시나리오 신규 저장
+export async function saveServerScenario(
+  plan: FestivalPlan,
+  selectedHour: number,
+  title?: string,
+): Promise<SavedScenario> {
+  const localSaved = saveScenario(plan, selectedHour);
+  const scenarioTitle =
+    title ?? localSaved.name;
+
+  try {
+    const response = await fetch(createApiUrl("/api/scenarios"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: scenarioTitle,
+        description: `${plan.region} ${plan.venueAddress}`,
+        parameters: { plan, selectedHour },
+        results_summary: {
+          targetVisitors: plan.expectedCapacity,
+          budgetKrw: plan.totalBudgetMillionKrw * 1000000,
+        },
+      }),
+    });
+
+    if (response.ok) {
+      const created = await response.json();
+      const serverSaved: SavedScenario = {
+        id: created.id,
+        name: created.title,
+        savedAt: created.created_at,
+        selectedHour,
+        plan,
+        shareToken: created.share_token,
+      };
+
+      const updated = [serverSaved, ...readRawScenarios().filter((i) => i.id !== localSaved.id)].slice(0, 10);
+      writeScenarios(updated);
+      return serverSaved;
+    }
+  } catch {
+    // 백엔드 미가동 시 로컬 저장 결과 반환
+  }
+
+  return localSaved;
+}
+
+// 3. 서버 REST API 시나리오 삭제
+export async function deleteServerScenario(id: string): Promise<boolean> {
+  try {
+    await fetch(createApiUrl(`/api/scenarios/${id}`), { method: "DELETE" });
+  } catch {
+    // ignore
+  }
+
+  const filtered = readRawScenarios().filter((item) => item.id !== id);
+  writeScenarios(filtered);
+  return true;
+}
+
+// 4. 공유 토큰 기반 B2G URL 생성 함수
+export function getShareUrl(shareToken?: string): string {
+  if (!shareToken) return window.location.href;
+  return `${window.location.origin}/?share_token=${shareToken}`;
+}
+
 export function loadScenarios(): SavedScenario[] {
   return readRawScenarios();
 }
@@ -49,7 +154,7 @@ export function saveScenario(
     selectedHour,
     plan,
   };
-  const scenarios = [scenario, ...readRawScenarios()].slice(0, 5);
+  const scenarios = [scenario, ...readRawScenarios()].slice(0, 10);
 
   writeScenarios(scenarios);
 

@@ -122,6 +122,23 @@ export function App() {
   useEffect(() => {
     const controller = new AbortController();
 
+    // B2G 공유 링크 URL 파라미터(share_token) 자동 복원 처리
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareToken = urlParams.get("share_token");
+    if (shareToken) {
+      fetch(`/api/scenarios/share/${shareToken}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.parameters?.plan) {
+            setPlan(data.parameters.plan);
+            if (data.parameters.selectedHour !== undefined) {
+              setSelectedHour(data.parameters.selectedHour);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
     getTourApiAreaCodes({ signal: controller.signal })
       .then((nextAreaCodes) => {
         if (!controller.signal.aborted) {

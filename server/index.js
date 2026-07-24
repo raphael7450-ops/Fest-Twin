@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { createSpendingProxyRouter } from "./spendingProxy.js";
 import { createTrafficProxyRouter } from "./trafficProxy.js";
 import { createTourProxyRouter } from "./tourProxy.js";
+import { createScenarioRouter } from "./scenarioRouter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,6 +89,12 @@ export function createApp(options = {}) {
     createSpendingProxyRouter({
       fetchImpl: options.fetchImpl,
       apiKey: options.apiKey,
+    }),
+  );
+  app.use(
+    "/api/scenarios",
+    createScenarioRouter({
+      db: options.scenarioDb,
     }),
   );
   app.use(express.static(staticDir));

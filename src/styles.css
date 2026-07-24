@@ -1575,3 +1575,40 @@ a:focus-visible {
   color: #475569;
   line-height: 1.55;
 }
+
+.scenario-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.scenario-load-btn {
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 4px 0;
+  flex: 1;
+}
+
+.scenario-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.compact-btn {
+  padding: 4px 8px !important;
+  font-size: 0.78rem !important;
+  min-height: auto !important;
+}
+
+.danger-text {
+  color: #dc2626 !important;
+  font-size: 0.78rem !important;
+  cursor: pointer;
+}
+

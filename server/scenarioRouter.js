@@ -1,0 +1,120 @@
+/**
+ * 파일 : server/scenarioRouter.js
+ * 내용 : 지자체 시나리오 영속 REST API (CRUD 및 부서 공유 share_token 엔트리포인트)
+ * 수정 : 2026-07-24. RESTful CRUD 라우트 구현 및 공유 토큰 기반 조회 추가
+ */
+
+import express from "express";
+import { scenarioDb } from "./db/database.js";
+
+function errorResponse(response, status, code, message) {
+  return response.status(status).json({
+    error: { code, message },
+  });
+}
+
+export function createScenarioRouter(options = {}) {
+  const router = express.Router();
+  const db = options.db ?? scenarioDb;
+
+  // 1. GET /api/scenarios - 저장된 전체 시나리오 목록 조회
+  router.get("/", (_request, response) => {
+    try {
+      const scenarios = db.getAllScenarios();
+      return response.status(200).json({ scenarios, count: scenarios.length });
+    } catch (error) {
+      return errorResponse(response, 500, "SCENARIO_READ_ERROR", "Failed to fetch scenarios.");
+    }
+  });
+
+  // 2. GET /api/scenarios/share/:token - B2G 부서 공유 토큰 기반 조회
+  router.get("/share/:token", (request, response) => {
+    try {
+      const { token } = request.params;
+      const scenario = db.getScenarioByShareToken(token);
+      if (!scenario) {
+        return errorResponse(response, 404, "SHARE_TOKEN_NOT_FOUND", "Shared scenario link is invalid or expired.");
+      }
+      return response.status(200).json(scenario);
+    } catch (error) {
+      return errorResponse(response, 500, "SHARE_READ_ERROR", "Failed to retrieve shared scenario.");
+    }
+  });
+
+  // 3. GET /api/scenarios/:id - 특정 시나리오 상세 조회
+  router.get("/:id", (request, response) => {
+    try {
+      const { id } = request.params;
+      const scenario = db.getScenarioById(id);
+      if (!scenario) {
+        return errorResponse(response, 404, "SCENARIO_NOT_FOUND", "Requested scenario does not exist.");
+      }
+      return response.status(200).json(scenario);
+    } catch (error) {
+      return errorResponse(response, 500, "SCENARIO_READ_ERROR", "Failed to fetch scenario detail.");
+    }
+  });
+
+  // 4. POST /api/scenarios - 신규 시나리오 저장 (share_token 자동 생성)
+  router.post("/", express.json(), (request, response) => {
+    try {
+      const { title, description, parameters, results_summary } = request.body ?? {};
+
+      if (!parameters || typeof parameters !== "object") {
+        return errorResponse(response, 400, "INVALID_PARAMETERS", "Scenario parameters must be provided.");
+      }
+
+      const created = db.createScenario({
+        title,
+        description,
+        parameters,
+        results_summary,
+      });
+
+      return response.status(201).json(created);
+    } catch (error) {
+      return errorResponse(response, 500, "SCENARIO_CREATE_ERROR", "Failed to create scenario.");
+    }
+  });
+
+  // 5. PUT /api/scenarios/:id - 기존 시나리오 수정
+  router.put("/:id", express.json(), (request, response) => {
+    try {
+      const { id } = request.params;
+      const { title, description, parameters, results_summary } = request.body ?? {};
+
+      const updated = db.updateScenario(id, {
+        title,
+        description,
+        parameters,
+        results_summary,
+      });
+
+      if (!updated) {
+        return errorResponse(response, 404, "SCENARIO_NOT_FOUND", "Scenario to update does not exist.");
+      }
+
+      return response.status(200).json(updated);
+    } catch (error) {
+      return errorResponse(response, 500, "SCENARIO_UPDATE_ERROR", "Failed to update scenario.");
+    }
+  });
+
+  // 6. DELETE /api/scenarios/:id - 시나리오 삭제
+  router.delete("/:id", (request, response) => {
+    try {
+      const { id } = request.params;
+      const deleted = db.deleteScenario(id);
+
+      if (!deleted) {
+        return errorResponse(response, 404, "SCENARIO_NOT_FOUND", "Scenario to delete does not exist.");
+      }
+
+      return response.status(200).json({ success: true, id });
+    } catch (error) {
+      return errorResponse(response, 500, "SCENARIO_DELETE_ERROR", "Failed to delete scenario.");
+    }
+  });
+
+  return router;
+}
