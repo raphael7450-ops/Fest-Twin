@@ -45,6 +45,7 @@ docs/
 
 서비스 핵심 산출 알고리즘, 데이터 처리 및 서비스 아키텍처 흐름입니다.
 
+* **[system-architecture-analysis.md](specs/system-architecture-analysis.md)**: 전체 시스템 종합 분석 보고서 (아키텍처, 데이터 흐름, 모듈 및 파일별 분석)
 * **[service-flows.md](specs/service-flows.md)**: 통합 서비스 아키텍처 흐름 (대시보드, 시나리오 저장, 리포트 출력, 공개 데모 퍼널)
 * **[data-methodology.md](specs/data-methodology.md)**: 축제 수요예측 및 리스크 진단 데이터 산출 방법론
 * **[extended-data-sources.md](specs/extended-data-sources.md)**: 확장 공공 및 빅데이터셋 연동 명세 (관광데이터랩, ITS, 기상청, 행안부)
