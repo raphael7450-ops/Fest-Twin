@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/App.tsx
+ * 내용 : Fest-Twin 사전 진단 대시보드 메인 컴포넌트 (상태 관리, 계산 연동, 레이아웃 조립)
+ * 수정 : 2026-07-24. OpenAPI 데이터 연동, 지표 근거 드로어 및 시뮬레이션 통합
+ */
+
 import { useEffect, useMemo, useState } from "react";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";

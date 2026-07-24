@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/domain/types.ts
+ * 내용 : Fest-Twin 핵심 도메인 인터페이스, DTO 및 상태 모델 정의
+ * 수정 : 2026-07-24. 수요예측 백데이터, 소비/교통 맥락 및 지표 근거 타입 통합
+ */
+
 export type ReadinessStatus = "반영" | "준비" | "향후";
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 export type DataSourceStatus =

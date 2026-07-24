@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/government/readiness.ts
+ * 내용 : 전자정부 서비스 가이드라인, CSAP 및 개인정보 최소수집 지침 자가 진단 평가기
+ * 수정 : 2026-07-24. B2G 서비스 준수 현황 항목 점수화 및 향후 조치안 산출 로직
+ */
+
 import type { GovernmentReadinessItem } from "../domain/types";
 import { governmentStandards } from "./guidelines";
 

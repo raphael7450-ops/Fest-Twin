@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/RoiEconomicImpact.tsx
+ * 내용 : 예상 방문객 소비 창출액 및 투입 예산 대비 경제적 파급효과(ROI) 시각화 패널
+ * 수정 : 2026-07-24. 관광데이터랩 BC/신한카드 객단가 추정액 연동 및 ROI 배율 시각화
+ */
+
 import type {
   FestivalPlan,
   ForecastResult,

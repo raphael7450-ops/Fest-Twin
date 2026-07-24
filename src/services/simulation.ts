@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/simulation.ts
+ * 내용 : 96개 격자 공간 기반 군중 밀집 위험 시뮬레이션 및 병목 구역 진단 엔진
+ * 수정 : 2026-07-24. 피크 시간대 수용 인원 밀집도(명/m²) 및 밀집 위험 등급 계산
+ */
+
 import type {
   Bottleneck,
   FestivalPlan,

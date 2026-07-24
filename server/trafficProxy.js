@@ -1,3 +1,9 @@
+/**
+ * 파일 : server/trafficProxy.js
+ * 내용 : 국가교통DB(KTDB) & ITS 도로 링크별 통행 속도 및 교통량 중계 프록시 라우터
+ * 수정 : 2026-07-24. View-T 선택 링크 교통량 API 중계 및 LINKID 파라미터 검증
+ */
+
 import express from "express";
 
 const VIEWT_BASE_URL = "https://viewt.ktdb.go.kr/cong/api/selectedLink_road.do";

@@ -1,3 +1,9 @@
+/**
+ * 파일 : server/index.js
+ * 내용 : Express 백엔드 서버 엔트리포인트 및 정적 파일(Vite 빌드 결과물) 서빙
+ * 수정 : 2026-07-24. OpenAPI 프록시 라우트 및 SPA 정적 서빙 설정
+ */
+
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,6 +14,7 @@ import { createTourProxyRouter } from "./tourProxy.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Express 애플리케이션 생성 및 API 프록시 라우트 초기화 함수
 export function createApp(options = {}) {
   const app = express();
   const staticDir = options.staticDir ?? path.resolve(__dirname, "../dist");

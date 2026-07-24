@@ -1,3 +1,9 @@
+/**
+ * 파일 : server/tourProxy.js
+ * 내용 : 한국관광공사 TourAPI 4.0 중계 프록시 라우터 (인증키 보안 및 파라미터 검증)
+ * 수정 : 2026-07-24. OpenAPI 요청 보안 중계 및 장애 발생 시 Fallback 응답 구현
+ */
+
 import express from "express";
 
 const TOUR_API_BASE_URL = "https://apis.data.go.kr/B551011/KorService2";

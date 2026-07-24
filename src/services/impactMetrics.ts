@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/impactMetrics.ts
+ * 내용 : 흥행 예측 지수, 안전요원/의료진 추천 배치, 주차 차오름 및 경제적 파급효과 지표 종합 산출기
+ * 수정 : 2026-07-24. 안전관리 지침 배치 인원 산출 공식 및 상권 소비지출 ROI 계산기 통합
+ */
+
 import type {
   FestivalPlan,
   ForecastResult,

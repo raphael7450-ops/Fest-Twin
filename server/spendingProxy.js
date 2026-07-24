@@ -1,3 +1,9 @@
+/**
+ * 파일 : server/spendingProxy.js
+ * 내용 : 관광데이터랩 카드 소비 지출 데이터 중계 프록시 라우터
+ * 수정 : 2026-07-24. BC/신한카드 지출 데이터 OpenAPI 중계 및 파라미터 검증
+ */
+
 import express from "express";
 
 const SPENDING_API_BASE_URL = "https://apis.data.go.kr/B551011/AreaTarDemDsService";

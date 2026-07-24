@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/metricEvidence.ts
+ * 내용 : KPI 수치별 공공데이터 출처, 산출 공식, 가정을 포함하는 산출 근거 세트 생성기
+ * 수정 : 2026-07-24. 출처 데이터 세부 세그먼트 매칭 및 오염 키 자동 비식별 정화 처리
+ */
+
 import type {
   DemandBackdataContext,
   EvidenceField,

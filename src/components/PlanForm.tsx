@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/PlanForm.tsx
+ * 내용 : 지자체 축제 기획안(지역, 기간, 예산, 수용 인원, 행사장 주소) 입력 및 실시간 조건 변경 폼 컴포넌트
+ * 수정 : 2026-07-24. TourAPI 지역 선택 이벤트 연동 및 수용 규모 실시간 반영 폼 구현
+ */
+
 import type { FestivalPlan } from "../domain/types";
 import type { TourApiAreaCode } from "../services/tourApiAdapter";
 

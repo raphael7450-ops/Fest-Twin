@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/SummaryKpiCards.tsx
+ * 내용 : 흥행 예측 지수, 최고 밀집 위험도, 예산 효율성 점수, 상권 유출 연계도 4대 핵심 KPI 카드 컴포넌트
+ * 수정 : 2026-07-24. KPI 뱃지 상태 연동 및 지표별 표준 근거 보기 버튼 통합
+ */
+
 import type {
   FestivalPlan,
   ForecastResult,

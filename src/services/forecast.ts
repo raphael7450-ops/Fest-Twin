@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/forecast.ts
+ * 내용 : 유사 축제 실적, 주변 관광 정보, 기후 예보 및 소셜 트렌드를 결합한 시간대별 수요 예측 알고리즘 엔진
+ * 수정 : 2026-07-24. 문체부 지역축제 실적 백데이터 연동 및 기후 가감율 산출 공식 통합
+ */
+
 import type {
   DemandBackdataContext,
   FestivalPlan,

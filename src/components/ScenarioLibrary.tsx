@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/ScenarioLibrary.tsx
+ * 내용 : 저장된 축제 기획안 시나리오 목록 조회, 선택 복원 및 삭제 컨트롤 컴포넌트
+ * 수정 : 2026-07-24. 브라우저 LocalStorage 기반 시나리오 저장/불러오기 인터랙션 구현
+ */
+
 import { useState } from "react";
 import type { FestivalPlan } from "../domain/types";
 import {

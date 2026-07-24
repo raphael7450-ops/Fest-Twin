@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/spendingAdapter.ts
+ * 내용 : 관광데이터랩 BC/신한카드 지출 데이터 어댑터 (1인당 평균 소비액 및 상권 유출 연계도 산출)
+ * 수정 : 2026-07-24. 지역별 카드 지출 패턴 파싱, 객단가 추정 및 Fallback 컨텍스트 제공
+ */
+
 import { sampleSpendingContext } from "../data/sampleSpending";
 import type {
   FestivalPlan,

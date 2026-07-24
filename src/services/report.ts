@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/report.ts
+ * 내용 : 사전 진단 리포트, 리스크 점수 및 기획 보완 추천안(Recommendation) 생성 엔진
+ * 수정 : 2026-07-24. B2G 예산 효율성, 군중 안전 및 상권 파급 리스크 종합 진단 보고서 작성
+ */
+
 import type {
   FestivalPlan,
   ForecastResult,

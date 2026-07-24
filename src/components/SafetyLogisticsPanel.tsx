@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/SafetyLogisticsPanel.tsx
+ * 내용 : 안전관리 요원, 의료진, 교통 위험도, 주차 수용성 4대 지표 패널 컴포넌트
+ * 수정 : 2026-07-24. 4열/2열 대칭 그리드 규격화, word-break 음절 잘림 방지 및 근거 버튼 일치
+ */
+
 import type {
   FestivalPlan,
   ForecastResult,

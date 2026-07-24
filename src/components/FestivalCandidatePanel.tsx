@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/FestivalCandidatePanel.tsx
+ * 내용 : TourAPI 지역 기반 축제 검색 결과 및 후보 선택 슬라이딩 패널 컴포넌트
+ * 수정 : 2026-07-24. 후보 선택 시 위치 좌표 및 기간 자동 적용 인터랙션 구현
+ */
+
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 
 interface FestivalCandidatePanelProps {

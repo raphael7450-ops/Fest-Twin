@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/weatherAdapter.ts
+ * 내용 : 기상청 단기예보 Open API 기반 기후 조건(강수확률, 기온, 풍속) 수요 가감 어댑터
+ * 수정 : 2026-07-24. 단기예보 수신 및 강수/기온 영향도 감쇄 비율(WeatherImpact) 계산
+ */
+
 import type { RiskLevel } from "../domain/types";
 
 export interface WeatherInfo {

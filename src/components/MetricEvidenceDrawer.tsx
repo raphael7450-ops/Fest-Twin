@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/MetricEvidenceDrawer.tsx
+ * 내용 : KPI 지표 산출 근거, 데이터 출처, 산출 공식, 가정을 투명하게 공개하는 슬라이딩 드로어 컴포넌트
+ * 수정 : 2026-07-24. 민감 키 비공개 정화 처리 및 공공데이터 레코드 세부 내역 공개 모달 구현
+ */
+
 import type { MetricEvidence } from "../domain/types";
 
 interface MetricEvidenceDrawerProps {

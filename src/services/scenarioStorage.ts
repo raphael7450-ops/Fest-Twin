@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/scenarioStorage.ts
+ * 내용 : 축제 기획안 시나리오 브라우저 LocalStorage 기반 보관/복원/삭제 저장소 서비스
+ * 수정 : 2026-07-24. 개인정보 수집 없는 로컬 저장소 시나리오 저장 관리자 구현
+ */
+
 import type { FestivalPlan } from "../domain/types";
 
 const STORAGE_KEY = "fest-twin-scenarios";

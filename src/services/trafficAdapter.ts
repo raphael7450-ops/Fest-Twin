@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/trafficAdapter.ts
+ * 내용 : 국가교통DB(KTDB) & ITS 도로 링크 정체 데이터 어댑터 (접근 교통 위험도 산출)
+ * 수정 : 2026-07-24. LINKID 매칭, 통행 속도 기반 정체 위험도 산출 및 Fallback 제공
+ */
+
 import { sampleTrafficContext, sampleTrafficSourceDetails, trafficLinkMappings } from "../data/sampleTraffic";
 import type {
   FestivalPlan,

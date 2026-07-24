@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/components/VenueMapPanel.tsx
+ * 내용 : Naver Map API v3 기반 행사장 위치 및 주변 랜드마크(응급실, 파출소, 주차장) 시각화 패널
+ * 수정 : 2026-07-24. NAVER_MAP_CLIENT_ID 연동, 마커 렌더링 및 키 미설치 시 Fallback 렌더링
+ */
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FestivalPlan } from "../domain/types";
 import type { FestivalCandidate } from "../services/tourApiAdapter";

@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/demandBackdataAdapter.ts
+ * 내용 : 문화체육관광부 지역축제 정보 실적 백데이터 매칭 및 유사 축제 베이스라인 추출 어댑터
+ * 수정 : 2026-07-24. 지역/유형 기반 유사 축제 매칭 및 근거 레코드 추출 구현
+ */
+
 import {
   sampleDemandBackdataContext,
   sampleDemandBackdataSourceDetails,

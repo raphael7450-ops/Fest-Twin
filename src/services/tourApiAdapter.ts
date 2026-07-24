@@ -1,3 +1,9 @@
+/**
+ * 파일 : src/services/tourApiAdapter.ts
+ * 내용 : 한국관광공사 TourAPI 4.0 응답 파싱, 지역별 축제 검색 및 주변 관광 자원 추출 어댑터
+ * 수정 : 2026-07-24. 지역 기반 완화 검색, 콘텐츠 ID 상세 조회 및 Fallback 컨텍스트 구축
+ */
+
 import { sampleTourismContext } from "../data/sampleTourApi";
 import type {
   FestivalPlan,
