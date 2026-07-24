@@ -4,17 +4,20 @@
  * 수정 : 2026-07-24. 피크 시간대 수용 인원 밀집도(명/m²) 및 밀집 위험 등급 계산
  */
 
+// 96격자 시뮬레이션 관련 도메인 타입 정의 불러오기
 import type {
-  Bottleneck,
-  FestivalPlan,
-  ForecastResult,
-  HeatmapCell,
-  RiskLevel,
-  SimulationResult,
-  VenueFacility,
+  Bottleneck, // 병목 위험 구역 모델
+  FestivalPlan, // 축제 기획안 모델
+  ForecastResult, // 수요 예측 결과 모델
+  HeatmapCell, // 히트맵 격자 셀 모델
+  RiskLevel, // 위험 수준 등급 (low/medium/high/critical)
+  SimulationResult, // 시뮬레이션 종합 결과 DTO
+  VenueFacility, // 행사장 주요 시설 배치 모델
 } from "../domain/types";
+// 수치 범주 제한 클램프 헬퍼 함수 불러오기
 import { clamp } from "./forecast";
 
+// 격자 밀집 수치(명/m²)를 기준으로 위험 등급을 분류하는 헬퍼 함수
 export function riskLevelFromDensity(density: number): RiskLevel {
   if (density >= 85) return "critical";
   if (density >= 60) return "high";
@@ -22,6 +25,7 @@ export function riskLevelFromDensity(density: number): RiskLevel {
   return "low";
 }
 
+// 특정 격자 셀(x, y)과 주요 행사장 시설간의 유클리드 거리를 계산하는 함수
 function distanceToFacility(x: number, y: number, facility: VenueFacility) {
   const dx = x - facility.x;
   const dy = y - facility.y;

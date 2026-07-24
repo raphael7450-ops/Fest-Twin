@@ -4,24 +4,30 @@
  * 수정 : 2026-07-24. 민감 키 비공개 정화 처리 및 공공데이터 레코드 세부 내역 공개 모달 구현
  */
 
+// 근거 정보 타입 정의 불러오기
 import type { MetricEvidence } from "../domain/types";
 
+// MetricEvidenceDrawer 입력 프로퍼티(Props) 정의
 interface MetricEvidenceDrawerProps {
-  evidence?: MetricEvidence;
-  isOpen: boolean;
-  onClose: () => void;
+  evidence?: MetricEvidence; // 현재 선택된 KPI 산출 근거 데이터
+  isOpen: boolean; // 드로어 열림 상태 여부
+  onClose: () => void; // 드로어 닫기 콜백
 }
 
+// API 키, 클라이언트 시크릿, 인증 쿠키 등 민감 키를 검출하기 위한 정규표현식 패턴
 const sensitiveEvidenceKeyPattern = /\b(?:servicekey|clientsecret|authorization|cookie)\b/i;
 
+// 레이블 또는 값에 민감 키 정보가 포함되어 있는지 진단하는 헬퍼 함수
 function isSensitiveEvidenceValue(value: string, label?: string) {
   return sensitiveEvidenceKeyPattern.test(`${label ?? ""} ${value}`);
 }
 
+// 민감 정보 발견 시 화면 노출을 막기 위해 "[비공개]" 문구로 정화(Sanitize)하는 함수
 function safeEvidenceText(value: string, label?: string) {
   return isSensitiveEvidenceValue(value, label) ? "[비공개]" : value;
 }
 
+// 투명한 산출 근거 슬라이딩 드로어 메인 UI 컴포넌트
 export function MetricEvidenceDrawer({
   evidence,
   isOpen,

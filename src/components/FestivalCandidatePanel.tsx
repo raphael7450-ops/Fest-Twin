@@ -4,18 +4,21 @@
  * 수정 : 2026-07-24. 후보 선택 시 위치 좌표 및 기간 자동 적용 인터랙션 구현
  */
 
+// TourAPI 축제 후보 모델 타입 불러오기
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 
+// FestivalCandidatePanel 입력 프로퍼티(Props) 명세
 interface FestivalCandidatePanelProps {
-  isOpen: boolean;
-  candidates: FestivalCandidate[];
-  isLoading: boolean;
-  errorMessage?: string;
-  selectedCandidateId?: string;
-  onClose: () => void;
-  onSelectCandidate: (candidate: FestivalCandidate) => void;
+  isOpen: boolean; // 드로어 열림 상태 여부
+  candidates: FestivalCandidate[]; // 조치된 TourAPI 축제 후보 배열
+  isLoading: boolean; // 로딩 진행 중 여부
+  errorMessage?: string; // 에러 메시지 (선택적)
+  selectedCandidateId?: string; // 현재 선택된 후보 ID
+  onClose: () => void; // 드로어 닫기 콜백
+  onSelectCandidate: (candidate: FestivalCandidate) => void; // 후보 선택 이벤트 핸들러
 }
 
+// 축제 후보의 개최 기간 텍스트(시작일 ~ 종료일)를 포맷팅하는 헬퍼 함수
 function periodLabel(candidate: FestivalCandidate) {
   if (candidate.startDate && candidate.endDate) {
     return `${candidate.startDate} ~ ${candidate.endDate}`;
@@ -24,6 +27,7 @@ function periodLabel(candidate: FestivalCandidate) {
   return "기간 정보 없음";
 }
 
+// TourAPI 축제 후보 탐색 및 선택 슬라이딩 패널 컴포넌트
 export function FestivalCandidatePanel({
   isOpen,
   candidates,

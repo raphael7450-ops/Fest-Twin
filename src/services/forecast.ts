@@ -4,25 +4,29 @@
  * 수정 : 2026-07-24. 문체부 지역축제 실적 백데이터 연동 및 기후 가감율 산출 공식 통합
  */
 
+// 핵심 도메인 인터페이스 및 타입 정의 불러오기
 import type {
-  DemandBackdataContext,
-  FestivalPlan,
-  ForecastResult,
-  RiskLevel,
-  TourismContext,
-  TrendContext,
+  DemandBackdataContext, // 문체부 실적 백데이터 매칭 맥락
+  FestivalPlan, // 입력 축제 기획안 모델
+  ForecastResult, // 수요 예측 결과 DTO
+  RiskLevel, // 예측 신뢰도 및 위험 등급 타입
+  TourismContext, // TourAPI 관광 자원 맥락
+  TrendContext, // 소셜 트렌드 맥락
 } from "../domain/types";
 
+// 수치를 최소값(min)과 최대값(max) 사이에 제한하는 유틸리티 클램프 함수
 export function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+// 수치 배열의 산술 평균을 구하는 유틸리티 함수
 function average(values: number[]) {
   return values.length === 0
     ? 0
     : values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+// 연동된 공공데이터 수량 및 데이터 연동 상태(live/sample)에 따라 예측 신뢰도를 산출하는 함수
 function confidenceFromEvidence(
   tourism: TourismContext,
   trends: TrendContext,

@@ -4,27 +4,33 @@
  * 수정 : 2026-07-24. 기획 보완 추천안, 경제 파급효과 지표 및 출처 요약 리포트 레이아웃 구성
  */
 
+// 핵심 도메인 인터페이스 및 타입 불러오기
 import type {
-  FestivalPlan,
-  ForecastResult,
-  MetricEvidence,
-  MetricEvidenceId,
-  PlanningReport,
-  SpendingContext,
+  FestivalPlan, // 축제 기획안 모델
+  ForecastResult, // 수요 예측 결과 모델
+  MetricEvidence, // 지표별 산출 근거 모델
+  MetricEvidenceId, // 지표 식별자
+  PlanningReport, // 사전 진단 리포트 모델
+  SpendingContext, // 관광데이터랩 소비 데이터 맥락
 } from "../domain/types";
+// 브라우저 인쇄/PDF 저장 버튼 컴포넌트 불러오기
 import { PrintReportButton } from "./PrintReportButton";
+// 보고서 하단 데이터 출처 요약 서브 컴포넌트 불러오기
 import { ReportEvidenceSummary } from "./ReportEvidenceSummary";
+// 예산 대비 경제적 파급효과 시각화 컴포넌트 불러오기
 import { RoiEconomicImpact } from "./RoiEconomicImpact";
 
+// ReportView 입력 프로퍼티(Props) 정의
 interface ReportViewProps {
-  report: PlanningReport;
-  plan: FestivalPlan;
-  forecast: ForecastResult;
-  spending?: SpendingContext;
-  evidenceSet: Record<MetricEvidenceId, MetricEvidence>;
-  onOpenEvidence: (metricId: MetricEvidenceId) => void;
+  report: PlanningReport; // 리포트 진단 종합 데이터
+  plan: FestivalPlan; // 축제 기획안 데이터
+  forecast: ForecastResult; // 시간대별 수요 예측 데이터
+  spending?: SpendingContext; // 소비지출 백데이터
+  evidenceSet: Record<MetricEvidenceId, MetricEvidence>; // 전체 지표 근거 맵
+  onOpenEvidence: (metricId: MetricEvidenceId) => void; // 근거 모달 오픈 콜백
 }
 
+// B2G 사전 진단 종합 보고서 화면 렌더링 메인 컴포넌트
 export function ReportView({
   report,
   plan,
