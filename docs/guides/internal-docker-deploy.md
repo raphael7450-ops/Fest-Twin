@@ -187,7 +187,7 @@ mkdir -p "$staging_dir"
 tar -xf "$HOME/fest-twin-demo.tar" -C "$staging_dir"
 rm -f "$HOME/fest-twin-demo.tar"
 
-if ! docker build -t "$new_image" "$staging_dir"; then
+if ! docker build --build-arg NAVER_MAP_CLIENT_ID=5mcwlg6qwo -t "$new_image" "$staging_dir"; then
   echo "New image build failed; existing source and container were not changed."
   exit 1
 fi
