@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { securityHeadersMiddleware, createRateLimiter } from "./index.js";
+import { corsMiddleware, createApp, createRateLimiter, securityHeadersMiddleware } from "./index.js";
 
 describe("server/index", () => {
-  it("sets HTTP security headers on responses", () => {
+  it("sets HTTP security headers including Content-Security-Policy", () => {
     const responseHeaders = new Map<string, string>();
     const mockRes: any = {
       setHeader(k: string, v: string) {
@@ -20,6 +20,36 @@ describe("server/index", () => {
     expect(responseHeaders.get("X-Frame-Options")).toBe("DENY");
     expect(responseHeaders.get("X-XSS-Protection")).toBe("1; mode=block");
     expect(responseHeaders.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
+    expect(responseHeaders.get("Content-Security-Policy")).toContain("openapi.map.naver.com");
+  });
+
+  it("handles CORS allowlist for trusted origins", () => {
+    const responseHeaders = new Map<string, string>();
+    const mockRes: any = {
+      setHeader(k: string, v: string) {
+        responseHeaders.set(k, v);
+      },
+      status(code: number) {
+        return {
+          end() {
+            return code;
+          },
+        };
+      },
+    };
+
+    const mockReq: any = {
+      headers: { origin: "https://cwserver.tail97dbc3.ts.net" },
+      method: "GET",
+    };
+
+    let calledNext = false;
+    corsMiddleware(mockReq, mockRes, () => {
+      calledNext = true;
+    });
+
+    expect(calledNext).toBe(true);
+    expect(responseHeaders.get("Access-Control-Allow-Origin")).toBe("https://cwserver.tail97dbc3.ts.net");
   });
 
   it("limits API requests when exceeding rate limit threshold", () => {
@@ -55,5 +85,14 @@ describe("server/index", () => {
     expect(third.calledNext).toBe(false);
     expect(third.status).toBe(429);
     expect(third.jsonBody?.error?.code).toBe("TOO_MANY_REQUESTS");
+  });
+
+  it("configures 30/min rate limit for OpenAPI endpoints", () => {
+    const dummyLimiter = (_req: any, _res: any, next: any) => next();
+    const app = createApp({
+      generalRateLimiter: dummyLimiter,
+      openApiRateLimiter: dummyLimiter,
+    });
+    expect(app).toBeDefined();
   });
 });

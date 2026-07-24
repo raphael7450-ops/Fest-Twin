@@ -1,7 +1,7 @@
 /**
  * 파일 : server/index.js
- * 내용 : Express 백엔드 서버 엔트리포인트 및 정적 파일(Vite 빌드 결과물) 서빙
- * 수정 : 2026-07-24. OpenAPI 프록시 라우트 및 SPA 정적 서빙 설정
+ * 내용 : Express 백엔드 서버 엔트리포인트 (Rate Limiter, Helmet/CSP, CORS Allowlist & SPA 정적 서빙)
+ * 수정 : 2026-07-24. OpenAPI 프록시 30회/분 전용 제한, CORS 허용목록 및 CSP 보안 헤더 구현
  */
 
 import express from "express";
@@ -15,19 +15,49 @@ import { createScenarioRouter } from "./scenarioRouter.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// HTTP 보안 헤더(X-Content-Type-Options, X-Frame-Options, X-XSS-Protection 등) 설정 미들웨어
+// 1. CORS Allowlist 허용 도메인 검증 미들웨어
+export function corsMiddleware(request, response, next) {
+  const origin = request.headers.origin;
+  if (!origin) {
+    return next();
+  }
+
+  const isAllowed =
+    origin.includes("localhost") ||
+    origin.includes("127.0.0.1") ||
+    origin.includes("192.168.55.223") ||
+    /\.ts\.net$/.test(new URL(origin).hostname);
+
+  if (isAllowed) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+    response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  }
+
+  if (request.method === "OPTIONS") {
+    return response.status(204).end();
+  }
+
+  next();
+}
+
+// 2. OWASP HTTP 보안 헤더 및 Content-Security-Policy (CSP) 미들웨어
 export function securityHeadersMiddleware(_request, response, next) {
   response.setHeader("X-Content-Type-Options", "nosniff");
   response.setHeader("X-Frame-Options", "DENY");
   response.setHeader("X-XSS-Protection", "1; mode=block");
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://openapi.map.naver.com https://ncp-docs.map.naver.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://apis.data.go.kr https://viewt.ktdb.go.kr https://openapi.map.naver.com;",
+  );
   next();
 }
 
-// IP 기반 분당 API 요청 횟수를 제한하는 Rate Limiter 미들웨어 생성 함수
+// 3. IP 기반 슬라이딩 윈도우 Rate Limiter 생성 함수
 export function createRateLimiter(options = {}) {
   const windowMs = options.windowMs ?? 60 * 1000; // 1분 슬라이딩 윈도우
-  const maxRequests = options.maxRequests ?? 100; // 분당 최대 100회 허용
+  const maxRequests = options.maxRequests ?? 100; // 기본 100회 (프록시는 30회)
   const requestCounts = new Map();
 
   return (request, response, next) => {
@@ -50,7 +80,7 @@ export function createRateLimiter(options = {}) {
       return response.status(429).json({
         error: {
           code: "TOO_MANY_REQUESTS",
-          message: "Too many requests from this IP, please try again later.",
+          message: `Too many requests from this IP, please try again later. (Limit: ${maxRequests}/min)`,
         },
       });
     }
@@ -59,17 +89,28 @@ export function createRateLimiter(options = {}) {
   };
 }
 
-// Express 애플리케이션 생성 및 API 프록시 라우트 초기화 함수
+// Express 애플리케이션 생성 및 미들웨어/라우트 초기화
 export function createApp(options = {}) {
   const app = express();
   const staticDir = options.staticDir ?? path.resolve(__dirname, "../dist");
 
-  // 1. 보안 헤더 미들웨어 전역 적용
+  // 보안 미들웨어 등록
   app.use(securityHeadersMiddleware);
+  app.use(corsMiddleware);
 
-  // 2. API 라우트 전용 Rate Limiter 미들웨어 적용
-  const rateLimiter = options.rateLimiter ?? createRateLimiter(options.rateLimitOptions);
-  app.use("/api", rateLimiter);
+  // Rate Limiting (테스트 환경에서는 옵션으로 오버라이드 가능)
+  const generalRateLimiter =
+    options.generalRateLimiter ?? createRateLimiter(options.generalRateLimitOptions ?? { maxRequests: 100 });
+  const openApiRateLimiter =
+    options.openApiRateLimiter ?? createRateLimiter(options.openApiRateLimitOptions ?? { maxRequests: 30 });
+
+  // 1. 일반 API 라우트 (/api/scenarios 등) - 1분당 최대 100회
+  app.use("/api", generalRateLimiter);
+
+  // 2. 외부 OpenAPI 중계 라우트 (/api/tour, /api/spending, /api/traffic) - 쿼터 보호용 1분당 최대 30회
+  app.use("/api/tour", openApiRateLimiter);
+  app.use("/api/spending", openApiRateLimiter);
+  app.use("/api/traffic", openApiRateLimiter);
 
   app.use(
     "/api/tour",
@@ -97,6 +138,7 @@ export function createApp(options = {}) {
       db: options.scenarioDb,
     }),
   );
+
   app.use(express.static(staticDir));
   app.get("/{*splat}", (_request, response) => {
     response.sendFile(path.join(staticDir, "index.html"));
