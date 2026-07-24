@@ -73,13 +73,9 @@ export function SafetyLogisticsPanel({
               <span>접근 교통 위험도</span>
               <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
             </div>
-            <div className="traffic-source-row">
-              <span className="traffic-source-badge">{metrics.trafficSourceLabel}</span>
-              <span className="traffic-source-status">{metrics.trafficSourceStatusLabel}</span>
-            </div>
             <strong>{metrics.trafficRiskLabel}</strong>
             <small>
-              {metrics.trafficRoadName} · {metrics.trafficRiskScore}점 · 기준년도 교통량
+              {metrics.trafficRoadName} · {metrics.trafficRiskScore}점 · {metrics.trafficSourceLabel} ({metrics.trafficSourceStatusLabel})
             </small>
           </div>
         </article>
@@ -108,7 +104,7 @@ export function SafetyLogisticsPanel({
               />
             </div>
             <small>
-              예상 차량 유입과 행사장 수용력 기반의 사전 배치 검토값입니다.
+              예상 차량 유입과 행사장 수용력 기반 사전 배치 검토값
             </small>
           </div>
         </article>

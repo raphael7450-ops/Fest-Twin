@@ -1303,13 +1303,19 @@ a:focus-visible {
 .kpi-actions,
 .metric-inline-heading {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.45rem;
 }
 
 .metric-inline-heading {
   justify-content: space-between;
   width: 100%;
+}
+
+.metric-inline-heading span {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  line-height: 1.35;
 }
 
 .evidence-drawer {
