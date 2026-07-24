@@ -5,6 +5,7 @@
  */
 
 import express from "express";
+import { getCachedData, setCachedData } from "./cache.js";
 
 const VIEWT_BASE_URL = "https://viewt.ktdb.go.kr/cong/api/selectedLink_road.do";
 const ALLOWED_QUERY_KEYS = new Set(["linkId", "year", "weekType", "time"]);
@@ -130,6 +131,12 @@ export function createTrafficProxyRouter(options = {}) {
       return errorResponse(response, 400, "INVALID_QUERY", validation.message);
     }
 
+    const cacheKey = `traffic:selected-link:${JSON.stringify(request.query)}`;
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      return response.status(200).json(cachedData);
+    }
+
     try {
       const upstreamResponse = await fetchImpl(buildViewTUrl(request.query));
       if (!upstreamResponse.ok) {
@@ -141,7 +148,9 @@ export function createTrafficProxyRouter(options = {}) {
         );
       }
 
-      return response.status(200).json(normalizeViewTPayload(await upstreamResponse.json()));
+      const normalizedPayload = normalizeViewTPayload(await upstreamResponse.json());
+      setCachedData(cacheKey, normalizedPayload);
+      return response.status(200).json(normalizedPayload);
     } catch (error) {
       const code = error instanceof SyntaxError
         ? "TRAFFIC_INVALID_RESPONSE"

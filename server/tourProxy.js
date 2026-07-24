@@ -5,6 +5,7 @@
  */
 
 import express from "express";
+import { getCachedData, setCachedData } from "./cache.js";
 
 const TOUR_API_BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
 const MOBILE_OS = "ETC";
@@ -115,6 +116,13 @@ export function createTourProxyRouter(options = {}) {
       return errorResponse(response, 400, "INVALID_QUERY", validation.message);
     }
 
+    // 1. 요청 파라미터 기반 캐시 키 생성 및 캐시 조회
+    const cacheKey = `tourapi:${request.params.endpoint}:${JSON.stringify(request.query)}`;
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      return response.status(200).json(cachedData);
+    }
+
     const upstreamUrl = buildTourApiUrl(request.params.endpoint, apiKey, request.query);
 
     try {
@@ -129,6 +137,8 @@ export function createTourProxyRouter(options = {}) {
       }
 
       const payload = await upstreamResponse.json();
+      // 2. 정상 수신 응답 캐시 저장소에 저장
+      setCachedData(cacheKey, payload);
       return response.status(200).json(payload);
     } catch (error) {
       const code = error instanceof SyntaxError
