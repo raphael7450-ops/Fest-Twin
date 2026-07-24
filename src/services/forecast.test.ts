@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import { sampleDemandBackdataContext } from "../data/sampleDemandBackdata";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
 import { createForecast } from "./forecast";
@@ -47,5 +48,36 @@ describe("createForecast", () => {
     expect(createForecast(sampleFestivalPlan, liveTourism, sampleTrendContext).confidence).toBe(
       "medium",
     );
+  });
+
+  it("uses regional festival visitor backdata as the similar demand baseline", () => {
+    const tourismWithoutSimilarFestivals = {
+      ...sampleTourismContext,
+      similarFestivals: [],
+    };
+    const forecastWithoutBackdata = createForecast(
+      sampleFestivalPlan,
+      tourismWithoutSimilarFestivals,
+      sampleTrendContext,
+    );
+    const forecastWithBackdata = createForecast(
+      sampleFestivalPlan,
+      tourismWithoutSimilarFestivals,
+      sampleTrendContext,
+      sampleDemandBackdataContext,
+    );
+
+    expect(forecastWithBackdata.expectedVisitors).toBeGreaterThan(30000);
+    expect(forecastWithBackdata.expectedVisitors).not.toBe(
+      forecastWithoutBackdata.expectedVisitors,
+    );
+    expect(forecastWithBackdata.reasons.map((reason) => reason.label)).toContain(
+      "지역축제 방문객 기준선",
+    );
+    expect(
+      forecastWithBackdata.reasons.find(
+        (reason) => reason.label === "지역축제 방문객 기준선",
+      )?.description,
+    ).toContain("문화체육관광부");
   });
 });

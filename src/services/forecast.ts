@@ -1,4 +1,5 @@
 import type {
+  DemandBackdataContext,
   FestivalPlan,
   ForecastResult,
   RiskLevel,
@@ -33,19 +34,39 @@ function confidenceFromEvidence(
   return "low";
 }
 
-export function createForecast(
-  plan: FestivalPlan,
-  tourism: TourismContext,
-  trends: TrendContext,
-): ForecastResult {
-  const regionalAttractiveness = average(
-    tourism.nearbySpots.map((spot) => spot.appealScore),
-  );
-  const similarDemand = average(
+function weightedDemandBackdataAverage(demandBackdata?: DemandBackdataContext) {
+  const festivals =
+    demandBackdata?.similarFestivalBaselines.filter((festival) => festival.visitors) ?? [];
+  const totalWeight = festivals.reduce((sum, festival) => sum + festival.similarityScore, 0);
+
+  if (festivals.length === 0 || totalWeight === 0) return 0;
+
+  return festivals.reduce(
+    (sum, festival) => sum + (festival.visitors ?? 0) * festival.similarityScore,
+    0,
+  ) / totalWeight;
+}
+
+function similarDemandFromTourism(tourism: TourismContext) {
+  return average(
     tourism.similarFestivals.map(
       (festival) => festival.visitors * festival.themeOverlap,
     ),
   );
+}
+
+export function createForecast(
+  plan: FestivalPlan,
+  tourism: TourismContext,
+  trends: TrendContext,
+  demandBackdata?: DemandBackdataContext,
+): ForecastResult {
+  const regionalAttractiveness = average(
+    tourism.nearbySpots.map((spot) => spot.appealScore),
+  );
+  const demandBackdataBaseline = weightedDemandBackdataAverage(demandBackdata);
+  const similarDemand =
+    demandBackdataBaseline > 0 ? demandBackdataBaseline : similarDemandFromTourism(tourism);
   const socialInterest = average(
     trends.signals.map((signal) => signal.interestScore),
   );
@@ -106,10 +127,15 @@ export function createForecast(
         description: "주변 관광지 흡인력을 수요 예측 근거로 반영했습니다.",
       },
       {
-        label: "유사 축제 추정 수요 프록시",
+        label:
+          demandBackdataBaseline > 0
+            ? "지역축제 방문객 기준선"
+            : "유사 축제 추정 수요 프록시",
         impact: Math.round(similarDemand),
         description:
-          tourism.provenance.sourceStatus === "live"
+          demandBackdataBaseline > 0
+            ? "문화체육관광부 지역축제 정보의 방문객 수, 예산, 유형 유사도를 수요 기준선으로 반영했습니다."
+            : tourism.provenance.sourceStatus === "live"
             ? "TourAPI 행사 메타데이터로 산정한 실제 방문객 집계가 아닌 추정 프록시입니다."
             : "샘플 축제 메타데이터로 산정한 실제 방문객 집계가 아닌 추정 프록시입니다.",
       },
