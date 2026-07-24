@@ -1,10 +1,10 @@
-# ⚙️ Fest-Twin 서비스 아키텍처 및 주요 작업 흐름 (Service Flows)
+# Fest-Twin 서비스 아키텍처 및 주요 작업 흐름 (Service Flows)
 
 본 문서는 Fest-Twin MVP의 대시보드 과업 흐름, 시나리오 저장/복원, 기획 보완 리포트 인쇄, 공개 데모 Tailscale Funnel 운영 흐름을 종합 정리한 문서입니다.
 
 ---
 
-## 1. 🖥️ 대시보드 과업 흐름 (Dashboard Service Flow)
+## 1. 대시보드 과업 흐름 (Dashboard Service Flow)
 
 ### 목적
 대시보드는 일반 사용자용 랜딩 페이지가 아닌 지자체 담당자 및 심사위원이 축제 기획안을 다각도로 진단하는 **행정 업무형 대시보드**입니다.
@@ -18,7 +18,7 @@
 
 ---
 
-## 2. 💾 시나리오 저장 및 불러오기 흐름 (Scenario Save & Restore Flow)
+## 2. 시나리오 저장 및 불러오기 흐름 (Scenario Save & Restore Flow)
 
 ### 목적
 예산, 수용 인원, 시간대 변경에 따른 수요 예측 및 혼잡 위험 결과를 다각도로 시뮬레이션하고 빠르게 비교할 수 있도록 제공하는 MVP 기능입니다.
@@ -30,7 +30,7 @@
 
 ---
 
-## 3. 🖨️ 기획 보완 리포트 인쇄 및 PDF 저장 흐름 (Report Export Flow)
+## 3. 기획 보완 리포트 인쇄 및 PDF 저장 흐름 (Report Export Flow)
 
 ### 목적
 축제 예산 집행 전 지자체 보고용 검토 자료로 출력하거나 PDF 파일로 저장할 수 있는 기능입니다.
@@ -42,7 +42,7 @@
 
 ---
 
-## 4. 🌐 공개 데모 Tailscale Funnel 운영 흐름 (Public Demo Funnel)
+## 4. 공개 데모 Tailscale Funnel 운영 흐름 (Public Demo Funnel)
 
 ### 접속 정보
 - **공개 데모 URL**: `https://cwserver.tail97dbc3.ts.net/`

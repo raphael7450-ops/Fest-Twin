@@ -125,7 +125,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 
 모든 세부 문서는 **[docs/README.md](docs/README.md)**에서 한눈에 확인하실 수 있습니다.
 
-### 🏆 공모전 제출 서류 (`docs/contest/`)
+### 공모전 제출 서류 (`docs/contest/`)
 - [페스트트윈 최종 제출 패키지](docs/contest/final-submission-package.md)
 - [페스트트윈 최종 제출 체크리스트](docs/contest/final-submission-checklist.md)
 - [제출 요약서](docs/contest/submission-summary.md)
@@ -133,7 +133,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [공모전 제출용 문구](docs/contest/contest-submission-copy.md)
 - [최종 리허설 체크리스트](docs/contest/final-rehearsal-checklist.md)
 
-### 🛠️ 개발 및 운영 가이드 (`docs/guides/`)
+### 개발 및 운영 가이드 (`docs/guides/`)
 - [제출 시연 가이드](docs/guides/submission-demo-guide.md)
 - [공개 데모 운영 안내](docs/guides/demo-operations-runbook.md)
 - [내부 Docker 배포](docs/guides/internal-docker-deploy.md)
@@ -141,7 +141,7 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - [네이버 지도 API 설정](docs/guides/naver-map-api-setup.md)
 - [데모 검증 체크리스트](docs/guides/demo-verification.md)
 
-### 🔬 기능 및 데이터 명세 (`docs/specs/`)
+### 기능 및 데이터 명세 (`docs/specs/`)
 - [통합 서비스 아키텍처 및 흐름](docs/specs/service-flows.md)
 - [데이터 산출 방법론](docs/specs/data-methodology.md)
 - [수요 예측·혼잡 진단·리포트 산정 기준](docs/specs/forecast-simulation-report-method.md)
