@@ -49,7 +49,7 @@ export function securityHeadersMiddleware(_request, response, next) {
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   response.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://openapi.map.naver.com https://ncp-docs.map.naver.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://apis.data.go.kr https://viewt.ktdb.go.kr https://openapi.map.naver.com;",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://oapi.map.naver.com https://openapi.map.naver.com https://ncp-docs.map.naver.com https://*.map.naver.com https://*.naver.com https://*.naver.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: https://*.map.naver.com https://*.naver.com https://*.naver.net; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://apis.data.go.kr https://viewt.ktdb.go.kr https://oapi.map.naver.com https://openapi.map.naver.com https://*.map.naver.com https://*.naver.com https://*.naver.net;",
   );
   next();
 }
