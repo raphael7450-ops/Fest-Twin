@@ -41,7 +41,7 @@
 | 서비스 적정성 | 30 | 과제 9번 문제와 타깃 사용자를 첫 화면, 제출 문서, 발표 도입부에서 명확히 연결한다. |
 | 서비스 완성도 | 30 | 데모 URL, GitHub Release, Docker 운영 안내, 재시작 검증 결과를 제시한다. |
 | 서비스 실용성 | 25 | 지자체 담당자가 실제로 수행하는 입력-예측-리스크 확인-리포트 출력 흐름을 시연한다. |
-| 발표 점수 | 15 | 3분 설명 순서를 `docs/final-rehearsal-checklist.md` 기준으로 준비한다. |
+| 발표 점수 | 15 | 3분 설명 순서를 `docs/guides/final-rehearsal-checklist.md` 기준으로 준비한다. |
 
 ## 제출 자료 매핑
 
@@ -50,10 +50,10 @@
 | 공개 데모 URL | https://cwserver.tail97dbc3.ts.net/ |
 | 저장소 URL | https://github.com/raphael7450-ops/Fest-Twin |
 | Release zip | https://github.com/raphael7450-ops/Fest-Twin/releases/download/v0.1.1-submission-final/fest-twin-submission-package.zip |
-| 제출 문구 | `docs/final-submission-package.md`, `docs/contest-submission-copy.md` |
-| 심사 기준 대응표 | `docs/contest-notice-response-matrix.md` |
-| 시연 순서 | `docs/submission-demo-guide.md`, `docs/final-rehearsal-checklist.md` |
-| 운영 안정성 | `docs/demo-operations-runbook.md` |
+| 제출 문구 | `docs/contest/final-submission-package.md`, `docs/contest/contest-submission-copy.md` |
+| 심사 기준 대응표 | `docs/contest/contest-notice-response-matrix.md` |
+| 시연 순서 | `docs/guides/submission-demo-guide.md`, `docs/contest/final-rehearsal-checklist.md` |
+| 운영 안정성 | `docs/guides/demo-operations-runbook.md` |
 | 화면 증빙 | `docs/assets/submission/*.png` |
 
 ## 남은 주의사항

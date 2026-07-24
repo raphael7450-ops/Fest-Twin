@@ -25,8 +25,8 @@
 - [ ] GitHub 저장소가 비로그인 상태에서 열린다.
 - [ ] GitHub Release가 열린다.
 - [ ] Release zip이 다운로드된다.
-- [ ] `docs/final-submission-package.md`가 있다.
-- [ ] `docs/final-submission-checklist.md`가 있다.
+- [ ] `docs/contest/final-submission-package.md`가 있다.
+- [ ] `docs/contest/final-submission-checklist.md`가 있다.
 - [ ] `artifacts/fest-twin-submission-package.zip`이 있다.
 - [ ] 화면 증빙 이미지가 `docs/assets/submission/`에 있다.
 

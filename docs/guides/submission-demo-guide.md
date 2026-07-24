@@ -6,8 +6,8 @@
 - 내부 데모: http://192.168.55.223:18080/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
 - 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
-- 제출 요약서: [submission-summary.md](submission-summary.md)
-- 제출 문구: [contest-submission-copy.md](contest-submission-copy.md)
+- 제출 요약서: [submission-summary.md](../contest/submission-summary.md)
+- 제출 문구: [contest-submission-copy.md](../contest/contest-submission-copy.md)
 - 작업 기준 브랜치: `main`
 
 ## 5분 시연 순서
@@ -70,11 +70,11 @@ npm run dev
 
 ## 관련 문서
 
-- [제출 요약서](submission-summary.md)
-- [TourAPI 실제 축제 예시](tourapi-recent-festival-example.md)
-- [공모전 제출용 문구](contest-submission-copy.md)
+- [제출 요약서](../contest/submission-summary.md)
+- [TourAPI 실제 축제 예시](../specs/tourapi-recent-festival-example.md)
+- [공모전 제출용 문구](../contest/contest-submission-copy.md)
 - [데모 검증 체크리스트](demo-verification.md)
-- [정부 지침 기반 설계 체크리스트](government-readiness-checklist.md)
-- [수요 예측·혼잡 진단·리포트 산정 기준](forecast-simulation-report-method.md)
-- [공공데이터 및 개인정보 최소수집 정책](public-data-and-privacy-policy.md)
+- [정부 지침 기반 설계 체크리스트](../specs/government-readiness-checklist.md)
+- [수요 예측·혼잡 진단·리포트 산정 기준](../specs/forecast-simulation-report-method.md)
+- [공공데이터 및 개인정보 최소수집 정책](../specs/public-data-and-privacy-policy.md)
 - [내부 Docker 배포](internal-docker-deploy.md)

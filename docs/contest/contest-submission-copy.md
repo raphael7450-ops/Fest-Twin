@@ -44,9 +44,9 @@ MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, �
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
 - 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - 내부 데모: http://192.168.55.223:18080/
-- 제출 요약서: `docs/submission-summary.md`
-- 시연 가이드: `docs/submission-demo-guide.md`
-- 검증 체크리스트: `docs/demo-verification.md`
+- 제출 요약서: `docs/contest/submission-summary.md`
+- 시연 가이드: `docs/guides/submission-demo-guide.md`
+- 검증 체크리스트: `docs/guides/demo-verification.md`
 - 화면 증빙: `docs/assets/submission/`
 
 ## 검증 현황

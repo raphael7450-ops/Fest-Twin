@@ -40,8 +40,8 @@
 - [ ] TourAPI 호출이 실패해도 수요 예측, 혼잡도 시뮬레이션, 기획 보완 리포트가 유지된다.
 - [ ] 실제 인증키는 Git 변경 목록에 포함되지 않는다.
 - [ ] 입력 기간 직접 일치 결과가 0건이면 같은 지역의 연간 TourAPI 축제 데이터를 참고하고, 데이터 근거 패널에 기간 완화 검색 사유가 표시된다.
-- [ ] `docs/tourapi-recent-festival-example.md`에서 기본 데모 축제의 조회 조건과 확인 결과를 재확인할 수 있다.
-- [ ] `docs/naver-map-api-setup.md`에서 네이버 지도 API 키 설정과 fallback 정책을 재확인할 수 있다.
+- [ ] `docs/specs/tourapi-recent-festival-example.md`에서 기본 데모 축제의 조회 조건과 확인 결과를 재확인할 수 있다.
+- [ ] `docs/guides/naver-map-api-setup.md`에서 네이버 지도 API 키 설정과 fallback 정책을 재확인할 수 있다.
 
 ## 상호작용 확인
 

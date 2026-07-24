@@ -37,11 +37,11 @@
 
 ## 첨부 추천 파일
 
-- `docs/final-submission-package.md`
-- `docs/contest-notice-response-matrix.md`
-- `docs/contest-submission-copy.md`
-- `docs/submission-summary.md`
-- `docs/submission-demo-guide.md`
-- `docs/demo-verification.md`
+- `docs/contest/final-submission-package.md`
+- `docs/contest/contest-notice-response-matrix.md`
+- `docs/contest/contest-submission-copy.md`
+- `docs/contest/submission-summary.md`
+- `docs/guides/submission-demo-guide.md`
+- `docs/guides/demo-verification.md`
 - `docs/assets/submission/*.png`
 - `artifacts/fest-twin-submission-package.zip`

@@ -329,7 +329,7 @@ PowerShell에서 다음 검사는 이름에 `KEY`, `PASSWORD`, `PASSWD`, `SECRET
 ```powershell
 $secretName = '[A-Z][A-Z0-9_]*(?:key|password|passwd|secret|token)[A-Z0-9_]*'
 $secretValue = '(?!["'']?(?:<[^>]+>|REDACTED\b|YOUR_[A-Z0-9_]+\b|\$\{?[A-Z_][A-Z0-9_]*\}?))\S+'
-$scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
+$scanPaths = @('Dockerfile', '.dockerignore', 'nginx.conf', 'docs/guides/internal-docker-deploy.md', 'docs/superpowers/specs/2026-07-16-internal-docker-deploy-design.md', 'docs/superpowers/plans/2026-07-16-internal-docker-deploy.md')
 $shellAssignment = "(?ix)^\s*(?:export\s+|`$env:)?$secretName\s*[:=]\s*$secretValue"
 $dockerInstruction = "(?ix)^\s*(?:env|arg)\s+(?:[A-Z][A-Z0-9_]*\s*(?:=|\s+)\s*\S+\s+)*$secretName\s*(?:=|\s+)\s*$secretValue"
 $buildArgument = "(?ix)\bdocker\s+build\b[^\r\n]*?\s--build-arg(?:=|\s+)$secretName\s*=\s*$secretValue"

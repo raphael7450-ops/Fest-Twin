@@ -11,8 +11,8 @@
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
 - 병합된 PR: https://github.com/raphael7450-ops/Fest-Twin/pull/1
 - 제출 문구: [공모전 제출용 문구](contest-submission-copy.md)
-- 시연 순서: [제출 시연 가이드](submission-demo-guide.md)
-- 검증 체크리스트: [데모 검증 체크리스트](demo-verification.md)
+- 시연 순서: [제출 시연 가이드](../guides/submission-demo-guide.md)
+- 검증 체크리스트: [데모 검증 체크리스트](../guides/demo-verification.md)
 
 ## 지정과제 9번 대응
 
@@ -64,39 +64,39 @@ MVP는 담당자 실명, 연락처, 결제정보, 개인별 위치 이력을 입
 
 ### 전체 대시보드
 
-![전체 대시보드](assets/submission/desktop-full.png)
+![전체 대시보드](../assets/submission/desktop-full.png)
 
 ### 첫 화면
 
-![페스트트윈 첫 화면](assets/submission/header.png)
+![페스트트윈 첫 화면](../assets/submission/header.png)
 
 ### 제출 데모 검증 현황
 
-![제출 데모 검증 현황](assets/submission/submission-status.png)
+![제출 데모 검증 현황](../assets/submission/submission-status.png)
 
 ### 데이터 근거
 
-![TourAPI 데이터 근거 패널](assets/submission/dataBasis.png)
+![TourAPI 데이터 근거 패널](../assets/submission/dataBasis.png)
 
 ### 수요 예측
 
-![시간대별 수요 예측](assets/submission/forecast.png)
+![시간대별 수요 예측](../assets/submission/forecast.png)
 
 ### 혼잡도 시뮬레이션
 
-![혼잡도 시뮬레이션 히트맵](assets/submission/heatmap.png)
+![혼잡도 시뮬레이션 히트맵](../assets/submission/heatmap.png)
 
 ### 기획 보완 리포트
 
-![기획 보완 리포트](assets/submission/report.png)
+![기획 보완 리포트](../assets/submission/report.png)
 
 ### 시나리오 저장
 
-![시나리오 저장](assets/submission/scenario.png)
+![시나리오 저장](../assets/submission/scenario.png)
 
 ### 모바일 첫 화면
 
-![모바일 첫 화면](assets/submission/mobile-viewport.png)
+![모바일 첫 화면](../assets/submission/mobile-viewport.png)
 
 ## 차별점
 

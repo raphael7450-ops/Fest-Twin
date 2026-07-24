@@ -65,7 +65,7 @@ MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, �
 - 공개 URL TourAPI `festivals`, `detail` 응답 정상 확인
 - 데스크톱·모바일 렌더링에서 제출 검증 패널 표시 및 가로 넘침 없음
 - 실제 TourAPI 키, 서버 비밀번호, SSH 비밀번호는 Git과 문서에 기록하지 않음
-- 공고문 대응 매트릭스: `docs/contest-notice-response-matrix.md`
+- 공고문 대응 매트릭스: `docs/contest/contest-notice-response-matrix.md`
 
 ## 화면 증빙
 
@@ -81,9 +81,9 @@ MVP는 개인정보를 수집하지 않습니다. 담당자 실명, 연락처, �
 
 ## 함께 제출할 문서
 
-- `docs/contest-submission-copy.md`
-- `docs/contest-notice-response-matrix.md`
-- `docs/submission-summary.md`
-- `docs/submission-demo-guide.md`
-- `docs/demo-verification.md`
-- `docs/public-demo-funnel.md`
+- `docs/contest/contest-submission-copy.md`
+- `docs/contest/contest-notice-response-matrix.md`
+- `docs/contest/submission-summary.md`
+- `docs/guides/submission-demo-guide.md`
+- `docs/guides/demo-verification.md`
+- `docs/specs/service-flows.md`

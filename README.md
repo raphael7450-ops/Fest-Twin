@@ -6,19 +6,20 @@
 
 - 공개 데모: https://cwserver.tail97dbc3.ts.net/
 - GitHub 저장소: https://github.com/raphael7450-ops/Fest-Twin
-- 최종 제출 패키지: [페스트트윈 최종 제출 패키지](docs/final-submission-package.md)
-- 제출 체크리스트: [페스트트윈 최종 제출 체크리스트](docs/final-submission-checklist.md)
+- 전체 문서 목차: [문서 체계 안내 (docs/README.md)](docs/README.md)
+- 최종 제출 패키지: [페스트트윈 최종 제출 패키지](docs/contest/final-submission-package.md)
+- 제출 체크리스트: [페스트트윈 최종 제출 체크리스트](docs/contest/final-submission-checklist.md)
 - 제출 zip: [fest-twin-submission-package.zip](artifacts/fest-twin-submission-package.zip)
 - GitHub Release: [Fest-Twin 제출 최종 패키지 v0.1.1](https://github.com/raphael7450-ops/Fest-Twin/releases/tag/v0.1.1-submission-final)
 - Release zip 다운로드: [fest-twin-submission-package.zip](https://github.com/raphael7450-ops/Fest-Twin/releases/download/v0.1.1-submission-final/fest-twin-submission-package.zip)
-- 제출 요약: [제출 요약서](docs/submission-summary.md)
-- 공고 대응: [공고 대응 매트릭스](docs/contest-notice-response-matrix.md)
-- 제출 문구: [공모전 제출용 문구](docs/contest-submission-copy.md)
-- TourAPI 실제 예시: [강남 미디어 윈터페스타 조회 근거](docs/tourapi-recent-festival-example.md)
-- 네이버 지도 설정: [네이버 지도 API 설정](docs/naver-map-api-setup.md)
-- 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
-- 운영 안내: [공개 데모 운영 안내](docs/demo-operations-runbook.md)
-- 최종 리허설: [최종 리허설 체크리스트](docs/final-rehearsal-checklist.md)
+- 제출 요약: [제출 요약서](docs/contest/submission-summary.md)
+- 공고 대응: [공고 대응 매트릭스](docs/contest/contest-notice-response-matrix.md)
+- 제출 문구: [공모전 제출용 문구](docs/contest/contest-submission-copy.md)
+- TourAPI 실제 예시: [강남 미디어 윈터페스타 조회 근거](docs/specs/tourapi-recent-festival-example.md)
+- 네이버 지도 설정: [네이버 지도 API 설정](docs/guides/naver-map-api-setup.md)
+- 시연 순서: [제출 시연 가이드](docs/guides/submission-demo-guide.md)
+- 운영 안내: [공개 데모 운영 안내](docs/guides/demo-operations-runbook.md)
+- 최종 리허설: [최종 리허설 체크리스트](docs/contest/final-rehearsal-checklist.md)
 
 ## 현재 공개 검증 상태
 
@@ -41,7 +42,7 @@
 
 심사자는 첫 화면에서 정부 지침 기반 대시보드, 데이터 근거, 수요 예측, 혼잡 히트맵, 기획 보완 리포트를 순서대로 확인하면 됩니다.
 
-현재 기본 기획안은 공개 데모 TourAPI 프록시에서 확인한 `강남 미디어 윈터페스타`를 기준으로 구성했습니다. 조회 조건과 값은 [TourAPI 실제 축제 예시](docs/tourapi-recent-festival-example.md)에 정리되어 있습니다.
+현재 기본 기획안은 공개 데모 TourAPI 프록시에서 확인한 `강남 미디어 윈터페스타`를 기준으로 구성했습니다. 조회 조건과 값은 [TourAPI 실제 축제 예시](docs/specs/tourapi-recent-festival-example.md)에 정리되어 있습니다.
 
 ## 한 줄 정의
 
@@ -106,7 +107,7 @@ React 앱은 같은 origin의 `/api/tour/*` 프록시만 호출합니다. 프록
 
 실제 행사장 지도 패널은 NAVER Maps JavaScript API v3를 사용합니다. 로컬에서 실제 지도를 보려면 `.env.local`에 `VITE_NAVER_MAP_NCP_KEY_ID`를 설정합니다. 키가 없으면 앱은 지도를 요청하지 않고 TourAPI 좌표 기준 fallback 정보를 표시합니다.
 
-자세한 설정은 [네이버 지도 API 설정](docs/naver-map-api-setup.md)을 확인합니다.
+자세한 설정은 [네이버 지도 API 설정](docs/guides/naver-map-api-setup.md)을 확인합니다.
 
 ## 정부 지침 기반 설계
 
@@ -120,26 +121,33 @@ MVP는 기능을 먼저 만들고 공공성을 나중에 붙이는 방식이 아
 - 개인정보 보호 및 개인정보 영향평가
 - 공공데이터 이용정책
 
-## 현재 문서
+## 문서 체계 (Documentation Structure)
 
-- [설계 문서](docs/superpowers/specs/2026-07-15-fest-twin-design.md)
-- [정부 지침 기반 MVP 구현 계획](docs/superpowers/plans/2026-07-15-fest-twin-mvp.md)
-- [정부 지침 기반 설계 체크리스트](docs/government-readiness-checklist.md)
-- [공공데이터 및 개인정보 최소수집 정책](docs/public-data-and-privacy-policy.md)
-- [수요 예측·혼잡 진단·리포트 산정 기준](docs/forecast-simulation-report-method.md)
-- [정부용 대시보드 화면 흐름](docs/dashboard-service-flow.md)
-- [공모전 제출용 문구](docs/contest-submission-copy.md)
-- [공고 대응 매트릭스](docs/contest-notice-response-matrix.md)
-- [네이버 지도 API 설정](docs/naver-map-api-setup.md)
-- [제출 요약서](docs/submission-summary.md)
-- [제출 시연 가이드](docs/submission-demo-guide.md)
-- [공개 데모 운영 안내](docs/demo-operations-runbook.md)
-- [최종 리허설 체크리스트](docs/final-rehearsal-checklist.md)
-- [리포트 출력 흐름](docs/report-export-flow.md)
-- [시나리오 저장 흐름](docs/scenario-save-flow.md)
-- [데모 검증 체크리스트](docs/demo-verification.md)
-- [로컬 작업 이어가기](docs/local-continuation-guide.md)
-- [내부 Docker 배포](docs/internal-docker-deploy.md)
+모든 세부 문서는 **[docs/README.md](docs/README.md)**에서 한눈에 확인하실 수 있습니다.
+
+### 🏆 공모전 제출 서류 (`docs/contest/`)
+- [페스트트윈 최종 제출 패키지](docs/contest/final-submission-package.md)
+- [페스트트윈 최종 제출 체크리스트](docs/contest/final-submission-checklist.md)
+- [제출 요약서](docs/contest/submission-summary.md)
+- [공고 대응 매트릭스](docs/contest/contest-notice-response-matrix.md)
+- [공모전 제출용 문구](docs/contest/contest-submission-copy.md)
+- [최종 리허설 체크리스트](docs/contest/final-rehearsal-checklist.md)
+
+### 🛠️ 개발 및 운영 가이드 (`docs/guides/`)
+- [제출 시연 가이드](docs/guides/submission-demo-guide.md)
+- [공개 데모 운영 안내](docs/guides/demo-operations-runbook.md)
+- [내부 Docker 배포](docs/guides/internal-docker-deploy.md)
+- [로컬 작업 이어가기](docs/guides/local-continuation-guide.md)
+- [네이버 지도 API 설정](docs/guides/naver-map-api-setup.md)
+- [데모 검증 체크리스트](docs/guides/demo-verification.md)
+
+### 🔬 기능 및 데이터 명세 (`docs/specs/`)
+- [통합 서비스 아키텍처 및 흐름](docs/specs/service-flows.md)
+- [데이터 산출 방법론](docs/specs/data-methodology.md)
+- [수요 예측·혼잡 진단·리포트 산정 기준](docs/specs/forecast-simulation-report-method.md)
+- [TourAPI 실제 축제 예시](docs/specs/tourapi-recent-festival-example.md)
+- [정부 지침 기반 설계 체크리스트](docs/specs/government-readiness-checklist.md)
+- [공공데이터 및 개인정보 최소수집 정책](docs/specs/public-data-and-privacy-policy.md)
 
 ## MVP 흐름
 
