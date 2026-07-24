@@ -87,6 +87,15 @@ function buildTourApiUrl(endpoint, apiKey, query) {
   url.searchParams.set("MobileApp", MOBILE_APP);
   url.searchParams.set("_type", "json");
 
+  // detailCommon2 상세 조회 시 필수 메타데이터(이미지, 주소, 상세개요) 반환 플래그 추가
+  if (endpoint === "detail") {
+    url.searchParams.set("defaultYN", "Y");
+    url.searchParams.set("firstImageYN", "Y");
+    url.searchParams.set("addrinfoYN", "Y");
+    url.searchParams.set("overviewYN", "Y");
+    url.searchParams.set("mapinfoYN", "Y");
+  }
+
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== "") {
       url.searchParams.set(key, String(value));

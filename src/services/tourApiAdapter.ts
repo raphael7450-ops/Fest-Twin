@@ -441,9 +441,9 @@ function mapSimilarFestival(
   const themeOverlap = clamp(0.35 + matchedKeywords * 0.18, 0.35, 0.95);
 
   return {
-    id: String(item.contentid),
-    name: item.title,
-    region: item.addr1,
+    id: String(item.contentid ?? item.code ?? Math.random()),
+    name: item.title ?? "축제 명칭 미상",
+    region: item.addr1 ?? plan.region,
     visitors: estimateVisitors(item, nearbyCount),
     themeOverlap: Math.round(themeOverlap * 100) / 100,
   };
@@ -597,17 +597,24 @@ function mapFestivalCandidate(
   searchScope: FestivalSearchScope,
   sourceDetails: MetricEvidenceSourceDetail[],
 ): FestivalCandidate | undefined {
-  if (!isValidFestivalItem(item)) return undefined;
+  if (!isValidContentItem(item)) return undefined;
+
+  const address =
+    (typeof item.addr1 === "string" && item.addr1.trim().length > 0)
+      ? item.addr1.trim()
+      : (typeof item.overview === "string" && item.overview.trim().length > 0)
+        ? item.overview.trim()
+        : "주소 정보 미기재";
 
   return {
-    id: String(item.contentid),
-    title: item.title,
-    address: item.addr1,
+    id: String(item.contentid ?? item.code ?? Math.random()),
+    title: item.title ?? "축제 명칭 미상",
+    address,
     startDate: formatTourApiDateForInput(item.eventstartdate),
     endDate: formatTourApiDateForInput(item.eventenddate),
     mapX: hasFiniteNumber(item.mapx) ? String(item.mapx) : undefined,
     mapY: hasFiniteNumber(item.mapy) ? String(item.mapy) : undefined,
-    imageUrl: item.firstimage,
+    imageUrl: item.firstimage ?? undefined,
     searchScope,
     sourceDetails,
   };
