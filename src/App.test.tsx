@@ -160,9 +160,9 @@ describe("App", () => {
     expect(screen.getByText("샘플 대체")).toBeInTheDocument();
     expect(screen.getByText(/테헤란로|세종대로|동문로|View-T 공식 예시 링크/)).toBeInTheDocument();
 
-    await userEvent.click(
-      screen.getByRole("button", { name: /주차 수용 차오름 비율 근거 보기/ }),
-    );
+    const safetyPanel = screen.getByText("안전 및 물류 수용성").closest("section")!;
+    const evidenceButtons = within(safetyPanel).getAllByRole("button", { name: "근거 보기" });
+    await userEvent.click(evidenceButtons[evidenceButtons.length - 1]);
 
     expect(await screen.findByText("사용 데이터 상세")).toBeInTheDocument();
     expect(screen.getAllByText(/KTDB\/View-T/).length).toBeGreaterThan(0);

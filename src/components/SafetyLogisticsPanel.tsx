@@ -84,33 +84,33 @@ export function SafetyLogisticsPanel({
           </div>
         </article>
 
-        <article className="safety-metric safety-metric-wide">
-          <div className="capacity-header">
-            <span>주차 수용 차오름 비율</span>
+        <article className="safety-metric">
+          <span className="safety-icon safety-icon-teal" aria-hidden="true">
+            P
+          </span>
+          <div>
             <div className="metric-inline-heading">
-              <EvidenceButton
-                label="주차 수용 차오름 비율 근거 보기"
-                onClick={() => onOpenEvidence("parking-occupancy")}
-              />
-              <strong>{metrics.parkingOccupancyRate}%</strong>
+              <span>주차 수용 차오름 비율</span>
+              <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
             </div>
-          </div>
-          <div
-            className="capacity-gauge"
-            role="meter"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={metrics.parkingOccupancyRate}
-            aria-label="주차 수용 차오름 비율"
-          >
+            <strong>{metrics.parkingOccupancyRate}%</strong>
             <div
-              className="capacity-gauge-fill"
-              style={{ width: `${metrics.parkingOccupancyRate}%` }}
-            />
+              className="capacity-gauge"
+              role="meter"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={metrics.parkingOccupancyRate}
+              aria-label="주차 수용 차오름 비율"
+            >
+              <div
+                className="capacity-gauge-fill"
+                style={{ width: `${metrics.parkingOccupancyRate}%` }}
+              />
+            </div>
+            <small>
+              예상 차량 유입과 행사장 수용력 기반의 사전 배치 검토값입니다.
+            </small>
           </div>
-          <small>
-            예상 차량 유입과 행사장 수용력 기반의 사전 배치 검토값입니다.
-          </small>
         </article>
       </div>
     </section>
