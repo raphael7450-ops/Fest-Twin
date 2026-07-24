@@ -47,6 +47,7 @@ docs/
 
 * **[service-flows.md](specs/service-flows.md)**: 통합 서비스 아키텍처 흐름 (대시보드, 시나리오 저장, 리포트 출력, 공개 데모 퍼널)
 * **[data-methodology.md](specs/data-methodology.md)**: 축제 수요예측 및 리스크 진단 데이터 산출 방법론
+* **[extended-data-sources.md](specs/extended-data-sources.md)**: 확장 공공 및 빅데이터셋 연동 명세 (관광데이터랩, ITS, 기상청, 행안부)
 * **[forecast-simulation-report-method.md](specs/forecast-simulation-report-method.md)**: 혼잡 시뮬레이션 및 기획 보완 리포트 생성 로직
 * **[tourapi-recent-festival-example.md](specs/tourapi-recent-festival-example.md)**: 한국관광공사 TourAPI 실제 조회 예시 근거 (강남 미디어 윈터페스타)
 * **[government-readiness-checklist.md](specs/government-readiness-checklist.md)**: 정부 가이드라인(전자정부, CSAP, 개인정보보호) 준수 체크리스트
