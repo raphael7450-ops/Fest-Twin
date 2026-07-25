@@ -1819,4 +1819,40 @@ a:focus-visible {
   font-size: 0.78rem;
 }
 
+/* 차세대 트렌드 연동 예정 배지 스타일 */
+.roadmap-badge-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.source-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.confirmed-source-badge {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.roadmap-source-badge {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px dashed #0284c7;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.roadmap-source-badge:hover {
+  background: #e0f2fe;
+  border-color: #0284c7;
+}
+
 
