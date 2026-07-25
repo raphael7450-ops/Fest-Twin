@@ -494,7 +494,7 @@ h3 {
 .workspace-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(260px, 300px) minmax(560px, 1.55fr) minmax(280px, 0.75fr);
+  grid-template-columns: minmax(260px, 280px) minmax(480px, 1.2fr) minmax(320px, 1fr);
   margin-bottom: 0;
 }
 

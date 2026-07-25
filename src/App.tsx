@@ -365,12 +365,14 @@ export function App() {
               setSelectedHour(scenario.selectedHour);
             }}
           />
-          <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
         </aside>
         <section className="main-column">
           <ForecastChart forecast={forecast} />
           <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
           <Heatmap plan={plan} simulation={simulation} />
+        </section>
+        <aside className="right-column">
+          <RiskPanel report={report} />
           <SafetyLogisticsPanel
             plan={plan}
             forecast={forecast}
@@ -378,9 +380,7 @@ export function App() {
             traffic={traffic}
             onOpenEvidence={setSelectedEvidenceId}
           />
-        </section>
-        <aside className="right-column">
-          <RiskPanel report={report} />
+          <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
         </aside>
       </div>
       <FestivalCandidatePanel
