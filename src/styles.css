@@ -715,17 +715,20 @@ a:focus-visible {
   background: #eef4fb;
   border: 1px solid var(--color-border);
   border-radius: 7px;
-  contain: paint;
   display: flex;
   max-width: 100%;
-  min-height: 320px;
+  min-height: 300px;
   overflow: hidden;
+  position: relative;
+  touch-action: pan-x pan-y;
   width: 100%;
 }
 
 .venue-map-canvas > div {
+  height: 100% !important;
   max-width: 100% !important;
-  overflow: hidden !important;
+  min-height: 300px !important;
+  width: 100% !important;
 }
 
 .venue-map-fallback {

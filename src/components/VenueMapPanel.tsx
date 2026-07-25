@@ -94,6 +94,13 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
         });
 
         setStatus("ready");
+
+        // 모바일 브라우저 뷰포트 크기 계산 지연 보정 (Android/iOS Safari)
+        window.setTimeout(() => {
+          if (!cancelled && mapContainerRef.current) {
+            window.dispatchEvent(new Event("resize"));
+          }
+        }, 300);
       })
       .catch(() => {
         if (!cancelled) setStatus("failed");
