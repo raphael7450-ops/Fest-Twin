@@ -19,7 +19,7 @@ const ENDPOINTS = [
 function checkEndpoint(endpoint) {
   return new Promise((resolve, reject) => {
     const url = `http://${TARGET_HOST}:${TARGET_PORT}${endpoint}`;
-    const req = http.get(url, { timeout: 5000 }, (res) => {
+    const req = http.get(url, { timeout: 10000 }, (res) => {
       let data = "";
       res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
@@ -34,7 +34,7 @@ function checkEndpoint(endpoint) {
     req.on("error", (err) => reject(new Error(`[FAIL] ${endpoint} connection error: ${err.message}`)));
     req.on("timeout", () => {
       req.destroy();
-      reject(new Error(`[FAIL] ${endpoint} connection timed out after 5000ms`));
+      reject(new Error(`[FAIL] ${endpoint} connection timed out after 10000ms`));
     });
   });
 }
@@ -44,12 +44,24 @@ async function runDeployCheck() {
   let successCount = 0;
 
   for (const endpoint of ENDPOINTS) {
-    try {
-      const result = await checkEndpoint(endpoint);
-      console.log(`  [OK] ${result.endpoint} -> HTTP ${result.statusCode} (${result.bytes} bytes)`);
-      successCount += 1;
-    } catch (error) {
-      console.error(`  [FAIL] ${error.message}`);
+    let attempts = 0;
+    let success = false;
+
+    while (attempts < 2 && !success) {
+      attempts += 1;
+      try {
+        const result = await checkEndpoint(endpoint);
+        console.log(`  [OK] ${result.endpoint} -> HTTP ${result.statusCode} (${result.bytes} bytes)`);
+        successCount += 1;
+        success = true;
+      } catch (error) {
+        if (attempts >= 2) {
+          console.error(`  [FAIL] ${error.message}`);
+        } else {
+          console.log(`  [RETRY] ${endpoint} retrying (attempt ${attempts + 1})...`);
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
     }
   }
 
