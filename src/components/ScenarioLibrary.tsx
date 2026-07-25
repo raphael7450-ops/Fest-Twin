@@ -34,7 +34,7 @@ export function ScenarioLibrary({
   onLoadScenario,
 }: ScenarioLibraryProps) {
   const [scenarios, setScenarios] = useState<SavedScenario[]>(() => loadScenarios());
-  const [copyNotice, setCopyNotice] = useState<string | null>(null);
+  const [copyNotice, setCopyNotice] = useState<{ text: string; url?: string } | null>(null);
 
   // 컴포넌트 마운트 시 서버 REST API 시나리오 목록 조회
   useEffect(() => {
@@ -53,8 +53,8 @@ export function ScenarioLibrary({
   async function handleSave() {
     const localSaved = saveScenario(plan, selectedHour);
     setScenarios((current) => [localSaved, ...current.filter((item) => item.id !== localSaved.id)].slice(0, 10));
-    setCopyNotice("시나리오가 안전하게 저장되었습니다.");
-    setTimeout(() => setCopyNotice(null), 3000);
+    setCopyNotice({ text: "✅ 시나리오가 저장되었습니다. 하단 목록의 [공유 링크]를 눌러 URL을 복사하거나 열 수 있습니다." });
+    setTimeout(() => setCopyNotice(null), 4000);
 
     saveServerScenario(plan, selectedHour).then((serverSaved) => {
       setScenarios((current) =>
@@ -70,17 +70,23 @@ export function ScenarioLibrary({
     setScenarios((current) => current.filter((item) => item.id !== id));
   }
 
-  // 공유 링크 클립보드 복사 처리
+  // 공유 링크 클립보드 복사 및 즉시 이동 지원
   async function handleCopyShareLink(scenario: SavedScenario, event: React.MouseEvent) {
     event.stopPropagation();
-    const url = getShareUrl(scenario.shareToken);
+    const url = getShareUrl(scenario);
     try {
       await navigator.clipboard.writeText(url);
-      setCopyNotice(`부서 공유 링크가 클립보드에 복사되었습니다! (${scenario.shareToken ?? "기본"})`);
+      setCopyNotice({
+        text: `📋 부서 공유 링크가 클립보드에 복사되었습니다! (클릭 시 새 탭 이동)`,
+        url,
+      });
     } catch {
-      setCopyNotice(`공유 링크: ${url}`);
+      setCopyNotice({
+        text: `🔗 공유 링크 주소:`,
+        url,
+      });
     }
-    setTimeout(() => setCopyNotice(null), 4000);
+    setTimeout(() => setCopyNotice(null), 7000);
   }
 
   // 전체 지우기
@@ -113,8 +119,32 @@ export function ScenarioLibrary({
       </div>
 
       {copyNotice && (
-        <div className="notice-banner" style={{ marginTop: "8px", padding: "6px 12px", background: "#e0f2fe", color: "#0369a1", borderRadius: "6px", fontSize: "0.85rem" }}>
-          {copyNotice}
+        <div
+          className="notice-banner"
+          style={{
+            marginTop: "8px",
+            padding: "8px 12px",
+            background: "#e0f2fe",
+            color: "#0369a1",
+            borderRadius: "6px",
+            fontSize: "0.85rem",
+            wordBreak: "break-all",
+          }}
+        >
+          <div>{copyNotice.text}</div>
+          {copyNotice.url && (
+            <div style={{ marginTop: "4px", fontWeight: "600" }}>
+              👉{" "}
+              <a
+                href={copyNotice.url}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "#0284c7", textDecoration: "underline" }}
+              >
+                {copyNotice.url} (새 탭에서 테스트 열기)
+              </a>
+            </div>
+          )}
         </div>
       )}
 

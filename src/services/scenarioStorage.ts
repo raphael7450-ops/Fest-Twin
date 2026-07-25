@@ -194,10 +194,20 @@ export async function deleteServerScenario(id: string): Promise<boolean> {
   return true;
 }
 
-// 4. 공유 토큰 기반 B2G URL 생성 함수
-export function getShareUrl(shareToken?: string): string {
-  if (!shareToken) return window.location.href;
-  return `${window.location.origin}/?share_token=${shareToken}`;
+// 4. 공유 토큰 기반 B2G URL 생성 함수 (shareToken 우선, 없으면 scenario.id 사용)
+export function getShareUrl(scenario?: Partial<SavedScenario> | string): string {
+  if (!scenario) return window.location.href;
+  const token = typeof scenario === "string" ? scenario : scenario.shareToken;
+  const id = typeof scenario === "object" ? scenario.id : undefined;
+
+  const baseUrl = typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+  if (token) {
+    return `${baseUrl}?share_token=${encodeURIComponent(token)}`;
+  }
+  if (id) {
+    return `${baseUrl}?scenario_id=${encodeURIComponent(id)}`;
+  }
+  return window.location.href;
 }
 
 export function loadScenarios(): SavedScenario[] {

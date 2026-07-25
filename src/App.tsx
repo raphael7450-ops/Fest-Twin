@@ -19,7 +19,7 @@ import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
-import { normalizeFestivalPlan } from "./services/scenarioStorage";
+import { loadScenarios, normalizeFestivalPlan } from "./services/scenarioStorage";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
@@ -120,24 +120,62 @@ export function App() {
   const isCandidateLoading =
     candidateState.planKey !== candidatePlanKey || candidateState.isLoading;
 
+  const [restoredNotice, setRestoredNotice] = useState<string | null>(null);
+
   useEffect(() => {
     const controller = new AbortController();
 
-    // B2G 공유 링크 URL 파라미터(share_token) 자동 복원 처리
+    // B2G 공유 링크 URL 파라미터(share_token 또는 scenario_id) 자동 복원 처리
     const urlParams = new URLSearchParams(window.location.search);
     const shareToken = urlParams.get("share_token");
+    const scenarioId = urlParams.get("scenario_id");
+
     if (shareToken) {
       fetch(`/api/scenarios/share/${shareToken}`)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.parameters?.plan) {
-            setPlan(normalizeFestivalPlan(data.parameters.plan));
+            const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
+            setPlan(restoredPlan);
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
+            setRestoredNotice(`🔗 공유 시나리오 [${restoredPlan.name}] 기획안이 복원되었습니다.`);
           }
         })
         .catch(() => {});
+    } else if (scenarioId) {
+      // 로컬/서버 scenarioId 기반 복원 fallback
+      fetch(`/api/scenarios/${scenarioId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.parameters?.plan) {
+            const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
+            setPlan(restoredPlan);
+            if (data.parameters.selectedHour !== undefined) {
+              setSelectedHour(data.parameters.selectedHour);
+            }
+            setRestoredNotice(`🔗 공유 시나리오 [${restoredPlan.name}] 기획안이 복원되었습니다.`);
+          } else {
+            // LocalStorage fallback
+            const localScenarios = loadScenarios();
+            const found = localScenarios.find((item) => item.id === scenarioId);
+            if (found) {
+              setPlan(normalizeFestivalPlan(found.plan));
+              setSelectedHour(found.selectedHour ?? 20);
+              setRestoredNotice(`🔗 저장된 시나리오 [${found.name}] 기획안이 복원되었습니다.`);
+            }
+          }
+        })
+        .catch(() => {
+          const localScenarios = loadScenarios();
+          const found = localScenarios.find((item) => item.id === scenarioId);
+          if (found) {
+            setPlan(normalizeFestivalPlan(found.plan));
+            setSelectedHour(found.selectedHour ?? 20);
+            setRestoredNotice(`🔗 저장된 시나리오 [${found.name}] 기획안이 복원되었습니다.`);
+          }
+        });
     }
 
     getTourApiAreaCodes({ signal: controller.signal })
@@ -327,6 +365,37 @@ export function App() {
   return (
     <main className="app-shell">
       <GovernmentHeader />
+      {restoredNotice && (
+        <div
+          style={{
+            margin: "12px 24px 0 24px",
+            padding: "12px 16px",
+            background: "#eff6ff",
+            border: "1px solid #93c5fd",
+            borderRadius: "8px",
+            color: "#1e40af",
+            fontWeight: 600,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>{restoredNotice}</span>
+          <button
+            type="button"
+            onClick={() => setRestoredNotice(null)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "1rem",
+              color: "#1e40af",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <SummaryKpiCards
         plan={plan}
         forecast={forecast}
