@@ -1,12 +1,12 @@
 # Final Submission Package Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create a final Korean submission package with copy-ready text, links, checklist, screenshots, and a zip archive.
+Goal: Create a final Korean submission package with copy-ready text, links, checklist, screenshots, and a zip archive.
 
-**Architecture:** Keep app code unchanged. Add two Markdown documents under `docs/` and generate one local zip artifact under `artifacts/` containing the submission docs and screenshot assets.
+Architecture: Keep app code unchanged. Add two Markdown documents under `docs/` and generate one local zip artifact under `artifacts/` containing the submission docs and screenshot assets.
 
-**Tech Stack:** Markdown, PowerShell `Compress-Archive`, existing docs/assets.
+Tech Stack: Markdown, PowerShell `Compress-Archive`, existing docs/assets.
 
 ## Global Constraints
 
@@ -29,15 +29,15 @@
 
 ### Task 1: Create Final Submission Documents
 
-**Files:**
+Files:
 - Create: `docs/final-submission-package.md`
 - Create: `docs/final-submission-checklist.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `docs/contest-submission-copy.md`, `docs/submission-summary.md`, `docs/submission-demo-guide.md`, `docs/demo-verification.md`, `docs/assets/submission/*`.
 - Produces: Copy-ready final submission docs.
 
-- [ ] **Step 1: Create final package document**
+- [ ] Step 1: Create final package document
 
 Create `docs/final-submission-package.md` with:
 
@@ -102,7 +102,7 @@ TourAPI 기반 축제 수요 근거와 혼잡 시뮬레이션을 활용해 지�
 - `docs/public-demo-funnel.md`
 ```
 
-- [ ] **Step 2: Create checklist**
+- [ ] Step 2: Create checklist
 
 Create `docs/final-submission-checklist.md` with:
 
@@ -146,14 +146,14 @@ Create `docs/final-submission-checklist.md` with:
 
 ### Task 2: Build Zip Artifact and Verify
 
-**Files:**
+Files:
 - Create: `artifacts/fest-twin-submission-package.zip`
 
-**Interfaces:**
+Interfaces:
 - Consumes: Final docs from Task 1 and existing screenshot assets.
 - Produces: Zip artifact for local submission packaging.
 
-- [ ] **Step 1: Create artifact directory**
+- [ ] Step 1: Create artifact directory
 
 Run:
 
@@ -161,7 +161,7 @@ Run:
 New-Item -ItemType Directory -Force artifacts | Out-Null
 ```
 
-- [ ] **Step 2: Create zip package**
+- [ ] Step 2: Create zip package
 
 Run:
 
@@ -188,7 +188,7 @@ $files = @(
 Compress-Archive -Path $files -DestinationPath artifacts/fest-twin-submission-package.zip -Force
 ```
 
-- [ ] **Step 3: Verify package and live demo**
+- [ ] Step 3: Verify package and live demo
 
 Run:
 
@@ -206,7 +206,7 @@ Expected:
 - TourAPI response contains `resultCode=0000`
 - secret search returns no matches
 
-- [ ] **Step 4: Commit**
+- [ ] Step 4: Commit
 
 Run:
 

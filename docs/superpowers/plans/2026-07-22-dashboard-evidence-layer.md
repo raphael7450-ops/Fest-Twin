@@ -1,12 +1,12 @@
 # Dashboard Evidence Layer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build an evidence layer that explains the sources, formulas, assumptions, confidence, and limitations behind Fest-Twin dashboard and report metrics.
+Goal: Build an evidence layer that explains the sources, formulas, assumptions, confidence, and limitations behind Fest-Twin dashboard and report metrics.
 
-**Architecture:** Keep the existing forecast, simulation, and impact metric calculations intact. Add a focused evidence service that translates existing calculation outputs into reusable evidence objects, then render those objects through shared UI components in the dashboard and report.
+Architecture: Keep the existing forecast, simulation, and impact metric calculations intact. Add a focused evidence service that translates existing calculation outputs into reusable evidence objects, then render those objects through shared UI components in the dashboard and report.
 
-**Tech Stack:** React 18, TypeScript, Vite, Vitest, Testing Library, existing CSS.
+Tech Stack: React 18, TypeScript, Vite, Vitest, Testing Library, existing CSS.
 
 ## Global Constraints
 
@@ -42,12 +42,12 @@
 
 ### Task 1: Evidence Data Service
 
-**Files:**
+Files:
 - Create: `src/services/metricEvidence.ts`
 - Create: `src/services/metricEvidence.test.ts`
 - Modify: `src/domain/types.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `FestivalPlan`, `ForecastResult`, `SimulationResult`, `TourismContext`, `TrendContext`, existing `createSummaryKpiMetrics`, `createSafetyLogisticsMetrics`, `createEconomicImpactMetrics`
 - Produces:
   - `MetricEvidence`
@@ -56,7 +56,7 @@
   - `createMetricEvidenceSet(plan, forecast, simulation, tourism, trends): Record<MetricEvidenceId, MetricEvidence>`
   - `createReportEvidenceSummaries(evidenceSet): Array<{ title: string; summary: string; confidenceLabel: string }>`
 
-- [ ] **Step 1: Add failing service tests**
+- [ ] Step 1: Add failing service tests
 
 Create `src/services/metricEvidence.test.ts` with:
 
@@ -146,13 +146,13 @@ describe("metricEvidence", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run: `npm run test -- src/services/metricEvidence.test.ts`
 
 Expected: FAIL because `./metricEvidence` does not exist.
 
-- [ ] **Step 3: Add domain evidence types**
+- [ ] Step 3: Add domain evidence types
 
 Modify `src/domain/types.ts` by adding:
 
@@ -189,7 +189,7 @@ export interface MetricEvidence {
 }
 ```
 
-- [ ] **Step 4: Implement evidence service**
+- [ ] Step 4: Implement evidence service
 
 Create `src/services/metricEvidence.ts` with:
 
@@ -406,13 +406,13 @@ export function createReportEvidenceSummaries(
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [ ] Step 5: Run test to verify it passes
 
 Run: `npm run test -- src/services/metricEvidence.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 Run:
 
@@ -425,19 +425,19 @@ git commit -m "feat: add metric evidence service"
 
 ### Task 2: Evidence Drawer UI
 
-**Files:**
+Files:
 - Create: `src/components/EvidenceButton.tsx`
 - Create: `src/components/MetricEvidenceDrawer.tsx`
 - Modify: `src/App.test.tsx`
 - Modify: `src/styles.css`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `MetricEvidence`
 - Produces:
   - `EvidenceButton({ label?, onClick })`
   - `MetricEvidenceDrawer({ evidence, isOpen, onClose })`
 
-- [ ] **Step 1: Add failing dashboard interaction test**
+- [ ] Step 1: Add failing dashboard interaction test
 
 Modify `src/App.test.tsx` by adding this test inside the existing `describe("App", () => { ... })` block:
 
@@ -458,13 +458,13 @@ it("opens a metric evidence drawer from the dashboard", async () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run: `npm run test -- src/App.test.tsx`
 
 Expected: FAIL because evidence UI does not exist yet.
 
-- [ ] **Step 3: Create evidence button**
+- [ ] Step 3: Create evidence button
 
 Create `src/components/EvidenceButton.tsx` with:
 
@@ -483,7 +483,7 @@ export function EvidenceButton({ label = "근거 보기", onClick }: EvidenceBut
 }
 ```
 
-- [ ] **Step 4: Create evidence drawer**
+- [ ] Step 4: Create evidence drawer
 
 Create `src/components/MetricEvidenceDrawer.tsx` with:
 
@@ -561,7 +561,7 @@ export function MetricEvidenceDrawer({
 }
 ```
 
-- [ ] **Step 5: Add drawer styles**
+- [ ] Step 5: Add drawer styles
 
 Append to `src/styles.css`:
 
@@ -694,13 +694,13 @@ Append to `src/styles.css`:
 }
 ```
 
-- [ ] **Step 6: Run test to verify it still fails for wiring only**
+- [ ] Step 6: Run test to verify it still fails for wiring only
 
 Run: `npm run test -- src/App.test.tsx`
 
 Expected: FAIL because `SummaryKpiCards` and `App` are not wired yet.
 
-- [ ] **Step 7: Commit reusable UI**
+- [ ] Step 7: Commit reusable UI
 
 Run:
 
@@ -713,7 +713,7 @@ git commit -m "feat: add metric evidence drawer UI"
 
 ### Task 3: Dashboard Wiring and Data Basis Reframe
 
-**Files:**
+Files:
 - Modify: `src/App.tsx`
 - Modify: `src/components/SummaryKpiCards.tsx`
 - Modify: `src/components/SafetyLogisticsPanel.tsx`
@@ -721,11 +721,11 @@ git commit -m "feat: add metric evidence drawer UI"
 - Modify: `src/components/DataBasisPanel.tsx`
 - Modify: `src/App.test.tsx`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `Record<MetricEvidenceId, MetricEvidence>`, `MetricEvidenceId`, `onOpenEvidence(metricId)`
 - Produces: Dashboard controls that open the drawer for each major metric.
 
-- [ ] **Step 1: Update component props**
+- [ ] Step 1: Update component props
 
 Modify component prop types as follows:
 
@@ -743,7 +743,7 @@ Apply this pattern to:
 - `SafetyLogisticsPanel`: open `safety-staff`, `medical-staff`, `parking-occupancy`
 - `RoiEconomicImpact`: open `economic-roi`
 
-- [ ] **Step 2: Add evidence buttons to KPI cards**
+- [ ] Step 2: Add evidence buttons to KPI cards
 
 In each metric header in `src/components/SummaryKpiCards.tsx`, render:
 
@@ -759,7 +759,7 @@ Use the matching IDs for the other KPI cards:
 <EvidenceButton onClick={() => onOpenEvidence("commercial-spillover")} />
 ```
 
-- [ ] **Step 3: Add evidence buttons to safety and ROI panels**
+- [ ] Step 3: Add evidence buttons to safety and ROI panels
 
 In `src/components/SafetyLogisticsPanel.tsx`, add:
 
@@ -775,7 +775,7 @@ In `src/components/RoiEconomicImpact.tsx`, add:
 <EvidenceButton onClick={() => onOpenEvidence("economic-roi")} />
 ```
 
-- [ ] **Step 4: Wire evidence state in App**
+- [ ] Step 4: Wire evidence state in App
 
 Modify `src/App.tsx` by importing:
 
@@ -807,7 +807,7 @@ Render the drawer:
 />
 ```
 
-- [ ] **Step 5: Reframe data basis panel**
+- [ ] Step 5: Reframe data basis panel
 
 Modify `src/components/DataBasisPanel.tsx` to show:
 
@@ -841,13 +841,13 @@ function statusLabel(status: DataSourceStatus | undefined) {
 }
 ```
 
-- [ ] **Step 6: Run dashboard test**
+- [ ] Step 6: Run dashboard test
 
 Run: `npm run test -- src/App.test.tsx`
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit dashboard wiring**
+- [ ] Step 7: Commit dashboard wiring
 
 Run:
 
@@ -860,7 +860,7 @@ git commit -m "feat: wire metric evidence into dashboard"
 
 ### Task 4: Report Evidence Summary and Methodology Document
 
-**Files:**
+Files:
 - Create: `src/components/ReportEvidenceSummary.tsx`
 - Modify: `src/components/ReportView.tsx`
 - Modify: `src/components/ReportView.test.tsx`
@@ -868,11 +868,11 @@ git commit -m "feat: wire metric evidence into dashboard"
 - Modify: `docs/data-methodology.md`
 - Modify: `src/styles.css`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `MetricEvidence`
 - Produces: Compact report evidence summary and submission methodology doc.
 
-- [ ] **Step 1: Add failing report test**
+- [ ] Step 1: Add failing report test
 
 Modify `src/components/ReportView.test.tsx` to include:
 
@@ -883,13 +883,13 @@ expect(screen.getByText("최고 밀집 위험도")).toBeInTheDocument();
 expect(screen.getByText("예산 대비 경제적 파급효과")).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Run report test to verify it fails**
+- [ ] Step 2: Run report test to verify it fails
 
 Run: `npm run test -- src/components/ReportView.test.tsx`
 
 Expected: FAIL because `ReportEvidenceSummary` does not exist yet.
 
-- [ ] **Step 3: Create report summary component**
+- [ ] Step 3: Create report summary component
 
 Create `src/components/ReportEvidenceSummary.tsx` with:
 
@@ -921,7 +921,7 @@ export function ReportEvidenceSummary({ evidenceSet }: ReportEvidenceSummaryProp
 }
 ```
 
-- [ ] **Step 4: Wire report evidence**
+- [ ] Step 4: Wire report evidence
 
 Modify `ReportView` props:
 
@@ -956,7 +956,7 @@ Update `App.tsx`:
 />
 ```
 
-- [ ] **Step 5: Add report summary styles**
+- [ ] Step 5: Add report summary styles
 
 Append to `src/styles.css`:
 
@@ -1008,7 +1008,7 @@ Append to `src/styles.css`:
 }
 ```
 
-- [ ] **Step 6: Create methodology document**
+- [ ] Step 6: Create methodology document
 
 Create `docs/data-methodology.md` with:
 
@@ -1056,13 +1056,13 @@ Create `docs/data-methodology.md` with:
 - 개인정보를 수집하지 않으며, 개인 단위 이동 경로를 추적하지 않는다.
 ```
 
-- [ ] **Step 7: Run report test**
+- [ ] Step 7: Run report test
 
 Run: `npm run test -- src/components/ReportView.test.tsx`
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit report and docs**
+- [ ] Step 8: Commit report and docs
 
 Run:
 
@@ -1075,27 +1075,27 @@ git commit -m "feat: add report evidence summary"
 
 ### Task 5: Full Verification, Push, and Docker Deploy
 
-**Files:**
+Files:
 - Verify all touched files.
 - No new source files unless a test reveals a focused fix.
 
-**Interfaces:**
+Interfaces:
 - Consumes: All outputs from Tasks 1-4.
 - Produces: Passing test/build state, pushed GitHub branch, updated Docker demo.
 
-- [ ] **Step 1: Run full tests**
+- [ ] Step 1: Run full tests
 
 Run: `npm run test`
 
 Expected: all Vitest tests pass.
 
-- [ ] **Step 2: Run production build**
+- [ ] Step 2: Run production build
 
 Run: `VITE_NAVER_MAP_NCP_KEY_ID=5mcwlg6qwo npm run build`
 
 Expected: TypeScript and Vite build pass.
 
-- [ ] **Step 3: Inspect git status**
+- [ ] Step 3: Inspect git status
 
 Run: `git status --short`
 
@@ -1108,13 +1108,13 @@ Expected: only pre-existing unrelated changes remain:
 ?? artifacts/fest-twin-project-understanding-docs/
 ```
 
-- [ ] **Step 4: Push main to GitHub**
+- [ ] Step 4: Push main to GitHub
 
 Run: `git push origin main`
 
 Expected: `main -> main`.
 
-- [ ] **Step 5: Deploy Docker demo**
+- [ ] Step 5: Deploy Docker demo
 
 Create an archive from `HEAD`, upload it to `cwuser@100.104.94.112`, build with `NAVER_MAP_CLIENT_ID=5mcwlg6qwo`, and replace the `fest-twin-demo` container. When `/home/cwuser/fest-twin-demo.env` exists, the replacement container must be started with `--env-file /home/cwuser/fest-twin-demo.env`; otherwise the server-side TourAPI proxy returns `TOUR_API_KEY_MISSING` and the region selector cannot load real area codes.
 
@@ -1133,7 +1133,7 @@ Then upload the archive and run the remote redeploy script with PuTTY tools. The
 
 Expected: container `fest-twin-demo` restarts, `curl http://127.0.0.1:18080/` returns 200, and `curl http://127.0.0.1:18080/api/tour/area-code?numOfRows=3\&pageNo=1` returns a TourAPI `resultCode` of `0000` instead of `TOUR_API_KEY_MISSING`.
 
-- [ ] **Step 6: Verify public demo bundle**
+- [ ] Step 6: Verify public demo bundle
 
 Run a browser or HTTP check against:
 
@@ -1150,7 +1150,7 @@ Expected visible labels in the deployed bundle:
 산출 근거 요약
 ```
 
-- [ ] **Step 7: Final status**
+- [ ] Step 7: Final status
 
 Report:
 

@@ -1,12 +1,12 @@
 # Demand Forecast Backdata Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add source-backed demand forecast baselines so the dashboard can explain expected visitors with similar-festival visitor records instead of only TourAPI metadata proxies.
+Goal: Add source-backed demand forecast baselines so the dashboard can explain expected visitors with similar-festival visitor records instead of only TourAPI metadata proxies.
 
-**Architecture:** Introduce a focused `DemandBackdataContext` domain model and a normalized regional festival sample dataset based on the Ministry of Culture, Sports and Tourism regional festival file-data shape. A new adapter selects similar festival baselines for a `FestivalPlan`, `createForecast` optionally consumes the context, and metric evidence exposes the exact records used for the demand-index calculation.
+Architecture: Introduce a focused `DemandBackdataContext` domain model and a normalized regional festival sample dataset based on the Ministry of Culture, Sports and Tourism regional festival file-data shape. A new adapter selects similar festival baselines for a `FestivalPlan`, `createForecast` optionally consumes the context, and metric evidence exposes the exact records used for the demand-index calculation.
 
-**Tech Stack:** React 18, TypeScript, Vite, Vitest, existing Express proxy patterns, existing metric evidence drawer.
+Tech Stack: React 18, TypeScript, Vite, Vitest, existing Express proxy patterns, existing metric evidence drawer.
 
 ## Global Constraints
 
@@ -36,19 +36,19 @@
 
 ### Task 1: Domain Types and Normalized Sample Backdata
 
-**Files:**
+Files:
 - Modify: `src/domain/types.ts`
 - Create: `src/data/sampleDemandBackdata.ts`
 - Test: `src/services/demandBackdataAdapter.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Produces:
   - `DemandBackdataSimilarFestival`
   - `DemandBackdataContext`
   - `sampleRegionalFestivalRecords`
   - `sampleDemandBackdataContext`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] Step 1: Write the failing test
 
 Create `src/services/demandBackdataAdapter.test.ts` with:
 
@@ -77,7 +77,7 @@ describe("sampleDemandBackdata", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run:
 
@@ -87,7 +87,7 @@ npm run test -- src/services/demandBackdataAdapter.test.ts
 
 Expected: FAIL because `src/data/sampleDemandBackdata.ts` does not exist.
 
-- [ ] **Step 3: Add domain types**
+- [ ] Step 3: Add domain types
 
 In `src/domain/types.ts`, add after `SpendingContext`:
 
@@ -138,7 +138,7 @@ export type DataSourceStatus =
   | "sample-fallback";
 ```
 
-- [ ] **Step 4: Create normalized sample dataset**
+- [ ] Step 4: Create normalized sample dataset
 
 Create `src/data/sampleDemandBackdata.ts`:
 
@@ -225,7 +225,7 @@ export const sampleDemandBackdataContext: DemandBackdataContext = {
 };
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [ ] Step 5: Run test to verify it passes
 
 Run:
 
@@ -235,7 +235,7 @@ npm run test -- src/services/demandBackdataAdapter.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 ```powershell
 git add src/domain/types.ts src/data/sampleDemandBackdata.ts src/services/demandBackdataAdapter.test.ts
@@ -246,11 +246,11 @@ git commit -m "feat: add demand backdata model"
 
 ### Task 2: Demand Backdata Adapter
 
-**Files:**
+Files:
 - Modify: `src/services/demandBackdataAdapter.test.ts`
 - Create: `src/services/demandBackdataAdapter.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes:
   - `sampleRegionalFestivalRecords`
   - `sampleDemandBackdataContext`
@@ -259,7 +259,7 @@ git commit -m "feat: add demand backdata model"
   - `getDemandBackdataContext(plan: FestivalPlan): DemandBackdataContext`
   - `createFallbackDemandBackdataContext(plan: FestivalPlan, reason: string): DemandBackdataContext`
 
-- [ ] **Step 1: Add failing adapter tests**
+- [ ] Step 1: Add failing adapter tests
 
 Append to `src/services/demandBackdataAdapter.test.ts`:
 
@@ -297,7 +297,7 @@ describe("demandBackdataAdapter", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run:
 
@@ -307,7 +307,7 @@ npm run test -- src/services/demandBackdataAdapter.test.ts
 
 Expected: FAIL because `demandBackdataAdapter.ts` does not exist.
 
-- [ ] **Step 3: Implement adapter**
+- [ ] Step 3: Implement adapter
 
 Create `src/services/demandBackdataAdapter.ts`:
 
@@ -430,7 +430,7 @@ export function getDemandBackdataContext(plan: FestivalPlan): DemandBackdataCont
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] Step 4: Run test to verify it passes
 
 Run:
 
@@ -440,7 +440,7 @@ npm run test -- src/services/demandBackdataAdapter.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] Step 5: Commit
 
 ```powershell
 git add src/services/demandBackdataAdapter.ts src/services/demandBackdataAdapter.test.ts
@@ -451,18 +451,18 @@ git commit -m "feat: select demand backdata baselines"
 
 ### Task 3: Forecast Uses Demand Backdata
 
-**Files:**
+Files:
 - Modify: `src/services/forecast.ts`
 - Modify: `src/services/forecast.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes:
   - `DemandBackdataContext`
   - `createForecast(plan, tourism, trends, demandBackdata?)`
 - Produces:
   - `createForecast` with optional fourth parameter.
 
-- [ ] **Step 1: Add failing forecast test**
+- [ ] Step 1: Add failing forecast test
 
 Append to `src/services/forecast.test.ts`:
 
@@ -496,7 +496,7 @@ it("uses regional festival visitor backdata as the similar demand baseline", () 
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run:
 
@@ -506,7 +506,7 @@ npm run test -- src/services/forecast.test.ts
 
 Expected: FAIL because `createForecast` does not accept or use demand backdata.
 
-- [ ] **Step 3: Update forecast implementation**
+- [ ] Step 3: Update forecast implementation
 
 In `src/services/forecast.ts`, import `DemandBackdataContext`:
 
@@ -581,7 +581,7 @@ Replace the similar festival reason object label/description with:
       },
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [ ] Step 4: Run tests to verify they pass
 
 Run:
 
@@ -591,7 +591,7 @@ npm run test -- src/services/forecast.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] Step 5: Commit
 
 ```powershell
 git add src/services/forecast.ts src/services/forecast.test.ts
@@ -602,13 +602,13 @@ git commit -m "feat: apply demand backdata to forecast"
 
 ### Task 4: Wire Demand Backdata Into App and Evidence
 
-**Files:**
+Files:
 - Modify: `src/App.tsx`
 - Modify: `src/App.test.tsx`
 - Modify: `src/services/metricEvidence.ts`
 - Modify: `src/services/metricEvidence.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes:
   - `getDemandBackdataContext(plan)`
   - `createForecast(plan, tourism, trends, demandBackdata?)`
@@ -616,7 +616,7 @@ git commit -m "feat: apply demand backdata to forecast"
 - Produces:
   - Dashboard forecast and demand-index evidence using demand backdata.
 
-- [ ] **Step 1: Add failing metric evidence test**
+- [ ] Step 1: Add failing metric evidence test
 
 Append to `src/services/metricEvidence.test.ts`:
 
@@ -650,7 +650,7 @@ it("includes regional festival visitor records in demand-index evidence", () => 
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run:
 
@@ -660,7 +660,7 @@ npm run test -- src/services/metricEvidence.test.ts
 
 Expected: FAIL because `createMetricEvidenceSet` does not accept demand backdata.
 
-- [ ] **Step 3: Update metric evidence**
+- [ ] Step 3: Update metric evidence
 
 In `src/services/metricEvidence.ts`, import `DemandBackdataContext` and update the function signature:
 
@@ -708,7 +708,7 @@ In `"demand-index".assumptions`, add:
           : []),
 ```
 
-- [ ] **Step 4: Wire app state**
+- [ ] Step 4: Wire app state
 
 In `src/App.tsx`, import:
 
@@ -747,7 +747,7 @@ Update metric evidence memo dependencies:
     [forecast, plan, simulation, tourism, traffic, spending, demandBackdata],
 ```
 
-- [ ] **Step 5: Update App test expectation**
+- [ ] Step 5: Update App test expectation
 
 In `src/App.test.tsx`, add one assertion to the main render test after the existing demand evidence assertions:
 
@@ -761,7 +761,7 @@ If this text is only visible inside the drawer, add it to the evidence drawer te
     expect(screen.getByText(/문화체육관광부_지역축제 정보|지역축제 방문객 기준선/)).toBeInTheDocument();
 ```
 
-- [ ] **Step 6: Run tests**
+- [ ] Step 6: Run tests
 
 Run:
 
@@ -771,7 +771,7 @@ npm run test -- src/services/metricEvidence.test.ts src/App.test.tsx
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [ ] Step 7: Commit
 
 ```powershell
 git add src/App.tsx src/App.test.tsx src/services/metricEvidence.ts src/services/metricEvidence.test.ts
@@ -782,15 +782,15 @@ git commit -m "feat: show demand backdata evidence"
 
 ### Task 5: Methodology Documentation and Verification
 
-**Files:**
+Files:
 - Modify: `docs/data-methodology.md`
 - Optional Modify: `docs/demo-verification.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes completed implementation from Tasks 1-4.
 - Produces updated public methodology notes and final verification.
 
-- [ ] **Step 1: Update methodology documentation**
+- [ ] Step 1: Update methodology documentation
 
 In `docs/data-methodology.md`, add a section after the demand forecast explanation:
 
@@ -805,7 +805,7 @@ Fest-Twin은 예상 방문객 산식에 문화체육관광부 지역축제 정�
 - 방문객 수는 출처 파일의 집계 기준에 의존하므로 실시간 군중 수나 확정 관광객 수로 해석하지 않는다.
 ```
 
-- [ ] **Step 2: Run full verification**
+- [ ] Step 2: Run full verification
 
 Run:
 
@@ -816,14 +816,14 @@ npm run build
 
 Expected: both commands PASS.
 
-- [ ] **Step 3: Commit docs**
+- [ ] Step 3: Commit docs
 
 ```powershell
 git add docs/data-methodology.md
 git commit -m "docs: explain demand backdata methodology"
 ```
 
-- [ ] **Step 4: Push and deploy**
+- [ ] Step 4: Push and deploy
 
 Run:
 

@@ -2,13 +2,13 @@
 
 > Superseded: this plan records the earlier browser-side TourAPI integration phase. Current implementation and deployment follow `docs/superpowers/plans/2026-07-16-tourapi-server-proxy.md`; TourAPI credentials must be provided only as the server runtime `TOUR_API_KEY`.
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Connect Fest-Twin's tourism evidence flow to Korea Tourism Organization TourAPI while preserving the current sample-data fallback.
+Goal: Connect Fest-Twin's tourism evidence flow to Korea Tourism Organization TourAPI while preserving the current sample-data fallback.
 
-**Architecture:** Keep the app as a Vite + React + TypeScript single-page app. Expand `TourismContext` provenance so UI can distinguish real TourAPI data, partial fallback, and sample fallback. Put TourAPI URL construction, response normalization, and fallback handling inside `src/services/tourApiAdapter.ts`, then make `App.tsx` load tourism context asynchronously without breaking forecast, simulation, or report rendering.
+Architecture: Keep the app as a Vite + React + TypeScript single-page app. Expand `TourismContext` provenance so UI can distinguish real TourAPI data, partial fallback, and sample fallback. Put TourAPI URL construction, response normalization, and fallback handling inside `src/services/tourApiAdapter.ts`, then make `App.tsx` load tourism context asynchronously without breaking forecast, simulation, or report rendering.
 
-**Tech Stack:** Vite, React 18, TypeScript, Vitest, Testing Library, browser `fetch`, Vite env variable `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`.
+Tech Stack: Vite, React 18, TypeScript, Vitest, Testing Library, browser `fetch`, Vite env variable `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`.
 
 ## Global Constraints
 
@@ -42,16 +42,16 @@
 
 ### Task 1: Provenance Status and Fallback Contract
 
-**Files:**
+Files:
 - Modify: `src/domain/types.ts`
 - Modify: `src/services/tourApiAdapter.ts`
 - Modify: `src/services/dataAdapters.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: existing `FestivalPlan`, `TourismContext`, `DataProvenance`.
 - Produces: `DataSourceStatus`, extended `DataProvenance`, `createFallbackTourismContext(plan: FestivalPlan, reason: string): TourismContext`.
 
-- [ ] **Step 1: Write failing tests for explicit fallback status**
+- [ ] Step 1: Write failing tests for explicit fallback status
 
 Replace the first tourism test in `src/services/dataAdapters.test.ts` with this expanded suite while keeping the existing trend test:
 
@@ -94,7 +94,7 @@ describe("public data adapters", () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify it fails**
+- [ ] Step 2: Run the focused test and verify it fails
 
 Run:
 
@@ -104,7 +104,7 @@ npm run test -- src/services/dataAdapters.test.ts
 
 Expected: FAIL because `sourceStatus`, `fallbackReason`, and `createFallbackTourismContext` do not exist.
 
-- [ ] **Step 3: Extend domain types**
+- [ ] Step 3: Extend domain types
 
 Modify `src/domain/types.ts`:
 
@@ -130,7 +130,7 @@ export interface DataProvenance {
 }
 ```
 
-- [ ] **Step 4: Add fallback helper**
+- [ ] Step 4: Add fallback helper
 
 Replace `src/services/tourApiAdapter.ts` with:
 
@@ -173,7 +173,7 @@ export async function getTourismContext(plan: FestivalPlan): Promise<TourismCont
 }
 ```
 
-- [ ] **Step 5: Run the focused test and verify it passes**
+- [ ] Step 5: Run the focused test and verify it passes
 
 Run:
 
@@ -183,7 +183,7 @@ npm run test -- src/services/dataAdapters.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 1**
+- [ ] Step 6: Commit Task 1
 
 ```powershell
 git add src/domain/types.ts src/services/tourApiAdapter.ts src/services/dataAdapters.test.ts
@@ -194,15 +194,15 @@ git commit -m "feat: add TourAPI provenance fallback contract"
 
 ### Task 2: TourAPI Client, Response Parsing, and Conversion
 
-**Files:**
+Files:
 - Modify: `src/services/tourApiAdapter.ts`
 - Modify: `src/services/dataAdapters.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `FestivalPlan`, `TourismContext`, `createFallbackTourismContext`.
 - Produces: `getTourismContext(plan, options?)`, `mapTourApiItemsToTourismContext(plan, festivalItems, nearbyItems, retrievedAt)`.
 
-- [ ] **Step 1: Add failing tests for conversion and failed live fetch fallback**
+- [ ] Step 1: Add failing tests for conversion and failed live fetch fallback
 
 Append these tests inside `describe("public data adapters", ...)` in `src/services/dataAdapters.test.ts`:
 
@@ -280,7 +280,7 @@ import {
 } from "./tourApiAdapter";
 ```
 
-- [ ] **Step 2: Run focused tests and verify they fail**
+- [ ] Step 2: Run focused tests and verify they fail
 
 Run:
 
@@ -290,7 +290,7 @@ npm run test -- src/services/dataAdapters.test.ts
 
 Expected: FAIL because `mapTourApiItemsToTourismContext` and the `getTourismContext` options parameter are not implemented.
 
-- [ ] **Step 3: Implement TourAPI helpers and conversion**
+- [ ] Step 3: Implement TourAPI helpers and conversion
 
 Replace `src/services/tourApiAdapter.ts` with:
 
@@ -619,7 +619,7 @@ export async function getTourismContext(
 }
 ```
 
-- [ ] **Step 4: Fix test imports**
+- [ ] Step 4: Fix test imports
 
 At the top of `src/services/dataAdapters.test.ts`, ensure imports are:
 
@@ -635,7 +635,7 @@ import {
 import { getTrendContext } from "./trendAdapter";
 ```
 
-- [ ] **Step 5: Run focused tests and verify they pass**
+- [ ] Step 5: Run focused tests and verify they pass
 
 Run:
 
@@ -645,7 +645,7 @@ npm run test -- src/services/dataAdapters.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 2**
+- [ ] Step 6: Commit Task 2
 
 ```powershell
 git add src/services/tourApiAdapter.ts src/services/dataAdapters.test.ts
@@ -656,16 +656,16 @@ git commit -m "feat: map TourAPI responses to tourism context"
 
 ### Task 3: Async App Wiring and Data Basis Status UI
 
-**Files:**
+Files:
 - Modify: `src/App.tsx`
 - Modify: `src/App.test.tsx`
 - Modify: `src/components/DataBasisPanel.tsx`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `getTourismContext(plan): Promise<TourismContext>`, `DataProvenance.sourceStatus`.
 - Produces: dashboard that loads live/fallback tourism context asynchronously and displays status text.
 
-- [ ] **Step 1: Write failing UI expectations**
+- [ ] Step 1: Write failing UI expectations
 
 Replace `src/App.test.tsx` with:
 
@@ -690,7 +690,7 @@ describe("App", () => {
 });
 ```
 
-- [ ] **Step 2: Run app test and verify it fails**
+- [ ] Step 2: Run app test and verify it fails
 
 Run:
 
@@ -700,7 +700,7 @@ npm run test -- src/App.test.tsx
 
 Expected: FAIL because `샘플 데이터 대체 사용` is not rendered.
 
-- [ ] **Step 3: Update DataBasisPanel status rendering**
+- [ ] Step 3: Update DataBasisPanel status rendering
 
 Replace `src/components/DataBasisPanel.tsx` with:
 
@@ -750,7 +750,7 @@ export function DataBasisPanel({ tourism, trends }: DataBasisPanelProps) {
 }
 ```
 
-- [ ] **Step 4: Wire App to async tourism adapter**
+- [ ] Step 4: Wire App to async tourism adapter
 
 Replace `src/App.tsx` with:
 
@@ -844,7 +844,7 @@ export function App() {
 }
 ```
 
-- [ ] **Step 5: Run UI tests and full tests**
+- [ ] Step 5: Run UI tests and full tests
 
 Run:
 
@@ -855,7 +855,7 @@ npm run test
 
 Expected: both commands PASS.
 
-- [ ] **Step 6: Commit Task 3**
+- [ ] Step 6: Commit Task 3
 
 ```powershell
 git add src/App.tsx src/App.test.tsx src/components/DataBasisPanel.tsx
@@ -866,17 +866,17 @@ git commit -m "feat: show TourAPI data source status"
 
 ### Task 4: Environment, Documentation, and Build Verification
 
-**Files:**
+Files:
 - Modify: `.gitignore`
 - Create: `.env.example`
 - Modify: `README.md`
 - Modify: `docs/demo-verification.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE`, current npm scripts.
 - Produces: documented local setup and verification path without committing secrets.
 
-- [ ] **Step 1: Verify `.env.local` is ignored**
+- [ ] Step 1: Verify `.env.local` is ignored
 
 Run:
 
@@ -886,7 +886,7 @@ git check-ignore .env.local
 
 Expected: exit code 0 and output `.env.local`. If it does not print `.env.local`, continue to Step 2.
 
-- [ ] **Step 2: Add environment ignore and example**
+- [ ] Step 2: Add environment ignore and example
 
 If `.env.local` is not already ignored, add these lines to `.gitignore`:
 
@@ -902,7 +902,7 @@ Create `.env.example`:
 LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE=replace-with-your-tourapi-service-key
 ```
 
-- [ ] **Step 3: Update README TourAPI setup**
+- [ ] Step 3: Update README TourAPI setup
 
 Add this section after the local run commands in `README.md`:
 
@@ -921,7 +921,7 @@ LEGACY_BROWSER_TOUR_API_KEY_DO_NOT_USE=발급받은_일반_인증키
 ```
 ```
 
-- [ ] **Step 4: Update demo verification**
+- [ ] Step 4: Update demo verification
 
 Add this section to `docs/demo-verification.md` before `## 집에서 재확인`:
 
@@ -935,7 +935,7 @@ Add this section to `docs/demo-verification.md` before `## 집에서 재확인`:
 - [ ] 실제 인증키는 Git 변경 목록에 포함되지 않는다.
 ```
 
-- [ ] **Step 5: Run full verification**
+- [ ] Step 5: Run full verification
 
 Run:
 
@@ -951,7 +951,7 @@ Expected:
 - `npm run build`: PASS
 - `git status --short`: only intended docs/env-example changes are present before commit
 
-- [ ] **Step 6: Commit Task 4**
+- [ ] Step 6: Commit Task 4
 
 ```powershell
 git add .gitignore .env.example README.md docs/demo-verification.md

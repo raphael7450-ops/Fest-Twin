@@ -10,16 +10,20 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "deploy:check": "node scripts/deploy-check.js",
-    "build:zip": "node scripts/build-submission-zip.js"
+    "build:zip": "node scripts/build-submission-zip.js",
+    "test:load": "node scripts/load-test.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "express": "^5.2.1",
     "lucide-react": "^0.468.0",
+    "morgan": "^1.11.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "^5.7.2",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

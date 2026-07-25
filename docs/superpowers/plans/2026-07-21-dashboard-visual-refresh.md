@@ -1,12 +1,12 @@
 # Dashboard Visual Refresh Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Upgrade the Fest-Twin dashboard visual design into a polished public-sector SaaS and operations-monitoring hybrid without changing data or prediction behavior.
+Goal: Upgrade the Fest-Twin dashboard visual design into a polished public-sector SaaS and operations-monitoring hybrid without changing data or prediction behavior.
 
-**Architecture:** Keep the existing React component structure and update only focused presentation components plus the global stylesheet. `GovernmentHeader` owns the top command header copy and metadata; `SummaryCards` owns KPI card labels and severity classes; `styles.css` owns the visual system, responsive layout, panels, controls, and dashboard polish.
+Architecture: Keep the existing React component structure and update only focused presentation components plus the global stylesheet. `GovernmentHeader` owns the top command header copy and metadata; `SummaryCards` owns KPI card labels and severity classes; `styles.css` owns the visual system, responsive layout, panels, controls, and dashboard polish.
 
-**Tech Stack:** React, TypeScript, Vite, Vitest, CSS.
+Tech Stack: React, TypeScript, Vite, Vitest, CSS.
 
 ## Global Constraints
 
@@ -21,16 +21,16 @@
 
 ### Task 1: Header and KPI Markup
 
-**Files:**
+Files:
 - Modify: `src/components/GovernmentHeader.tsx`
 - Modify: `src/components/SummaryCards.tsx`
 - Test: `src/App.test.tsx`
 
-**Interfaces:**
+Interfaces:
 - Consumes: existing `forecast`, `simulation`, and `report` props.
 - Produces: unchanged public component names, with new CSS class hooks: `government-header__content`, `government-header__meta`, `metric-card--primary`, `metric-card--success`, `metric-card--warning`, `metric-card--danger`, `metric-trend`.
 
-- [ ] **Step 1: Write failing render assertions**
+- [ ] Step 1: Write failing render assertions
 
 Add assertions to `src/App.test.tsx` in the existing dashboard render test:
 
@@ -41,7 +41,7 @@ expect(screen.getByText("데이터 신뢰도")).toBeInTheDocument();
 expect(screen.getByText("예산 검토")).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Run the focused test and verify failure**
+- [ ] Step 2: Run the focused test and verify failure
 
 Run:
 
@@ -51,7 +51,7 @@ $env:Path='C:\Program Files\nodejs;' + $env:Path; & 'C:\Program Files\nodejs\npm
 
 Expected: fail because the new header/KPI text is missing.
 
-- [ ] **Step 3: Update `GovernmentHeader.tsx`**
+- [ ] Step 3: Update `GovernmentHeader.tsx`
 
 Replace the component body with:
 
@@ -77,7 +77,7 @@ export function GovernmentHeader() {
 }
 ```
 
-- [ ] **Step 4: Update `SummaryCards.tsx`**
+- [ ] Step 4: Update `SummaryCards.tsx`
 
 Use the existing values but assign class variants and clearer labels:
 
@@ -106,13 +106,13 @@ Use the existing values but assign class variants and clearer labels:
 </section>
 ```
 
-- [ ] **Step 5: Run the focused test and verify pass**
+- [ ] Step 5: Run the focused test and verify pass
 
 Run the same App test command.
 
 Expected: all `src/App.test.tsx` tests pass.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 ```powershell
 & 'C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd\git.exe' add src/components/GovernmentHeader.tsx src/components/SummaryCards.tsx src/App.test.tsx
@@ -122,15 +122,15 @@ Expected: all `src/App.test.tsx` tests pass.
 
 ### Task 2: Visual System and Responsive Layout
 
-**Files:**
+Files:
 - Modify: `src/styles.css`
 - Test: `src/App.test.tsx`
 
-**Interfaces:**
+Interfaces:
 - Consumes: class hooks from Task 1 and existing component class names.
 - Produces: polished public-sector SaaS visual language, responsive three-column layout, stable panel and control sizing.
 
-- [ ] **Step 1: Add a visual contract test**
+- [ ] Step 1: Add a visual contract test
 
 Add this assertion to the existing render test in `src/App.test.tsx`:
 
@@ -138,7 +138,7 @@ Add this assertion to the existing render test in `src/App.test.tsx`:
 expect(screen.getByLabelText("핵심 진단 지표")).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Run the focused test**
+- [ ] Step 2: Run the focused test
 
 Run:
 
@@ -148,7 +148,7 @@ $env:Path='C:\Program Files\nodejs;' + $env:Path; & 'C:\Program Files\nodejs\npm
 
 Expected: pass if Task 1 kept the semantic label.
 
-- [ ] **Step 3: Update stylesheet**
+- [ ] Step 3: Update stylesheet
 
 Replace and extend `src/styles.css` so it includes:
 
@@ -160,7 +160,7 @@ Replace and extend `src/styles.css` so it includes:
 - Responsive breakpoints for summary grid and workspace columns.
 - Map and heatmap panels that keep stable dimensions.
 
-- [ ] **Step 4: Run focused and full verification**
+- [ ] Step 4: Run focused and full verification
 
 Run:
 
@@ -172,7 +172,7 @@ $env:Path='C:\Program Files\nodejs;' + $env:Path; & 'C:\Program Files\nodejs\npm
 
 Expected: tests and build pass.
 
-- [ ] **Step 5: Browser verification**
+- [ ] Step 5: Browser verification
 
 Open `http://localhost:5173/` and verify:
 
@@ -181,7 +181,7 @@ Open `http://localhost:5173/` and verify:
 - Central forecast/map/simulation area is prominent.
 - Mobile width does not overlap text or controls.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 ```powershell
 & 'C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd\git.exe' add src/styles.css src/App.test.tsx docs/superpowers/plans/2026-07-21-dashboard-visual-refresh.md

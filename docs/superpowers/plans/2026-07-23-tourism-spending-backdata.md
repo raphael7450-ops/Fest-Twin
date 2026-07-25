@@ -1,12 +1,12 @@
 # Tourism Spending Backdata Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the fixed `62,000원` ROI spending assumption with a source-backed tourism spending context that can later be connected to data.go.kr regional tourism demand APIs.
+Goal: Replace the fixed `62,000원` ROI spending assumption with a source-backed tourism spending context that can later be connected to data.go.kr regional tourism demand APIs.
 
-**Architecture:** Add a focused `SpendingContext` domain model and a sample public-data fallback dataset that represents 한국관광공사 지역별 관광 수요 강도/관광 다양성 outputs. Pass the spending context into economic impact metrics, ROI UI, and metric evidence so the same average spend value and source basis are visible everywhere. Keep this first implementation client-side and deterministic; server-side data.go.kr proxy work is a later task.
+Architecture: Add a focused `SpendingContext` domain model and a sample public-data fallback dataset that represents 한국관광공사 지역별 관광 수요 강도/관광 다양성 outputs. Pass the spending context into economic impact metrics, ROI UI, and metric evidence so the same average spend value and source basis are visible everywhere. Keep this first implementation client-side and deterministic; server-side data.go.kr proxy work is a later task.
 
-**Tech Stack:** React 18, TypeScript, Vite, Vitest, Testing Library.
+Tech Stack: React 18, TypeScript, Vite, Vitest, Testing Library.
 
 ## Global Constraints
 
@@ -44,12 +44,12 @@
 
 ### Task 1: Add Spending Context Model and Sample Backdata
 
-**Files:**
+Files:
 - Modify: `src/domain/types.ts`
 - Create: `src/data/sampleSpending.ts`
 - Test: `src/services/impactMetrics.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Produces:
   - `SpendingBasis = "tourism-demand-intensity" | "tourism-diversity" | "similar-region" | "fallback"`
   - `SpendingConfidence = "high" | "medium" | "low"`
@@ -58,7 +58,7 @@
 - Consumes:
   - Existing `MetricEvidenceSourceDetail`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] Step 1: Write the failing test
 
 Add or extend `src/services/impactMetrics.test.ts` with:
 
@@ -90,7 +90,7 @@ describe("createEconomicImpactMetrics", () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [ ] Step 2: Run the test to verify it fails
 
 Run:
 
@@ -100,7 +100,7 @@ npm run test -- src/services/impactMetrics.test.ts
 
 Expected: FAIL because `sampleSpendingContext` and the new `createEconomicImpactMetrics` signature/properties do not exist.
 
-- [ ] **Step 3: Add types**
+- [ ] Step 3: Add types
 
 In `src/domain/types.ts`, add after `TrendContext`:
 
@@ -127,7 +127,7 @@ export interface SpendingContext {
 }
 ```
 
-- [ ] **Step 4: Create sample spending data**
+- [ ] Step 4: Create sample spending data
 
 Create `src/data/sampleSpending.ts`:
 
@@ -173,7 +173,7 @@ export const sampleSpendingContext: SpendingContext = {
 };
 ```
 
-- [ ] **Step 5: Run the test again**
+- [ ] Step 5: Run the test again
 
 Run:
 
@@ -187,18 +187,18 @@ Expected: still FAIL because `createEconomicImpactMetrics` has not been updated.
 
 ### Task 2: Replace Fixed ROI Spending Constant
 
-**Files:**
+Files:
 - Modify: `src/services/impactMetrics.ts`
 - Test: `src/services/impactMetrics.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `SpendingContext`
 - Produces:
   - `EconomicImpactMetrics.spendingBasisLabel`
   - `EconomicImpactMetrics.spendingSourceName`
   - `EconomicImpactMetrics.spendingConfidence`
 
-- [ ] **Step 1: Update economic metric types**
+- [ ] Step 1: Update economic metric types
 
 In `src/services/impactMetrics.ts`, import `SpendingContext` and update `EconomicImpactMetrics`:
 
@@ -214,7 +214,7 @@ export interface EconomicImpactMetrics {
 }
 ```
 
-- [ ] **Step 2: Remove the fixed constant**
+- [ ] Step 2: Remove the fixed constant
 
 Delete:
 
@@ -222,7 +222,7 @@ Delete:
 const AVERAGE_SPEND_PER_VISITOR_KRW = 62000;
 ```
 
-- [ ] **Step 3: Update `createEconomicImpactMetrics`**
+- [ ] Step 3: Update `createEconomicImpactMetrics`
 
 Replace the function with:
 
@@ -254,7 +254,7 @@ export function createEconomicImpactMetrics(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [ ] Step 4: Run tests
 
 Run:
 
@@ -264,7 +264,7 @@ npm run test -- src/services/impactMetrics.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] Step 5: Commit
 
 ```powershell
 git add src/domain/types.ts src/data/sampleSpending.ts src/services/impactMetrics.ts src/services/impactMetrics.test.ts
@@ -275,7 +275,7 @@ git commit -m "feat: add tourism spending context"
 
 ### Task 3: Surface Spending Source in ROI UI and Evidence
 
-**Files:**
+Files:
 - Modify: `src/components/RoiEconomicImpact.tsx`
 - Modify: `src/components/ReportView.tsx`
 - Modify: `src/services/metricEvidence.ts`
@@ -283,11 +283,11 @@ git commit -m "feat: add tourism spending context"
 - Test: `src/App.test.tsx`
 - Test: `src/services/metricEvidence.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `SpendingContext`, `sampleSpendingContext`
 - Produces: ROI panel copy and evidence details that include the spending source.
 
-- [ ] **Step 1: Write failing UI test**
+- [ ] Step 1: Write failing UI test
 
 In `src/App.test.tsx`, extend the dashboard render test:
 
@@ -296,7 +296,7 @@ expect(screen.getByText(/지역 관광 소비 강도 기반/)).toBeInTheDocument
 expect(screen.getByText(/58,400원/)).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Write failing evidence test**
+- [ ] Step 2: Write failing evidence test
 
 In `src/services/metricEvidence.test.ts`, add:
 
@@ -309,7 +309,7 @@ expect(JSON.stringify(evidence["economic-roi"].assumptions)).not.toContain(
 );
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [ ] Step 3: Run tests to verify they fail
 
 Run:
 
@@ -319,7 +319,7 @@ npm run test -- src/App.test.tsx src/services/metricEvidence.test.ts
 
 Expected: FAIL because spending context is not yet passed into UI/evidence.
 
-- [ ] **Step 4: Update `RoiEconomicImpact` props**
+- [ ] Step 4: Update `RoiEconomicImpact` props
 
 In `src/components/RoiEconomicImpact.tsx`, import `SpendingContext`, add `spending?: SpendingContext`, call `createEconomicImpactMetrics(plan, forecast, spending)`, and replace the paragraph with:
 
@@ -331,7 +331,7 @@ In `src/components/RoiEconomicImpact.tsx`, import `SpendingContext`, add `spendi
 </p>
 ```
 
-- [ ] **Step 5: Pass spending through report**
+- [ ] Step 5: Pass spending through report
 
 In `src/components/ReportView.tsx`, add `spending?: SpendingContext` to props and pass it to:
 
@@ -344,7 +344,7 @@ In `src/components/ReportView.tsx`, add `spending?: SpendingContext` to props an
 />
 ```
 
-- [ ] **Step 6: Pass spending from App**
+- [ ] Step 6: Pass spending from App
 
 In `src/App.tsx`, import:
 
@@ -371,7 +371,7 @@ and:
 />
 ```
 
-- [ ] **Step 7: Update `metricEvidence` signature and ROI details**
+- [ ] Step 7: Update `metricEvidence` signature and ROI details
 
 In `src/services/metricEvidence.ts`, import `SpendingContext`, update `createMetricEvidenceSet(..., spending?: SpendingContext)`, and call:
 
@@ -407,7 +407,7 @@ assumptions: [
 ],
 ```
 
-- [ ] **Step 8: Run tests**
+- [ ] Step 8: Run tests
 
 Run:
 
@@ -417,7 +417,7 @@ npm run test -- src/App.test.tsx src/services/metricEvidence.test.ts src/service
 
 Expected: PASS.
 
-- [ ] **Step 9: Build**
+- [ ] Step 9: Build
 
 Run:
 
@@ -427,7 +427,7 @@ npm run build
 
 Expected: PASS.
 
-- [ ] **Step 10: Commit**
+- [ ] Step 10: Commit
 
 ```powershell
 git add src/App.tsx src/components/RoiEconomicImpact.tsx src/components/ReportView.tsx src/services/metricEvidence.ts src/App.test.tsx src/services/metricEvidence.test.ts
@@ -438,14 +438,14 @@ git commit -m "feat: show tourism spending source in ROI"
 
 ### Task 4: Update Documentation and Deploy
 
-**Files:**
+Files:
 - Modify: `docs/data-methodology.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: implemented spending context and ROI behavior.
 - Produces: updated methodology copy for submission review.
 
-- [ ] **Step 1: Update methodology**
+- [ ] Step 1: Update methodology
 
 Append a concise Korean section to `docs/data-methodology.md`:
 
@@ -455,7 +455,7 @@ Append a concise Korean section to `docs/data-methodology.md`:
 Fest-Twin은 ROI 산출 시 고정 소비 단가를 1차 근거로 사용하지 않는다. 기본 구조는 한국관광공사 지역별 관광 수요 강도의 방문량 대비 소비액 계열 지표와 지역별 관광 다양성의 연령별 소비액 지표를 우선 사용한다. API 연동 전 데모에서는 동일 구조를 따르는 샘플 소비 컨텍스트를 표시하며, 근거 패널에 출처, 조회 지역, 사용 지표, 신뢰도, fallback 여부를 함께 제공한다.
 ```
 
-- [ ] **Step 2: Run final verification**
+- [ ] Step 2: Run final verification
 
 Run:
 
@@ -466,20 +466,20 @@ npm run build
 
 Expected: all PASS.
 
-- [ ] **Step 3: Commit docs**
+- [ ] Step 3: Commit docs
 
 ```powershell
 git add docs/data-methodology.md
 git commit -m "docs: explain tourism spending basis"
 ```
 
-- [ ] **Step 4: Push**
+- [ ] Step 4: Push
 
 ```powershell
 git push origin main
 ```
 
-- [ ] **Step 5: Deploy remote Docker**
+- [ ] Step 5: Deploy remote Docker
 
 Run the existing remote Docker deployment command with a fresh tag and preserve:
 
@@ -488,7 +488,7 @@ Run the existing remote Docker deployment command with a fresh tag and preserve:
 --build-arg NAVER_MAP_CLIENT_ID=5mcwlg6qwo
 ```
 
-- [ ] **Step 6: Verify public deployment**
+- [ ] Step 6: Verify public deployment
 
 Check:
 

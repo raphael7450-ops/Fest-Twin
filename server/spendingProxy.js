@@ -6,6 +6,7 @@
 
 import express from "express";
 import { getCachedData, setCachedData } from "./cache.js";
+import { noopLogger } from "./logger.js";
 
 const SPENDING_API_BASE_URL = "https://apis.data.go.kr/B551011/AreaTarDemDsService";
 const DEFAULT_OPERATION = "areaTarExpDsList";
@@ -68,6 +69,7 @@ function buildSpendingApiUrl(apiKey, query) {
 export function createSpendingProxyRouter(options = {}) {
   const router = express.Router();
   const fetchImpl = options.fetchImpl ?? fetch;
+  const log = options.logger ?? noopLogger;
 
   router.get("/consumer-strength", async (request, response) => {
     const apiKey = options.apiKey ?? process.env.TOUR_API_KEY ?? "";
@@ -94,6 +96,10 @@ export function createSpendingProxyRouter(options = {}) {
     try {
       const upstreamResponse = await fetchImpl(buildSpendingApiUrl(apiKey, request.query));
       if (!upstreamResponse.ok) {
+        log.warn("Tourism spending upstream error", {
+          event: "SPENDING_UPSTREAM_FALLBACK",
+          upstreamStatus: upstreamResponse.status,
+        });
         return errorResponse(
           response,
           502,
@@ -109,6 +115,11 @@ export function createSpendingProxyRouter(options = {}) {
       const code = error instanceof SyntaxError
         ? "SPENDING_INVALID_RESPONSE"
         : "SPENDING_UPSTREAM_ERROR";
+      log.error("Tourism spending proxy request failed", {
+        event: "SPENDING_PROXY_ERROR",
+        errorCode: code,
+        message: error.message,
+      });
       return errorResponse(response, 502, code, "Tourism spending proxy request failed.");
     }
   });

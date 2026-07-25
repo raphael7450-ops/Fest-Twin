@@ -1,12 +1,12 @@
 # Public Demo Funnel Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Expose the existing Fest-Twin internal Docker demo through a public HTTPS Tailscale Funnel URL without changing app code or exposing TourAPI secrets.
+Goal: Expose the existing Fest-Twin internal Docker demo through a public HTTPS Tailscale Funnel URL without changing app code or exposing TourAPI secrets.
 
-**Architecture:** Keep the running `fest-twin-demo` container on `127.0.0.1:18080`. Configure Tailscale Serve/Funnel on the remote server to reverse proxy public HTTPS traffic to that local port. Record the resulting public URL and rollback commands in repository docs.
+Architecture: Keep the running `fest-twin-demo` container on `127.0.0.1:18080`. Configure Tailscale Serve/Funnel on the remote server to reverse proxy public HTTPS traffic to that local port. Record the resulting public URL and rollback commands in repository docs.
 
-**Tech Stack:** Tailscale CLI, Docker, Node/Express static app, PowerShell local shell, SSH remote shell, Markdown documentation.
+Tech Stack: Tailscale CLI, Docker, Node/Express static app, PowerShell local shell, SSH remote shell, Markdown documentation.
 
 ## Global Constraints
 
@@ -35,14 +35,14 @@
 
 ### Task 1: Remote Server Preflight
 
-**Files:**
+Files:
 - No file changes.
 
-**Interfaces:**
+Interfaces:
 - Consumes: Existing SSH access to `cwuser@192.168.55.223`.
 - Produces: Confirmed values for container status, Tailscale hostname, and local HTTP health.
 
-- [ ] **Step 1: Confirm local git branch is clean**
+- [ ] Step 1: Confirm local git branch is clean
 
 Run:
 
@@ -56,7 +56,7 @@ Expected:
 ## codex/public-demo-funnel
 ```
 
-- [ ] **Step 2: Check remote Tailscale and Docker state**
+- [ ] Step 2: Check remote Tailscale and Docker state
 
 Run:
 
@@ -86,7 +86,7 @@ HTTP/1.1 200 OK
 
 Also expect one `fest-twin-demo` row. If SSH fails with `Permission denied` or BatchMode key failure, stop and ask the user to confirm SSH key access.
 
-- [ ] **Step 3: Capture the Tailscale DNS name**
+- [ ] Step 3: Capture the Tailscale DNS name
 
 Run:
 
@@ -98,14 +98,14 @@ Expected: one DNS name ending in `.ts.net`. Save it for Task 2.
 
 ### Task 2: Configure Tailscale Funnel
 
-**Files:**
+Files:
 - No file changes.
 
-**Interfaces:**
+Interfaces:
 - Consumes: Confirmed local service `http://127.0.0.1:18080/` from Task 1.
 - Produces: Public HTTPS URL using the server Tailscale DNS name.
 
-- [ ] **Step 1: Configure Serve for local demo port**
+- [ ] Step 1: Configure Serve for local demo port
 
 Run:
 
@@ -124,7 +124,7 @@ If output says `Serve is not enabled on your tailnet`, open the Tailscale URL pr
 ssh -o BatchMode=yes cwuser@192.168.55.223 'timeout 15s tailscale serve --bg --yes --https=443 http://127.0.0.1:18080; tailscale serve status || true'
 ```
 
-- [ ] **Step 2: Enable Funnel on HTTPS 443**
+- [ ] Step 2: Enable Funnel on HTTPS 443
 
 Run:
 
@@ -139,7 +139,7 @@ Expected: Funnel status shows HTTPS `443` forwarding to `http://127.0.0.1:18080`
 
 If output says Funnel is disabled by policy, stop and ask the user to enable Funnel in the Tailscale admin console for this tailnet. Do not change Docker.
 
-- [ ] **Step 3: Verify public HTTPS URL**
+- [ ] Step 3: Verify public HTTPS URL
 
 Replace `<dns-name>` with the DNS name from Task 1.
 
@@ -161,7 +161,7 @@ or:
 HTTP/1.1 200 OK
 ```
 
-- [ ] **Step 4: Verify TourAPI proxy through public URL**
+- [ ] Step 4: Verify TourAPI proxy through public URL
 
 Replace `<dns-name>` with the DNS name from Task 1.
 
@@ -175,18 +175,18 @@ Expected: JSON response with `"resultCode":"0000"` or a valid app-level fallback
 
 ### Task 3: Document Public Demo URL
 
-**Files:**
+Files:
 - Create: `docs/public-demo-funnel.md`
 - Modify: `README.md`
 - Modify: `docs/submission-summary.md`
 - Modify: `docs/submission-demo-guide.md`
 - Modify: `docs/demo-verification.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: Public URL from Task 2 as `https://<dns-name>`.
 - Produces: Repository documentation that separates public URL, internal URL, verification, and rollback.
 
-- [ ] **Step 1: Create public demo runbook**
+- [ ] Step 1: Create public demo runbook
 
 Create `docs/public-demo-funnel.md` with this structure, replacing `<public-url>` with the verified URL:
 
@@ -227,7 +227,7 @@ curl -fsSI http://127.0.0.1:18080/
 - 기존 서버의 다른 Docker 컨테이너는 변경하지 않는다.
 ```
 
-- [ ] **Step 2: Update README quick demo links**
+- [ ] Step 2: Update README quick demo links
 
 In `README.md`, add one public demo bullet immediately before the existing internal demo bullet:
 
@@ -236,7 +236,7 @@ In `README.md`, add one public demo bullet immediately before the existing inter
 - 내부 데모: http://192.168.55.223:18080/
 ```
 
-- [ ] **Step 3: Update submission summary**
+- [ ] Step 3: Update submission summary
 
 In `docs/submission-summary.md`, add the public demo URL to the submission metadata section:
 
@@ -245,7 +245,7 @@ In `docs/submission-summary.md`, add the public demo URL to the submission metad
 - 내부 데모: http://192.168.55.223:18080/
 ```
 
-- [ ] **Step 4: Update demo guide**
+- [ ] Step 4: Update demo guide
 
 In `docs/submission-demo-guide.md`, add this near the top:
 
@@ -254,7 +254,7 @@ In `docs/submission-demo-guide.md`, add this near the top:
 - 내부 데모: http://192.168.55.223:18080/
 ```
 
-- [ ] **Step 5: Update verification checklist**
+- [ ] Step 5: Update verification checklist
 
 Append a dated section to `docs/demo-verification.md`:
 
@@ -271,18 +271,18 @@ Append a dated section to `docs/demo-verification.md`:
 
 ### Task 4: Verify and Commit
 
-**Files:**
+Files:
 - Verify: `README.md`
 - Verify: `docs/public-demo-funnel.md`
 - Verify: `docs/submission-summary.md`
 - Verify: `docs/submission-demo-guide.md`
 - Verify: `docs/demo-verification.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: Documentation changes from Task 3.
 - Produces: Committed public demo documentation and final public URL.
 
-- [ ] **Step 1: Run test suite**
+- [ ] Step 1: Run test suite
 
 Run:
 
@@ -292,7 +292,7 @@ npm test
 
 Expected: all Vitest tests pass.
 
-- [ ] **Step 2: Run production build**
+- [ ] Step 2: Run production build
 
 Run:
 
@@ -302,7 +302,7 @@ npm run build
 
 Expected: TypeScript build and Vite build complete successfully.
 
-- [ ] **Step 3: Verify URLs one final time**
+- [ ] Step 3: Verify URLs one final time
 
 Replace `<public-url>` with the verified URL.
 
@@ -315,7 +315,7 @@ curl.exe -I --max-time 10 http://192.168.55.223:18080/
 
 Expected: both return HTTP 200.
 
-- [ ] **Step 4: Check for secret leakage**
+- [ ] Step 4: Check for secret leakage
 
 Run:
 
@@ -325,7 +325,7 @@ rg -n "TOUR_API_KEY=.*[0-9a-fA-F]{20,}|password|비밀번호" README.md docs ser
 
 Expected: no matches for actual secret values. Literal references to `TOUR_API_KEY` without values or placeholder values are acceptable.
 
-- [ ] **Step 5: Commit documentation**
+- [ ] Step 5: Commit documentation
 
 Run:
 

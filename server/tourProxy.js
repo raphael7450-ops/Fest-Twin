@@ -6,6 +6,7 @@
 
 import express from "express";
 import { getCachedData, setCachedData } from "./cache.js";
+import { noopLogger } from "./logger.js";
 
 const TOUR_API_BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
 const MOBILE_OS = "ETC";
@@ -108,6 +109,7 @@ function buildTourApiUrl(endpoint, apiKey, query) {
 export function createTourProxyRouter(options = {}) {
   const router = express.Router();
   const fetchImpl = options.fetchImpl ?? fetch;
+  const log = options.logger ?? noopLogger;
 
   router.get("/:endpoint", async (request, response) => {
     const apiKey = options.apiKey ?? process.env.TOUR_API_KEY ?? "";
@@ -137,6 +139,11 @@ export function createTourProxyRouter(options = {}) {
     try {
       const upstreamResponse = await fetchImpl(upstreamUrl);
       if (!upstreamResponse.ok) {
+        log.warn("TourAPI upstream error", {
+          event: "TOUR_API_UPSTREAM_FALLBACK",
+          endpoint: request.params.endpoint,
+          upstreamStatus: upstreamResponse.status,
+        });
         return errorResponse(
           response,
           502,
@@ -153,6 +160,12 @@ export function createTourProxyRouter(options = {}) {
       const code = error instanceof SyntaxError
         ? "TOUR_API_INVALID_RESPONSE"
         : "TOUR_API_UPSTREAM_ERROR";
+      log.error("TourAPI proxy request failed", {
+        event: "TOUR_API_PROXY_ERROR",
+        endpoint: request.params.endpoint,
+        errorCode: code,
+        message: error.message,
+      });
       return errorResponse(response, 502, code, "TourAPI proxy request failed.");
     }
   });

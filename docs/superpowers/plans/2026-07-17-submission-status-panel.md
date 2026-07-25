@@ -1,12 +1,12 @@
 # Submission Status Panel Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a top-of-dashboard submission demo verification panel that makes the public demo URL, TourAPI proxy verification, secret handling, and submission readiness visible in the app itself.
+Goal: Add a top-of-dashboard submission demo verification panel that makes the public demo URL, TourAPI proxy verification, secret handling, and submission readiness visible in the app itself.
 
-**Architecture:** Add a focused React component under `src/components/SubmissionStatusPanel.tsx`, render it in `src/App.tsx` immediately below `GovernmentHeader`, and add scoped CSS classes in `src/styles.css`. Extend the existing app render test to assert the new panel text appears without changing the TourAPI loading flow.
+Architecture: Add a focused React component under `src/components/SubmissionStatusPanel.tsx`, render it in `src/App.tsx` immediately below `GovernmentHeader`, and add scoped CSS classes in `src/styles.css`. Extend the existing app render test to assert the new panel text appears without changing the TourAPI loading flow.
 
-**Tech Stack:** React 18, TypeScript, Vite, Vitest, Testing Library, CSS.
+Tech Stack: React 18, TypeScript, Vite, Vitest, Testing Library, CSS.
 
 ## Global Constraints
 
@@ -33,17 +33,17 @@
 
 ### Task 1: Add Submission Status Panel Component
 
-**Files:**
+Files:
 - Create: `src/components/SubmissionStatusPanel.tsx`
 - Modify: `src/App.tsx`
 - Modify: `src/styles.css`
 - Test: `src/App.test.tsx`
 
-**Interfaces:**
+Interfaces:
 - Consumes: Existing `App` component layout and global CSS utility classes `panel` and `panel-heading`.
 - Produces: `SubmissionStatusPanel(): JSX.Element`, imported by `src/App.tsx`.
 
-- [ ] **Step 1: Add failing render assertions**
+- [ ] Step 1: Add failing render assertions
 
 Edit `src/App.test.tsx` inside `renders the government-guided Fest-Twin MVP dashboard` and add these assertions after the `정부 지침 반영 현황` assertion:
 
@@ -54,7 +54,7 @@ expect(screen.getByText("TourAPI 프록시")).toBeInTheDocument();
 expect(screen.getByText("인증키는 서버 런타임 환경변수로만 주입")).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] Step 2: Run test to verify it fails
 
 Run:
 
@@ -64,7 +64,7 @@ npm test -- src/App.test.tsx
 
 Expected: FAIL because `제출 데모 검증 현황` is not rendered yet.
 
-- [ ] **Step 3: Create component**
+- [ ] Step 3: Create component
 
 Create `src/components/SubmissionStatusPanel.tsx`:
 
@@ -125,7 +125,7 @@ export function SubmissionStatusPanel() {
 }
 ```
 
-- [ ] **Step 4: Render component in App**
+- [ ] Step 4: Render component in App
 
 Edit `src/App.tsx` imports:
 
@@ -141,7 +141,7 @@ Render immediately after `GovernmentHeader`:
 <GovernmentReadinessPanel />
 ```
 
-- [ ] **Step 5: Add styles**
+- [ ] Step 5: Add styles
 
 Edit `src/styles.css`. Add `.submission-status-card` to the shared card rule:
 
@@ -266,7 +266,7 @@ In `@media print`, hide the status panel:
 
 This existing selector already hides `.submission-status-panel` because it has `panel` and is not `report-panel`.
 
-- [ ] **Step 6: Run focused test**
+- [ ] Step 6: Run focused test
 
 Run:
 
@@ -276,7 +276,7 @@ npm test -- src/App.test.tsx
 
 Expected: PASS for `src/App.test.tsx`.
 
-- [ ] **Step 7: Commit**
+- [ ] Step 7: Commit
 
 Run:
 
@@ -287,14 +287,14 @@ git commit -m "feat: add submission status panel"
 
 ### Task 2: Verify, Deploy, and Document
 
-**Files:**
+Files:
 - Modify: `docs/demo-verification.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: Built app with `SubmissionStatusPanel`.
 - Produces: Updated public Docker demo serving the new panel.
 
-- [ ] **Step 1: Run full tests**
+- [ ] Step 1: Run full tests
 
 Run:
 
@@ -304,7 +304,7 @@ npm test
 
 Expected: 10 files and 27 or more tests pass.
 
-- [ ] **Step 2: Run production build**
+- [ ] Step 2: Run production build
 
 Run:
 
@@ -314,7 +314,7 @@ npm run build
 
 Expected: TypeScript and Vite build pass.
 
-- [ ] **Step 3: Build Docker image locally**
+- [ ] Step 3: Build Docker image locally
 
 Run:
 
@@ -326,7 +326,7 @@ $tag
 
 Expected: Docker image build succeeds and prints a `fest-twin-demo:<timestamp>` tag.
 
-- [ ] **Step 4: Save and upload image**
+- [ ] Step 4: Save and upload image
 
 Replace `<tag>` with the tag from Step 3.
 
@@ -340,7 +340,7 @@ Remove-Item .\fest-twin-demo.tar
 
 Expected: upload completes.
 
-- [ ] **Step 5: Load and replace managed container**
+- [ ] Step 5: Load and replace managed container
 
 Replace `<tag>` with the tag from Step 3.
 
@@ -358,7 +358,7 @@ curl -fsSI --max-time 10 http://127.0.0.1:18080/
 
 Expected: new container starts and local HTTP returns 200.
 
-- [ ] **Step 6: Verify public panel text**
+- [ ] Step 6: Verify public panel text
 
 Run:
 
@@ -371,7 +371,7 @@ curl.exe -sS --max-time 30 "https://cwserver.tail97dbc3.ts.net/api/tour/detail?c
 
 Expected: both commands print a match.
 
-- [ ] **Step 7: Update demo verification document**
+- [ ] Step 7: Update demo verification document
 
 Append to `docs/demo-verification.md`:
 
@@ -386,7 +386,7 @@ Append to `docs/demo-verification.md`:
 - 비밀값 기록 여부: 인증키와 SSH/Tailscale 인증 정보 미기록
 ```
 
-- [ ] **Step 8: Final checks and commit**
+- [ ] Step 8: Final checks and commit
 
 Run:
 

@@ -1,12 +1,12 @@
 # Evidence Source Detail Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a `사용 데이터 상세` evidence layer so reviewers can inspect the exact safe source records, query conditions, user inputs, and derived calculation inputs used for each dashboard metric.
+Goal: Add a `사용 데이터 상세` evidence layer so reviewers can inspect the exact safe source records, query conditions, user inputs, and derived calculation inputs used for each dashboard metric.
 
-**Architecture:** Extend domain types with a normalized evidence-source detail model, then have TourAPI adapter functions attach safe query and record metadata to festival candidates and tourism contexts. The metric evidence service will compose TourAPI, user-input, derived, and fallback/sample details into each `MetricEvidence`, and the drawer will render them in a compact audit-friendly section.
+Architecture: Extend domain types with a normalized evidence-source detail model, then have TourAPI adapter functions attach safe query and record metadata to festival candidates and tourism contexts. The metric evidence service will compose TourAPI, user-input, derived, and fallback/sample details into each `MetricEvidence`, and the drawer will render them in a compact audit-friendly section.
 
-**Tech Stack:** React, TypeScript, Vite, Vitest, Testing Library, Express TourAPI proxy, Docker/Nginx deployment.
+Tech Stack: React, TypeScript, Vite, Vitest, Testing Library, Express TourAPI proxy, Docker/Nginx deployment.
 
 ## Global Constraints
 
@@ -57,17 +57,17 @@
 
 ### Task 1: Domain Types And Sample Evidence
 
-**Files:**
+Files:
 - Modify: `src/domain/types.ts`
 - Modify: `src/data/sampleTourApi.ts`
 - Test: `src/services/metricEvidence.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Produces: `MetricEvidenceSourceDetail`, used by TourAPI adapter, metric evidence service, and drawer.
 - Produces: `TourismContext.sourceDetails?: MetricEvidenceSourceDetail[]`.
 - Produces: `MetricEvidence.sourceDetails: MetricEvidenceSourceDetail[]`.
 
-- [ ] **Step 1: Write the failing metric evidence type behavior test**
+- [ ] Step 1: Write the failing metric evidence type behavior test
 
 Add this test to `src/services/metricEvidence.test.ts`:
 
@@ -101,7 +101,7 @@ it("includes safe source details for public-data, user-input, and derived values
 });
 ```
 
-- [ ] **Step 2: Run the focused failing test**
+- [ ] Step 2: Run the focused failing test
 
 Run:
 
@@ -111,7 +111,7 @@ npm run test -- src/services/metricEvidence.test.ts
 
 Expected: FAIL because `sourceDetails` does not exist on `MetricEvidence`.
 
-- [ ] **Step 3: Add domain types**
+- [ ] Step 3: Add domain types
 
 In `src/domain/types.ts`, add these interfaces near the existing metric evidence types:
 
@@ -171,7 +171,7 @@ export interface MetricEvidence {
 }
 ```
 
-- [ ] **Step 4: Add sample TourAPI source details**
+- [ ] Step 4: Add sample TourAPI source details
 
 In `src/data/sampleTourApi.ts`, add `sourceDetails` to `sampleTourismContext`:
 
@@ -203,7 +203,7 @@ sourceDetails: [
 ],
 ```
 
-- [ ] **Step 5: Run the focused test again**
+- [ ] Step 5: Run the focused test again
 
 Run:
 
@@ -213,7 +213,7 @@ npm run test -- src/services/metricEvidence.test.ts
 
 Expected: still FAIL until Task 3 adds metric evidence composition.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 Stage only task files:
 
@@ -226,16 +226,16 @@ git commit -m "feat: add evidence source detail types"
 
 ### Task 2: TourAPI Source Detail Metadata
 
-**Files:**
+Files:
 - Modify: `src/services/tourApiAdapter.ts`
 - Test: `src/services/dataAdapters.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `MetricEvidenceSourceDetail` from `src/domain/types.ts`.
 - Produces: `FestivalCandidate.sourceDetails?: MetricEvidenceSourceDetail[]`.
 - Produces: live/fallback `TourismContext.sourceDetails`.
 
-- [ ] **Step 1: Write candidate source detail test**
+- [ ] Step 1: Write candidate source detail test
 
 Add this test to `src/services/dataAdapters.test.ts` near candidate lookup tests:
 
@@ -281,7 +281,7 @@ it("attaches safe source details to festival candidates", async () => {
 });
 ```
 
-- [ ] **Step 2: Write tourism context source detail test**
+- [ ] Step 2: Write tourism context source detail test
 
 Add this test to `src/services/dataAdapters.test.ts`:
 
@@ -336,7 +336,7 @@ it("keeps source details on live tourism context lookup", async () => {
 });
 ```
 
-- [ ] **Step 3: Run the failing adapter tests**
+- [ ] Step 3: Run the failing adapter tests
 
 Run:
 
@@ -346,7 +346,7 @@ npm run test -- src/services/dataAdapters.test.ts
 
 Expected: FAIL because candidates and tourism context do not include `sourceDetails`.
 
-- [ ] **Step 4: Implement safe source detail helpers**
+- [ ] Step 4: Implement safe source detail helpers
 
 In `src/services/tourApiAdapter.ts`, import `MetricEvidenceSourceDetail` and add helpers near the mapping helpers:
 
@@ -400,7 +400,7 @@ function createTourApiSourceDetail({
 }
 ```
 
-- [ ] **Step 5: Add TourAPI item record mappers**
+- [ ] Step 5: Add TourAPI item record mappers
 
 Add focused record mappers in `src/services/tourApiAdapter.ts`:
 
@@ -427,7 +427,7 @@ function nearbySpotRecordFields(item: TourApiItem) {
 }
 ```
 
-- [ ] **Step 6: Attach source details to candidates and tourism contexts**
+- [ ] Step 6: Attach source details to candidates and tourism contexts
 
 Update `FestivalCandidate` with:
 
@@ -463,7 +463,7 @@ sourceDetails: [
 
 When fallback is used, call `createFallbackTourismContext(plan, reason)` and ensure it contains a sample/fallback detail.
 
-- [ ] **Step 7: Run adapter tests**
+- [ ] Step 7: Run adapter tests
 
 Run:
 
@@ -473,7 +473,7 @@ npm run test -- src/services/dataAdapters.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [ ] Step 8: Commit
 
 ```bash
 git add src/services/tourApiAdapter.ts src/services/dataAdapters.test.ts
@@ -484,15 +484,15 @@ git commit -m "feat: add TourAPI source details"
 
 ### Task 3: Metric Evidence Composition
 
-**Files:**
+Files:
 - Modify: `src/services/metricEvidence.ts`
 - Test: `src/services/metricEvidence.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `TourismContext.sourceDetails`.
 - Produces: `MetricEvidence.sourceDetails` for every metric.
 
-- [ ] **Step 1: Add focused tests for metric-level distribution**
+- [ ] Step 1: Add focused tests for metric-level distribution
 
 Add this test to `src/services/metricEvidence.test.ts`:
 
@@ -516,7 +516,7 @@ it("separates user input and derived calculation evidence for budget and ROI met
 });
 ```
 
-- [ ] **Step 2: Run failing metric tests**
+- [ ] Step 2: Run failing metric tests
 
 Run:
 
@@ -526,7 +526,7 @@ npm run test -- src/services/metricEvidence.test.ts
 
 Expected: FAIL because `sourceDetails` is not composed yet.
 
-- [ ] **Step 3: Add reusable source detail helpers**
+- [ ] Step 3: Add reusable source detail helpers
 
 In `src/services/metricEvidence.ts`, add helpers before `createMetricEvidenceSet`:
 
@@ -595,7 +595,7 @@ function derivedForecastDetails(
 }
 ```
 
-- [ ] **Step 4: Add ROI source detail helper**
+- [ ] Step 4: Add ROI source detail helper
 
 Add:
 
@@ -633,7 +633,7 @@ function economicDerivedDetails(
 }
 ```
 
-- [ ] **Step 5: Add source details to every evidence object**
+- [ ] Step 5: Add source details to every evidence object
 
 Inside `createMetricEvidenceSet`, define:
 
@@ -673,7 +673,7 @@ For commercial spillover:
 sourceDetails: [...tourApiDetails, ...userInputDetails],
 ```
 
-- [ ] **Step 6: Run metric evidence tests**
+- [ ] Step 6: Run metric evidence tests
 
 Run:
 
@@ -683,7 +683,7 @@ npm run test -- src/services/metricEvidence.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [ ] Step 7: Commit
 
 ```bash
 git add src/services/metricEvidence.ts src/services/metricEvidence.test.ts
@@ -694,16 +694,16 @@ git commit -m "feat: compose metric source details"
 
 ### Task 4: Evidence Drawer UI
 
-**Files:**
+Files:
 - Modify: `src/components/MetricEvidenceDrawer.tsx`
 - Modify: `src/styles.css`
 - Test: `src/App.test.tsx`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `MetricEvidence.sourceDetails`.
 - Produces: visible `사용 데이터 상세` section in the drawer.
 
-- [ ] **Step 1: Add UI behavior test**
+- [ ] Step 1: Add UI behavior test
 
 Add or extend an evidence drawer test in `src/App.test.tsx`:
 
@@ -725,7 +725,7 @@ it("shows exact source detail records in the evidence drawer", async () => {
 
 If existing button accessible names differ, use the current evidence button query already present in `src/App.test.tsx`.
 
-- [ ] **Step 2: Run the failing UI test**
+- [ ] Step 2: Run the failing UI test
 
 Run:
 
@@ -735,7 +735,7 @@ npm run test -- src/App.test.tsx
 
 Expected: FAIL until drawer renders source details.
 
-- [ ] **Step 3: Render source details in drawer**
+- [ ] Step 3: Render source details in drawer
 
 In `src/components/MetricEvidenceDrawer.tsx`, add this section after the `사용 데이터` section:
 
@@ -804,7 +804,7 @@ In `src/components/MetricEvidenceDrawer.tsx`, add this section after the `사용
 ) : null}
 ```
 
-- [ ] **Step 4: Add drawer styles**
+- [ ] Step 4: Add drawer styles
 
 In `src/styles.css`, add:
 
@@ -901,7 +901,7 @@ In `src/styles.css`, add:
 }
 ```
 
-- [ ] **Step 5: Run UI test**
+- [ ] Step 5: Run UI test
 
 Run:
 
@@ -911,7 +911,7 @@ npm run test -- src/App.test.tsx
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 ```bash
 git add src/components/MetricEvidenceDrawer.tsx src/styles.css src/App.test.tsx
@@ -922,15 +922,15 @@ git commit -m "feat: show source details in evidence drawer"
 
 ### Task 5: Documentation, Full Verification, GitHub Push, Remote Deploy
 
-**Files:**
+Files:
 - Modify: `docs/data-methodology.md`
 - Optional modify: `README.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: completed app behavior from Tasks 1-4.
 - Produces: verified local build, pushed commit history, deployed Docker service.
 
-- [ ] **Step 1: Update methodology document**
+- [ ] Step 1: Update methodology document
 
 Add a section to `docs/data-methodology.md`:
 
@@ -947,7 +947,7 @@ Fest-Twin은 주요 지표의 `근거 보기` 패널에서 데이터 출처 요�
 API 키, 시크릿, 인증 헤더, 쿠키, 내부 환경변수 값은 화면과 문서에 표시하지 않는다. 원본 API 응답 전체가 아니라 심사와 검토에 필요한 최소 필드만 정규화하여 제공한다.
 ```
 
-- [ ] **Step 2: Run full tests**
+- [ ] Step 2: Run full tests
 
 Run:
 
@@ -957,7 +957,7 @@ npm run test
 
 Expected: all test files pass.
 
-- [ ] **Step 3: Run production build**
+- [ ] Step 3: Run production build
 
 Run:
 
@@ -967,7 +967,7 @@ $env:VITE_NAVER_MAP_NCP_KEY_ID='5mcwlg6qwo'; npm run build
 
 Expected: Vite build completes and `dist` is generated.
 
-- [ ] **Step 4: Check git status and stage only intended files**
+- [ ] Step 4: Check git status and stage only intended files
 
 Run:
 
@@ -983,7 +983,7 @@ git add docs/data-methodology.md
 
 If `README.md` was intentionally updated in this task, stage it only after confirming unrelated edits are not being mixed.
 
-- [ ] **Step 5: Commit docs**
+- [ ] Step 5: Commit docs
 
 Run:
 
@@ -991,7 +991,7 @@ Run:
 git commit -m "docs: document source detail evidence"
 ```
 
-- [ ] **Step 6: Push to GitHub**
+- [ ] Step 6: Push to GitHub
 
 Run:
 
@@ -1001,7 +1001,7 @@ git push origin main
 
 Expected: `main` pushed to `https://github.com/raphael7450-ops/Fest-Twin`.
 
-- [ ] **Step 7: Deploy remote Docker**
+- [ ] Step 7: Deploy remote Docker
 
 Use the established server flow. Build a new image archive from the verified local source, copy it to `100.104.94.112`, load it, and restart `fest-twin-demo` with the env file preserved:
 
@@ -1011,7 +1011,7 @@ docker run -d --name fest-twin-demo --restart unless-stopped --env-file /home/cw
 
 The `--env-file /home/cwuser/fest-twin-demo.env` flag is required so TourAPI lookup keeps working.
 
-- [ ] **Step 8: Verify public deployment**
+- [ ] Step 8: Verify public deployment
 
 Verify:
 
@@ -1026,7 +1026,7 @@ Expected:
 - Public page includes the updated bundle.
 - In the browser, opening `근거 보기` shows `사용 데이터 상세`, source status, query conditions, and safe record fields.
 
-- [ ] **Step 9: Final status**
+- [ ] Step 9: Final status
 
 Report:
 

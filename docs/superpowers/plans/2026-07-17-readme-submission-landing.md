@@ -1,12 +1,12 @@
 # README Submission Landing Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the public GitHub README work as the first submission landing page.
+Goal: Make the public GitHub README work as the first submission landing page.
 
-**Architecture:** This is a documentation-only change. Keep existing README detail sections intact and replace the top quick links with a clearer submission-first entry section.
+Architecture: This is a documentation-only change. Keep existing README detail sections intact and replace the top quick links with a clearer submission-first entry section.
 
-**Tech Stack:** Markdown, existing repository docs and artifact paths.
+Tech Stack: Markdown, existing repository docs and artifact paths.
 
 ## Global Constraints
 
@@ -20,14 +20,14 @@
 
 ### Task 1: README Submission Landing
 
-**Files:**
+Files:
 - Modify: `README.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: existing docs under `docs/` and zip under `artifacts/`.
 - Produces: public README entry section for judges and teammates.
 
-- [ ] **Step 1: Replace the top quick-link section**
+- [ ] Step 1: Replace the top quick-link section
 
 Update the existing `## 빠른 데모 확인` section into `## 제출 바로가기` and include these links:
 
@@ -43,7 +43,7 @@ Update the existing `## 빠른 데모 확인` section into `## 제출 바로가�
 - 시연 순서: [제출 시연 가이드](docs/submission-demo-guide.md)
 ```
 
-- [ ] **Step 2: Add current verification bullets**
+- [ ] Step 2: Add current verification bullets
 
 Add a short `현재 공개 검증 상태` subsection:
 
@@ -57,11 +57,11 @@ Add a short `현재 공개 검증 상태` subsection:
 - 저장소 공개 접근 확인
 ```
 
-- [ ] **Step 3: Update merged PR links**
+- [ ] Step 3: Update merged PR links
 
 Add PR #1 through #5 in a compact list.
 
-- [ ] **Step 4: Verify links and status**
+- [ ] Step 4: Verify links and status
 
 Run:
 
@@ -75,7 +75,7 @@ curl.exe --resolve cwserver.tail97dbc3.ts.net:443:103.84.155.153 -I --max-time 3
 
 Expected: all `Test-Path` commands return `True`, and both HTTP checks return `200 OK`.
 
-- [ ] **Step 5: Commit**
+- [ ] Step 5: Commit
 
 ```powershell
 git add README.md docs/superpowers/specs/2026-07-17-readme-submission-landing-design.md docs/superpowers/plans/2026-07-17-readme-submission-landing.md

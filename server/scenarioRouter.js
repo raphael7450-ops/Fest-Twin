@@ -6,6 +6,7 @@
 
 import express from "express";
 import { scenarioDb } from "./db/database.js";
+import { noopLogger } from "./logger.js";
 
 function errorResponse(response, status, code, message) {
   return response.status(status).json({
@@ -16,6 +17,7 @@ function errorResponse(response, status, code, message) {
 export function createScenarioRouter(options = {}) {
   const router = express.Router();
   const db = options.db ?? scenarioDb;
+  const auditLog = options.auditLogger ?? noopLogger;
 
   // 1. GET /api/scenarios - 저장된 전체 시나리오 목록 조회
   router.get("/", (_request, response) => {
@@ -71,6 +73,14 @@ export function createScenarioRouter(options = {}) {
         results_summary,
       });
 
+      // B2G Audit: 시나리오 생성 기록
+      auditLog.info("scenario_created", {
+        event: "SCENARIO_CREATE",
+        id: created.id,
+        share_token: created.share_token,
+        title: created.title,
+      });
+
       return response.status(201).json(created);
     } catch (error) {
       return errorResponse(response, 500, "SCENARIO_CREATE_ERROR", "Failed to create scenario.");
@@ -94,6 +104,12 @@ export function createScenarioRouter(options = {}) {
         return errorResponse(response, 404, "SCENARIO_NOT_FOUND", "Scenario to update does not exist.");
       }
 
+      // B2G Audit: 시나리오 수정 기록
+      auditLog.info("scenario_updated", {
+        event: "SCENARIO_UPDATE",
+        id: updated.id,
+      });
+
       return response.status(200).json(updated);
     } catch (error) {
       return errorResponse(response, 500, "SCENARIO_UPDATE_ERROR", "Failed to update scenario.");
@@ -109,6 +125,12 @@ export function createScenarioRouter(options = {}) {
       if (!deleted) {
         return errorResponse(response, 404, "SCENARIO_NOT_FOUND", "Scenario to delete does not exist.");
       }
+
+      // B2G Audit: 시나리오 삭제 기록
+      auditLog.info("scenario_deleted", {
+        event: "SCENARIO_DELETE",
+        id,
+      });
 
       return response.status(200).json({ success: true, id });
     } catch (error) {

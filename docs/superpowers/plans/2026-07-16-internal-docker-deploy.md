@@ -1,12 +1,12 @@
 # Internal Docker Deploy Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Package Fest-Twin as an internal-demo Docker deployment served by Nginx on `http://192.168.55.223:18080`.
+Goal: Package Fest-Twin as an internal-demo Docker deployment served by Nginx on `http://192.168.55.223:18080`.
 
-**Architecture:** Build the Vite app with Node in a Docker build stage, then copy the generated `dist/` assets into an `nginx:alpine` runtime image. Keep deployment as a static SPA container named `fest-twin-demo`, with host port `18080` mapped to container port `80`. Document server commands so deployment can be executed manually without embedding SSH passwords or TourAPI keys in the repository.
+Architecture: Build the Vite app with Node in a Docker build stage, then copy the generated `dist/` assets into an `nginx:alpine` runtime image. Keep deployment as a static SPA container named `fest-twin-demo`, with host port `18080` mapped to container port `80`. Document server commands so deployment can be executed manually without embedding SSH passwords or TourAPI keys in the repository.
 
-**Tech Stack:** Docker, Node 20 Alpine, npm ci, Vite build, Nginx Alpine, React static assets.
+Tech Stack: Docker, Node 20 Alpine, npm ci, Vite build, Nginx Alpine, React static assets.
 
 ## Global Constraints
 
@@ -40,16 +40,16 @@
 
 ### Task 1: Docker Runtime Files
 
-**Files:**
+Files:
 - Create: `Dockerfile`
 - Create: `.dockerignore`
 - Create: `nginx.conf`
 
-**Interfaces:**
+Interfaces:
 - Consumes: existing `package.json`, `package-lock.json`, `npm run build`, Vite `dist/`.
 - Produces: Docker image `fest-twin-demo` that serves `/usr/share/nginx/html` through Nginx.
 
-- [ ] **Step 1: Write Dockerfile**
+- [ ] Step 1: Write Dockerfile
 
 Create `Dockerfile`:
 
@@ -74,7 +74,7 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-- [ ] **Step 2: Write Docker ignore rules**
+- [ ] Step 2: Write Docker ignore rules
 
 Create `.dockerignore`:
 
@@ -94,7 +94,7 @@ vitest.config.js
 vitest.config.d.ts
 ```
 
-- [ ] **Step 3: Write Nginx SPA config**
+- [ ] Step 3: Write Nginx SPA config
 
 Create `nginx.conf`:
 
@@ -118,7 +118,7 @@ server {
 }
 ```
 
-- [ ] **Step 4: Run local app verification before Docker**
+- [ ] Step 4: Run local app verification before Docker
 
 Run:
 
@@ -132,7 +132,7 @@ Expected:
 - `npm run test`: all tests pass.
 - `npm run build`: exits 0 and writes `dist/`.
 
-- [ ] **Step 5: Build Docker image**
+- [ ] Step 5: Build Docker image
 
 Run:
 
@@ -142,7 +142,7 @@ docker build -t fest-twin-demo .
 
 Expected: build exits 0 and creates image `fest-twin-demo`.
 
-- [ ] **Step 6: Commit Task 1**
+- [ ] Step 6: Commit Task 1
 
 ```powershell
 git add Dockerfile .dockerignore nginx.conf
@@ -153,15 +153,15 @@ git commit -m "chore: add Docker static deployment files"
 
 ### Task 2: Deployment Documentation
 
-**Files:**
+Files:
 - Create: `docs/internal-docker-deploy.md`
 - Modify: `README.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: Docker image contract from Task 1, container name `fest-twin-demo`, port `18080`.
 - Produces: manual server deployment instructions that do not require storing secrets in Git.
 
-- [ ] **Step 1: Create internal deployment doc**
+- [ ] Step 1: Create internal deployment doc
 
 Create `docs/internal-docker-deploy.md`:
 
@@ -286,7 +286,7 @@ TourAPI 호출 실패:
 - 실제 키를 넣었다면 브라우저 번들에 노출될 수 있으므로 재발급 전제로만 사용한다.
 ```
 
-- [ ] **Step 2: Link doc from README**
+- [ ] Step 2: Link doc from README
 
 In `README.md`, add this bullet to the current documents list:
 
@@ -294,7 +294,7 @@ In `README.md`, add this bullet to the current documents list:
 - [내부 Docker 배포](docs/internal-docker-deploy.md)
 ```
 
-- [ ] **Step 3: Run documentation sanity checks**
+- [ ] Step 3: Run documentation sanity checks
 
 Run:
 
@@ -316,7 +316,7 @@ exit 0
 
 Expected: no output and exit code `0` when no actual secret assignment is present. The case-insensitive checks cover shell assignments, legacy and equals Dockerfile `ENV`/`ARG` directives with multiple arguments, and Docker CLI build arguments whose names contain `KEY`, `PASSWORD`, `PASSWD`, `SECRET`, or `TOKEN`, without self-matching the documented scan.
 
-- [ ] **Step 4: Commit Task 2**
+- [ ] Step 4: Commit Task 2
 
 ```powershell
 git add docs/internal-docker-deploy.md README.md

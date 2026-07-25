@@ -1,7 +1,7 @@
 /**
  * 파일 : server/index.js
  * 내용 : Express 백엔드 서버 엔트리포인트 (Rate Limiter, Helmet/CSP, CORS Allowlist & SPA 정적 서빙)
- * 수정 : 2026-07-24. OpenAPI 프록시 30회/분 전용 제한, CORS 허용목록 및 CSP 보안 헤더 구현
+ * 수정 : 2026-07-25. Winston/Morgan 중앙 로깅 연동, OpenAPI 프록시 30회/분 전용 제한
  */
 
 import express from "express";
@@ -11,6 +11,8 @@ import { createSpendingProxyRouter } from "./spendingProxy.js";
 import { createTrafficProxyRouter } from "./trafficProxy.js";
 import { createTourProxyRouter } from "./tourProxy.js";
 import { createScenarioRouter } from "./scenarioRouter.js";
+import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
+import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +60,7 @@ export function securityHeadersMiddleware(_request, response, next) {
 export function createRateLimiter(options = {}) {
   const windowMs = options.windowMs ?? 60 * 1000; // 1분 슬라이딩 윈도우
   const maxRequests = options.maxRequests ?? 100; // 기본 100회 (프록시는 30회)
+  const auditLog = options.auditLogger ?? noopLogger;
   const requestCounts = new Map();
 
   return (request, response, next) => {
@@ -77,6 +80,15 @@ export function createRateLimiter(options = {}) {
     response.setHeader("X-RateLimit-Remaining", Math.max(0, maxRequests - record.count));
 
     if (record.count > maxRequests) {
+      // B2G Audit: Rate Limit 초과 차단 기록
+      auditLog.warn("rate_limit_exceeded", {
+        event: "RATE_LIMIT_429",
+        ip,
+        endpoint: request.originalUrl || request.url,
+        limit: maxRequests,
+        count: record.count,
+      });
+
       return response.status(429).json({
         error: {
           code: "TOO_MANY_REQUESTS",
@@ -93,16 +105,29 @@ export function createRateLimiter(options = {}) {
 export function createApp(options = {}) {
   const app = express();
   const staticDir = options.staticDir ?? path.resolve(__dirname, "../dist");
+  const log = options.logger ?? defaultLogger;
+  const auditLog = options.auditLogger ?? defaultAuditLogger;
 
   // 보안 미들웨어 등록
   app.use(securityHeadersMiddleware);
   app.use(corsMiddleware);
 
+  // Morgan HTTP 요청 로깅 미들웨어 (테스트 환경에서는 skip)
+  if (!options.disableHttpLogging) {
+    app.use(createHttpLoggerMiddleware({ logger: log }));
+  }
+
   // Rate Limiting (테스트 환경에서는 옵션으로 오버라이드 가능)
   const generalRateLimiter =
-    options.generalRateLimiter ?? createRateLimiter(options.generalRateLimitOptions ?? { maxRequests: 100 });
+    options.generalRateLimiter ?? createRateLimiter({
+      ...(options.generalRateLimitOptions ?? { maxRequests: 100 }),
+      auditLogger: auditLog,
+    });
   const openApiRateLimiter =
-    options.openApiRateLimiter ?? createRateLimiter(options.openApiRateLimitOptions ?? { maxRequests: 30 });
+    options.openApiRateLimiter ?? createRateLimiter({
+      ...(options.openApiRateLimitOptions ?? { maxRequests: 30 }),
+      auditLogger: auditLog,
+    });
 
   // 1. 일반 API 라우트 (/api/scenarios 등) - 1분당 최대 100회
   app.use("/api", generalRateLimiter);
@@ -117,12 +142,15 @@ export function createApp(options = {}) {
     createTourProxyRouter({
       fetchImpl: options.fetchImpl,
       apiKey: options.apiKey,
+      logger: log,
+      auditLogger: auditLog,
     }),
   );
   app.use(
     "/api/traffic",
     createTrafficProxyRouter({
       fetchImpl: options.fetchImpl,
+      logger: log,
     }),
   );
   app.use(
@@ -130,12 +158,14 @@ export function createApp(options = {}) {
     createSpendingProxyRouter({
       fetchImpl: options.fetchImpl,
       apiKey: options.apiKey,
+      logger: log,
     }),
   );
   app.use(
     "/api/scenarios",
     createScenarioRouter({
       db: options.scenarioDb,
+      auditLogger: auditLog,
     }),
   );
 
@@ -150,6 +180,6 @@ export function createApp(options = {}) {
 if (process.env.NODE_ENV !== "test") {
   const port = Number(process.env.PORT ?? 80);
   createApp().listen(port, "0.0.0.0", () => {
-    console.log(`Fest-Twin server listening on port ${port}`);
+    defaultLogger.info(`Fest-Twin server listening on port ${port}`);
   });
 }

@@ -1,12 +1,12 @@
 # KTDB Traffic Evidence Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> For agentic workers: REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Integrate KTDB/View-T road-link traffic volume into Fest-Twin so safety/logistics planning can show access traffic risk, parking-pressure adjustment, and source-detail evidence.
+Goal: Integrate KTDB/View-T road-link traffic volume into Fest-Twin so safety/logistics planning can show access traffic risk, parking-pressure adjustment, and source-detail evidence.
 
-**Architecture:** Add a server-side `/api/traffic/selected-link` proxy modeled after the existing TourAPI proxy, then add a client `trafficAdapter` that maps festival plans to representative road links and normalizes View-T responses into `TrafficContext`. Pass `TrafficContext` into safety/logistics metrics and metric evidence composition, then render access traffic risk in the dashboard and evidence drawer.
+Architecture: Add a server-side `/api/traffic/selected-link` proxy modeled after the existing TourAPI proxy, then add a client `trafficAdapter` that maps festival plans to representative road links and normalizes View-T responses into `TrafficContext`. Pass `TrafficContext` into safety/logistics metrics and metric evidence composition, then render access traffic risk in the dashboard and evidence drawer.
 
-**Tech Stack:** React, TypeScript, Vite, Vitest, Testing Library, Express, Docker, KTDB/View-T public API.
+Tech Stack: React, TypeScript, Vite, Vitest, Testing Library, Express, Docker, KTDB/View-T public API.
 
 ## Global Constraints
 
@@ -78,16 +78,16 @@
 
 ### Task 1: Server Traffic Proxy
 
-**Files:**
+Files:
 - Create: `server/trafficProxy.js`
 - Modify: `server/index.js`
 - Create: `server/trafficProxy.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Produces: `createTrafficProxyRouter(options?: { fetchImpl?: typeof fetch })`.
 - Produces endpoint: `GET /api/traffic/selected-link?linkId=<LINKID>&year=<YEAR>&weekType=<weekday|weekend>&time=<HH|ALL>`.
 
-- [ ] **Step 1: Write the failing proxy test**
+- [ ] Step 1: Write the failing proxy test
 
 Create `server/trafficProxy.test.ts`:
 
@@ -192,7 +192,7 @@ describe("KTDB/View-T traffic proxy", () => {
 });
 ```
 
-- [ ] **Step 2: Run the failing proxy test**
+- [ ] Step 2: Run the failing proxy test
 
 Run:
 
@@ -202,7 +202,7 @@ npx vitest run --config vitest.config.ts server/trafficProxy.test.ts
 
 Expected: FAIL because `server/trafficProxy.js` does not exist.
 
-- [ ] **Step 3: Implement the traffic proxy**
+- [ ] Step 3: Implement the traffic proxy
 
 Create `server/trafficProxy.js`:
 
@@ -323,7 +323,7 @@ export function createTrafficProxyRouter(options = {}) {
 }
 ```
 
-- [ ] **Step 4: Mount the router**
+- [ ] Step 4: Mount the router
 
 Modify `server/index.js`:
 
@@ -342,7 +342,7 @@ app.use(
 );
 ```
 
-- [ ] **Step 5: Run proxy tests**
+- [ ] Step 5: Run proxy tests
 
 Run:
 
@@ -352,7 +352,7 @@ npx vitest run --config vitest.config.ts server/trafficProxy.test.ts server/tour
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 ```bash
 git add server/trafficProxy.js server/trafficProxy.test.ts server/index.js
@@ -363,18 +363,18 @@ git commit -m "feat: add KTDB traffic proxy"
 
 ### Task 2: Traffic Domain And Adapter
 
-**Files:**
+Files:
 - Modify: `src/domain/types.ts`
 - Create: `src/data/sampleTraffic.ts`
 - Create: `src/services/trafficAdapter.ts`
 - Create: `src/services/trafficAdapter.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Produces: `TrafficContext`.
 - Produces: `getTrafficContext(plan: FestivalPlan, options?: { fetchImpl?: typeof fetch; signal?: AbortSignal; hour?: number }): Promise<TrafficContext>`.
 - Produces: `createFallbackTrafficContext(plan: FestivalPlan, reason: string, hour?: number): TrafficContext`.
 
-- [ ] **Step 1: Write the failing adapter test**
+- [ ] Step 1: Write the failing adapter test
 
 Create `src/services/trafficAdapter.test.ts`:
 
@@ -470,7 +470,7 @@ describe("trafficAdapter", () => {
 });
 ```
 
-- [ ] **Step 2: Run failing adapter tests**
+- [ ] Step 2: Run failing adapter tests
 
 Run:
 
@@ -480,7 +480,7 @@ npm run test -- src/services/trafficAdapter.test.ts
 
 Expected: FAIL because traffic adapter files do not exist.
 
-- [ ] **Step 3: Add domain types**
+- [ ] Step 3: Add domain types
 
 Modify `src/domain/types.ts`:
 
@@ -513,7 +513,7 @@ export interface TrafficContext {
 }
 ```
 
-- [ ] **Step 4: Create sample traffic data**
+- [ ] Step 4: Create sample traffic data
 
 Create `src/data/sampleTraffic.ts`:
 
@@ -611,7 +611,7 @@ export const sampleTrafficContext: TrafficContext = {
 };
 ```
 
-- [ ] **Step 5: Implement traffic adapter**
+- [ ] Step 5: Implement traffic adapter
 
 Create `src/services/trafficAdapter.ts` with:
 
@@ -849,7 +849,7 @@ export async function getTrafficContext(
 }
 ```
 
-- [ ] **Step 6: Run adapter tests**
+- [ ] Step 6: Run adapter tests
 
 Run:
 
@@ -859,7 +859,7 @@ npm run test -- src/services/trafficAdapter.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [ ] Step 7: Commit
 
 ```bash
 git add src/domain/types.ts src/data/sampleTraffic.ts src/services/trafficAdapter.ts src/services/trafficAdapter.test.ts
@@ -870,17 +870,17 @@ git commit -m "feat: add traffic context adapter"
 
 ### Task 3: Safety Metrics And Evidence Integration
 
-**Files:**
+Files:
 - Modify: `src/services/impactMetrics.ts`
 - Modify: `src/services/metricEvidence.ts`
 - Modify: `src/services/metricEvidence.test.ts`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `TrafficContext`.
 - Updates: `createSafetyLogisticsMetrics(plan, forecast, simulation, traffic?)`.
 - Updates: `createMetricEvidenceSet(plan, forecast, simulation, tourism, trends, traffic)`.
 
-- [ ] **Step 1: Add failing metrics tests**
+- [ ] Step 1: Add failing metrics tests
 
 Add to `src/services/metricEvidence.test.ts`:
 
@@ -913,7 +913,7 @@ it("includes KTDB traffic evidence for parking and safety metrics", () => {
 });
 ```
 
-- [ ] **Step 2: Run failing metric tests**
+- [ ] Step 2: Run failing metric tests
 
 Run:
 
@@ -923,7 +923,7 @@ npm run test -- src/services/metricEvidence.test.ts
 
 Expected: FAIL because function signatures and traffic evidence are not integrated.
 
-- [ ] **Step 3: Update safety metrics**
+- [ ] Step 3: Update safety metrics
 
 Modify `src/services/impactMetrics.ts`:
 
@@ -979,7 +979,7 @@ trafficRoadName: traffic?.links[0]?.roadName ?? "교통량 기준 도로 없음"
 parkingBaseOccupancyRate,
 ```
 
-- [ ] **Step 4: Update metric evidence composition**
+- [ ] Step 4: Update metric evidence composition
 
 Modify `src/services/metricEvidence.ts` signature:
 
@@ -1022,7 +1022,7 @@ const safety = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic)
 
 Add `...trafficDetails` to `safety-staff`, `medical-staff`, and `parking-occupancy` sourceDetails.
 
-- [ ] **Step 5: Run metric tests**
+- [ ] Step 5: Run metric tests
 
 Run:
 
@@ -1032,7 +1032,7 @@ npm run test -- src/services/metricEvidence.test.ts
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 ```bash
 git add src/services/impactMetrics.ts src/services/metricEvidence.ts src/services/metricEvidence.test.ts
@@ -1043,17 +1043,17 @@ git commit -m "feat: apply traffic risk to safety evidence"
 
 ### Task 4: App State And Safety Panel UI
 
-**Files:**
+Files:
 - Modify: `src/App.tsx`
 - Modify: `src/components/SafetyLogisticsPanel.tsx`
 - Modify: `src/App.test.tsx`
 - Modify: `src/styles.css`
 
-**Interfaces:**
+Interfaces:
 - Consumes: `getTrafficContext`.
 - Passes `traffic` into `SafetyLogisticsPanel` and `createMetricEvidenceSet`.
 
-- [ ] **Step 1: Add failing UI test**
+- [ ] Step 1: Add failing UI test
 
 Modify `src/App.test.tsx` to mock `getTrafficContext` from `src/services/trafficAdapter.ts` and default it to `sampleTrafficContext`.
 
@@ -1076,7 +1076,7 @@ it("shows KTDB access traffic risk in the safety logistics panel and evidence dr
 
 Use the same evidence-button selection style already used by the existing `opens a metric evidence drawer from the dashboard` test in `src/App.test.tsx`; target the parking metric button in the safety/logistics panel and assert the drawer content after the click.
 
-- [ ] **Step 2: Run failing UI test**
+- [ ] Step 2: Run failing UI test
 
 Run:
 
@@ -1086,7 +1086,7 @@ npm run test -- src/App.test.tsx
 
 Expected: FAIL because traffic is not loaded or rendered yet.
 
-- [ ] **Step 3: Wire traffic state in App**
+- [ ] Step 3: Wire traffic state in App
 
 Modify `src/App.tsx`:
 
@@ -1167,7 +1167,7 @@ Update panel:
 />
 ```
 
-- [ ] **Step 4: Render traffic risk in SafetyLogisticsPanel**
+- [ ] Step 4: Render traffic risk in SafetyLogisticsPanel
 
 Modify props:
 
@@ -1217,7 +1217,7 @@ Add style for `.safety-icon-amber` in `src/styles.css`:
 }
 ```
 
-- [ ] **Step 5: Run UI tests**
+- [ ] Step 5: Run UI tests
 
 Run:
 
@@ -1227,7 +1227,7 @@ npm run test -- src/App.test.tsx
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] Step 6: Commit
 
 ```bash
 git add src/App.tsx src/components/SafetyLogisticsPanel.tsx src/App.test.tsx src/styles.css
@@ -1238,14 +1238,14 @@ git commit -m "feat: show access traffic risk"
 
 ### Task 5: Documentation, Full Verification, Push, Deploy
 
-**Files:**
+Files:
 - Modify: `docs/data-methodology.md`
 
-**Interfaces:**
+Interfaces:
 - Consumes: completed traffic integration.
 - Produces: tested, built, pushed, deployed app.
 
-- [ ] **Step 1: Update methodology docs**
+- [ ] Step 1: Update methodology docs
 
 Add to `docs/data-methodology.md`:
 
@@ -1263,7 +1263,7 @@ Fest-Twin은 안전 및 물류 수용성 판단에 KTDB/View-T 도로 링크 교
 개인 이동 경로, 차량 번호, 단말 위치 정보는 수집하지 않는다. API 원본 URL 전체나 인증 관련 값은 화면에 표시하지 않고, 근거 패널에는 내부 프록시 경로와 안전한 조회 조건만 표시한다.
 ```
 
-- [ ] **Step 2: Run full tests**
+- [ ] Step 2: Run full tests
 
 Run:
 
@@ -1273,7 +1273,7 @@ npm run test
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Run production build**
+- [ ] Step 3: Run production build
 
 Run:
 
@@ -1283,7 +1283,7 @@ $env:VITE_NAVER_MAP_NCP_KEY_ID='5mcwlg6qwo'; npm run build
 
 Expected: build passes.
 
-- [ ] **Step 4: Commit docs**
+- [ ] Step 4: Commit docs
 
 Stage only methodology doc:
 
@@ -1292,7 +1292,7 @@ git add docs/data-methodology.md
 git commit -m "docs: document KTDB traffic evidence"
 ```
 
-- [ ] **Step 5: Push GitHub**
+- [ ] Step 5: Push GitHub
 
 Run:
 
@@ -1302,7 +1302,7 @@ git push origin main
 
 Expected: `main` pushed.
 
-- [ ] **Step 6: Deploy remote Docker**
+- [ ] Step 6: Deploy remote Docker
 
 On remote server, clone latest `main`, build image with the Naver map client id, and restart `fest-twin-demo` while preserving TourAPI env file:
 
@@ -1310,7 +1310,7 @@ On remote server, clone latest `main`, build image with the Naver map client id,
 docker run -d --name fest-twin-demo --restart unless-stopped --env-file /home/cwuser/fest-twin-demo.env -p 18080:80 --label com.fest-twin.managed-by=fest-twin-internal-demo fest-twin-demo:<new-tag>
 ```
 
-- [ ] **Step 7: Verify public deployment**
+- [ ] Step 7: Verify public deployment
 
 Verify:
 
@@ -1326,7 +1326,7 @@ Expected:
 - Traffic proxy returns either live View-T response or a controlled proxy error without leaking raw URLs.
 - Public JS bundle contains `접근 교통 위험도`, `KTDB/View-T`, and `기준년도 교통량`.
 
-- [ ] **Step 8: Final report**
+- [ ] Step 8: Final report
 
 Report:
 

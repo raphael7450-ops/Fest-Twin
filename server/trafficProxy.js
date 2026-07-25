@@ -6,6 +6,7 @@
 
 import express from "express";
 import { getCachedData, setCachedData } from "./cache.js";
+import { noopLogger } from "./logger.js";
 
 const VIEWT_BASE_URL = "https://viewt.ktdb.go.kr/cong/api/selectedLink_road.do";
 const ALLOWED_QUERY_KEYS = new Set(["linkId", "year", "weekType", "time"]);
@@ -124,6 +125,7 @@ function normalizeViewTPayload(payload) {
 export function createTrafficProxyRouter(options = {}) {
   const router = express.Router();
   const fetchImpl = options.fetchImpl ?? fetch;
+  const log = options.logger ?? noopLogger;
 
   router.get("/selected-link", async (request, response) => {
     const validation = validateQuery(request.query);
@@ -140,6 +142,10 @@ export function createTrafficProxyRouter(options = {}) {
     try {
       const upstreamResponse = await fetchImpl(buildViewTUrl(request.query));
       if (!upstreamResponse.ok) {
+        log.warn("Traffic upstream error", {
+          event: "TRAFFIC_UPSTREAM_FALLBACK",
+          upstreamStatus: upstreamResponse.status,
+        });
         return errorResponse(
           response,
           502,
@@ -155,6 +161,11 @@ export function createTrafficProxyRouter(options = {}) {
       const code = error instanceof SyntaxError
         ? "TRAFFIC_INVALID_RESPONSE"
         : "TRAFFIC_UPSTREAM_ERROR";
+      log.error("Traffic proxy request failed", {
+        event: "TRAFFIC_PROXY_ERROR",
+        errorCode: code,
+        message: error.message,
+      });
       return errorResponse(response, 502, code, "Traffic proxy request failed.");
     }
   });
