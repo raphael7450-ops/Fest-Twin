@@ -1,56 +1,78 @@
-# Fest-Twin 문서 체계 안내 (Documentation Sitemap)
+# Fest-Twin 프로젝트 기술 문서 종합 안내 (Technical Documentation Index)
 
-본 디렉터리는 Fest-Twin(페스트트윈) 프로젝트의 제출 서류, 개발/운영 가이드, 서비스 및 데이터 산출 명세를 관리합니다.
+지자체 축제 기획 사전 진단 및 디지털 트윈 시뮬레이션 B2G SaaS **Fest-Twin**의 시스템 명세, 아키텍처, 배포/운영 가이드 및 공모전 제출 서류 통합 인덱스 문서입니다.
 
 ---
 
-## 디렉터리 구성
+## 1. 문서 전체 체계도 (Documentation Directory)
 
-```text
+```
 docs/
-├── contest/    # 공모전 제출 및 평가 심사 관련 서류
-├── guides/     # 개발자, 배포자 및 운영 시연 가이드
-└── specs/      # 기능 명세, 데이터 분석 방법론 및 플로우
+├── README.md                              # [본 문서] 기술 문서 종합 인덱스 가이드
+├── LOAD_TEST_REPORT.md                    # 부하 테스트(k6-style) 성과 및 안정성 보고서
+│
+├── specs/                                 # 시스템 명세 및 아키텍처 스펙
+│   ├── architecture-and-api.md            # 시스템 블록 아키텍처, 계층 설계 및 REST API 명세서
+│   └── data-and-simulation-methodology.md # 3대 공공데이터 연동 수식, 디지털 트윈 시뮬레이션 및 보안 정책
+│
+├── guides/                                # 개발, 배포 및 시연 운영 가이드
+│   ├── deployment-and-cicd.md             # 로컬 구동, 원격 Docker 배포 스크립트 및 GitHub Actions CI/CD
+│   └── demo-and-operations.md             # 3분 핵심 시연 시나리오 스크립트 및 운영 런북
+│
+└── contest/                               # 공모전 제출 서류 및 최종 검증
+    ├── submission-package.md              # 공모전 제출 요약, 카피라이팅 및 공고 대응 매트릭스
+    └── submission-checklist.md            # 빌드, 테스트, 배포 헬스체크 및 시연 통합 체크리스트
 ```
 
 ---
 
-## 1. 공모전 제출 관련 문서 (`docs/contest/`)
+## 2. 카테고리별 주요 문서 안내
 
-평가위원 및 제출용 최종 패키지 서류입니다.
+### 2.1 시스템 명세 및 아키텍처 (`docs/specs/`)
 
-* [final-submission-package.md](contest/final-submission-package.md): Fest-Twin 최종 제출 패키지 메인 명세서
-* [final-submission-checklist.md](contest/final-submission-checklist.md): 최종 제출 항목 체크리스트
-* [submission-summary.md](contest/submission-summary.md): 공모전 1차/2차 제출 요약서
-* [contest-notice-response-matrix.md](contest/contest-notice-response-matrix.md): 지정과제 9번 공고 대응 매트릭스
-* [contest-submission-copy.md](contest/contest-submission-copy.md): 제출 시스템 입력용 요약 카피문
-* [final-rehearsal-checklist.md](contest/final-rehearsal-checklist.md): 제출 직전 최종 리허설 체크리스트
+- **[architecture-and-api.md](specs/architecture-and-api.md)**
+  - React 18 / Vite 6 SPA 프론트엔드 및 Express 백엔드 전체 시스템 블록 다이어그램 기술
+  - OWASP CSP 보안 헤더 및 2단계 계층형 Rate Limiter(분당 100회/30회) 설계
+  - SQLite 시나리오 보관 및 공유 토큰(`share_token`) RESTful API 상세 규격 명세
+
+- **[data-and-simulation-methodology.md](specs/data-and-simulation-methodology.md)**
+  - 한국관광공사 TourAPI 4.0, 관광데이터랩 지출 객단가, 국가교통DB(KTDB View-T) 연동 방법론
+  - 예상 방문객 수, 예상 경제 효과($E_{impact}$), 피크 시간대 혼잡 밀도($명/m^2$) 수식 및 시뮬레이션 알고리즘
+  - 비식별화 개인정보 보호 정책 및 시스템 4단계 감사 로드맵
+
+### 2.2 배포 및 운영 가이드 (`docs/guides/`)
+
+- **[deployment-and-cicd.md](guides/deployment-and-cicd.md)**
+  - 로컬 개발 환경 실행 및 네이버 지도 API Client ID 설정법
+  - 원격 Docker 서버(`192.168.55.223:18080`) 원클릭 무중단 배포 스크립트 (`npm run deploy:remote`) 사용법
+  - GitHub Actions 파이프라인 (`.github/workflows/deploy.yml`) 구성 및 헬스체크 타임아웃 재시도 처리
+
+- **[demo-and-operations.md](guides/demo-and-operations.md)**
+  - 3분 이내에 기획안 입력부터 수치 근거 확인, 피크 시간대 시뮬레이션, 공유 및 보고서 출력까지 보여주는 시연 스크립트
+  - 지자체 시연 시 외부 API 지연 및 DB 오류 발생에 대비한 오버레이/LRU 캐시 Fallback 런북
+
+### 2.3 공모전 제출 서류 및 검증 (`docs/contest/`)
+
+- **[submission-package.md](contest/submission-package.md)**
+  - 공모전 참가 요약 정보 및 핵심 서비스 소개 카피
+  - 공모전 평가 항목별 Fest-Twin 구현 내용 1:1 대응 매트릭스
+
+- **[submission-checklist.md](contest/submission-checklist.md)**
+  - Vitest 84개 단위 테스트 및 빌드 검증 목록
+  - 4대 REST API 엔드포인트 헬스체크 및 시연 준비 종합 체크리스트
+
+### 2.4 성능 검증 보고서 (`docs/LOAD_TEST_REPORT.md`)
+
+- **[LOAD_TEST_REPORT.md](LOAD_TEST_REPORT.md)**
+  - Node.js 기반 k6-style 부하 테스트 수행 결과
+  - 일반 API TPS 1,283.28 req/s 수용 및 429 Rate Limit 초과 차단 100% 방어
+  - 인메모리 캐시 적용 시 Cache Hit 평균 응답 시간 0.58ms 달성 증빙
 
 ---
 
-## 2. 개발 및 운영 가이드 (`docs/guides/`)
+## 3. 빠른 시작 안내 (Quick Links)
 
-개발자 및 데모 시연자, 운영자를 위한 가이드입니다.
-
-* [submission-demo-guide.md](guides/submission-demo-guide.md): 공모전 심사 시연 가이드 및 동선
-* [demo-operations-runbook.md](guides/demo-operations-runbook.md): 공개 데모(Tailscale Funnel, Docker) 운영 런북
-* [internal-docker-deploy.md](guides/internal-docker-deploy.md): Docker 컨테이너 생성 및 내부 배포 가이드
-* [local-continuation-guide.md](guides/local-continuation-guide.md): 로컬 개발 환경 구축 및 이어하기 가이드
-* [naver-map-api-setup.md](guides/naver-map-api-setup.md): 행사장 지도 연동용 Naver Map API 설정법
-* [demo-verification.md](guides/demo-verification.md): 데모 환경 검증 체크서
-
----
-
-## 3. 기능 및 데이터 명세 (`docs/specs/`)
-
-서비스 핵심 산출 알고리즘, 데이터 처리 및 서비스 아키텍처 흐름입니다.
-
-* [system-audit-roadmap.md](specs/system-audit-roadmap.md): 전체 시스템 심층 진단(Audit) 및 고도화 로드맵 보고서
-* [system-architecture-analysis.md](specs/system-architecture-analysis.md): 전체 시스템 종합 분석 보고서 (아키텍처, 데이터 흐름, 모듈 및 파일별 분석)
-* [service-flows.md](specs/service-flows.md): 통합 서비스 아키텍처 흐름 (대시보드, 시나리오 저장, 리포트 출력, 공개 데모 퍼널)
-* [data-methodology.md](specs/data-methodology.md): 축제 수요예측 및 리스크 진단 데이터 산출 방법론
-* [extended-data-sources.md](specs/extended-data-sources.md): 확장 공공 및 빅데이터셋 연동 명세 (관광데이터랩, ITS, 기상청, 행안부)
-* [forecast-simulation-report-method.md](specs/forecast-simulation-report-method.md): 혼잡 시뮬레이션 및 기획 보완 리포트 생성 로직
-* [tourapi-recent-festival-example.md](specs/tourapi-recent-festival-example.md): 한국관광공사 TourAPI 실제 조회 예시 근거 (강남 미디어 윈터페스타)
-* [government-readiness-checklist.md](specs/government-readiness-checklist.md): 정부 가이드라인(전자정부, CSAP, 개인정보보호) 준수 체크리스트
-* [public-data-and-privacy-policy.md](specs/public-data-and-privacy-policy.md): 공공데이터 활용 및 비식별 개인정보 정책
+- **원격 배포 실행**: `npm run deploy:remote`
+- **배포 헬스체크 실행**: `npm run deploy:check`
+- **단위 및 통합 테스트**: `npm test`
+- **부하 테스트 실행**: `npm run test:load`
