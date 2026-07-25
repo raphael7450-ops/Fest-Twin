@@ -10,6 +10,7 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "deploy:check": "node scripts/deploy-check.js",
+    "deploy:remote": "node scripts/remote-deploy.js",
     "build:zip": "node scripts/build-submission-zip.js",
     "test:load": "node scripts/load-test.js"
   },
