@@ -9,7 +9,7 @@ on:
 
 jobs:
   test-and-build:
-    name: CI: Test & Build
+    name: "CI - Test and Build"
     runs-on: ubuntu-latest
 
     steps:
@@ -30,11 +30,15 @@ jobs:
 
       - name: Build production bundle
         env:
-          VITE_NAVER_MAP_NCP_KEY_ID: ${{ secrets.NAVER_MAP_CLIENT_ID || '5mcwlg6qwo' }}
-        run: npm run build
+          VITE_NAVER_MAP_NCP_KEY_ID: ${{ secrets.NAVER_MAP_CLIENT_ID }}
+        run: |
+          if [ -z "$VITE_NAVER_MAP_NCP_KEY_ID" ]; then
+            export VITE_NAVER_MAP_NCP_KEY_ID="5mcwlg6qwo"
+          fi
+          npm run build
 
   deploy:
-    name: CD: Remote Docker Deploy
+    name: "CD - Remote Docker Deploy"
     needs: test-and-build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -43,10 +47,10 @@ jobs:
       - name: Deploy container on remote Docker server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.REMOTE_HOST || '192.168.55.223' }}
-          username: ${{ secrets.REMOTE_USER || 'cwuser' }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
             set -euo pipefail
             echo "==> Pulling latest changes from main branch..."
@@ -55,7 +59,8 @@ jobs:
             git reset --hard origin/main
 
             echo "==> Building Docker image..."
-            NAVER_KEY="${{ secrets.NAVER_MAP_CLIENT_ID || '5mcwlg6qwo' }}"
+            NAVER_KEY="${{ secrets.NAVER_MAP_CLIENT_ID }}"
+            NAVER_KEY="${NAVER_KEY:-5mcwlg6qwo}"
             docker build --build-arg NAVER_MAP_CLIENT_ID="$NAVER_KEY" -t fest-twin-demo:latest .
 
             echo "==> Stopping old container..."
