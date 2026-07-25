@@ -321,6 +321,8 @@ export function App() {
     setIsCandidatePanelOpen(false);
   };
 
+  const [layoutMode, setLayoutMode] = useState<"mainFlow" | "balanced3">("mainFlow");
+
   return (
     <main className="app-shell">
       <GovernmentHeader />
@@ -331,58 +333,131 @@ export function App() {
         tourism={tourism}
         onOpenEvidence={setSelectedEvidenceId}
       />
-      <div className="workspace-grid">
-        <aside className="left-column">
-          <PlanForm
-            plan={plan}
-            onPlanChange={(nextPlan) => {
-              setPlan(nextPlan);
-              if (
-                nextPlan.region !== plan.region ||
-                nextPlan.startDate !== plan.startDate ||
-                nextPlan.endDate !== plan.endDate
-              ) {
-                setSelectedCandidate(null);
-              }
-            }}
-            areaCodes={areaCodes}
-            isAreaLoading={isAreaLoading}
-            isCandidateLoading={isCandidateLoading}
-            candidateCount={candidates.length}
-            selectedCandidateTitle={selectedCandidate?.title}
-            onOpenCandidates={() => setIsCandidatePanelOpen(true)}
-          />
-          <ScenarioControls
-            hours={plan.operatingHours}
-            selectedHour={selectedHour}
-            onSelectedHourChange={setSelectedHour}
-          />
-          <ScenarioLibrary
-            plan={plan}
-            selectedHour={selectedHour}
-            onLoadScenario={(scenario) => {
-              setPlan(scenario.plan);
-              setSelectedHour(scenario.selectedHour);
-            }}
-          />
-        </aside>
-        <section className="main-column">
-          <ForecastChart forecast={forecast} />
-          <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
-          <Heatmap plan={plan} simulation={simulation} />
-        </section>
-        <aside className="right-column">
-          <RiskPanel report={report} />
-          <SafetyLogisticsPanel
-            plan={plan}
-            forecast={forecast}
-            simulation={simulation}
-            traffic={traffic}
-            onOpenEvidence={setSelectedEvidenceId}
-          />
-          <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
-        </aside>
+      <div className="layout-control-bar">
+        <span className="layout-control-label">대시보드 정렬 방식:</span>
+        <div className="layout-toggle-group">
+          <button
+            type="button"
+            className={`layout-toggle-btn ${layoutMode === "mainFlow" ? "active" : ""}`}
+            onClick={() => setLayoutMode("mainFlow")}
+          >
+            2컬럼 와이드 뷰 (4열 카드 유지)
+          </button>
+          <button
+            type="button"
+            className={`layout-toggle-btn ${layoutMode === "balanced3" ? "active" : ""}`}
+            onClick={() => setLayoutMode("balanced3")}
+          >
+            3컬럼 분할 뷰 (우측 패널 통합)
+          </button>
+        </div>
       </div>
+
+      {layoutMode === "mainFlow" ? (
+        <div className="workspace-grid workspace-grid--2col">
+          <aside className="left-column">
+            <PlanForm
+              plan={plan}
+              onPlanChange={(nextPlan) => {
+                setPlan(nextPlan);
+                if (
+                  nextPlan.region !== plan.region ||
+                  nextPlan.startDate !== plan.startDate ||
+                  nextPlan.endDate !== plan.endDate
+                ) {
+                  setSelectedCandidate(null);
+                }
+              }}
+              areaCodes={areaCodes}
+              isAreaLoading={isAreaLoading}
+              isCandidateLoading={isCandidateLoading}
+              candidateCount={candidates.length}
+              selectedCandidateTitle={selectedCandidate?.title}
+              onOpenCandidates={() => setIsCandidatePanelOpen(true)}
+            />
+            <ScenarioControls
+              hours={plan.operatingHours}
+              selectedHour={selectedHour}
+              onSelectedHourChange={setSelectedHour}
+            />
+            <ScenarioLibrary
+              plan={plan}
+              selectedHour={selectedHour}
+              onLoadScenario={(scenario) => {
+                setPlan(scenario.plan);
+                setSelectedHour(scenario.selectedHour);
+              }}
+            />
+            <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
+          </aside>
+          <section className="main-column">
+            <ForecastChart forecast={forecast} />
+            <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
+            <Heatmap plan={plan} simulation={simulation} />
+            <SafetyLogisticsPanel
+              plan={plan}
+              forecast={forecast}
+              simulation={simulation}
+              traffic={traffic}
+              onOpenEvidence={setSelectedEvidenceId}
+            />
+            <RiskPanel report={report} />
+          </section>
+        </div>
+      ) : (
+        <div className="workspace-grid workspace-grid--3col">
+          <aside className="left-column">
+            <PlanForm
+              plan={plan}
+              onPlanChange={(nextPlan) => {
+                setPlan(nextPlan);
+                if (
+                  nextPlan.region !== plan.region ||
+                  nextPlan.startDate !== plan.startDate ||
+                  nextPlan.endDate !== plan.endDate
+                ) {
+                  setSelectedCandidate(null);
+                }
+              }}
+              areaCodes={areaCodes}
+              isAreaLoading={isAreaLoading}
+              isCandidateLoading={isCandidateLoading}
+              candidateCount={candidates.length}
+              selectedCandidateTitle={selectedCandidate?.title}
+              onOpenCandidates={() => setIsCandidatePanelOpen(true)}
+            />
+            <ScenarioControls
+              hours={plan.operatingHours}
+              selectedHour={selectedHour}
+              onSelectedHourChange={setSelectedHour}
+            />
+            <ScenarioLibrary
+              plan={plan}
+              selectedHour={selectedHour}
+              onLoadScenario={(scenario) => {
+                setPlan(scenario.plan);
+                setSelectedHour(scenario.selectedHour);
+              }}
+            />
+          </aside>
+          <section className="main-column">
+            <ForecastChart forecast={forecast} />
+            <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
+            <Heatmap plan={plan} simulation={simulation} />
+          </section>
+          <aside className="right-column">
+            <RiskPanel report={report} />
+            <SafetyLogisticsPanel
+              plan={plan}
+              forecast={forecast}
+              simulation={simulation}
+              traffic={traffic}
+              onOpenEvidence={setSelectedEvidenceId}
+            />
+            <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
+          </aside>
+        </div>
+      )}
       <FestivalCandidatePanel
         isOpen={isCandidatePanelOpen}
         candidates={candidates}

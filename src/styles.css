@@ -491,11 +491,60 @@ h3 {
   color: #9f251f;
 }
 
+.layout-control-bar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.layout-control-label {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.layout-toggle-group {
+  background: #f1f5f9;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.layout-toggle-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 850;
+  padding: 6px 12px;
+  transition: all 0.15s ease;
+}
+
+.layout-toggle-btn.active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: var(--color-primary-strong);
+  font-weight: 900;
+}
+
 .workspace-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(260px, 280px) minmax(480px, 1.2fr) minmax(320px, 1fr);
   margin-bottom: 0;
+}
+
+.workspace-grid--2col {
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+}
+
+.workspace-grid--3col {
+  grid-template-columns: minmax(260px, 280px) minmax(480px, 1.2fr) minmax(320px, 1fr);
 }
 
 .left-column,
@@ -863,19 +912,7 @@ a:focus-visible {
 .safety-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@media (max-width: 1300px) {
-  .safety-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .safety-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .safety-metric {
@@ -920,6 +957,15 @@ a:focus-visible {
 .safety-icon-teal {
   background: #ccfbf1;
   color: #0f766e;
+}
+
+.metric-inline-heading {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
 
 .safety-metric span,
