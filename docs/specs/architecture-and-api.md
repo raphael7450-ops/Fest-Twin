@@ -63,7 +63,7 @@ graph TD
 
 ### 2.4 영속 데이터베이스 계층 (SQLite Scenario Database)
 - `server/db/database.js` 및 SQLite 영속 저장소를 통해 축제 기획안 파라미터와 결과 요약을 영속 저장합니다.
-- 부서 간 간 편한 공유를 위하여 8자리 난수 토큰(`share_token`)을 생성하며, 해당 URL 접속 시 기획 조건이 자동 복원됩니다.
+- 부서 간 편리한 공유를 위하여 8자리 난수 토큰(`share_token`)을 생성하며, 해당 URL 접속 시 기획 조건이 자동 복원됩니다.
 
 ---
 

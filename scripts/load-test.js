@@ -387,7 +387,7 @@ function generateReport(resultA, resultB, resultC) {
 | P95 응답 시간 | ${resultA.p95Latency.toFixed(2)}ms |
 | TPS | ${resultA.tps} req/s |
 | 총 소요 시간 | ${resultA.elapsedMs.toFixed(0)}ms |
-| **결과** | **${resultA.passed ? "PASS" : "FAIL"}** |
+| 결과 | ${resultA.passed ? "PASS" : "FAIL"} |
 
 > 100회/분 임계값 이내에서 모든 요청이 HTTP 200으로 정상 수용됨을 확인합니다.
 
@@ -404,7 +404,7 @@ function generateReport(resultA, resultB, resultC) {
 | 차단 응답 (HTTP 429) | ${resultB.rateLimited}회 |
 | X-RateLimit-Limit 헤더 검증 | ${resultB.headerCorrect}회 |
 | 31번째 이후 전부 429 | ${resultB.allLimitedAre429 ? "YES" : "NO"} |
-| **결과** | **${resultB.passed ? "PASS" : "FAIL"}** |
+| 결과 | ${resultB.passed ? "PASS" : "FAIL"} |
 
 > OpenAPI 프록시 경로에 적용된 Rate Limiter(30회/분)가 정상 동작하여,
 > 제한 초과 시 HTTP 429 + \`X-RateLimit-Limit\` 헤더를 반환합니다.
@@ -418,11 +418,11 @@ function generateReport(resultA, resultB, resultC) {
 | 대상 엔드포인트 | \`/api/tour/area-code\` |
 | Cold Start (첫 요청) | ${resultC.coldStartMs.toFixed(2)}ms |
 | Cache Hit 측정 횟수 | ${resultC.cacheHitCount}회 |
-| **Cache Hit 평균 응답** | **${resultC.avgCacheHit.toFixed(2)}ms** |
+| Cache Hit 평균 응답 | ${resultC.avgCacheHit.toFixed(2)}ms |
 | Cache Hit 최대 응답 | ${resultC.maxCacheHit.toFixed(2)}ms |
 | Cache Hit P95 응답 | ${resultC.p95CacheHit.toFixed(2)}ms |
 | 임계값 | <= ${resultC.thresholdMs}ms |
-| **결과** | **${resultC.passed ? "PASS" : "FAIL"}** |
+| 결과 | ${resultC.passed ? "PASS" : "FAIL"} |
 
 > 인메모리 캐시를 통해 동일 요청의 반복 호출 시 네트워크 I/O 없이
 > 극도로 빠른 응답(평균 ${resultC.avgCacheHit.toFixed(2)}ms)을 달성합니다.
@@ -437,7 +437,7 @@ function generateReport(resultA, resultB, resultC) {
 | Rate Limiter 방어 | ${resultB.passed ? "정상" : "미작동"} — 초과 요청 100% 차단 |
 | 캐시 응답 속도 | ${resultC.passed ? "우수" : "미달"} — 평균 ${resultC.avgCacheHit.toFixed(2)}ms |
 | TPS (초당 처리량) | ${resultA.tps} req/s |
-| **종합 판정** | **${overallPass}** |
+| 종합 판정 | ${overallPass} |
 `;
 
   const reportPath = path.join(PROJECT_ROOT, "docs", "LOAD_TEST_REPORT.md");

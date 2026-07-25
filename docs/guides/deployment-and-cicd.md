@@ -44,12 +44,12 @@ npm run deploy:remote
 ```
 
 ### 2.2 원격 배포 수행 단계
-1. **아카이브 생성**: `git archive`를 사용하여 최신 HEAD 소스를 `fest-twin-demo.tar`로 아카이브합니다.
-2. **원격 업로드**: SCP를 이용해 `cwuser@192.168.55.223` 원격 서버 홈 디렉터리로 전송합니다.
-3. **Docker 이미지 빌드 & 컨테이너 재가동**:
+1. 아카이브 생성: `git archive`를 사용하여 최신 HEAD 소스를 `fest-twin-demo.tar`로 아카이브합니다.
+2. 원격 업로드: SCP를 이용해 `cwuser@192.168.55.223` 원격 서버 홈 디렉터리로 전송합니다.
+3. Docker 이미지 빌드 & 컨테이너 재가동:
    - `fest-twin-demo:latest` 태그로 Docker 이미지를 생성합니다.
    - 기존 구동 중인 컨테이너(`fest-twin-demo`)를 안전하게 중지 및 삭제 후 신규 컨테이너를 구동(포트 18080:80)합니다.
-4. **배포 헬스체크 (`npm run deploy:check`)**:
+4. 배포 헬스체크 (`npm run deploy:check`):
    - `/api/scenarios`, `/api/tour/area-code`, `/api/scenarios/scen_sample_01` 등 4개 주요 라우트에 HTTP GET 요청을 보내 정상 수신(HTTP 200 OK)을 검증합니다.
 
 ---
@@ -123,5 +123,5 @@ jobs:
 ```
 
 ### 3.2 사설망 배포 및 트러블슈팅
-- **사설 IP 접속 문제**: GitHub Actions 클라우드 호스팅 러너는 192.168.x.x 대역의 사설 IP에 직접 도달할 수 없습니다. 따라서 사설망 배포 시에는 로컬/내부 개발 환경에서 `npm run deploy:remote` 스크립트를 사용하여 직접 배포하거나, Tailscale / Self-Hosted Runner를 연결하는 방식을 권장합니다.
-- **배포 헬스체크 타임아웃 지연**: 외부 공공 API(TourAPI) 최초 연결 지연에 대비하여 `deploy-check.js`에는 10초 타임아웃 및 1회 자동 재시도 로직이 기본 내장되어 있습니다.
+- 사설 IP 접속 문제: GitHub Actions 클라우드 호스팅 러너는 192.168.x.x 대역의 사설 IP에 직접 도달할 수 없습니다. 따라서 사설망 배포 시에는 로컬/내부 개발 환경에서 `npm run deploy:remote` 스크립트를 사용하여 직접 배포하거나, Tailscale / Self-Hosted Runner를 연결하는 방식을 권장합니다.
+- 배포 헬스체크 타임아웃 지연: 외부 공공 API(TourAPI) 최초 연결 지연에 대비하여 `deploy-check.js`에는 10초 타임아웃 및 1회 자동 재시도 로직이 기본 내장되어 있습니다.
