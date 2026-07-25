@@ -53,7 +53,7 @@ export function ScenarioLibrary({
   async function handleSave() {
     const localSaved = saveScenario(plan, selectedHour);
     setScenarios((current) => [localSaved, ...current.filter((item) => item.id !== localSaved.id)].slice(0, 10));
-    setCopyNotice({ text: "✅ 시나리오가 저장되었습니다. 하단 목록의 [공유 링크]를 눌러 URL을 복사하거나 열 수 있습니다." });
+    setCopyNotice({ text: "시나리오가 저장되었습니다. 하단 목록의 [공유 링크]를 눌러 URL을 복사하거나 열 수 있습니다." });
     setTimeout(() => setCopyNotice(null), 4000);
 
     saveServerScenario(plan, selectedHour).then((serverSaved) => {
@@ -77,12 +77,12 @@ export function ScenarioLibrary({
     try {
       await navigator.clipboard.writeText(url);
       setCopyNotice({
-        text: `📋 부서 공유 링크가 클립보드에 복사되었습니다! (클릭 시 새 탭 이동)`,
+        text: `부서 공유 링크가 클립보드에 복사되었습니다! (클릭 시 새 탭 이동)`,
         url,
       });
     } catch {
       setCopyNotice({
-        text: `🔗 공유 링크 주소:`,
+        text: `공유 링크 주소:`,
         url,
       });
     }
@@ -134,7 +134,7 @@ export function ScenarioLibrary({
           <div>{copyNotice.text}</div>
           {copyNotice.url && (
             <div style={{ marginTop: "4px", fontWeight: "600" }}>
-              👉{" "}
+              링크:{" "}
               <a
                 href={copyNotice.url}
                 target="_blank"

@@ -23,7 +23,7 @@ function run(cmd, opts = {}) {
 
 async function main() {
   console.log("======================================================");
-  console.log("🚀 원격지(192.168.55.223) Docker 자동 재배포 시작");
+  console.log("[INFO] 원격지(192.168.55.223) Docker 자동 재배포 시작");
   console.log("======================================================");
 
   const tarPath = path.join(PROJECT_ROOT, TAR_FILE);
@@ -67,10 +67,10 @@ async function main() {
     run("npm run deploy:check");
 
     console.log("\n======================================================");
-    console.log("🎉 원격지(192.168.55.223:18080) Docker 반영 및 헬스체크 성공!");
+    console.log("[SUCCESS] 원격지(192.168.55.223:18080) Docker 반영 및 헬스체크 성공!");
     console.log("======================================================\n");
   } catch (error) {
-    console.error("\n💥 배포 과정에서 오류가 발생했습니다:", error.message);
+    console.error("\n[ERROR] 배포 과정에서 오류가 발생했습니다:", error.message);
     process.exit(1);
   } finally {
     if (fs.existsSync(tarPath)) {

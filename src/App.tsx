@@ -140,7 +140,7 @@ export function App() {
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
-            setRestoredNotice(`🔗 공유 시나리오 [${restoredPlan.name}] 기획안이 복원되었습니다.`);
+            setRestoredNotice(`[공유 시나리오] [${restoredPlan.name}] 기획안이 복원되었습니다.`);
           }
         })
         .catch(() => {});
@@ -155,7 +155,7 @@ export function App() {
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
-            setRestoredNotice(`🔗 공유 시나리오 [${restoredPlan.name}] 기획안이 복원되었습니다.`);
+            setRestoredNotice(`[공유 시나리오] [${restoredPlan.name}] 기획안이 복원되었습니다.`);
           } else {
             // LocalStorage fallback
             const localScenarios = loadScenarios();
@@ -163,7 +163,7 @@ export function App() {
             if (found) {
               setPlan(normalizeFestivalPlan(found.plan));
               setSelectedHour(found.selectedHour ?? 20);
-              setRestoredNotice(`🔗 저장된 시나리오 [${found.name}] 기획안이 복원되었습니다.`);
+              setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
             }
           }
         })
@@ -173,7 +173,7 @@ export function App() {
           if (found) {
             setPlan(normalizeFestivalPlan(found.plan));
             setSelectedHour(found.selectedHour ?? 20);
-            setRestoredNotice(`🔗 저장된 시나리오 [${found.name}] 기획안이 복원되었습니다.`);
+            setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
           }
         });
     }

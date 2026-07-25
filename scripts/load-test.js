@@ -344,20 +344,20 @@ async function scenarioC(port, clearCache) {
 function generateReport(resultA, resultB, resultC) {
   const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
   const overallPass =
-    resultA.passed && resultB.passed && resultC.passed ? "✅ ALL PASS" : "❌ FAIL";
+    resultA.passed && resultB.passed && resultC.passed ? "ALL PASS" : "FAIL";
 
-  const md = `# 📊 Fest-Twin 부하 테스트 결과 보고서
+  const md = `# Fest-Twin 부하 테스트 결과 보고서
 
 > 자동 생성: ${timestamp}
 > 스크립트: \`scripts/load-test.js\` (Node.js 기반 k6-style 부하 테스트 러너)
 
-## 🏁 종합 결과: ${overallPass}
+## 종합 결과: ${overallPass}
 
 | 시나리오 | 결과 | 핵심 지표 |
 |---------|------|----------|
-| A. 일반 API 정상 부하 | ${resultA.passed ? "✅ PASS" : "❌ FAIL"} | ${resultA.successCount}/${resultA.totalRequests} 성공, TPS ${resultA.tps} |
-| B. Rate Limit 방어 | ${resultB.passed ? "✅ PASS" : "❌ FAIL"} | 429 응답 ${resultB.rateLimited}회, 헤더 검증 ${resultB.headerCorrect}회 |
-| C. 캐시 성능 | ${resultC.passed ? "✅ PASS" : "❌ FAIL"} | 평균 ${resultC.avgCacheHit.toFixed(2)}ms (임계값 ≤ ${resultC.thresholdMs}ms) |
+| A. 일반 API 정상 부하 | ${resultA.passed ? "PASS" : "FAIL"} | ${resultA.successCount}/${resultA.totalRequests} 성공, TPS ${resultA.tps} |
+| B. Rate Limit 방어 | ${resultB.passed ? "PASS" : "FAIL"} | 429 응답 ${resultB.rateLimited}회, 헤더 검증 ${resultB.headerCorrect}회 |
+| C. 캐시 성능 | ${resultC.passed ? "PASS" : "FAIL"} | 평균 ${resultC.avgCacheHit.toFixed(2)}ms (임계값 <= ${resultC.thresholdMs}ms) |
 
 ---
 
@@ -387,7 +387,7 @@ function generateReport(resultA, resultB, resultC) {
 | P95 응답 시간 | ${resultA.p95Latency.toFixed(2)}ms |
 | TPS | ${resultA.tps} req/s |
 | 총 소요 시간 | ${resultA.elapsedMs.toFixed(0)}ms |
-| **결과** | **${resultA.passed ? "✅ PASS" : "❌ FAIL"}** |
+| **결과** | **${resultA.passed ? "PASS" : "FAIL"}** |
 
 > 100회/분 임계값 이내에서 모든 요청이 HTTP 200으로 정상 수용됨을 확인합니다.
 
@@ -403,8 +403,8 @@ function generateReport(resultA, resultB, resultC) {
 | 정상 응답 (HTTP 200) | ${resultB.normalOk}회 |
 | 차단 응답 (HTTP 429) | ${resultB.rateLimited}회 |
 | X-RateLimit-Limit 헤더 검증 | ${resultB.headerCorrect}회 |
-| 31번째 이후 전부 429 | ${resultB.allLimitedAre429 ? "✅ YES" : "❌ NO"} |
-| **결과** | **${resultB.passed ? "✅ PASS" : "❌ FAIL"}** |
+| 31번째 이후 전부 429 | ${resultB.allLimitedAre429 ? "YES" : "NO"} |
+| **결과** | **${resultB.passed ? "PASS" : "FAIL"}** |
 
 > OpenAPI 프록시 경로에 적용된 Rate Limiter(30회/분)가 정상 동작하여,
 > 제한 초과 시 HTTP 429 + \`X-RateLimit-Limit\` 헤더를 반환합니다.
@@ -421,8 +421,8 @@ function generateReport(resultA, resultB, resultC) {
 | **Cache Hit 평균 응답** | **${resultC.avgCacheHit.toFixed(2)}ms** |
 | Cache Hit 최대 응답 | ${resultC.maxCacheHit.toFixed(2)}ms |
 | Cache Hit P95 응답 | ${resultC.p95CacheHit.toFixed(2)}ms |
-| 임계값 | ≤ ${resultC.thresholdMs}ms |
-| **결과** | **${resultC.passed ? "✅ PASS" : "❌ FAIL"}** |
+| 임계값 | <= ${resultC.thresholdMs}ms |
+| **결과** | **${resultC.passed ? "PASS" : "FAIL"}** |
 
 > 인메모리 캐시를 통해 동일 요청의 반복 호출 시 네트워크 I/O 없이
 > 극도로 빠른 응답(평균 ${resultC.avgCacheHit.toFixed(2)}ms)을 달성합니다.
@@ -433,25 +433,25 @@ function generateReport(resultA, resultB, resultC) {
 
 | 평가 항목 | 결과 |
 |-----------|------|
-| 부하 수용 능력 | ${resultA.passed ? "✅ 양호" : "❌ 불량"} — ${resultA.totalRequests}회 요청 안정 처리 |
-| Rate Limiter 방어 | ${resultB.passed ? "✅ 정상" : "❌ 미작동"} — 초과 요청 100% 차단 |
-| 캐시 응답 속도 | ${resultC.passed ? "✅ 우수" : "⚠️ 미달"} — 평균 ${resultC.avgCacheHit.toFixed(2)}ms |
+| 부하 수용 능력 | ${resultA.passed ? "양호" : "불량"} — ${resultA.totalRequests}회 요청 안정 처리 |
+| Rate Limiter 방어 | ${resultB.passed ? "정상" : "미작동"} — 초과 요청 100% 차단 |
+| 캐시 응답 속도 | ${resultC.passed ? "우수" : "미달"} — 평균 ${resultC.avgCacheHit.toFixed(2)}ms |
 | TPS (초당 처리량) | ${resultA.tps} req/s |
 | **종합 판정** | **${overallPass}** |
 `;
 
   const reportPath = path.join(PROJECT_ROOT, "docs", "LOAD_TEST_REPORT.md");
   fs.writeFileSync(reportPath, md, "utf-8");
-  console.log(`\n📝 보고서 생성 완료: ${reportPath}`);
+  console.log(`\n[INFO] 보고서 생성 완료: ${reportPath}`);
   return reportPath;
 }
 
 // ─── 메인 실행 ───────────────────────────────────────────────────────────
 
 async function main() {
-  console.log("╔══════════════════════════════════════════════════════╗");
-  console.log("║  🏋️  Fest-Twin 부하 테스트 (k6-style Load Test)      ║");
-  console.log("╚══════════════════════════════════════════════════════╝");
+  console.log("======================================================");
+  console.log("  Fest-Twin 부하 테스트 (k6-style Load Test)           ");
+  console.log("======================================================");
 
   let server;
   try {
@@ -464,19 +464,19 @@ async function main() {
 
     generateReport(resultA, resultB, resultC);
 
-    console.log("\n╔══════════════════════════════════════════════════════╗");
+    console.log("\n======================================================");
     const allPassed = resultA.passed && resultB.passed && resultC.passed;
     if (allPassed) {
-      console.log("║  🎉 모든 시나리오 PASS! 부하 테스트 성공             ║");
+      console.log("  모든 시나리오 PASS! 부하 테스트 성공                 ");
     } else {
-      console.log("║  ⚠️  일부 시나리오 FAIL. 결과를 확인해 주세요        ║");
+      console.log("  일부 시나리오 FAIL. 결과를 확인해 주세요            ");
     }
-    console.log("╚══════════════════════════════════════════════════════╝\n");
+    console.log("======================================================\n");
 
     await stopServer(server);
     process.exit(allPassed ? 0 : 1);
   } catch (error) {
-    console.error("\n💥 부하 테스트 중 오류 발생:", error);
+    console.error("\n[ERROR] 부하 테스트 중 오류 발생:", error);
     if (server) await stopServer(server);
     process.exit(1);
   }
