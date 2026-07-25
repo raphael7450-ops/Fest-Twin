@@ -32,27 +32,37 @@ jobs:
         env:
           VITE_NAVER_MAP_NCP_KEY_ID: ${{ secrets.NAVER_MAP_CLIENT_ID }}
         run: |
-          if [ -z "$VITE_NAVER_MAP_NCP_KEY_ID" ]; then
-            export VITE_NAVER_MAP_NCP_KEY_ID="5mcwlg6qwo"
-          fi
-          npm run build
+          KEY_ID="${VITE_NAVER_MAP_NCP_KEY_ID:-5mcwlg6qwo}"
+          VITE_NAVER_MAP_NCP_KEY_ID="$KEY_ID" npm run build
 
   deploy:
     name: "CD - Remote Docker Deploy"
     needs: test-and-build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
+      - name: Check deployment secrets
+        id: check_secrets
+        run: |
+          if [ -n "${{ secrets.REMOTE_HOST }}" ] && [ -n "${{ secrets.REMOTE_USER }}" ] && [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+            echo "[NOTICE] Remote SSH secrets (REMOTE_HOST, REMOTE_USER, SSH_PRIVATE_KEY) are not set. Skipping SSH deployment."
+          fi
+
       - name: Deploy container on remote Docker server via SSH
+        if: steps.check_secrets.outputs.has_secrets == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          port: ${{ secrets.SSH_PORT || '22' }}
           script: |
-            set -euo pipefail
+            set -e
             echo "==> Pulling latest changes from main branch..."
             cd ~/fest-twin-demo || (git clone https://github.com/raphael7450-ops/Fest-Twin.git ~/fest-twin-demo && cd ~/fest-twin-demo)
             git fetch origin main
@@ -60,23 +70,25 @@ jobs:
 
             echo "==> Building Docker image..."
             NAVER_KEY="${{ secrets.NAVER_MAP_CLIENT_ID }}"
-            NAVER_KEY="${NAVER_KEY:-5mcwlg6qwo}"
+            if [ -z "$NAVER_KEY" ]; then NAVER_KEY="5mcwlg6qwo"; fi
             docker build --build-arg NAVER_MAP_CLIENT_ID="$NAVER_KEY" -t fest-twin-demo:latest .
 
             echo "==> Stopping old container..."
-            if [ "$(docker ps -aq -f name=^fest-twin-demo$)" ]; then
+            EXISTING_CONTAINER=$(docker ps -aq -f name=^fest-twin-demo$)
+            if [ -n "$EXISTING_CONTAINER" ]; then
               docker stop fest-twin-demo || true
               docker rm fest-twin-demo || true
             fi
 
             echo "==> Starting new container..."
-            ENV_ARGS=()
             if [ -f "$HOME/fest-twin-demo.env" ]; then
-              ENV_ARGS=(--env-file "$HOME/fest-twin-demo.env")
+              docker run -d --name fest-twin-demo --env-file "$HOME/fest-twin-demo.env" --restart unless-stopped -p 18080:80 fest-twin-demo:latest
+            else
+              docker run -d --name fest-twin-demo --restart unless-stopped -p 18080:80 fest-twin-demo:latest
             fi
-            docker run -d --name fest-twin-demo "${ENV_ARGS[@]}" --restart unless-stopped -p 18080:80 fest-twin-demo:latest
 
             echo "==> Performing deployment health check..."
             sleep 3
             curl -f -s http://localhost:18080/api/scenarios > /dev/null || (echo "Health check failed!" && exit 1)
             echo "Deployment successful!"
+
