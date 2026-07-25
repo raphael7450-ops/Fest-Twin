@@ -5,6 +5,7 @@
  */
 
 import type { FestivalPlan } from "../domain/types";
+import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 
 const STORAGE_KEY = "fest-twin-scenarios";
 
@@ -17,6 +18,63 @@ export interface SavedScenario {
   shareToken?: string;
 }
 
+export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
+  if (!rawPlan || typeof rawPlan !== "object") {
+    return { ...sampleFestivalPlan };
+  }
+  return {
+    name: rawPlan.name ?? rawPlan.title ?? sampleFestivalPlan.name,
+    region: rawPlan.region ?? sampleFestivalPlan.region,
+    venueAddress: rawPlan.venueAddress ?? sampleFestivalPlan.venueAddress,
+    startDate: rawPlan.startDate ?? sampleFestivalPlan.startDate,
+    endDate: rawPlan.endDate ?? sampleFestivalPlan.endDate,
+    operatingHours:
+      Array.isArray(rawPlan.operatingHours) && rawPlan.operatingHours.length > 0
+        ? rawPlan.operatingHours
+        : sampleFestivalPlan.operatingHours,
+    totalBudgetMillionKrw:
+      typeof rawPlan.totalBudgetMillionKrw === "number"
+        ? rawPlan.totalBudgetMillionKrw
+        : typeof rawPlan.budgetKrw === "number"
+        ? Math.round(rawPlan.budgetKrw / 1000000)
+        : sampleFestivalPlan.totalBudgetMillionKrw,
+    promotionBudgetMillionKrw:
+      typeof rawPlan.promotionBudgetMillionKrw === "number"
+        ? rawPlan.promotionBudgetMillionKrw
+        : sampleFestivalPlan.promotionBudgetMillionKrw,
+    safetyBudgetMillionKrw:
+      typeof rawPlan.safetyBudgetMillionKrw === "number"
+        ? rawPlan.safetyBudgetMillionKrw
+        : sampleFestivalPlan.safetyBudgetMillionKrw,
+    targetGroups:
+      Array.isArray(rawPlan.targetGroups) && rawPlan.targetGroups.length > 0
+        ? rawPlan.targetGroups
+        : sampleFestivalPlan.targetGroups,
+    keywords:
+      Array.isArray(rawPlan.keywords) && rawPlan.keywords.length > 0
+        ? rawPlan.keywords
+        : sampleFestivalPlan.keywords,
+    expectedCapacity:
+      typeof rawPlan.expectedCapacity === "number"
+        ? rawPlan.expectedCapacity
+        : typeof rawPlan.targetVisitors === "number"
+        ? rawPlan.targetVisitors
+        : typeof rawPlan.venueCapacity === "number"
+        ? rawPlan.venueCapacity
+        : sampleFestivalPlan.expectedCapacity,
+    gridWidth: typeof rawPlan.gridWidth === "number" ? rawPlan.gridWidth : sampleFestivalPlan.gridWidth,
+    gridHeight: typeof rawPlan.gridHeight === "number" ? rawPlan.gridHeight : sampleFestivalPlan.gridHeight,
+    programs:
+      Array.isArray(rawPlan.programs) && rawPlan.programs.length > 0
+        ? rawPlan.programs
+        : sampleFestivalPlan.programs,
+    facilities:
+      Array.isArray(rawPlan.facilities) && rawPlan.facilities.length > 0
+        ? rawPlan.facilities
+        : sampleFestivalPlan.facilities,
+  };
+}
+
 function readRawScenarios(): SavedScenario[] {
   const raw = localStorage.getItem(STORAGE_KEY);
 
@@ -24,7 +82,11 @@ function readRawScenarios(): SavedScenario[] {
 
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item: any) => ({
+      ...item,
+      plan: normalizeFestivalPlan(item.plan),
+    }));
   } catch {
     return [];
   }
@@ -57,7 +119,7 @@ export async function fetchServerScenarios(): Promise<SavedScenario[]> {
         name: item.title ?? `${item.parameters?.plan?.name ?? "시나리오"}`,
         savedAt: item.created_at ?? new Date().toISOString(),
         selectedHour: item.parameters?.selectedHour ?? 20,
-        plan: item.parameters?.plan,
+        plan: normalizeFestivalPlan(item.parameters?.plan),
         shareToken: item.share_token,
       }));
 

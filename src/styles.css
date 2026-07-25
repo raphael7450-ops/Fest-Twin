@@ -326,19 +326,84 @@ h3 {
   padding: 0;
 }
 
-.scenario-list button {
+.scenario-item {
   background: #f8fafc;
   border: 1px solid var(--color-border);
-  color: var(--color-text);
-  display: grid;
-  gap: 4px;
-  padding: 10px;
-  text-align: left;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scenario-item:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: 0 2px 6px rgba(18, 58, 93, 0.05);
+}
+
+.scenario-item-content {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 10px;
   width: 100%;
 }
 
-.scenario-list small {
+.scenario-load-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 4px 6px;
+  text-align: left;
+}
+
+.scenario-load-btn:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.scenario-load-btn strong {
+  color: var(--color-primary-strong);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+
+.scenario-load-btn small {
   color: var(--color-muted);
+  font-size: 11px;
+}
+
+.scenario-item-actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.scenario-item-actions .compact-btn,
+.scenario-item-actions .danger-text {
+  font-size: 11px;
+  font-weight: 850;
+  min-height: 30px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.danger-text {
+  color: var(--color-red);
+}
+
+.danger-text:hover {
+  background: #fee4df;
+  border-color: #fca5a5;
 }
 
 .guideline-grid,

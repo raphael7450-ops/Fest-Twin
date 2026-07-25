@@ -19,6 +19,7 @@ import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
+import { normalizeFestivalPlan } from "./services/scenarioStorage";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
@@ -130,7 +131,7 @@ export function App() {
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.parameters?.plan) {
-            setPlan(data.parameters.plan);
+            setPlan(normalizeFestivalPlan(data.parameters.plan));
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
@@ -384,8 +385,8 @@ export function App() {
               plan={plan}
               selectedHour={selectedHour}
               onLoadScenario={(scenario) => {
-                setPlan(scenario.plan);
-                setSelectedHour(scenario.selectedHour);
+                setPlan(normalizeFestivalPlan(scenario.plan));
+                setSelectedHour(scenario.selectedHour ?? 20);
               }}
             />
             <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
@@ -435,8 +436,8 @@ export function App() {
               plan={plan}
               selectedHour={selectedHour}
               onLoadScenario={(scenario) => {
-                setPlan(scenario.plan);
-                setSelectedHour(scenario.selectedHour);
+                setPlan(normalizeFestivalPlan(scenario.plan));
+                setSelectedHour(scenario.selectedHour ?? 20);
               }}
             />
           </aside>
