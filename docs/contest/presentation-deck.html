@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fest-Twin (페스트트윈) 발표 자료</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: #1e293b;
+      --card-bg: #182234;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-blue: #3b82f6;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --border-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Controller Header */
+    header.deck-header {
+      width: 100%;
+      max-width: 1100px;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.9);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .nav-controls {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .btn {
+      background: var(--panel-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    .slide-indicator {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+
+    /* Deck Viewport */
+    .deck-viewport {
+      width: 100%;
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .slide {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 3rem;
+      min-height: 650px;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    .slide-title-group {
+      margin-bottom: 2rem;
+    }
+
+    .slide-number {
+      color: var(--accent-cyan);
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .slide-title {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .slide-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+      margin-top: 0.5rem;
+    }
+
+    /* Cards & Grid Layouts */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 0.75rem;
+    }
+
+    .card-text {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    ul.feature-list {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+
+    ul.feature-list li {
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    ul.feature-list li::before {
+      content: "•";
+      color: var(--accent-emerald);
+      font-weight: bold;
+    }
+
+    /* Highlight Banner */
+    .banner {
+      background: rgba(6, 182, 212, 0.1);
+      border-left: 4px solid var(--accent-cyan);
+      padding: 1rem 1.5rem;
+      border-radius: 4px;
+      margin: 1.5rem 0;
+      font-size: 1rem;
+      color: var(--text-main);
+    }
+
+    /* Slide Images */
+    .slide-image {
+      width: 100%;
+      max-height: 380px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-top: 1rem;
+    }
+
+    /* Stat Box */
+    .stat-box {
+      text-align: center;
+      padding: 1.5rem;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid var(--accent-emerald);
+      border-radius: 8px;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--accent-emerald);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      margin-top: 0.25rem;
+    }
+
+    /* Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      padding-top: 1rem;
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    @media print {
+      header.deck-header { display: none; }
+      .slide { display: flex !important; page-break-after: always; min-height: 100vh; border: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="deck-header">
+    <div class="brand">Fest-Twin (페스트트윈) 발표 자료</div>
+    <div class="nav-controls">
+      <button class="btn" onclick="prevSlide()">◀ 이전</button>
+      <span class="slide-indicator" id="slideIndicator">1 / 7</span>
+      <button class="btn" onclick="nextSlide()">다음 ▶</button>
+      <button class="btn" onclick="window.print()">🖨️ PDF 출력</button>
+    </div>
+  </header>
+
+  <div class="deck-viewport">
+
+    <!-- Slide 1 -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-title-group">
+        <div class="slide-number">Overview</div>
+        <h1 class="slide-title">Fest-Twin (페스트트윈)</h1>
+        <p class="slide-subtitle">실데이터 기반 B2G 축제·행사 사전 진단 및 디지털 트윈 시뮬레이터</p>
+      </div>
+
+      <div class="banner">
+        <strong>공공데이터 연동 | 4단계 산출 근거 시각화 | 행정 협업 영속화 플랫폼</strong>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">발표 개요</div>
+          <p class="card-text">축제·행사 기획 단계에서 발생하는 불확실한 방문객 추정과 예산 근거 부재 문제를 실공공데이터 기반 디지털 트윈으로 해결하는 플랫폼입니다.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">발표자 정보</div>
+          <p class="card-text"><strong>발표자:</strong> Fest-Twin 개발팀<br><strong>대상:</strong> B2G 사업 평가위원 및 지자체 문화관광/안전 담당자</p>
+        </div>
+        <div class="card">
+          <div class="card-title">핵심 제공 가치</div>
+          <p class="card-text">감(感) 위주 추정 탈피, 감사(Audit) 완벽 대응, 부서 간 시나리오 영속 공유 파이프라인 제공.</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Fest-Twin B2G Business Proposal</span>
+        <span>Page 1 of 7</span>
+      </div>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="slide" id="slide-2">
+      <div class="slide-title-group">
+        <div class="slide-number">Section 1</div>
+        <h2 class="slide-title">1. 기존 행사 기획의 한계와 행정적 페인포인트</h2>
+        <p class="slide-subtitle">"이 축제에 예산 5억 원을 투입하면, 방문객은 정말 5만 명이 오나요?"</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">과거 경험과 감 위주 추정</div>
+          <ul class="feature-list">
+            <li>근거 불명확한 방문객 및 경제 효과 부풀리기</li>
+            <li>감사 및 수의계약 검증 시 객관적 자료 부재</li>
+            <li>담당자 경험에 의존한 비재현적 기획</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">실시간 통신사 데이터 한계</div>
+          <ul class="feature-list">
+            <li>사후 인파 추정만 가능, 사전 기획 단계 예측 불가</li>
+            <li>좁은 현장 밀집도 오차 발생</li>
+            <li>수백만 원 대의 높은 수집 비용 발생</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">부서 간 파편화된 관리</div>
+          <ul class="feature-list">
+            <li>담당자 변경 시 기획 데이터 및 수치 기준 분실</li>
+            <li>부서 간 시나리오 공유 체계 부재</li>
+            <li>상급 기관 보고 시 일관된 근거 제출 불가</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="banner">
+        ⚠️ 현행 행사 기획 프로세스는 감사 대응, 예산 투명성, 부서 연속성 측면에서 구조적 취약점을 내포하고 있습니다.
+      </div>
+
+      <div class="slide-footer">
+        <span>Fest-Twin Problem Analysis</span>
+        <span>Page 2 of 7</span>
+      </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="slide" id="slide-3">
+      <div class="slide-title-group">
+        <div class="slide-number">Section 2</div>
+        <h2 class="slide-title">2. Fest-Twin 핵심 솔루션 & B2G 가치</h2>
+        <p class="slide-subtitle">사전 예측의 신뢰성과 행정 투명성을 극대화한 디지털 트윈</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">실공공데이터 기반 수요 예측</div>
+          <ul class="feature-list">
+            <li>한국관광공사 TourAPI 4.0 + 국가교통DB(KTDB) 기준선 연동</li>
+            <li>Graceful Fallback 자동 전환으로 100% 서비스 연속성 보장</li>
+            <li>공공 인증 소스 활용으로 감사 대응 근거 확보</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">4단계 Step Breakdown 산출</div>
+          <ul class="feature-list">
+            <li>수식, 가중치 계수, 출처 라벨 투명 공개</li>
+            <li>Metric Evidence Drawer를 통한 연산 흐름 추적</li>
+            <li>행정적 산출 근거 완벽 입증 가능</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">시나리오 영속 저장 및 공유</div>
+          <ul class="feature-list">
+            <li>영속 REST API & LocalStorage 하이브리드 share_token 생성</li>
+            <li>타 부서 및 상급 기관 즉시 복원 협업 가능</li>
+            <li>동일 시뮬레이션 환경 100% 재현</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Fest-Twin Core Solution</span>
+        <span>Page 3 of 7</span>
+      </div>
+    </div>
+
+    <!-- Slide 4 -->
+    <div class="slide" id="slide-4">
+      <div class="slide-title-group">
+        <div class="slide-number">Section 3</div>
+        <h2 class="slide-title">3. 핵심 기술 아키텍처 & 안전성 검증</h2>
+        <p class="slide-subtitle">B2G 요구사항을 100% 충족하는 고성능·고보안 인프라</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom: 1rem;">
+        <div class="stat-box">
+          <div class="stat-value">2,052</div>
+          <div class="stat-label">TPS (대용량 트래픽 처리)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">0.36ms</div>
+          <div class="stat-label">평균 응답 지연 (캐싱 적용)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">70 PASS</div>
+          <div class="stat-label">18개 파일, Vitest 테스트 100%</div>
+        </div>
+      </div>
+
+      <img class="slide-image" src="../assets/presentation/fest_twin_architecture.jpg" alt="Fest-Twin Architecture Diagram">
+
+      <div class="slide-footer">
+        <span>Fest-Twin Architecture & Performance</span>
+        <span>Page 4 of 7</span>
+      </div>
+    </div>
+
+    <!-- Slide 5 -->
+    <div class="slide" id="slide-5">
+      <div class="slide-title-group">
+        <div class="slide-number">Section 4</div>
+        <h2 class="slide-title">4. 수치 산출 근거 시각화 (Metric Evidence Drawer)</h2>
+        <p class="slide-subtitle">1단계 베이스라인부터 4단계 최종 산출까지 연산 흐름 투명 공개</p>
+      </div>
+
+      <img class="slide-image" src="../assets/presentation/evidence_drawer_mockup.jpg" alt="Metric Evidence Drawer UI Mockup">
+
+      <div class="grid-2" style="margin-top: 1rem;">
+        <div class="card">
+          <div class="card-title">4단계 연산 수식 (Formulas)</div>
+          <p class="card-text">
+            <strong>Step 1:</strong> Base_Visitors = Area_m² × Target_Density<br>
+            <strong>Step 2:</strong> Weighted_Visitors = Base_Visitors × Budget_Weight(1.15x) × Time_Weight(1.08x)<br>
+            <strong>Step 4:</strong> Final_Output = { 예상 방문객(명), 밀집도(명/m²), ROI 파급효과(배) }
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">계수 및 출처 투명성</div>
+          <p class="card-text">
+            • <strong>Budget_Weight (1.15x):</strong> KTDB / 예산 가중<br>
+            • <strong>Time_Weight (1.08x):</strong> TourAPI 4.0 / 시간대 보정<br>
+            • <strong>경제 파급 계수:</strong> 관광데이터랩 카드 소비 객단가 기반
+          </p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Fest-Twin Metric Evidence Engine</span>
+        <span>Page 5 of 7</span>
+      </div>
+    </div>
+
+    <!-- Slide 6 -->
+    <div class="slide" id="slide-6">
+      <div class="slide-title-group">
+        <div class="slide-number">Section 5</div>
+        <h2 class="slide-title">5. 부서 간 협업 및 미래 확장성 (Roadmap)</h2>
+        <p class="slide-subtitle">시나리오 공유부터 차세대 소셜 트렌드 연동까지</p>
+      </div>
+
+      <img class="slide-image" src="../assets/presentation/b2g_collaboration.jpg" alt="B2G Collaboration Flow">
+
+      <div class="grid-2" style="margin-top: 1rem;">
+        <div class="card">
+          <div class="card-title">부서 간 무결점 협업 파이프라인</div>
+          <p class="card-text">01. 시나리오 기획 및 저장 ➔ 02. share_token 단일 복원 URL 생성 ➔ 03. 타 부서 및 감사 기관 공유</p>
+        </div>
+        <div class="card">
+          <div class="card-title">v2.0 트렌드 연동 확장 (Roadmap)</div>
+          <p class="card-text">Naver DataLab Trend & Social Buzz 연동 백엔드 프록시 인터페이스 수용 준비 완료</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Fest-Twin Roadmap & Future Scope</span>
+        <span>Page 6 of 7</span>
+      </div>
+    </div>
+
+    <!-- Slide 7 -->
+    <div class="slide" id="slide-7">
+      <div class="slide-title-group">
+        <div class="slide-number">Section 6</div>
+        <h2 class="slide-title">6. 결론 및 질의응답 (Q&A)</h2>
+        <p class="slide-subtitle">행정의 신뢰성을 높이는 B2G 표준 사전 진단 플랫폼</p>
+      </div>
+
+      <div class="banner">
+        "Fest-Twin은 불확실한 행정 예측을 데이터 중심의 투명한 의사결정으로 바꿉니다."
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Q1. API 장애 발생 시?</div>
+          <p class="card-text">정규화 공공 백데이터 모드로 자동 전환되어 100% 서비스 연속성을 보장합니다.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Q2. 감사 기관 증빙 가능?</div>
+          <p class="card-text">Metric Evidence Drawer의 수식, 계수, 출처 데이터로 행정적 근거를 완벽 증빙합니다.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Q3. 대규모 접속 시 안전?</div>
+          <p class="card-text">2단계 Rate Limiter 방어와 0.36ms 캐시 응답, 2,052 TPS 검증으로 안전합니다.</p>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Fest-Twin Q&A & Conclusion</span>
+        <span>Page 7 of 7</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 7;
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+
+      currentSlide = index;
+      document.querySelectorAll('.slide').forEach((el, i) => {
+        el.classList.toggle('active', i + 1 === currentSlide);
+      });
+
+      document.getElementById('slideIndicator').innerText = `${currentSlide} / ${totalSlides}`;
+    }
+
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      showSlide(currentSlide - 1);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') nextSlide();
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
+  </script>
+</body>
+</html>
