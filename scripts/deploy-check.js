@@ -5,9 +5,16 @@
  */
 
 import http from "node:http";
+import https from "node:https";
 
-const TARGET_HOST = process.env.DEPLOY_TARGET_HOST || "192.168.55.223";
-const TARGET_PORT = process.env.DEPLOY_TARGET_PORT || "18080";
+const DEFAULT_TARGET_URL = "https://cwserver.tail97dbc3.ts.net";
+const legacyTargetHost = process.env.DEPLOY_TARGET_HOST;
+const legacyTargetPort = process.env.DEPLOY_TARGET_PORT || "18080";
+const TARGET_BASE_URL =
+  process.env.DEPLOY_TARGET_URL ||
+  (legacyTargetHost
+    ? `http://${legacyTargetHost}:${legacyTargetPort}`
+    : DEFAULT_TARGET_URL);
 
 const ENDPOINTS = [
   "/api/scenarios",
@@ -18,8 +25,9 @@ const ENDPOINTS = [
 
 function checkEndpoint(endpoint) {
   return new Promise((resolve, reject) => {
-    const url = `http://${TARGET_HOST}:${TARGET_PORT}${endpoint}`;
-    const req = http.get(url, { timeout: 10000 }, (res) => {
+    const url = new URL(endpoint, TARGET_BASE_URL);
+    const client = url.protocol === "https:" ? https : http;
+    const req = client.get(url, { timeout: 10000 }, (res) => {
       let data = "";
       res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
@@ -40,7 +48,7 @@ function checkEndpoint(endpoint) {
 }
 
 async function runDeployCheck() {
-  console.log(`[CHECK] Checking deployment health on http://${TARGET_HOST}:${TARGET_PORT}...`);
+  console.log(`[CHECK] Checking deployment health on ${TARGET_BASE_URL}...`);
   let successCount = 0;
 
   for (const endpoint of ENDPOINTS) {

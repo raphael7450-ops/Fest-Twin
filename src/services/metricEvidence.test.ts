@@ -167,6 +167,62 @@ describe("metricEvidence", () => {
     expect(JSON.stringify(source)).toContain("127.0610512042, 37.5103955843");
   });
 
+  it("provides a source detail for every top-level KPI", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleTrafficContext,
+      sampleSpendingContext,
+      sampleDemandBackdataContext,
+      selectedFestivalBasis,
+    );
+
+    Object.values(evidence).forEach((metric) => {
+      expect(metric.sourceDetails.length, metric.metricId).toBeGreaterThan(0);
+    });
+  });
+
+  it("summarizes demand evidence with selected festival, tourism, trend, backdata, and user inputs", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleTrafficContext,
+      sampleSpendingContext,
+      sampleDemandBackdataContext,
+      selectedFestivalBasis,
+    );
+
+    const sourceIds = evidence["demand-index"].sourceDetails.map(
+      (detail) => detail.sourceId,
+    );
+    const sourceNames = evidence["demand-index"].sourceDetails.map(
+      (detail) => detail.sourceName,
+    );
+
+    expect(sourceIds).toEqual(
+      expect.arrayContaining([
+        "tourapi-selected-festival-basis",
+        "tourapi-nearby-tourism-context",
+        "trend-search-interest-correction",
+        "regional-demand-backdata-summary",
+        "user-demand-inputs",
+      ]),
+    );
+    expect(sourceNames).toEqual(
+      expect.arrayContaining([
+        "주변 관광지 맥락",
+        "검색 관심도 보정",
+        "지역 수요 백데이터",
+      ]),
+    );
+  });
+
   it("scopes user input evidence to fields used by each metric", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,

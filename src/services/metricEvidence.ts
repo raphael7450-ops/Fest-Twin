@@ -240,6 +240,76 @@ function selectedFestivalBasisDetails(
   ];
 }
 
+function cleanStatusLabel(status?: string) {
+  if (status === "live") return "실데이터";
+  if (status === "partial-fallback") return "부분 보완";
+  if (status === "file-normalized") return "파일 정규화";
+  return "샘플 보완";
+}
+
+function createDemandEvidenceMatrixDetails(
+  tourism: TourismContext,
+  trends: TrendContext,
+  demandBackdata?: DemandBackdataContext,
+): MetricEvidence["sourceDetails"] {
+  const details: MetricEvidence["sourceDetails"] = [
+    {
+      sourceId: "tourapi-nearby-tourism-context",
+      sourceName: "주변 관광지 맥락",
+      sourceType: tourism.provenance.sourceStatus === "sample-fallback" ? "sample" : "tourapi",
+      statusLabel: cleanStatusLabel(tourism.provenance.sourceStatus),
+      calculationInputs: [
+        { label: "주변 관광지 수", value: `${tourism.nearbySpots.length}곳` },
+        { label: "유사 축제 수", value: `${tourism.similarFestivals.length}건` },
+      ],
+      note: tourism.provenance.basisText,
+    },
+    {
+      sourceId: "trend-search-interest-correction",
+      sourceName: "검색 관심도 보정",
+      sourceType: trends.provenance.sourceType === "trend-sample" ? "sample" : "derived",
+      statusLabel: cleanStatusLabel(trends.provenance.sourceStatus),
+      calculationInputs: [
+        { label: "검색 키워드 수", value: `${trends.signals.length}개` },
+        {
+          label: "대표 키워드",
+          value: trends.signals.map((signal) => signal.keyword).slice(0, 3).join(", "),
+        },
+      ],
+      note: trends.provenance.basisText,
+    },
+  ];
+
+  if (demandBackdata) {
+    details.push({
+      sourceId: "regional-demand-backdata-summary",
+      sourceName: "지역 수요 백데이터",
+      sourceType: demandBackdata.status === "sample-fallback" ? "sample" : "derived",
+      statusLabel: cleanStatusLabel(demandBackdata.status),
+      calculationInputs: [
+        {
+          label: "비교 축제 수",
+          value: `${demandBackdata.similarFestivalBaselines.length}건`,
+        },
+      ],
+      records: demandBackdata.similarFestivalBaselines.slice(0, 3).map((festival) => ({
+        label: festival.name,
+        fields: [
+          { label: "지역", value: festival.region },
+          { label: "유형", value: festival.type },
+          {
+            label: "방문객 수",
+            value: `${(festival.visitors ?? 0).toLocaleString("ko-KR")}명`,
+          },
+          { label: "유사도", value: `${festival.similarityScore}점` },
+        ],
+      })),
+    });
+  }
+
+  return details;
+}
+
 export function createMetricEvidenceSet(
   plan: FestivalPlan,
   forecast: ForecastResult,
@@ -261,6 +331,11 @@ export function createMetricEvidenceSet(
   const spendingDetails = spending?.sourceDetails ?? [];
   const demandBackdataDetails = demandBackdata?.sourceDetails ?? [];
   const selectedFestivalDetails = selectedFestivalBasisDetails(selectedFestivalBasis);
+  const demandEvidenceMatrixDetails = createDemandEvidenceMatrixDetails(
+    tourism,
+    trends,
+    demandBackdata,
+  );
   const nearbyTourismDetails = tourismDetails.filter(
     (detail) => detail.sourceId.includes("nearby") || detail.sourceId === "sample-nearby-spots",
   );
@@ -418,6 +493,7 @@ export function createMetricEvidenceSet(
       limitations,
       sourceDetails: [
         ...selectedFestivalDetails,
+        ...demandEvidenceMatrixDetails,
         ...tourismDetails,
         ...demandBackdataDetails,
         ...demandUserInputs,

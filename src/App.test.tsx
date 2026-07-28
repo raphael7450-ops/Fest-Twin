@@ -94,8 +94,8 @@ describe("App", () => {
     expect(screen.getByLabelText("시작일")).toBeInTheDocument();
     expect(screen.getByLabelText("종료일")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 후보 보기")).toBeInTheDocument();
-    expect(screen.getByText("데이터 신뢰도")).toBeInTheDocument();
-    expect(await screen.findByText("샘플 데이터 대체 사용")).toBeInTheDocument();
+    expect(screen.getByText("데이터 근거")).toBeInTheDocument();
+    expect((await screen.findAllByText("샘플 보완")).length).toBeGreaterThan(0);
     expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
     expect(screen.getByText("서울특별시 강남구 영동대로 511 (삼성동)")).toBeInTheDocument();
@@ -262,7 +262,7 @@ describe("App", () => {
         vi.advanceTimersByTime(300);
       });
 
-      expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("실데이터").length).toBeGreaterThan(0);
       expect(getTourismContextMock).toHaveBeenCalledTimes(1);
       const initialSignal = getTourismContextMock.mock.calls[0][1].signal as AbortSignal;
 
@@ -323,14 +323,14 @@ describe("App", () => {
       await act(async () => {
         vi.advanceTimersByTime(300);
       });
-      expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("실데이터").length).toBeGreaterThan(0);
 
       fireEvent.change(view.getByLabelText("개최 지역"), {
         target: { value: "부산광역시" },
       });
 
-      expect(screen.queryByText("실제 TourAPI 조회 성공")).not.toBeInTheDocument();
-      expect(screen.getByText("샘플 데이터 대체 사용")).toBeInTheDocument();
+      expect(screen.queryByText("실데이터")).not.toBeInTheDocument();
+      expect(screen.getAllByText("샘플 보완").length).toBeGreaterThan(0);
 
       await act(async () => {
         vi.advanceTimersByTime(300);
