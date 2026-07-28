@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import { getDemandBackdataContext } from "./demandBackdataAdapter";
 import type { FestivalCandidate } from "./tourApiAdapter";
 import {
   applyFestivalCandidateToPlan,
@@ -45,5 +46,51 @@ describe("festivalSelection", () => {
     expect(nextPlan.expectedCapacity).toBe(sampleFestivalPlan.expectedCapacity);
     expect(nextPlan.facilities).toBe(sampleFestivalPlan.facilities);
     expect(nextPlan.programs).toBe(sampleFestivalPlan.programs);
+  });
+
+  it("prefills budget and expected capacity from the best matching festival backdata", () => {
+    const seoulLightCandidate: FestivalCandidate = {
+      id: "4000001",
+      title: "서울라이트 광화문",
+      address: "서울특별시 종로구 세종대로 175",
+      startDate: "2025-12-19",
+      endDate: "2026-01-03",
+      searchScope: "exact-period",
+    };
+    const candidatePlan = applyFestivalCandidateToPlan(sampleFestivalPlan, seoulLightCandidate);
+    const demandBackdata = getDemandBackdataContext(candidatePlan);
+
+    const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, seoulLightCandidate, {
+      demandBackdata,
+    });
+
+    expect(nextPlan.totalBudgetMillionKrw).toBe(1100);
+    expect(nextPlan.expectedCapacity).toBe(12200);
+  });
+
+  it("preserves user-edited planning values when applying backdata recommendations", () => {
+    const seoulLightCandidate: FestivalCandidate = {
+      id: "4000001",
+      title: "서울라이트 광화문",
+      address: "서울특별시 종로구 세종대로 175",
+      startDate: "2025-12-19",
+      endDate: "2026-01-03",
+      searchScope: "exact-period",
+    };
+    const candidatePlan = applyFestivalCandidateToPlan(sampleFestivalPlan, seoulLightCandidate);
+    const demandBackdata = getDemandBackdataContext(candidatePlan);
+
+    const nextPlan = applyFestivalCandidateToPlan(
+      { ...sampleFestivalPlan, totalBudgetMillionKrw: 777, expectedCapacity: 8888 },
+      seoulLightCandidate,
+      {
+        demandBackdata,
+        preserveBudget: true,
+        preserveExpectedCapacity: true,
+      },
+    );
+
+    expect(nextPlan.totalBudgetMillionKrw).toBe(777);
+    expect(nextPlan.expectedCapacity).toBe(8888);
   });
 });

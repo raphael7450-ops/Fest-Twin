@@ -80,6 +80,10 @@ export function App() {
     candidates: [],
     isLoading: true,
   }));
+  const [manualPlanningFields, setManualPlanningFields] = useState({
+    totalBudget: false,
+    expectedCapacity: false,
+  });
   const tourApiPlanKey = JSON.stringify({
     region: plan.region,
     venueAddress: plan.venueAddress,
@@ -432,9 +436,37 @@ export function App() {
     () => createPlanningReport(plan, forecast, simulation),
     [forecast, plan, simulation],
   );
+  const handlePlanChange = (nextPlan: typeof plan) => {
+    setPlan(nextPlan);
+    if (nextPlan.totalBudgetMillionKrw !== plan.totalBudgetMillionKrw) {
+      setManualPlanningFields((current) => ({ ...current, totalBudget: true }));
+    }
+    if (nextPlan.expectedCapacity !== plan.expectedCapacity) {
+      setManualPlanningFields((current) => ({ ...current, expectedCapacity: true }));
+    }
+    if (
+      nextPlan.region !== plan.region ||
+      nextPlan.name !== plan.name ||
+      nextPlan.venueAddress !== plan.venueAddress ||
+      nextPlan.startDate !== plan.startDate ||
+      nextPlan.endDate !== plan.endDate
+    ) {
+      setSelectedCandidate(null);
+    }
+  };
+
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
-    setPlan((currentPlan) => applyFestivalCandidateToPlan(currentPlan, candidate));
+    setPlan((currentPlan) => {
+      const candidatePlan = applyFestivalCandidateToPlan(currentPlan, candidate);
+      const candidateBackdata = getDemandBackdataContext(candidatePlan);
+
+      return applyFestivalCandidateToPlan(currentPlan, candidate, {
+        demandBackdata: candidateBackdata,
+        preserveBudget: manualPlanningFields.totalBudget,
+        preserveExpectedCapacity: manualPlanningFields.expectedCapacity,
+      });
+    });
     setIsCandidatePanelOpen(false);
   };
 
@@ -506,18 +538,7 @@ export function App() {
           <aside className="left-column">
             <PlanForm
               plan={plan}
-              onPlanChange={(nextPlan) => {
-                setPlan(nextPlan);
-                if (
-                  nextPlan.region !== plan.region ||
-                  nextPlan.name !== plan.name ||
-                  nextPlan.venueAddress !== plan.venueAddress ||
-                  nextPlan.startDate !== plan.startDate ||
-                  nextPlan.endDate !== plan.endDate
-                ) {
-                  setSelectedCandidate(null);
-                }
-              }}
+              onPlanChange={handlePlanChange}
               areaCodes={areaCodes}
               isAreaLoading={isAreaLoading}
               isCandidateLoading={isCandidateLoading}
@@ -566,18 +587,7 @@ export function App() {
           <aside className="left-column">
             <PlanForm
               plan={plan}
-              onPlanChange={(nextPlan) => {
-                setPlan(nextPlan);
-                if (
-                  nextPlan.region !== plan.region ||
-                  nextPlan.name !== plan.name ||
-                  nextPlan.venueAddress !== plan.venueAddress ||
-                  nextPlan.startDate !== plan.startDate ||
-                  nextPlan.endDate !== plan.endDate
-                ) {
-                  setSelectedCandidate(null);
-                }
-              }}
+              onPlanChange={handlePlanChange}
               areaCodes={areaCodes}
               isAreaLoading={isAreaLoading}
               isCandidateLoading={isCandidateLoading}

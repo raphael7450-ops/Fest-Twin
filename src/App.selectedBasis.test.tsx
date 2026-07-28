@@ -185,6 +185,36 @@ describe("App selected festival basis", () => {
     );
   });
 
+  it("prefills budget and expected capacity from similar festival backdata after candidate selection", async () => {
+    vi.useFakeTimers();
+    getFestivalCandidatesMock.mockResolvedValue([
+      {
+        id: "4000001",
+        title: "서울라이트 광화문",
+        address: "서울특별시 종로구 세종대로 175",
+        startDate: "2025-12-19",
+        endDate: "2026-01-03",
+        searchScope: "exact-period",
+      },
+    ]);
+
+    const view = render(<App />);
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /TourAPI/ }));
+    const selectButton = view.container.querySelector<HTMLButtonElement>(
+      ".candidate-card .secondary-button",
+    );
+    expect(selectButton).not.toBeNull();
+    fireEvent.click(selectButton!);
+
+    expect(screen.getByLabelText("총 예산(백만원)")).toHaveValue(1100);
+    expect(screen.getByLabelText("예상 수용 인원")).toHaveValue(12200);
+  });
+
   it("restores selected TourAPI basis from a shared scenario link", async () => {
     window.history.pushState({}, "", "/?share_token=token_selected");
     vi.stubGlobal(
