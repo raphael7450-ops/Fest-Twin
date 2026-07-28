@@ -112,6 +112,7 @@ export function createApp(options = {}) {
   // 보안 미들웨어 등록
   app.use(securityHeadersMiddleware);
   app.use(corsMiddleware);
+  app.use(express.json({ limit: "1mb" }));
 
   // Morgan HTTP 요청 로깅 미들웨어 (테스트 환경에서는 skip)
   if (!options.disableHttpLogging) {

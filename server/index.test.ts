@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { corsMiddleware, createApp, createRateLimiter, securityHeadersMiddleware } from "./index.js";
 
+async function withAppServer(app: ReturnType<typeof createApp>, callback: (baseUrl: string) => Promise<void>) {
+  const server = app.listen(0);
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    throw new Error("Test server did not start on a TCP port");
+  }
+
+  try {
+    await callback(`http://127.0.0.1:${address.port}`);
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
 describe("server/index", () => {
   it("sets HTTP security headers including Content-Security-Policy", () => {
     const responseHeaders = new Map<string, string>();
@@ -94,5 +110,34 @@ describe("server/index", () => {
       openApiRateLimiter: dummyLimiter,
     });
     expect(app).toBeDefined();
+  });
+
+  it("parses JSON bodies for trend proxy requests mounted through createApp", async () => {
+    const dummyLimiter = (_req: any, _res: any, next: any) => next();
+    const app = createApp({
+      generalRateLimiter: dummyLimiter,
+      openApiRateLimiter: dummyLimiter,
+      naverDataLabClientId: "",
+      naverDataLabClientSecret: "",
+      disableHttpLogging: true,
+    });
+
+    await withAppServer(app, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/trends/naver-search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startDate: "2026-07-01",
+          endDate: "2026-07-28",
+          timeUnit: "week",
+          keywordGroups: [{ groupName: "Fest Twin", keywords: ["festival"] }],
+        }),
+      });
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.sourceStatus).toBe("sample-fallback");
+      expect(body.results[0].keywords).toEqual(["festival"]);
+    });
   });
 });
