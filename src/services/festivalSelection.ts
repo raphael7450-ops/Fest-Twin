@@ -16,6 +16,23 @@ export function createSelectedFestivalBasis(
   };
 }
 
+export function selectedFestivalBasisToCandidate(
+  basis?: SelectedFestivalBasis | null,
+): FestivalCandidate | null {
+  if (!basis) return null;
+
+  return {
+    id: basis.contentId,
+    title: basis.title,
+    address: basis.address,
+    startDate: basis.startDate,
+    endDate: basis.endDate,
+    mapX: basis.mapX,
+    mapY: basis.mapY,
+    searchScope: "exact-period",
+  };
+}
+
 export function applyFestivalCandidateToPlan(
   currentPlan: FestivalPlan,
   candidate: FestivalCandidate,

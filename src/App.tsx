@@ -19,7 +19,12 @@ import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
-import { loadScenarios, normalizeFestivalPlan } from "./services/scenarioStorage";
+import {
+  loadScenarios,
+  normalizeFestivalPlan,
+  normalizeSelectedFestivalBasis,
+  type SavedScenario,
+} from "./services/scenarioStorage";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
@@ -30,6 +35,7 @@ import { getDemandBackdataContext } from "./services/demandBackdataAdapter";
 import {
   applyFestivalCandidateToPlan,
   createSelectedFestivalBasis,
+  selectedFestivalBasisToCandidate,
 } from "./services/festivalSelection";
 import { createForecast } from "./services/forecast";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
@@ -155,6 +161,12 @@ export function App() {
 
   const [restoredNotice, setRestoredNotice] = useState<string | null>(null);
 
+  function restoreSavedScenario(scenario: Pick<SavedScenario, "plan" | "selectedHour" | "selectedFestivalBasis">) {
+    setPlan(normalizeFestivalPlan(scenario.plan));
+    setSelectedHour(scenario.selectedHour ?? 20);
+    setSelectedCandidate(selectedFestivalBasisToCandidate(scenario.selectedFestivalBasis));
+  }
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -169,10 +181,11 @@ export function App() {
         .then((data) => {
           if (data?.parameters?.plan) {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
-            setPlan(restoredPlan);
-            if (data.parameters.selectedHour !== undefined) {
-              setSelectedHour(data.parameters.selectedHour);
-            }
+            restoreSavedScenario({
+              plan: restoredPlan,
+              selectedHour: data.parameters.selectedHour ?? 20,
+              selectedFestivalBasis: normalizeSelectedFestivalBasis(data.parameters.selectedFestivalBasis),
+            });
             setRestoredNotice(`[공유 시나리오] [${restoredPlan.name}] 기획안이 복원되었습니다.`);
           }
         })
@@ -184,18 +197,18 @@ export function App() {
         .then((data) => {
           if (data?.parameters?.plan) {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
-            setPlan(restoredPlan);
-            if (data.parameters.selectedHour !== undefined) {
-              setSelectedHour(data.parameters.selectedHour);
-            }
+            restoreSavedScenario({
+              plan: restoredPlan,
+              selectedHour: data.parameters.selectedHour ?? 20,
+              selectedFestivalBasis: normalizeSelectedFestivalBasis(data.parameters.selectedFestivalBasis),
+            });
             setRestoredNotice(`[공유 시나리오] [${restoredPlan.name}] 기획안이 복원되었습니다.`);
           } else {
             // LocalStorage fallback
             const localScenarios = loadScenarios();
             const found = localScenarios.find((item) => item.id === scenarioId);
             if (found) {
-              setPlan(normalizeFestivalPlan(found.plan));
-              setSelectedHour(found.selectedHour ?? 20);
+              restoreSavedScenario(found);
               setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
             }
           }
@@ -204,8 +217,7 @@ export function App() {
           const localScenarios = loadScenarios();
           const found = localScenarios.find((item) => item.id === scenarioId);
           if (found) {
-            setPlan(normalizeFestivalPlan(found.plan));
-            setSelectedHour(found.selectedHour ?? 20);
+            restoreSavedScenario(found);
             setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
           }
         });
@@ -521,9 +533,9 @@ export function App() {
             <ScenarioLibrary
               plan={plan}
               selectedHour={selectedHour}
+              selectedFestivalBasis={selectedFestivalBasis}
               onLoadScenario={(scenario) => {
-                setPlan(normalizeFestivalPlan(scenario.plan));
-                setSelectedHour(scenario.selectedHour ?? 20);
+                restoreSavedScenario(scenario);
               }}
             />
             <DataBasisPanel
@@ -581,9 +593,9 @@ export function App() {
             <ScenarioLibrary
               plan={plan}
               selectedHour={selectedHour}
+              selectedFestivalBasis={selectedFestivalBasis}
               onLoadScenario={(scenario) => {
-                setPlan(normalizeFestivalPlan(scenario.plan));
-                setSelectedHour(scenario.selectedHour ?? 20);
+                restoreSavedScenario(scenario);
               }}
             />
           </aside>

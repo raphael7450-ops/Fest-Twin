@@ -5,6 +5,16 @@ import { createScenarioRouter } from "./scenarioRouter.js";
 describe("server/scenarioRouter", () => {
   let mockScenarios: any[] = [];
   let nextId = 1;
+  const selectedFestivalBasis = {
+    contentId: "3439947",
+    title: "Gangnam Media Winter Festa",
+    address: "Seoul Gangnam-gu Yeongdong-daero 511",
+    startDate: "2025-12-19",
+    endDate: "2026-01-03",
+    mapX: "127.0610512042",
+    mapY: "37.5103955843",
+    sourceName: "TourAPI selected festival candidate",
+  };
 
   const mockDb = {
     getAllScenarios: () => [...mockScenarios],
@@ -49,7 +59,7 @@ describe("server/scenarioRouter", () => {
         id: "scen_1",
         title: "Test Scenario 1",
         description: "Desc 1",
-        parameters: { selectedHour: 15 },
+        parameters: { selectedHour: 15, selectedFestivalBasis },
         share_token: "token_share_1",
         created_at: "2026-07-24T10:00:00.000Z",
       },
@@ -105,16 +115,18 @@ describe("server/scenarioRouter", () => {
     const res = callRoute("GET", "/share/token_share_1");
     expect(res.status).toBe(200);
     expect(res.jsonBody.id).toBe("scen_1");
+    expect(res.jsonBody.parameters.selectedFestivalBasis.contentId).toBe("3439947");
   });
 
   it("POST /api/scenarios - creates a new scenario with share_token", () => {
     const res = callRoute("POST", "/", {
       title: "New Festival Plan",
-      parameters: { selectedHour: 20 },
+      parameters: { selectedHour: 20, selectedFestivalBasis },
     });
     expect(res.status).toBe(201);
     expect(res.jsonBody.title).toBe("New Festival Plan");
     expect(res.jsonBody.share_token).toBeDefined();
+    expect(res.jsonBody.parameters.selectedFestivalBasis.contentId).toBe("3439947");
   });
 
   it("DELETE /api/scenarios/:id - deletes existing scenario", () => {

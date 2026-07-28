@@ -18,7 +18,7 @@
 | 1 | KPI 근거 매트릭스 강화 | 완료 | `src/services/metricEvidence.ts`, `src/components/DataBasisPanel.tsx`, `docs/specs/kpi-evidence-matrix.md` |
 | 2 | 축제 후보 변경 시 모든 컨텍스트 동기화 | 완료 | TourAPI, 트렌드, 교통, 소비, 지도, 보고서 refresh key 정리 |
 | 3 | B2G 공공검토 보고서 구조화 | 완료 | 예측 결과, 혼잡·안전, 예산·경제효과, 데이터 한계, 개선 권고 |
-| 4 | 시나리오 저장·공유 보존 | 예정 | 선택 축제 기준이 포함된 scenario save/share restore |
+| 4 | 시나리오 저장·공유 보존 | 완료 | 선택 축제 기준이 포함된 scenario save/share restore |
 | 5 | 운영 검증 게이트 안정화 | 일부 진행 | 공개 URL 기본 헬스체크 적용, 부하 테스트 설명 보정 필요 |
 | 6 | 제출 패키지 갱신 | 예정 | 제출 ZIP, README, 운영가이드, 검증 결과 갱신 |
 
@@ -87,6 +87,13 @@ npm run deploy:check
 - `npm run deploy:check`: 공개 URL 4개 헬스체크 모두 HTTP 200
 - `logs/audit-2026-07-28.log`: 예상된 rate limit `warn` 기록만 있으며 오류 패턴 없음
 
+## Task 4 최종 QA 결과
+
+- 구현 범위: 저장 시나리오와 공유 링크에 선택 TourAPI 축제 기준(`selectedFestivalBasis`)을 함께 보존하도록 확장
+- 복원 범위: 공유 토큰, 서버 시나리오 ID, LocalStorage fallback, 저장 목록 불러오기에서 선택 축제 기준 복원
+- 데이터 연동 효과: 복원된 `contentId`, 행사명, 기간, 좌표가 TourAPI, 지도, 트렌드, 교통, 소비 컨텍스트 재계산 키에 다시 반영됨
+- 집중 검증: `npm run test -- src/services/scenarioStorage.test.ts server/scenarioRouter.test.ts src/App.selectedBasis.test.tsx src/components/ScenarioLibrary.test.tsx` 통과
+
 ## 다음 추천 작업
 
-다음 작업은 “시나리오 저장·공유 보존”이다. 선택 축제 기준과 보고서 구조가 안정화되었으므로, 다음 단계에서는 저장/공유 링크를 열었을 때 선택 축제 기준까지 함께 복원되는지 보강한다.
+다음 단계는 “운영 검증 게이트”다. 공개 URL 기준 헬스체크, 감사 로그, rate limit 차단 결과를 더 명확히 남겨 9월 21일 제출 전 서비스 운영 가능성을 증빙한다.

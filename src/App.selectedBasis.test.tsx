@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
@@ -75,6 +75,8 @@ describe("App selected festival basis", () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    vi.unstubAllGlobals();
+    window.history.pushState({}, "", "/");
   });
 
   it("shows selected TourAPI contentId after a festival candidate is selected", async () => {
@@ -181,5 +183,66 @@ describe("App selected festival basis", () => {
       expectedPlan,
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
+  });
+
+  it("restores selected TourAPI basis from a shared scenario link", async () => {
+    window.history.pushState({}, "", "/?share_token=token_selected");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/scenarios/share/token_selected")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              parameters: {
+                plan: {
+                  name: "Gangnam Media Winter Festa",
+                  region: "Seoul",
+                  venueAddress: "Seoul Gangnam-gu Yeongdong-daero 511",
+                  startDate: "2025-12-19",
+                  endDate: "2026-01-03",
+                  totalBudgetMillionKrw: 920,
+                  expectedCapacity: 30000,
+                },
+                selectedHour: 19,
+                selectedFestivalBasis: {
+                  contentId: "3439947",
+                  title: "Gangnam Media Winter Festa",
+                  address: "Seoul Gangnam-gu Yeongdong-daero 511",
+                  startDate: "2025-12-19",
+                  endDate: "2026-01-03",
+                  mapX: "127.0610512042",
+                  mapY: "37.5103955843",
+                  sourceName: "TourAPI selected festival candidate",
+                },
+              },
+            }),
+          } as Response);
+        }
+        return Promise.resolve({ ok: false, json: async () => ({}) } as Response);
+      }),
+    );
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("3439947").length).toBeGreaterThan(0);
+    });
+
+    await waitFor(() => {
+      expect(getTourismContextMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "Gangnam Media Winter Festa",
+          venueAddress: "Seoul Gangnam-gu Yeongdong-daero 511",
+        }),
+        expect.objectContaining({
+          selectedCandidate: expect.objectContaining({
+            id: "3439947",
+            title: "Gangnam Media Winter Festa",
+          }),
+        }),
+      );
+    });
   });
 });

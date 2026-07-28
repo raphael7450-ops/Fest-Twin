@@ -7,7 +7,7 @@
 // React 훅 및 타입 불러오기
 import { useEffect, useState } from "react";
 // 핵심 도메인 축제 기획안 타입 불러오기
-import type { FestivalPlan } from "../domain/types";
+import type { FestivalPlan, SelectedFestivalBasis } from "../domain/types";
 // 서버 REST API 및 로컬 저장소 하이브리드 시나리오 저장소 서비스 불러오기
 import {
   clearScenarios,
@@ -24,6 +24,7 @@ import {
 interface ScenarioLibraryProps {
   plan: FestivalPlan; // 현재 축제 기획안
   selectedHour: number; // 선택된 피크 시간대
+  selectedFestivalBasis?: SelectedFestivalBasis | null; // 선택된 TourAPI 축제 기준
   onLoadScenario: (scenario: SavedScenario) => void; // 시나리오 불러오기 콜백
 }
 
@@ -31,6 +32,7 @@ interface ScenarioLibraryProps {
 export function ScenarioLibrary({
   plan,
   selectedHour,
+  selectedFestivalBasis,
   onLoadScenario,
 }: ScenarioLibraryProps) {
   const [scenarios, setScenarios] = useState<SavedScenario[]>(() => loadScenarios());
@@ -51,12 +53,12 @@ export function ScenarioLibrary({
 
   // 시나리오 저장 처리
   async function handleSave() {
-    const localSaved = saveScenario(plan, selectedHour);
+    const localSaved = saveScenario(plan, selectedHour, selectedFestivalBasis);
     setScenarios((current) => [localSaved, ...current.filter((item) => item.id !== localSaved.id)].slice(0, 10));
     setCopyNotice({ text: "시나리오가 저장되었습니다. 하단 목록의 [공유 링크]를 눌러 URL을 복사하거나 열 수 있습니다." });
     setTimeout(() => setCopyNotice(null), 4000);
 
-    saveServerScenario(plan, selectedHour).then((serverSaved) => {
+    saveServerScenario(plan, selectedHour, undefined, selectedFestivalBasis).then((serverSaved) => {
       setScenarios((current) =>
         [serverSaved, ...current.filter((item) => item.id !== serverSaved.id && item.id !== localSaved.id)].slice(0, 10),
       );

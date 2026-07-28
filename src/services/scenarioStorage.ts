@@ -4,7 +4,7 @@
  * 수정 : 2026-07-24. REST API 연동, share_token 공유 링크 복사 지원 및 하이브리드 동기화 구현
  */
 
-import type { FestivalPlan } from "../domain/types";
+import type { FestivalPlan, SelectedFestivalBasis } from "../domain/types";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 
 const STORAGE_KEY = "fest-twin-scenarios";
@@ -15,6 +15,7 @@ export interface SavedScenario {
   savedAt: string;
   selectedHour: number;
   plan: FestivalPlan;
+  selectedFestivalBasis?: SelectedFestivalBasis | null;
   shareToken?: string;
 }
 
@@ -75,6 +76,31 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
   };
 }
 
+export function normalizeSelectedFestivalBasis(rawBasis: any): SelectedFestivalBasis | null {
+  if (!rawBasis || typeof rawBasis !== "object") return null;
+  const contentId = typeof rawBasis.contentId === "string" ? rawBasis.contentId.trim() : "";
+  const title = typeof rawBasis.title === "string" ? rawBasis.title.trim() : "";
+  const address = typeof rawBasis.address === "string" ? rawBasis.address.trim() : "";
+  const startDate = typeof rawBasis.startDate === "string" ? rawBasis.startDate : "";
+  const endDate = typeof rawBasis.endDate === "string" ? rawBasis.endDate : "";
+
+  if (!contentId || !title || !address) return null;
+
+  return {
+    contentId,
+    title,
+    address,
+    startDate,
+    endDate,
+    mapX: typeof rawBasis.mapX === "string" ? rawBasis.mapX : undefined,
+    mapY: typeof rawBasis.mapY === "string" ? rawBasis.mapY : undefined,
+    sourceName:
+      typeof rawBasis.sourceName === "string" && rawBasis.sourceName.trim()
+        ? rawBasis.sourceName
+        : "TourAPI selected festival candidate",
+  };
+}
+
 function readRawScenarios(): SavedScenario[] {
   const raw = localStorage.getItem(STORAGE_KEY);
 
@@ -86,6 +112,7 @@ function readRawScenarios(): SavedScenario[] {
     return parsed.map((item: any) => ({
       ...item,
       plan: normalizeFestivalPlan(item.plan),
+      selectedFestivalBasis: normalizeSelectedFestivalBasis(item.selectedFestivalBasis),
     }));
   } catch {
     return [];
@@ -120,6 +147,7 @@ export async function fetchServerScenarios(): Promise<SavedScenario[]> {
         savedAt: item.created_at ?? new Date().toISOString(),
         selectedHour: item.parameters?.selectedHour ?? 20,
         plan: normalizeFestivalPlan(item.parameters?.plan),
+        selectedFestivalBasis: normalizeSelectedFestivalBasis(item.parameters?.selectedFestivalBasis),
         shareToken: item.share_token,
       }));
 
@@ -139,8 +167,9 @@ export async function saveServerScenario(
   plan: FestivalPlan,
   selectedHour: number,
   title?: string,
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): Promise<SavedScenario> {
-  const localSaved = saveScenario(plan, selectedHour);
+  const localSaved = saveScenario(plan, selectedHour, selectedFestivalBasis);
   const scenarioTitle =
     title ?? localSaved.name;
 
@@ -151,7 +180,7 @@ export async function saveServerScenario(
       body: JSON.stringify({
         title: scenarioTitle,
         description: `${plan.region} ${plan.venueAddress}`,
-        parameters: { plan, selectedHour },
+        parameters: { plan, selectedHour, selectedFestivalBasis: selectedFestivalBasis ?? null },
         results_summary: {
           targetVisitors: plan.expectedCapacity,
           budgetKrw: plan.totalBudgetMillionKrw * 1000000,
@@ -167,6 +196,7 @@ export async function saveServerScenario(
         savedAt: created.created_at,
         selectedHour,
         plan,
+        selectedFestivalBasis: selectedFestivalBasis ?? null,
         shareToken: created.share_token,
       };
 
@@ -217,6 +247,7 @@ export function loadScenarios(): SavedScenario[] {
 export function saveScenario(
   plan: FestivalPlan,
   selectedHour: number,
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): SavedScenario {
   const savedAt = new Date().toISOString();
   const scenario: SavedScenario = {
@@ -225,6 +256,7 @@ export function saveScenario(
     savedAt,
     selectedHour,
     plan,
+    selectedFestivalBasis: selectedFestivalBasis ?? null,
   };
   const scenarios = [scenario, ...readRawScenarios()].slice(0, 10);
 
