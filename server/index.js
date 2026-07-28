@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { createSpendingProxyRouter } from "./spendingProxy.js";
 import { createTrafficProxyRouter } from "./trafficProxy.js";
 import { createTourProxyRouter } from "./tourProxy.js";
+import { createTrendProxyRouter } from "./trendProxy.js";
 import { createScenarioRouter } from "./scenarioRouter.js";
 import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
 import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
@@ -136,6 +137,7 @@ export function createApp(options = {}) {
   app.use("/api/tour", openApiRateLimiter);
   app.use("/api/spending", openApiRateLimiter);
   app.use("/api/traffic", openApiRateLimiter);
+  app.use("/api/trends", openApiRateLimiter);
 
   app.use(
     "/api/tour",
@@ -158,6 +160,15 @@ export function createApp(options = {}) {
     createSpendingProxyRouter({
       fetchImpl: options.fetchImpl,
       apiKey: options.apiKey,
+      logger: log,
+    }),
+  );
+  app.use(
+    "/api/trends",
+    createTrendProxyRouter({
+      fetchImpl: options.fetchImpl,
+      clientId: options.naverDataLabClientId,
+      clientSecret: options.naverDataLabClientSecret,
       logger: log,
     }),
   );
