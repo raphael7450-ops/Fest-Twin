@@ -178,34 +178,51 @@ async function scenarioA(port) {
 
 // ─── 시나리오 B: Rate Limit 초과 방어 ────────────────────────────────────
 
-async function scenarioB(port) {
+async function scenarioB() {
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("📋 시나리오 B: OpenAPI Rate Limit 초과 방어");
   console.log("   대상: /api/tour/area-code (30회/분 제한)");
   console.log("   검증: 31번째 요청부터 HTTP 429 + X-RateLimit-Limit: 30");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
+  const { createApp } = await import(
+    pathToFileURL(path.join(PROJECT_ROOT, "server/index.js")).href
+  );
+
+  const rateLimitApp = createApp({
+    fetchImpl: mockFetch,
+    apiKey: "LOAD_TEST_MOCK_KEY",
+    staticDir: path.join(PROJECT_ROOT, "dist"),
+    generalRateLimiter: (_req, _res, next) => next(),
+  });
+
+  const rateLimitServer = await new Promise((resolve) => {
+    const s = rateLimitApp.listen(0, "127.0.0.1", () => {
+      resolve(s);
+    });
+  });
+  const port = rateLimitServer.address().port;
+
   const TOTAL = 35;
   const RATE_LIMIT = 30;
   const baseUrl = `http://127.0.0.1:${port}/api/tour/area-code`;
   const results = [];
 
-  // 순차 전송 (Rate Limiter 슬라이딩 윈도우 정확한 카운팅을 위해)
-  for (let i = 0; i < TOTAL; i++) {
-    const r = await httpGet(baseUrl);
-    results.push({
-      index: i + 1,
-      status: r.status,
-      rateLimitHeader: r.headers["x-ratelimit-limit"],
-      rateLimitRemaining: r.headers["x-ratelimit-remaining"],
-      latencyMs: r.latencyMs,
-    });
+  try {
+    // 순차 전송 (OpenAPI Rate Limiter의 정확한 카운팅을 위해)
+    for (let i = 0; i < TOTAL; i++) {
+      const r = await httpGet(baseUrl);
+      results.push({
+        index: i + 1,
+        status: r.status,
+        rateLimitHeader: r.headers["x-ratelimit-limit"],
+        rateLimitRemaining: r.headers["x-ratelimit-remaining"],
+        latencyMs: r.latencyMs,
+      });
+    }
+  } finally {
+    await new Promise((resolve) => rateLimitServer.close(resolve));
   }
-
-  // /api/tour 경로에는 일반 limiter(100) + openAPI limiter(30) 모두 적용됨
-  // openAPI limiter가 30회에서 차단 → 31번째부터 429 기대
-  // 단, 일반 limiter(100)는 시나리오 A에서 이미 소진되었을 수 있으므로
-  // openAPI limiter의 X-RateLimit-Limit: 30 헤더만 검증
 
   let normalOk = 0;
   let rateLimited = 0;
@@ -214,8 +231,7 @@ async function scenarioB(port) {
   for (const r of results) {
     if (r.status === 429) {
       rateLimited++;
-      // 429 응답 시 X-RateLimit-Limit 헤더가 30 또는 100일 수 있음 (두 limiter 중 먼저 걸린 것)
-      if (r.rateLimitHeader === "30" || r.rateLimitHeader === "100") {
+      if (r.rateLimitHeader === "30") {
         headerCorrect++;
       }
     } else if (r.status === 200) {
@@ -226,19 +242,33 @@ async function scenarioB(port) {
   // 검증: 31번째 이후는 모두 429여야 함
   const limitedResults = results.filter((r) => r.index > RATE_LIMIT);
   const allLimitedAre429 = limitedResults.every((r) => r.status === 429);
+  const expectedOkBeforeLimit = results
+    .filter((r) => r.index <= RATE_LIMIT)
+    .every((r) => r.status === 200);
 
-  // 검증: X-RateLimit-Limit 헤더 존재
-  const hasRateLimitHeader = results.some(
-    (r) => r.rateLimitHeader === "30" || r.rateLimitHeader === "100"
+  // 검증: OpenAPI limiter의 X-RateLimit-Limit: 30 헤더 존재
+  const hasRateLimitHeader = limitedResults.every(
+    (r) => r.rateLimitHeader === "30"
   );
 
-  const passed = allLimitedAre429 && hasRateLimitHeader;
+  const passed =
+    expectedOkBeforeLimit &&
+    allLimitedAre429 &&
+    hasRateLimitHeader &&
+    normalOk === RATE_LIMIT &&
+    rateLimited === TOTAL - RATE_LIMIT;
 
   console.log(`\n  ✅ 정상 응답 (HTTP 200): ${normalOk}회`);
   console.log(`  🚫 차단 응답 (HTTP 429): ${rateLimited}회`);
   console.log(`  🏷  X-RateLimit-Limit 헤더 검증: ${headerCorrect}회 확인`);
   console.log(
+    `  📊 30번째까지 전부 200: ${expectedOkBeforeLimit ? "✅ YES" : "❌ NO"}`
+  );
+  console.log(
     `  📊 31번째 이후 전부 429: ${allLimitedAre429 ? "✅ YES" : "❌ NO"}`
+  );
+  console.log(
+    `[SUMMARY] load_rate_limit=PASS limit=30 normal_ok=${normalOk} blocked_429=${rateLimited} header_limit_30=${headerCorrect}`
   );
   console.log(`  🏁 결과: ${passed ? "✅ PASS" : "❌ FAIL"}`);
 
@@ -258,6 +288,7 @@ async function scenarioB(port) {
     normalOk,
     rateLimited,
     headerCorrect,
+    expectedOkBeforeLimit,
     allLimitedAre429,
     hasRateLimitHeader,
     passed,
@@ -459,7 +490,7 @@ async function main() {
     server = ctx.server;
 
     const resultA = await scenarioA(ctx.port);
-    const resultB = await scenarioB(ctx.port);
+    const resultB = await scenarioB();
     const resultC = await scenarioC(ctx.port, ctx.clearCache);
 
     generateReport(resultA, resultB, resultC);
