@@ -21,6 +21,27 @@ interface ReportViewProps {
   onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
+const importantEvidenceIds: MetricEvidenceId[] = [
+  "demand-index",
+  "peak-density",
+  "economic-roi",
+  "parking-occupancy",
+];
+
+function formatKrw(value: number) {
+  return `${value.toLocaleString("ko-KR")}원`;
+}
+
+function uniqueLimitations(evidenceSet: Record<MetricEvidenceId, MetricEvidence>) {
+  return Array.from(
+    new Set(
+      Object.values(evidenceSet)
+        .flatMap((evidence) => evidence.limitations)
+        .filter(Boolean),
+    ),
+  ).slice(0, 5);
+}
+
 export function ReportView({
   report,
   plan,
@@ -30,23 +51,123 @@ export function ReportView({
   evidenceSet,
   onOpenEvidence,
 }: ReportViewProps) {
+  const limitations = uniqueLimitations(evidenceSet);
+  const peakHour = forecast.visitorsByHour.find((item) => item.hour === forecast.peakHour);
+  const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+
   return (
-    <section className="panel report-panel">
-      <div className="panel-heading">
-        <h2>기획 보완 리포트</h2>
+    <section className="panel report-panel" aria-label="공공검토 보고서">
+      <div className="panel-heading report-heading">
+        <div>
+          <h2>공공검토 보고서</h2>
+          <p>지자체 축제 사전 검토용 예측·안전·예산 근거 요약</p>
+        </div>
         <div className="panel-actions">
-          <span>공공 검토용 요약</span>
+          <span>B2G 검토본</span>
           <PrintReportButton />
         </div>
       </div>
-      <RoiEconomicImpact
-        plan={plan}
-        forecast={forecast}
-        spending={spending}
-        onOpenEvidence={onOpenEvidence}
-      />
-      <ReportEvidenceSummary evidenceSet={evidenceSet} />
-      <section className="openapi-operations-report" aria-label="OpenAPI 운영계정 신청 증빙">
+
+      <section className="report-section" aria-labelledby="report-forecast-heading">
+        <div className="report-section-heading">
+          <h3 id="report-forecast-heading">예측 결과</h3>
+          <span>수요 예측</span>
+        </div>
+        <p className="report-summary">{report.summary}</p>
+        <div className="report-fact-grid">
+          <article>
+            <span>예상 방문객</span>
+            <strong>{forecast.expectedVisitors.toLocaleString("ko-KR")}명</strong>
+            <small>TourAPI·트렌드·기획 입력 기반 추정</small>
+          </article>
+          <article>
+            <span>피크 시간</span>
+            <strong>{forecast.peakHour}:00</strong>
+            <small>{peakHour ? `${peakHour.visitors.toLocaleString("ko-KR")}명 예상` : "시간대별 추정"}</small>
+          </article>
+          <article>
+            <span>성공 예측 점수</span>
+            <strong>{forecast.successScore}점</strong>
+            <small>신뢰도 {forecast.confidence}</small>
+          </article>
+        </div>
+      </section>
+
+      <section className="report-section" aria-labelledby="report-safety-heading">
+        <div className="report-section-heading">
+          <h3 id="report-safety-heading">혼잡·안전 진단</h3>
+          <span>현장 운영</span>
+        </div>
+        <div className="score-table">
+          {report.scores.length > 0 ? (
+            report.scores.map((score) => (
+              <article key={score.label}>
+                <span>{score.label}</span>
+                <strong>{score.score}점</strong>
+                <small>{score.reason}</small>
+              </article>
+            ))
+          ) : (
+            <article>
+              <span>종합 위험</span>
+              <strong>검토 필요</strong>
+              <small>혼잡도와 현장 배치 정보를 함께 검토합니다.</small>
+            </article>
+          )}
+        </div>
+        {report.findings.length > 0 ? (
+          <ul className="report-list">
+            {report.findings.map((finding) => (
+              <li key={finding}>{finding}</li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+
+      <section className="report-section" aria-labelledby="report-budget-heading">
+        <div className="report-section-heading">
+          <h3 id="report-budget-heading">예산·경제 효과</h3>
+          <span>ROI 검토</span>
+        </div>
+        <div className="report-budget-note">
+          <span>총 투입 예산</span>
+          <strong>{formatKrw(budgetKrw)}</strong>
+          <small>
+            방문객 1인당 소비 기준:{" "}
+            {spending
+              ? `${spending.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원`
+              : "공공데이터 구조 기반 샘플"}
+          </small>
+        </div>
+        <RoiEconomicImpact
+          plan={plan}
+          forecast={forecast}
+          spending={spending}
+          onOpenEvidence={onOpenEvidence}
+        />
+      </section>
+
+      <section className="report-section" aria-labelledby="report-data-heading">
+        <div className="report-section-heading">
+          <h3 id="report-data-heading">사용 데이터와 한계</h3>
+          <span>감사 대응 근거</span>
+        </div>
+        <ReportEvidenceSummary evidenceSet={evidenceSet} />
+        <div className="report-evidence-actions">
+          {importantEvidenceIds.map((metricId) => (
+            <button key={metricId} type="button" onClick={() => onOpenEvidence(metricId)}>
+              {evidenceSet[metricId].title} 근거 보기
+            </button>
+          ))}
+        </div>
+        <ul className="report-list">
+          {limitations.map((limitation) => (
+            <li key={limitation}>{limitation}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="report-section openapi-operations-report" aria-label="OpenAPI 운영계정 신청 증빙">
         <div className="openapi-operations-heading">
           <h3>OpenAPI 운영계정 신청 증빙</h3>
           <strong>Fest-Twin</strong>
@@ -61,7 +182,7 @@ export function ReportView({
             <dd>B2G SaaS Web</dd>
           </div>
           <div>
-            <dt>활용 목적</dt>
+            <dt>사용 목적</dt>
             <dd>축제 후보 조회, 행사장 위치 보강, 주변 관광지 기반 수요 예측 근거 산출</dd>
           </div>
           <div>
@@ -70,14 +191,11 @@ export function ReportView({
           </div>
           <div>
             <dt>운영 전환 기준</dt>
-            <dd>
-              개발계정은 오퍼레이션별 일 1,000건 기준으로 호출 이력을 검증하고, 운영계정
-              승인에는 약 1~3일이 소요됩니다.
-            </dd>
+            <dd>개발계정 호출 이력과 공개 URL 정상 동작을 확인한 뒤 운영계정 승인을 요청합니다.</dd>
           </div>
           <div>
             <dt>출처 및 라이선스</dt>
-            <dd>한국관광공사 TourAPI 4.0 출처 표기와 라이선스 표시 동의를 전제로 활용합니다.</dd>
+            <dd>한국관광공사 TourAPI 4.0 출처 표기와 라이선스 표시 동의를 전제로 사용합니다.</dd>
           </div>
         </dl>
         {selectedFestivalBasis ? (
@@ -106,26 +224,23 @@ export function ReportView({
           </div>
         ) : null}
       </section>
-      <p className="report-summary">{report.summary}</p>
-      <p className="muted">{report.governmentReviewNote}</p>
-      <div className="score-table">
-        {report.scores.map((score) => (
-          <article key={score.label}>
-            <span>{score.label}</span>
-            <strong>{score.score}점</strong>
-            <small>{score.reason}</small>
-          </article>
-        ))}
-      </div>
-      <div className="recommendation-grid">
-        {report.recommendations.map((item) => (
-          <article className="recommendation" key={item.id}>
-            <h3>{item.title}</h3>
-            <p>{item.detail}</p>
-            <small>{item.expectedEffect}</small>
-          </article>
-        ))}
-      </div>
+
+      <section className="report-section" aria-labelledby="report-recommendation-heading">
+        <div className="report-section-heading">
+          <h3 id="report-recommendation-heading">개선 권고</h3>
+          <span>부서 협의안</span>
+        </div>
+        <p className="muted">{report.governmentReviewNote}</p>
+        <div className="recommendation-grid">
+          {report.recommendations.map((item) => (
+            <article className="recommendation" key={item.id}>
+              <h3>{item.title}</h3>
+              <p>{item.detail}</p>
+              <small>{item.expectedEffect}</small>
+            </article>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }

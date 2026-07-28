@@ -1321,7 +1321,110 @@ a:focus-visible {
 }
 
 .report-panel {
+  display: grid;
+  gap: 16px;
   margin-bottom: 24px;
+}
+
+.report-heading h2 {
+  margin-bottom: 4px;
+}
+
+.report-heading p {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.report-section {
+  border-top: 1px solid #e2e8f0;
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.report-section-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.report-section-heading h3 {
+  color: #0f172a;
+  font-size: 17px;
+  margin: 0;
+}
+
+.report-section-heading span {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 850;
+  padding: 5px 9px;
+}
+
+.report-fact-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.report-fact-grid article,
+.report-budget-note {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+}
+
+.report-fact-grid span,
+.report-budget-note span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.report-fact-grid strong,
+.report-budget-note strong {
+  color: var(--color-primary-strong);
+  font-size: 20px;
+}
+
+.report-fact-grid small,
+.report-budget-note small {
+  color: #475569;
+  line-height: 1.45;
+}
+
+.report-list {
+  color: #344054;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.report-evidence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-evidence-actions button {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  color: #1e3a8a;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 850;
+  padding: 7px 10px;
 }
 
 .roi-impact {
@@ -1577,6 +1680,20 @@ a:focus-visible {
     border: 0;
     margin: 0;
     padding: 0;
+  }
+
+  .report-section,
+  .roi-impact,
+  .report-evidence-summary,
+  .openapi-operations-report,
+  .selected-festival-basis,
+  .recommendation {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-section {
+    padding-top: 12px;
   }
 
   .panel-heading {

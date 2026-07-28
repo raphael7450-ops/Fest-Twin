@@ -17,7 +17,7 @@
 | --- | --- | --- | --- |
 | 1 | KPI 근거 매트릭스 강화 | 완료 | `src/services/metricEvidence.ts`, `src/components/DataBasisPanel.tsx`, `docs/specs/kpi-evidence-matrix.md` |
 | 2 | 축제 후보 변경 시 모든 컨텍스트 동기화 | 완료 | TourAPI, 트렌드, 교통, 소비, 지도, 보고서 refresh key 정리 |
-| 3 | B2G 공공검토 보고서 구조화 | 예정 | 예측 결과, 혼잡·안전, 예산·경제효과, 데이터 한계, 개선 권고 |
+| 3 | B2G 공공검토 보고서 구조화 | 완료 | 예측 결과, 혼잡·안전, 예산·경제효과, 데이터 한계, 개선 권고 |
 | 4 | 시나리오 저장·공유 보존 | 예정 | 선택 축제 기준이 포함된 scenario save/share restore |
 | 5 | 운영 검증 게이트 안정화 | 일부 진행 | 공개 URL 기본 헬스체크 적용, 부하 테스트 설명 보정 필요 |
 | 6 | 제출 패키지 갱신 | 예정 | 제출 ZIP, README, 운영가이드, 검증 결과 갱신 |
@@ -79,6 +79,14 @@ npm run deploy:check
 - `npm run deploy:check`: 공개 URL 4개 헬스체크 모두 HTTP 200
 - `logs/audit-2026-07-28.log`: `ERROR/FATAL/EXCEPTION/UNHANDLED` 0건, rate limit 경고는 정상 방어 동작으로 확인
 
+## Task 3 최종 QA 결과
+
+- `npm test`: 27개 테스트 파일 / 107개 테스트 통과
+- `npm run build`: TypeScript 빌드 및 Vite 번들 생성 성공
+- `npm run test:load`: TPS 302.42 req/s, HTTP 429 35회 확인
+- `npm run deploy:check`: 공개 URL 4개 헬스체크 모두 HTTP 200
+- `logs/audit-2026-07-28.log`: 예상된 rate limit `warn` 기록만 있으며 오류 패턴 없음
+
 ## 다음 추천 작업
 
-다음 작업은 “B2G 공공검토 보고서 구조화”다. 현재 대시보드 근거와 선택 축제 동기화는 강화되었으므로, 다음 단계에서는 보고서가 지자체 내부 검토 문서처럼 예측 결과, 혼잡·안전, 예산·경제효과, 사용 데이터와 한계, 개선 권고를 명확히 담도록 정리한다.
+다음 작업은 “시나리오 저장·공유 보존”이다. 선택 축제 기준과 보고서 구조가 안정화되었으므로, 다음 단계에서는 저장/공유 링크를 열었을 때 선택 축제 기준까지 함께 복원되는지 보강한다.

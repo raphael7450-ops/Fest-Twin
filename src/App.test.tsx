@@ -105,11 +105,11 @@ describe("App", () => {
     expect(screen.getAllByText("의료/구급 인력 추천 배치").length).toBeGreaterThan(0);
     expect(screen.getByText("주차 수용 차오름 비율")).toBeInTheDocument();
     expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
-    expect(screen.getByText("총 투입 예산")).toBeInTheDocument();
+    expect(screen.getAllByText("총 투입 예산").length).toBeGreaterThan(0);
     expect(screen.getByText("예상 지역 상권 소비 창출액")).toBeInTheDocument();
     expect(screen.getByText(/지역 관광 소비 강도 기반/)).toBeInTheDocument();
-    expect(screen.getByText(/58,400원/)).toBeInTheDocument();
-    expect(screen.getByText("기획 보완 리포트")).toBeInTheDocument();
+    expect(screen.getAllByText(/58,400원/).length).toBeGreaterThan(0);
+    expect(screen.getByText("공공검토 보고서")).toBeInTheDocument();
   });
 
   it("opens TourAPI festival candidates in a right-side selection panel", async () => {

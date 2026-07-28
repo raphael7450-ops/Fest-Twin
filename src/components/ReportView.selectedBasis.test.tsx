@@ -44,7 +44,7 @@ const selectedFestivalBasis: SelectedFestivalBasis = {
 };
 
 describe("ReportView selected festival basis", () => {
-  it("renders selected TourAPI festival basis in the report", () => {
+  it("renders selected TourAPI festival basis in the public-review report", () => {
     const simulation = createSimulation(sampleFestivalPlan, forecast, forecast.peakHour);
     const evidenceSet = createMetricEvidenceSet(
       sampleFestivalPlan,
@@ -68,5 +68,6 @@ describe("ReportView selected festival basis", () => {
     expect(screen.getByText("선택 TourAPI 축제 기준")).toBeInTheDocument();
     expect(screen.getByText("Gangnam Media Winter Festa")).toBeInTheDocument();
     expect(screen.getByText("3439947")).toBeInTheDocument();
+    expect(screen.getByText("Seoul Gangnam-gu Yeongdong-daero 511")).toBeInTheDocument();
   });
 });
