@@ -231,15 +231,6 @@ describe("public data adapters", () => {
           contentid: "100",
           title: "강남 미디어 윈터페스타",
           addr1: "서울특별시 강남구 영동대로 511",
-          eventstartdate: "20251219",
-          eventenddate: "20260103",
-        },
-      ]),
-      tourApiPayload([
-        {
-          contentid: "100",
-          title: "강남 미디어 윈터페스타",
-          addr1: "서울특별시 강남구 영동대로 511",
           firstimage: "https://example.com/festival.jpg",
           eventstartdate: "20251219",
           eventenddate: "20260103",
@@ -274,14 +265,12 @@ describe("public data adapters", () => {
     expect(urls.map((url) => url.pathname)).toEqual([
       "/api/tour/area-code",
       "/api/tour/festivals",
-      "/api/tour/detail",
     ]);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
-    expect(urls[2].searchParams.get("contentId")).toBe("100");
   });
 
-  it("attaches every processed candidate record with separate search and detail attribution", async () => {
+  it("returns candidate records without blocking on per-candidate detail lookups", async () => {
     const festivalItems = Array.from({ length: 8 }, (_, index) => ({
       contentid: String(3439947 + index),
       title: `축제 후보 ${index + 1}`,
@@ -294,7 +283,6 @@ describe("public data adapters", () => {
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),
       tourApiPayload(festivalItems),
-      ...festivalItems.map((item) => tourApiPayload([{ ...item, overview: "상세 설명" }])),
     ];
     const fetchImpl = vi.fn(async () => jsonResponse(responses.shift()));
 
@@ -311,16 +299,14 @@ describe("public data adapters", () => {
     );
 
     expect(candidates).toHaveLength(8);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect(searchDetail).toMatchObject({
       sourceName: "TourAPI 축제 정보 조회",
       sourceType: "tourapi",
       endpoint: "/api/tour/festivals",
     });
     expect(searchDetail?.records).toHaveLength(8);
-    expect(festivalDetails).toHaveLength(8);
-    expect(
-      festivalDetails.map((detail) => detail.query?.find((field) => field.label === "contentId")?.value),
-    ).toEqual(festivalItems.map((item) => item.contentid));
+    expect(festivalDetails).toHaveLength(0);
     expect(JSON.stringify(sourceDetails)).toContain("eventStartDate");
     expect(JSON.stringify(sourceDetails)).not.toMatch(/serviceKey/i);
   });

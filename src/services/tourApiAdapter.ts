@@ -761,20 +761,6 @@ export async function getFestivalCandidates(
   }
 
   const candidateItems = festivalItems.slice(0, MAX_FESTIVAL_CANDIDATES);
-  const detailLookups = await Promise.all(
-    candidateItems.map((item) =>
-      fetchTourApiItems(
-        "detail",
-        { contentId: item.contentid },
-        fetchImpl,
-        options.signal,
-      )
-        .then((items) => ({ item: { ...item, ...items[0] }, succeeded: true }))
-        .catch(() => ({ item, succeeded: false })),
-    ),
-  );
-  const detailItems = detailLookups.map((lookup) => lookup.item);
-
   const searchSourceDetail = createTourApiSourceDetail({
     sourceId: "tourapi-festival-candidates",
     sourceName: "TourAPI 축제 정보 조회",
@@ -785,14 +771,9 @@ export async function getFestivalCandidates(
       fields: festivalRecordFields(item),
     })),
   });
-  const detailSourceDetails = createFestivalDetailSources(
-    "tourapi-festival-candidate-detail",
-    detailItems,
-    detailLookups.map((lookup) => lookup.succeeded),
-  );
-  const sourceDetails = [searchSourceDetail, ...detailSourceDetails];
+  const sourceDetails = [searchSourceDetail];
 
-  return detailItems
+  return candidateItems
     .map((item) => mapFestivalCandidate(item, festivalSearchScope, sourceDetails))
     .filter((item): item is FestivalCandidate => Boolean(item));
 }
