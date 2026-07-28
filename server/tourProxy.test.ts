@@ -94,6 +94,27 @@ describe("TourAPI server proxy", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("forwards detailCommon2 with only contentId plus server-managed common parameters", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(tourApiPayload([{ contentid: "3439947", title: "강남 미디어 윈터페스타" }])),
+    );
+
+    const { response } = await request(
+      "/api/tour/detail?contentId=3439947",
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(response.status).toBe(200);
+    const upstreamUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(upstreamUrl.pathname.endsWith("/detailCommon2")).toBe(true);
+    expect(upstreamUrl.searchParams.get("contentId")).toBe("3439947");
+    expect(upstreamUrl.searchParams.has("defaultYN")).toBe(false);
+    expect(upstreamUrl.searchParams.has("firstImageYN")).toBe(false);
+    expect(upstreamUrl.searchParams.has("addrinfoYN")).toBe(false);
+    expect(upstreamUrl.searchParams.has("overviewYN")).toBe(false);
+    expect(upstreamUrl.searchParams.has("mapinfoYN")).toBe(false);
+  });
+
   it.each([
     ["whitespace", "/api/tour/nearby?mapX=%20%20%20&mapY=37.52&radius=5000"],
     ["Infinity", "/api/tour/nearby?mapX=126.92&mapY=Infinity&radius=5000"],
