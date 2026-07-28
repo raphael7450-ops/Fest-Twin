@@ -17,6 +17,7 @@ import { clamp } from "./forecast";
 interface TourApiOptions {
   fetchImpl?: typeof fetch;
   signal?: AbortSignal;
+  selectedCandidate?: FestivalCandidate | null;
 }
 
 export interface TourApiAreaCode {
@@ -620,6 +621,116 @@ function mapFestivalCandidate(
   };
 }
 
+function selectedCandidateToTourApiItem(candidate: FestivalCandidate): TourApiItem {
+  return {
+    contentid: candidate.id,
+    title: candidate.title,
+    addr1: candidate.address,
+    eventstartdate: candidate.startDate.replace(/-/g, ""),
+    eventenddate: candidate.endDate.replace(/-/g, ""),
+    mapx: candidate.mapX,
+    mapy: candidate.mapY,
+  };
+}
+
+async function getSelectedFestivalTourismContext(
+  plan: FestivalPlan,
+  selectedCandidate: FestivalCandidate,
+  fetchImpl: typeof fetch,
+  signal?: AbortSignal,
+) {
+  const fallbackItem = selectedCandidateToTourApiItem(selectedCandidate);
+  let selectedItem = fallbackItem;
+  let detailSucceeded = false;
+
+  try {
+    const detailItems = await fetchTourApiItems(
+      "detail",
+      { contentId: selectedCandidate.id },
+      fetchImpl,
+      signal,
+    );
+    selectedItem = {
+      ...fallbackItem,
+      ...detailItems[0],
+      contentid: selectedCandidate.id,
+      title: detailItems[0]?.title ?? selectedCandidate.title,
+      addr1: detailItems[0]?.addr1 ?? selectedCandidate.address,
+      mapx: detailItems[0]?.mapx ?? selectedCandidate.mapX,
+      mapy: detailItems[0]?.mapy ?? selectedCandidate.mapY,
+    };
+    detailSucceeded = true;
+  } catch {
+    selectedItem = fallbackItem;
+  }
+
+  const nearbyQueryParams =
+    selectedItem.mapx && selectedItem.mapy
+      ? {
+          numOfRows: 10,
+          pageNo: 1,
+          arrange: "E",
+          mapX: selectedItem.mapx,
+          mapY: selectedItem.mapy,
+          radius: 5000,
+        }
+      : {};
+  const nearbyItems =
+    selectedItem.mapx && selectedItem.mapy
+      ? await fetchTourApiItems("nearby", nearbyQueryParams, fetchImpl, signal)
+      : [];
+  const selectedNearbyItems = nearbyItems
+    .filter(isValidNearbyItem)
+    .slice(0, MAX_NEARBY_SPOTS);
+  const detailSource = createTourApiSourceDetail({
+    sourceId: `tourapi-selected-tourism-detail-${selectedCandidate.id}`,
+    sourceName: "TourAPI 선택 축제 상세 조회",
+    endpoint: "/api/tour/detail",
+    query: { contentId: selectedCandidate.id },
+    records: [
+      {
+        label: selectedCandidate.title,
+        fields: festivalRecordFields(selectedItem),
+      },
+    ],
+    statusLabel: detailSucceeded
+      ? "실시간 조회 성공"
+      : "상세 조회 실패: 선택 후보 메타데이터 사용",
+    note: detailSucceeded
+      ? undefined
+      : "선택 후보의 contentId, 주소, 기간, 좌표를 현재 관광 컨텍스트 기준으로 사용했습니다.",
+  });
+  const nearbySource = createTourApiSourceDetail({
+    sourceId: "tourapi-selected-tourism-nearby",
+    sourceName: "TourAPI 선택 축제 주변 관광지 조회",
+    endpoint: "/api/tour/nearby",
+    query: nearbyQueryParams,
+    records: selectedNearbyItems.map((item) => ({
+      label: String(item.title ?? item.contentid ?? "주변 관광지"),
+      fields: nearbySpotRecordFields(item),
+    })),
+    statusLabel:
+      selectedItem.mapx && selectedItem.mapy
+        ? "실시간 조회 성공"
+        : "조회하지 않음: 선택 축제 좌표 없음",
+    note:
+      selectedItem.mapx && selectedItem.mapy
+        ? "선택한 TourAPI 축제 후보의 좌표를 기준으로 주변 관광지를 조회했습니다."
+        : "선택 축제 후보에 좌표가 없어 주변 관광지 조회를 생략했습니다.",
+  });
+
+  return mapTourApiItemsToTourismContext(
+    plan,
+    [selectedItem],
+    nearbyItems,
+    new Date().toISOString(),
+    {
+      festivalSearchScope: selectedCandidate.searchScope,
+      sourceDetails: [detailSource, nearbySource],
+    },
+  );
+}
+
 export async function getFestivalCandidates(
   plan: FestivalPlan,
   options: TourApiOptions = {},
@@ -693,6 +804,15 @@ export async function getTourismContext(
   const fetchImpl = options.fetchImpl ?? fetch;
 
   try {
+    if (options.selectedCandidate) {
+      return await getSelectedFestivalTourismContext(
+        plan,
+        options.selectedCandidate,
+        fetchImpl,
+        options.signal,
+      );
+    }
+
     const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
 
     if (!areaCode) {

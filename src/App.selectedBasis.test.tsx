@@ -82,7 +82,20 @@ describe("App selected festival basis", () => {
     expect(selectButton).not.toBeNull();
     fireEvent.click(selectButton!);
 
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
     expect(screen.getAllByText("3439947").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Gangnam Media Winter Festa").length).toBeGreaterThan(0);
+    expect(getTourismContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: "Gangnam Media Winter Festa" }),
+      expect.objectContaining({
+        selectedCandidate: expect.objectContaining({
+          id: "3439947",
+          title: "Gangnam Media Winter Festa",
+        }),
+      }),
+    );
   });
 });

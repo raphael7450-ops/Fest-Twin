@@ -273,7 +273,10 @@ export function App() {
     const controller = new AbortController();
     const planSnapshot = plan;
     const timeoutId = window.setTimeout(() => {
-      getTourismContext(planSnapshot, { signal: controller.signal })
+      getTourismContext(planSnapshot, {
+        signal: controller.signal,
+        selectedCandidate,
+      })
         .then((nextTourism) => {
           if (!controller.signal.aborted) {
             setTourismState({ planKey: tourApiPlanKey, context: nextTourism });

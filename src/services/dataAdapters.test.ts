@@ -144,6 +144,69 @@ describe("public data adapters", () => {
     expect(urls[3].searchParams.get("radius")).toBe("5000");
   });
 
+  it("uses the selected festival contentId as the tourism context basis", async () => {
+    const responses = [
+      tourApiPayload([
+        {
+          contentid: "777",
+          title: "Selected River Light Festival",
+          addr1: "Seoul River Park",
+          firstimage: "https://example.com/selected.jpg",
+          eventstartdate: "20260801",
+          eventenddate: "20260807",
+          overview: "Selected candidate detail",
+          mapx: "126.9001",
+          mapy: "37.5001",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "888",
+          title: "Selected Nearby Spot",
+          contenttypeid: "12",
+          dist: "450",
+        },
+      ]),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) =>
+      jsonResponse(responses.shift()),
+    );
+
+    const tourism = await getTourismContext(sampleFestivalPlan, {
+      fetchImpl: fetchMock as unknown as typeof fetch,
+      selectedCandidate: {
+        id: "777",
+        title: "Selected River Light Festival",
+        address: "Seoul River Park",
+        startDate: "2026-08-01",
+        endDate: "2026-08-07",
+        mapX: "126.9001",
+        mapY: "37.5001",
+        searchScope: "exact-period",
+      },
+    });
+
+    expect(tourism.similarFestivals[0]).toMatchObject({
+      id: "777",
+      name: "Selected River Light Festival",
+      region: "Seoul River Park",
+    });
+    expect(tourism.nearbySpots[0]).toMatchObject({
+      id: "888",
+      name: "Selected Nearby Spot",
+      distanceKm: 0.5,
+    });
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/api/tour/detail",
+      "/api/tour/nearby",
+    ]);
+    expect(urls[0].searchParams.get("contentId")).toBe("777");
+    expect(urls[1].searchParams.get("mapX")).toBe("126.9001");
+    expect(urls[1].searchParams.get("mapY")).toBe("37.5001");
+  });
+
   it("returns region codes and festival candidates for the planning selector", async () => {
     const areaFetchMock = vi.fn(async () =>
       jsonResponse(
