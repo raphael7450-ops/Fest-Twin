@@ -105,7 +105,7 @@ export function DataBasisPanel({
         ))}
       </div>
 
-      <div className="evidence-source-status">
+      <div className="evidence-source-status data-basis-source-status">
         <strong>{tourism.provenance.sourceName}</strong>
         <span>
           {tourism.provenance.retrievedAt
