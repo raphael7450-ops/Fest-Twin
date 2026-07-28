@@ -83,7 +83,7 @@ export function SafetyLogisticsPanel({
           <div>
             <div className="metric-inline-heading">
               <span>접근 교통 위험도</span>
-              <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
+              <EvidenceButton onClick={() => onOpenEvidence("traffic-risk")} />
             </div>
             <strong>{metrics.trafficRiskLabel}</strong>
             <small>

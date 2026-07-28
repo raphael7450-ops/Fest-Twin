@@ -315,6 +315,7 @@ describe("metricEvidence", () => {
       "commercial-spillover",
       "safety-staff",
       "medical-staff",
+      "traffic-risk",
       "parking-occupancy",
       "economic-roi",
     ]);
@@ -322,6 +323,7 @@ describe("metricEvidence", () => {
     expect(evidence["demand-index"].dataSources).toContain(
       "TourAPI 주변 관광지 매력도",
     );
+    expect(evidence["traffic-risk"].title).toBe("접근 교통 위험도");
     expect(evidence["economic-roi"].formulaSummary).toContain("예상 방문객");
   });
 

@@ -646,6 +646,43 @@ export function createMetricEvidenceSet(
         },
       ],
     },
+    "traffic-risk": {
+      metricId: "traffic-risk",
+      title: "접근 교통 위험도",
+      summary: `${safety.trafficRoadName} 접근 구간의 교통 위험도를 ${safety.trafficRiskScore}점, ${safety.trafficRiskLabel} 단계로 산출했습니다.`,
+      dataSources: [
+        "KTDB/View-T 선택 링크 교통량",
+        "행사장 접근 도로 매핑",
+        "선택 시간대 교통량",
+      ],
+      formulaSummary:
+        "접근 교통 위험도 = 기준 도로 링크의 유입·유출 교통량과 차로 수를 반영한 정체 위험 점수입니다.",
+      assumptions: [
+        "행사장 주소와 가장 가까운 매핑 도로 링크를 접근 교통 기준으로 사용합니다.",
+        "실시간 교통량이 미연동된 경우 KTDB/View-T 구조를 따른 지역 매핑 샘플로 보완합니다.",
+      ],
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
+      limitations,
+      sourceDetails: trafficDetails,
+      contributors: [
+        {
+          label: "위험도",
+          value: `${safety.trafficRiskScore}점`,
+          effect: safety.trafficRiskScore >= 70 ? "risk" : "neutral",
+        },
+        {
+          label: "위험 단계",
+          value: safety.trafficRiskLabel,
+          effect: safety.trafficRiskLabel === "높음" ? "risk" : "neutral",
+        },
+        {
+          label: "기준 도로",
+          value: safety.trafficRoadName,
+          effect: "neutral",
+        },
+      ],
+    },
     "parking-occupancy": {
       metricId: "parking-occupancy",
       title: "주차 수용 차오름 비율",

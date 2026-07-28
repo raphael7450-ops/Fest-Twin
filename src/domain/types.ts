@@ -274,6 +274,7 @@ export type MetricEvidenceId =
   | "commercial-spillover"
   | "safety-staff"
   | "medical-staff"
+  | "traffic-risk"
   | "parking-occupancy"
   | "economic-roi";
 

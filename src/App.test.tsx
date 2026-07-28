@@ -161,6 +161,7 @@ describe("App", () => {
     const evidenceButtons = within(safetyPanel).getAllByRole("button", { name: "근거 보기" });
     await userEvent.click(evidenceButtons[2]);
 
+    expect(await screen.findByRole("heading", { name: "접근 교통 위험도" })).toBeInTheDocument();
     expect(await screen.findByText("사용 데이터 상세")).toBeInTheDocument();
     expect(screen.getAllByText(/KTDB\/View-T/).length).toBeGreaterThan(0);
     expect(screen.getByText(/LINKID/)).toBeInTheDocument();
