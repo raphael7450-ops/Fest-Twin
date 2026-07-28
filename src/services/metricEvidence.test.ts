@@ -5,6 +5,7 @@ import { sampleSpendingContext } from "../data/sampleSpending";
 import { sampleTrafficContext } from "../data/sampleTraffic";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
+import type { SelectedFestivalBasis } from "../domain/types";
 import { createForecast } from "./forecast";
 import { createSimulation } from "./simulation";
 import {
@@ -22,6 +23,16 @@ const sampleSimulationResult = createSimulation(
   sampleForecastResult,
   sampleForecastResult.peakHour,
 );
+const selectedFestivalBasis: SelectedFestivalBasis = {
+  contentId: "3439947",
+  title: "Gangnam Media Winter Festa",
+  address: "Seoul Gangnam-gu Yeongdong-daero 511",
+  startDate: "2025-12-19",
+  endDate: "2026-01-03",
+  mapX: "127.0610512042",
+  mapY: "37.5103955843",
+  sourceName: "TourAPI selected festival candidate",
+};
 
 describe("metricEvidence", () => {
   it("includes KTDB traffic evidence for parking metrics only", () => {
@@ -131,6 +142,29 @@ describe("metricEvidence", () => {
     expect(serialized).toContain("locationBasedList2");
     expect(serialized).toContain("운영계정 승인");
     expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
+  });
+
+  it("includes the selected TourAPI festival basis in demand evidence", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      undefined,
+      undefined,
+      undefined,
+      selectedFestivalBasis,
+    );
+
+    const source = evidence["demand-index"].sourceDetails.find(
+      (detail) => detail.sourceId === "tourapi-selected-festival-basis",
+    );
+
+    expect(source?.sourceType).toBe("tourapi");
+    expect(JSON.stringify(source)).toContain("Gangnam Media Winter Festa");
+    expect(JSON.stringify(source)).toContain("3439947");
+    expect(JSON.stringify(source)).toContain("127.0610512042, 37.5103955843");
   });
 
   it("scopes user input evidence to fields used by each metric", () => {

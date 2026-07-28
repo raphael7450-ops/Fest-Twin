@@ -11,6 +11,7 @@ import type {
   ForecastResult,
   MetricEvidence,
   MetricEvidenceId,
+  SelectedFestivalBasis,
   SimulationResult,
   SpendingContext,
   TrafficContext,
@@ -201,6 +202,44 @@ function tourApiOperationsApprovalDetails(): MetricEvidence["sourceDetails"] {
   ];
 }
 
+function selectedFestivalBasisDetails(
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
+): MetricEvidence["sourceDetails"] {
+  if (!selectedFestivalBasis) return [];
+
+  return [
+    {
+      sourceId: "tourapi-selected-festival-basis",
+      sourceName: "TourAPI 선택 축제 기준",
+      sourceType: "tourapi",
+      statusLabel: "사용자 선택 후보 반영",
+      records: [
+        {
+          label: selectedFestivalBasis.title,
+          fields: [
+            { label: "contentId", value: selectedFestivalBasis.contentId },
+            { label: "title", value: selectedFestivalBasis.title },
+            { label: "address", value: selectedFestivalBasis.address },
+            {
+              label: "period",
+              value: `${selectedFestivalBasis.startDate} ~ ${selectedFestivalBasis.endDate}`,
+            },
+            {
+              label: "mapX/mapY",
+              value:
+                selectedFestivalBasis.mapX && selectedFestivalBasis.mapY
+                  ? `${selectedFestivalBasis.mapX}, ${selectedFestivalBasis.mapY}`
+                  : "-",
+            },
+          ],
+        },
+      ],
+      note:
+        "축제 후보를 선택하면 해당 TourAPI contentId를 현재 수요 예측과 근거 검토의 기준 축제로 표시합니다.",
+    },
+  ];
+}
+
 export function createMetricEvidenceSet(
   plan: FestivalPlan,
   forecast: ForecastResult,
@@ -210,6 +249,7 @@ export function createMetricEvidenceSet(
   traffic?: TrafficContext,
   spending?: SpendingContext,
   demandBackdata?: DemandBackdataContext,
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): Record<MetricEvidenceId, MetricEvidence> {
   const summary = createSummaryKpiMetrics(plan, forecast, simulation, tourism);
   const safety = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic);
@@ -220,6 +260,7 @@ export function createMetricEvidenceSet(
   const trafficDetails = trafficDerivedDetails(traffic);
   const spendingDetails = spending?.sourceDetails ?? [];
   const demandBackdataDetails = demandBackdata?.sourceDetails ?? [];
+  const selectedFestivalDetails = selectedFestivalBasisDetails(selectedFestivalBasis);
   const nearbyTourismDetails = tourismDetails.filter(
     (detail) => detail.sourceId.includes("nearby") || detail.sourceId === "sample-nearby-spots",
   );
@@ -376,6 +417,7 @@ export function createMetricEvidenceSet(
       confidenceLabel: confidenceLabel(confidence),
       limitations,
       sourceDetails: [
+        ...selectedFestivalDetails,
         ...tourismDetails,
         ...demandBackdataDetails,
         ...demandUserInputs,

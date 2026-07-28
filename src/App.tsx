@@ -27,6 +27,10 @@ import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleTrendContext } from "./data/sampleTrends";
 import type { MetricEvidenceId } from "./domain/types";
 import { getDemandBackdataContext } from "./services/demandBackdataAdapter";
+import {
+  applyFestivalCandidateToPlan,
+  createSelectedFestivalBasis,
+} from "./services/festivalSelection";
 import { createForecast } from "./services/forecast";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
 import { createPlanningReport } from "./services/report";
@@ -50,6 +54,10 @@ export function App() {
   const [isAreaLoading, setIsAreaLoading] = useState(true);
   const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
+  const selectedFestivalBasis = useMemo(
+    () => (selectedCandidate ? createSelectedFestivalBasis(selectedCandidate) : null),
+    [selectedCandidate],
+  );
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<MetricEvidenceId | null>(null);
   const candidatePlanKey = JSON.stringify({
     region: plan.region,
@@ -73,6 +81,9 @@ export function App() {
     endDate: plan.endDate,
     name: plan.name,
     keywords: plan.keywords,
+    selectedContentId: selectedFestivalBasis?.contentId,
+    selectedMapX: selectedFestivalBasis?.mapX,
+    selectedMapY: selectedFestivalBasis?.mapY,
   });
   const [tourismState, setTourismState] = useState(() => ({
     planKey: tourApiPlanKey,
@@ -94,6 +105,9 @@ export function App() {
     name: plan.name,
     startDate: plan.startDate,
     selectedHour,
+    selectedContentId: selectedFestivalBasis?.contentId,
+    selectedMapX: selectedFestivalBasis?.mapX,
+    selectedMapY: selectedFestivalBasis?.mapY,
   });
   const [trafficState, setTrafficState] = useState(() => ({
     planKey: trafficPlanKey,
@@ -121,6 +135,7 @@ export function App() {
     startDate: plan.startDate,
     endDate: plan.endDate,
     keywords: plan.keywords,
+    selectedContentId: selectedFestivalBasis?.contentId,
   });
   const [trendState, setTrendState] = useState(() => ({
     planKey: trendPlanKey,
@@ -380,8 +395,19 @@ export function App() {
       traffic,
       spending,
       demandBackdata,
+      selectedFestivalBasis,
     ),
-    [forecast, plan, simulation, tourism, trends, traffic, spending, demandBackdata],
+    [
+      forecast,
+      plan,
+      simulation,
+      tourism,
+      trends,
+      traffic,
+      spending,
+      demandBackdata,
+      selectedFestivalBasis,
+    ],
   );
   const report = useMemo(
     () => createPlanningReport(plan, forecast, simulation),
@@ -389,14 +415,7 @@ export function App() {
   );
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
-    setPlan((currentPlan) => ({
-      ...currentPlan,
-      name: candidate.title,
-      venueAddress: candidate.address,
-      startDate: candidate.startDate || currentPlan.startDate,
-      endDate: candidate.endDate || currentPlan.endDate,
-      keywords: Array.from(new Set([candidate.title, ...currentPlan.keywords])).slice(0, 6),
-    }));
+    setPlan((currentPlan) => applyFestivalCandidateToPlan(currentPlan, candidate));
     setIsCandidatePanelOpen(false);
   };
 
@@ -472,6 +491,8 @@ export function App() {
                 setPlan(nextPlan);
                 if (
                   nextPlan.region !== plan.region ||
+                  nextPlan.name !== plan.name ||
+                  nextPlan.venueAddress !== plan.venueAddress ||
                   nextPlan.startDate !== plan.startDate ||
                   nextPlan.endDate !== plan.endDate
                 ) {
@@ -498,7 +519,11 @@ export function App() {
                 setSelectedHour(scenario.selectedHour ?? 20);
               }}
             />
-            <DataBasisPanel tourism={tourism} trends={trends} />
+            <DataBasisPanel
+              tourism={tourism}
+              trends={trends}
+              selectedFestivalBasis={selectedFestivalBasis}
+            />
           </aside>
           <section className="main-column">
             <ForecastChart forecast={forecast} />
@@ -523,6 +548,8 @@ export function App() {
                 setPlan(nextPlan);
                 if (
                   nextPlan.region !== plan.region ||
+                  nextPlan.name !== plan.name ||
+                  nextPlan.venueAddress !== plan.venueAddress ||
                   nextPlan.startDate !== plan.startDate ||
                   nextPlan.endDate !== plan.endDate
                 ) {
@@ -564,7 +591,11 @@ export function App() {
               traffic={traffic}
               onOpenEvidence={setSelectedEvidenceId}
             />
-            <DataBasisPanel tourism={tourism} trends={trends} />
+            <DataBasisPanel
+              tourism={tourism}
+              trends={trends}
+              selectedFestivalBasis={selectedFestivalBasis}
+            />
           </aside>
         </div>
       )}
@@ -587,6 +618,7 @@ export function App() {
         plan={plan}
         forecast={forecast}
         spending={spending}
+        selectedFestivalBasis={selectedFestivalBasis}
         evidenceSet={metricEvidence}
         onOpenEvidence={setSelectedEvidenceId}
       />

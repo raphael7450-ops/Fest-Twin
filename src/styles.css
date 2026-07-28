@@ -815,6 +815,57 @@ a:focus-visible {
   padding: 6px 10px;
 }
 
+.selected-festival-basis {
+  background: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+}
+
+.selected-festival-basis--report {
+  margin-top: 12px;
+}
+
+.selected-festival-basis h3 {
+  color: #1e3a8a;
+  font-size: 14px;
+  margin: 0;
+}
+
+.selected-festival-basis-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin: 0;
+}
+
+.selected-festival-basis-grid div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  min-width: 0;
+  padding: 9px;
+}
+
+.selected-festival-basis-grid dt {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 850;
+  margin-bottom: 4px;
+}
+
+.selected-festival-basis-grid dd {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .bar-chart {
   display: grid;
   gap: 10px;

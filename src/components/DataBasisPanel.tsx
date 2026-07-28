@@ -1,8 +1,14 @@
-import type { DataSourceStatus, TourismContext, TrendContext } from "../domain/types";
+import type {
+  DataSourceStatus,
+  SelectedFestivalBasis,
+  TourismContext,
+  TrendContext,
+} from "../domain/types";
 
 interface DataBasisPanelProps {
   tourism: TourismContext;
   trends: TrendContext;
+  selectedFestivalBasis?: SelectedFestivalBasis | null;
 }
 
 const TOURAPI_PUBLIC_URL = "https://cwserver.tail97dbc3.ts.net/";
@@ -19,7 +25,11 @@ function statusLabel(status: DataSourceStatus | undefined) {
   return "샘플 데이터 대체 사용";
 }
 
-export function DataBasisPanel({ tourism, trends }: DataBasisPanelProps) {
+export function DataBasisPanel({
+  tourism,
+  trends,
+  selectedFestivalBasis,
+}: DataBasisPanelProps) {
   return (
     <section className="panel data-basis-panel">
       <div className="panel-heading">
@@ -46,6 +56,36 @@ export function DataBasisPanel({ tourism, trends }: DataBasisPanelProps) {
         <li>개인정보 수집 여부: 수집하지 않음</li>
         <li>예측값 성격: 실제 집계값이 아닌 사전 의사결정용 추정값</li>
       </ul>
+
+      {selectedFestivalBasis ? (
+        <div className="selected-festival-basis">
+          <h3>선택 TourAPI 축제 기준</h3>
+          <dl className="selected-festival-basis-grid">
+            <div>
+              <dt>축제명</dt>
+              <dd>{selectedFestivalBasis.title}</dd>
+            </div>
+            <div>
+              <dt>contentId</dt>
+              <dd>{selectedFestivalBasis.contentId}</dd>
+            </div>
+            <div>
+              <dt>기간</dt>
+              <dd>
+                {selectedFestivalBasis.startDate} ~ {selectedFestivalBasis.endDate}
+              </dd>
+            </div>
+            <div>
+              <dt>좌표</dt>
+              <dd>
+                {selectedFestivalBasis.mapX && selectedFestivalBasis.mapY
+                  ? `${selectedFestivalBasis.mapX}, ${selectedFestivalBasis.mapY}`
+                  : "-"}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      ) : null}
 
       <div className="tourapi-operations-evidence">
         <h3>OpenAPI 운영계정 신청 증빙</h3>

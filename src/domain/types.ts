@@ -75,6 +75,17 @@ export interface FestivalPlan {
   facilities: VenueFacility[];
 }
 
+export interface SelectedFestivalBasis {
+  contentId: string;
+  title: string;
+  address: string;
+  startDate: string;
+  endDate: string;
+  mapX?: string;
+  mapY?: string;
+  sourceName: string;
+}
+
 export interface DataProvenance {
   sourceName: string;
   sourceType: "public-data" | "trend-sample" | "user-input";

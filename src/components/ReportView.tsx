@@ -1,40 +1,31 @@
-/**
- * 파일 : src/components/ReportView.tsx
- * 내용 : 지자체 예산 집행 전 사전 검토 보고서 뷰어 및 브라우저 인쇄(PDF Export) 서식 컴포넌트
- * 수정 : 2026-07-24. 기획 보완 추천안, 경제 파급효과 지표 및 출처 요약 리포트 레이아웃 구성
- */
-
-// 핵심 도메인 인터페이스 및 타입 불러오기
 import type {
-  FestivalPlan, // 축제 기획안 모델
-  ForecastResult, // 수요 예측 결과 모델
-  MetricEvidence, // 지표별 산출 근거 모델
-  MetricEvidenceId, // 지표 식별자
-  PlanningReport, // 사전 진단 리포트 모델
-  SpendingContext, // 관광데이터랩 소비 데이터 맥락
+  FestivalPlan,
+  ForecastResult,
+  MetricEvidence,
+  MetricEvidenceId,
+  PlanningReport,
+  SelectedFestivalBasis,
+  SpendingContext,
 } from "../domain/types";
-// 브라우저 인쇄/PDF 저장 버튼 컴포넌트 불러오기
 import { PrintReportButton } from "./PrintReportButton";
-// 보고서 하단 데이터 출처 요약 서브 컴포넌트 불러오기
 import { ReportEvidenceSummary } from "./ReportEvidenceSummary";
-// 예산 대비 경제적 파급효과 시각화 컴포넌트 불러오기
 import { RoiEconomicImpact } from "./RoiEconomicImpact";
 
-// ReportView 입력 프로퍼티(Props) 정의
 interface ReportViewProps {
-  report: PlanningReport; // 리포트 진단 종합 데이터
-  plan: FestivalPlan; // 축제 기획안 데이터
-  forecast: ForecastResult; // 시간대별 수요 예측 데이터
-  spending?: SpendingContext; // 소비지출 백데이터
-  evidenceSet: Record<MetricEvidenceId, MetricEvidence>; // 전체 지표 근거 맵
-  onOpenEvidence: (metricId: MetricEvidenceId) => void; // 근거 모달 오픈 콜백
+  report: PlanningReport;
+  plan: FestivalPlan;
+  forecast: ForecastResult;
+  selectedFestivalBasis?: SelectedFestivalBasis | null;
+  spending?: SpendingContext;
+  evidenceSet: Record<MetricEvidenceId, MetricEvidence>;
+  onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
-// B2G 사전 진단 종합 보고서 화면 렌더링 메인 컴포넌트
 export function ReportView({
   report,
   plan,
   forecast,
+  selectedFestivalBasis,
   spending,
   evidenceSet,
   onOpenEvidence,
@@ -79,13 +70,41 @@ export function ReportView({
           </div>
           <div>
             <dt>운영 전환 기준</dt>
-            <dd>개발계정은 오퍼레이션별 일 1,000건 기준으로 호출 이력을 검증하고, 운영계정 승인에는 약 1~3일이 소요됩니다.</dd>
+            <dd>
+              개발계정은 오퍼레이션별 일 1,000건 기준으로 호출 이력을 검증하고, 운영계정
+              승인에는 약 1~3일이 소요됩니다.
+            </dd>
           </div>
           <div>
             <dt>출처 및 라이선스</dt>
             <dd>한국관광공사 TourAPI 4.0 출처 표기와 라이선스 표시 동의를 전제로 활용합니다.</dd>
           </div>
         </dl>
+        {selectedFestivalBasis ? (
+          <div className="selected-festival-basis selected-festival-basis--report">
+            <h3>선택 TourAPI 축제 기준</h3>
+            <dl className="selected-festival-basis-grid">
+              <div>
+                <dt>축제명</dt>
+                <dd>{selectedFestivalBasis.title}</dd>
+              </div>
+              <div>
+                <dt>contentId</dt>
+                <dd>{selectedFestivalBasis.contentId}</dd>
+              </div>
+              <div>
+                <dt>기간</dt>
+                <dd>
+                  {selectedFestivalBasis.startDate} ~ {selectedFestivalBasis.endDate}
+                </dd>
+              </div>
+              <div>
+                <dt>주소</dt>
+                <dd>{selectedFestivalBasis.address}</dd>
+              </div>
+            </dl>
+          </div>
+        ) : null}
       </section>
       <p className="report-summary">{report.summary}</p>
       <p className="muted">{report.governmentReviewNote}</p>
