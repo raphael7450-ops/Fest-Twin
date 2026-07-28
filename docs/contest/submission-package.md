@@ -16,6 +16,22 @@ Fest-Twin (지자체 축제 기획 사전 진단 및 디지털 트윈 시뮬레�
 
 ---
 
+## 1-1. 최신 제출 패키지 구성
+
+2026년 7월 28일 기준 제출 패키지는 `artifacts/fest-twin-submission-package.zip`으로 생성한다. 패키지에는 서비스 소스, Express OpenAPI 프록시, Docker 배포 파일, 제출 문서, 기능설명서, 화면 캡처용 문서와 최신 프로덕션 빌드 산출물이 포함된다.
+
+| 구성 | 포함 내용 | 확인 포인트 |
+| :--- | :--- | :--- |
+| 서비스 URL | `https://cwserver.tail97dbc3.ts.net/` | 심사자가 별도 승인 없이 접속 가능한 공개 URL |
+| 필수 OpenAPI | 한국관광공사 TourAPI 4.0 `areaCode2`, `searchFestival2`, `detailCommon2`, `locationBasedList2` | 지역·기간 기반 후보 조회, 선택 축제 좌표, 주변 관광지 근거 |
+| 보조 데이터 | Naver DataLab 검색량, KTDB/View-T 교통량, 관광소비 객단가 | 수요 예측 보정, 접근 교통 위험도, 경제효과 산출 |
+| 서비스 흐름 | 기획안 입력 → 후보 조회 → 예측/시뮬레이션 → 근거 확인 → 보고서 출력 → 공유 링크 복원 | 제출 시연 핵심 동선 |
+| Fallback 정책 | API 키 미설정 또는 호출 실패 시 샘플/부분 보완 상태 표시 | 파일 데이터 단독 활용으로 오해되지 않도록 상태와 한계 명시 |
+
+최신 검증 결과는 `docs/LOAD_TEST_REPORT.md`, `docs/PHASE2_ROADMAP_PLAN.md`, `docs/contest/submission-checklist.md`에 함께 기록한다.
+
+---
+
 ## 2. 공모전 공고 대응 매트릭스 (Notice Response Matrix)
 
 | 평가 항목 | 공고 요구사항 | Fest-Twin 구체적 대응 구현 내용 | 증빙 및 명세 위치 |

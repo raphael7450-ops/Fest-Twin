@@ -20,7 +20,7 @@
 | 3 | B2G 공공검토 보고서 구조화 | 완료 | 예측 결과, 혼잡·안전, 예산·경제효과, 데이터 한계, 개선 권고 |
 | 4 | 시나리오 저장·공유 보존 | 완료 | 선택 축제 기준이 포함된 scenario save/share restore |
 | 5 | 운영 검증 게이트 안정화 | 완료 | 공개 URL, 정적 번들, API 구조, OpenAPI rate limit 증빙 정합성 보강 |
-| 6 | 제출 패키지 갱신 | 예정 | 제출 ZIP, README, 운영가이드, 검증 결과 갱신 |
+| 6 | 제출 패키지 갱신 | 완료 | 제출 ZIP, 기능설명서, 제출 체크리스트, 검증 결과 갱신 |
 
 ## 이번 작업 반영 내용
 
@@ -103,6 +103,13 @@ npm run deploy:check
 - 운영 검증: `npm run test:load`에서 `limit=30 normal_ok=30 blocked_429=5 header_limit_30=5` 통과, `npm run deploy:check` 5개 게이트 통과
 - 감사 로그: `logs/audit-2026-07-28.log` 기준 `error/fatal/exception/failed/unhandled` 0건, rate-limit 감사 경고 정상 기록
 
+## Task 6 최종 QA 결과
+
+- 구현 범위: 2026년 9월 21일 제출 기준에 맞춰 제출 패키지 문서와 ZIP 산출물을 최신 v1 흐름으로 갱신
+- 문서 반영: 공개 URL, TourAPI 후보 선택, Naver DataLab 관심도, KTDB/View-T 교통 근거, 관광소비 객단가, Fallback 정책, 보고서/공유 링크 흐름 정리
+- 산출물 반영: `artifacts/fest-twin-submission-package.zip` 재생성
+- 검증: `npm run test:load` 통과, `npm run build:zip` 통과, `npm run deploy:check` 5개 게이트 통과
+
 ## 다음 추천 작업
 
-다음 단계는 “제출 패키지 갱신”이다. 지금까지의 v1 동작, 검증 로그, 문서 변경을 제출 ZIP과 기능설명서·발표자료에 반영한다.
+다음 단계는 “실제 운영계정/실데이터 리허설”이다. 원격 서버 환경변수에 TourAPI와 Naver DataLab 운영 키가 준비된 상태에서 지역·기간 후보 조회, 후보 선택, 검색량 보정, 보고서 출력, 공유 링크 복원까지 한 번의 제출 시연 동선으로 녹화·캡처한다.

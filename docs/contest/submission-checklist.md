@@ -8,7 +8,7 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 
 - [x] 단위 및 통합 테스트 통과: `npm test` 실행 시 Vitest 27개 테스트 파일 111개 테스트 항목 100% 성공
 - [x] TypeScript 및 프로덕션 빌드: `npm run build` 실행 시 tsc 및 vite bundle 정상 생성 (에러 없음)
-- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API 100/100 성공, OpenAPI 30회/분 제한 초과 5건 HTTP 429 차단, 캐시 히트 평균 5ms 이하 통과 (`docs/LOAD_TEST_REPORT.md`)
+- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API 100/100 성공, TPS 493.83 req/s, OpenAPI 30회/분 제한 초과 5건 HTTP 429 차단, 캐시 히트 평균 2.35ms 통과 (`docs/LOAD_TEST_REPORT.md`)
 - [x] 이모티콘 및 강조 제한 준수: 소스 코드, 스크립트, 배포 로그 및 Markdown 문서 전체 이모티콘 및 볼드 표기 제거 완료 (`.agents/AGENTS.md`)
 
 ---
@@ -23,6 +23,7 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
   - [x] `/api/tour/area-code` (HTTP 200)
   - [x] `/api/scenarios/scen_sample_01` (HTTP 200)
   - [x] `/api/scenarios/share/token_gn_winter_2026` (HTTP 200)
+- [x] 정적 JS/CSS 번들이 로컬 `dist`와 공개 URL에서 일치함
 - [x] OWASP 보안 헤더 확인: CSP, X-Frame-Options, X-Content-Type-Options 헤더 정상 응답
 - [x] GitHub Actions 파이프라인: CI 파이프라인(`test-and-build`) 및 CD 구동 준비 완료
 
