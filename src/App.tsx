@@ -33,6 +33,7 @@ import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
 import { getSpendingContext } from "./services/spendingAdapter";
 import { getTrafficContext } from "./services/trafficAdapter";
+import { getTrendContext } from "./services/trendAdapter";
 import {
   createFallbackTourismContext,
   getFestivalCandidates,
@@ -114,6 +115,19 @@ export function App() {
     () => getDemandBackdataContext(plan),
     [plan.region, plan.name, plan.startDate, plan.totalBudgetMillionKrw, plan.keywords],
   );
+  const trendPlanKey = JSON.stringify({
+    region: plan.region,
+    name: plan.name,
+    startDate: plan.startDate,
+    endDate: plan.endDate,
+    keywords: plan.keywords,
+  });
+  const [trendState, setTrendState] = useState(() => ({
+    planKey: trendPlanKey,
+    context: sampleTrendContext,
+  }));
+  const trends =
+    trendState.planKey === trendPlanKey ? trendState.context : sampleTrendContext;
 
   const candidates =
     candidateState.planKey === candidatePlanKey ? candidateState.candidates : [];
@@ -322,9 +336,35 @@ export function App() {
     };
   }, [spendingPlanKey]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const planSnapshot = plan;
+    const timeoutId = window.setTimeout(() => {
+      getTrendContext(planSnapshot, { signal: controller.signal })
+        .then((nextTrends) => {
+          if (!controller.signal.aborted) {
+            setTrendState({ planKey: trendPlanKey, context: nextTrends });
+          }
+        })
+        .catch((error: unknown) => {
+          if (
+            !controller.signal.aborted &&
+            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+          ) {
+            console.error("Trend context loading failed", error);
+          }
+        });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [trendPlanKey]);
+
   const forecast = useMemo(
-    () => createForecast(plan, tourism, sampleTrendContext, demandBackdata),
-    [plan, tourism, demandBackdata],
+    () => createForecast(plan, tourism, trends, demandBackdata),
+    [plan, tourism, trends, demandBackdata],
   );
   const simulation = useMemo(
     () => createSimulation(plan, forecast, selectedHour),
@@ -336,12 +376,12 @@ export function App() {
       forecast,
       simulation,
       tourism,
-      sampleTrendContext,
+      trends,
       traffic,
       spending,
       demandBackdata,
     ),
-    [forecast, plan, simulation, tourism, traffic, spending, demandBackdata],
+    [forecast, plan, simulation, tourism, trends, traffic, spending, demandBackdata],
   );
   const report = useMemo(
     () => createPlanningReport(plan, forecast, simulation),
@@ -458,7 +498,7 @@ export function App() {
                 setSelectedHour(scenario.selectedHour ?? 20);
               }}
             />
-            <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
+            <DataBasisPanel tourism={tourism} trends={trends} />
           </aside>
           <section className="main-column">
             <ForecastChart forecast={forecast} />
@@ -524,7 +564,7 @@ export function App() {
               traffic={traffic}
               onOpenEvidence={setSelectedEvidenceId}
             />
-            <DataBasisPanel tourism={tourism} trends={sampleTrendContext} />
+            <DataBasisPanel tourism={tourism} trends={trends} />
           </aside>
         </div>
       )}

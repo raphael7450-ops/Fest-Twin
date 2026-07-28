@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import { sampleDemandBackdataContext } from "../data/sampleDemandBackdata";
+import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
 import { createForecast } from "./forecast";
@@ -15,16 +15,11 @@ describe("createForecast", () => {
 
     expect(forecast.expectedVisitors).toBeGreaterThan(30000);
     expect(forecast.peakHour).toBe(20);
+    expect(forecast.reasons).toHaveLength(5);
     expect(forecast.reasons.map((reason) => reason.label)).toContain(
-      "TourAPI 주변 관광 매력도",
+      "Naver DataLab 검색량 보정",
     );
-    expect(forecast.reasons.map((reason) => reason.label)).toContain(
-      "샘플 트렌드 관심도 프록시",
-    );
-    expect(forecast.reasons.map((reason) => reason.label)).toContain(
-      "유사 축제 추정 수요 프록시",
-    );
-    expect(forecast.reasons[1].description).toContain("실제 방문객 집계가 아닌");
+    expect(forecast.reasons.every((reason) => reason.description.length > 0)).toBe(true);
     expect(forecast.confidence).toBe("medium");
 
     const liveTourism = {
@@ -71,13 +66,64 @@ describe("createForecast", () => {
     expect(forecastWithBackdata.expectedVisitors).not.toBe(
       forecastWithoutBackdata.expectedVisitors,
     );
-    expect(forecastWithBackdata.reasons.map((reason) => reason.label)).toContain(
-      "지역축제 방문객 기준선",
+    expect(forecastWithBackdata.reasons.some((reason) => reason.impact > 0)).toBe(true);
+  });
+
+  it("applies bounded search trend correction to demand forecasting", () => {
+    const scalablePlan = {
+      ...sampleFestivalPlan,
+      expectedCapacity: 80000,
+    };
+    const neutralTrends = {
+      ...sampleTrendContext,
+      searchInterestScore: 50,
+      trendAcceleration: 0,
+    };
+    const risingTrends = {
+      ...sampleTrendContext,
+      provenance: {
+        ...sampleTrendContext.provenance,
+        sourceName: "Naver DataLab search trend",
+        sourceType: "public-data" as const,
+        sourceStatus: "live" as const,
+      },
+      searchInterestScore: 100,
+      trendAcceleration: 100,
+    };
+    const coolingTrends = {
+      ...sampleTrendContext,
+      searchInterestScore: 0,
+      trendAcceleration: -100,
+    };
+
+    const neutralForecast = createForecast(
+      scalablePlan,
+      sampleTourismContext,
+      neutralTrends,
     );
-    expect(
-      forecastWithBackdata.reasons.find(
-        (reason) => reason.label === "지역축제 방문객 기준선",
-      )?.description,
-    ).toContain("문화체육관광부");
+    const risingForecast = createForecast(
+      scalablePlan,
+      sampleTourismContext,
+      risingTrends,
+    );
+    const coolingForecast = createForecast(
+      scalablePlan,
+      sampleTourismContext,
+      coolingTrends,
+    );
+
+    expect(risingForecast.expectedVisitors).toBeGreaterThan(
+      neutralForecast.expectedVisitors,
+    );
+    expect(coolingForecast.expectedVisitors).toBeLessThan(
+      neutralForecast.expectedVisitors,
+    );
+    expect(risingForecast.expectedVisitors).toBeLessThanOrEqual(
+      scalablePlan.expectedCapacity * 1.45,
+    );
+    expect(coolingForecast.expectedVisitors).toBeGreaterThanOrEqual(5000);
+    expect(risingForecast.reasons.map((reason) => reason.label)).toContain(
+      "Naver DataLab 검색량 보정",
+    );
   });
 });

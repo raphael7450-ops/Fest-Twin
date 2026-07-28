@@ -519,4 +519,46 @@ describe("public data adapters", () => {
     expect(keywords).toContain("미디어아트");
     expect(keywords.every((keyword) => sampleFestivalPlan.keywords.includes(keyword))).toBe(true);
   });
+  it("maps Naver DataLab proxy results into trend context evidence", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        sourceStatus: "live",
+        sourceName: "Naver DataLab search trend",
+        retrievedAt: "2026-07-28T00:00:00.000Z",
+        results: [
+          {
+            title: "festival",
+            keywords: ["festival", "winter festival"],
+            data: [
+              { period: "2026-07-07", ratio: 20 },
+              { period: "2026-07-14", ratio: 40 },
+              { period: "2026-07-21", ratio: 80 },
+            ],
+          },
+        ],
+      }),
+    );
+
+    const trends = await getTrendContext(sampleFestivalPlan, {
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(trends.provenance.sourceStatus).toBe("live");
+    expect(trends.provenance.sourceName).toContain("Naver DataLab");
+    expect(trends.searchInterestScore).toBe(47);
+    expect(trends.trendAcceleration).toBe(60);
+    expect(trends.points).toEqual([
+      { period: "2026-07-07", ratio: 20 },
+      { period: "2026-07-14", ratio: 40 },
+      { period: "2026-07-21", ratio: 80 },
+    ]);
+    expect(trends.sourceDetails?.[0]).toMatchObject({
+      sourceName: "Naver DataLab search trend",
+      sourceType: "derived",
+      endpoint: "/api/trends/naver-search",
+    });
+    expect(JSON.stringify(trends.sourceDetails)).not.toMatch(
+      /clientSecret|serviceKey|Authorization|Cookie/i,
+    );
+  });
 });

@@ -116,9 +116,28 @@ export interface TrendSignal {
   mentions: number;
 }
 
+export interface TrendKeywordGroup {
+  groupName: string;
+  keywords: string[];
+}
+
+export interface TrendPoint {
+  period: string;
+  ratio: number;
+}
+
 export interface TrendContext {
   signals: TrendSignal[];
   provenance: DataProvenance;
+  sourceName?: string;
+  sourceStatus?: DataSourceStatus;
+  basisLabel?: string;
+  keywordGroups?: TrendKeywordGroup[];
+  searchInterestScore?: number;
+  trendAcceleration?: number;
+  points?: TrendPoint[];
+  fallbackReason?: string;
+  sourceDetails?: MetricEvidenceSourceDetail[];
 }
 
 export type SpendingBasis =

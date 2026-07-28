@@ -1,5 +1,14 @@
 # Social Trends Service Stabilization Implementation Plan
 
+## 2026-07-28 진행 현황
+
+- 완료: `/api/trends/naver-search` Naver DataLab 서버 프록시 추가.
+- 완료: `getTrendContext(plan)`에서 Naver DataLab 프록시를 우선 조회하고 실패 시 샘플 Fallback을 반환하도록 연결.
+- 완료: 대시보드 예측 산식이 `searchInterestScore`와 `trendAcceleration`을 제한 계수로 반영.
+- 완료: `App.tsx`가 샘플 트렌드 고정값 대신 현재 축제명, 지역, 기간, 키워드 기준 트렌드 컨텍스트를 비동기로 갱신.
+- 검증: `npm run test -- src/services/forecast.test.ts src/services/dataAdapters.test.ts`, `npm run build` 통과.
+- 다음 작업: Metric Evidence Drawer, DataBasisPanel, ReportView에 검색량 보정 근거를 더 명확하게 표시하는 Task 4.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 2026년 9월 21일 제출판 Fest-Twin에 TourAPI 필수 활용 흐름과 Naver DataLab 검색량 기반 사전 관심도 지표를 안정적으로 포함한다.

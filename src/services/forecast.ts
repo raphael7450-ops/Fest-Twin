@@ -65,6 +65,15 @@ function similarDemandFromTourism(tourism: TourismContext) {
   );
 }
 
+function searchTrendMultiplier(trends: TrendContext, socialInterest: number) {
+  const searchInterestScore = trends.searchInterestScore ?? socialInterest;
+  const trendAcceleration = trends.trendAcceleration ?? 0;
+  const interestCorrection = clamp(((searchInterestScore - 50) / 100) * 0.18, -0.08, 0.18);
+  const accelerationCorrection = clamp((trendAcceleration / 100) * 0.12, -0.05, 0.12);
+
+  return 1 + interestCorrection + accelerationCorrection;
+}
+
 export function createForecast(
   plan: FestivalPlan,
   tourism: TourismContext,
@@ -80,6 +89,7 @@ export function createForecast(
   const socialInterest = average(
     trends.signals.map((signal) => signal.interestScore),
   );
+  const trendMultiplier = searchTrendMultiplier(trends, socialInterest);
   const programScore = average(
     plan.programs.map((program) => program.expectedDraw),
   );
@@ -91,6 +101,7 @@ export function createForecast(
   const baseDemand =
     (similarDemand * 0.52 + plan.expectedCapacity * 0.28 + regionalAttractiveness * 180) *
     (0.75 + socialInterest / 300) *
+    trendMultiplier *
     (0.8 + programScore / 400) *
     budgetScale *
     entranceFactor;
@@ -131,6 +142,12 @@ export function createForecast(
     successScore,
     confidence: confidenceFromEvidence(tourism, trends),
     reasons: [
+      {
+        label: "Naver DataLab 검색량 보정",
+        impact: Math.round((trendMultiplier - 1) * 100),
+        description:
+          "기간별 상대 검색량 평균과 최근 상승률을 제한 계수로 반영해 사전 관심도 급등 또는 냉각을 보정합니다.",
+      },
       {
         label: "TourAPI 주변 관광 매력도",
         impact: Math.round(regionalAttractiveness),
