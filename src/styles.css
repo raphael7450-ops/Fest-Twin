@@ -1007,6 +1007,13 @@ a:focus-visible {
   gap: 10px;
 }
 
+.forecast-method-note {
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin: 12px 0 0;
+}
+
 .bar-row {
   align-items: center;
   display: grid;

@@ -74,6 +74,82 @@ function searchTrendMultiplier(trends: TrendContext, socialInterest: number) {
   return 1 + interestCorrection + accelerationCorrection;
 }
 
+function normalizeText(value: string) {
+  return value.replace(/\s+/g, "").toLowerCase();
+}
+
+function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBackdataContext) {
+  const bestBackdata = demandBackdata?.similarFestivalBaselines[0];
+  const evidenceText = normalizeText(
+    `${bestBackdata?.type ?? ""} ${bestBackdata?.periodLabel ?? ""} ${plan.name} ${plan.keywords.join(" ")}`,
+  );
+
+  if (
+    evidenceText.includes("먹거리") ||
+    evidenceText.includes("특산물") ||
+    evidenceText.includes("푸드")
+  ) {
+    return {
+      label: bestBackdata?.type ?? "먹거리/특산물",
+      sourceLabel: bestBackdata
+        ? `${bestBackdata.sourceName} ${bestBackdata.type}`
+        : "축제명·키워드",
+      weightForHour: (hour: number) => {
+        if (hour >= 11 && hour <= 13) return 1.32;
+        if (hour >= 18 && hour <= 20) return 1.28;
+        if (hour >= 14 && hour <= 16) return 0.92;
+        return 0.98;
+      },
+    };
+  }
+
+  if (
+    evidenceText.includes("미디어") ||
+    evidenceText.includes("빛") ||
+    evidenceText.includes("야간") ||
+    evidenceText.includes("라이트")
+  ) {
+    return {
+      label: bestBackdata?.type ?? "야간 미디어형",
+      sourceLabel: bestBackdata
+        ? `${bestBackdata.sourceName} ${bestBackdata.type}`
+        : "축제명·키워드",
+      weightForHour: (hour: number) => {
+        if (hour === 20) return 1.4;
+        if (hour >= 18 && hour <= 22) return 1.22;
+        if (hour >= 14 && hour <= 16) return 0.88;
+        return 1;
+      },
+    };
+  }
+
+  if (
+    evidenceText.includes("가족") ||
+    evidenceText.includes("체험") ||
+    evidenceText.includes("어린이")
+  ) {
+    return {
+      label: bestBackdata?.type ?? "가족/체험형",
+      sourceLabel: bestBackdata
+        ? `${bestBackdata.sourceName} ${bestBackdata.type}`
+        : "축제명·키워드",
+      weightForHour: (hour: number) => {
+        if (hour >= 14 && hour <= 17) return 1.3;
+        if (hour >= 18 && hour <= 20) return 1.04;
+        return 0.96;
+      },
+    };
+  }
+
+  return {
+    label: bestBackdata?.type ?? "기본 프로그램형",
+    sourceLabel: bestBackdata
+      ? `${bestBackdata.sourceName} ${bestBackdata.type}`
+      : "프로그램 시간표",
+    weightForHour: (hour: number) => (hour >= 18 && hour <= 20 ? 1.18 : 1),
+  };
+}
+
 export function createForecast(
   plan: FestivalPlan,
   tourism: TourismContext,
@@ -98,6 +174,7 @@ export function createForecast(
     .length >= 2
     ? 1.08
     : 0.92;
+  const timePattern = createFestivalTimePattern(plan, demandBackdata);
   const baseDemand =
     (similarDemand * 0.52 + plan.expectedCapacity * 0.28 + regionalAttractiveness * 180) *
     (0.75 + socialInterest / 300) *
@@ -112,9 +189,9 @@ export function createForecast(
     const programDraw = plan.programs
       .filter((program) => hour >= program.startHour && hour <= program.endHour)
       .reduce((sum, program) => sum + program.expectedDraw, 0);
-    const eveningBoost = hour >= 18 && hour <= 20 ? 1.28 : 1;
+    const typePatternBoost = timePattern.weightForHour(hour);
 
-    return Math.max(0.7, 0.8 + programDraw / 180) * eveningBoost;
+    return Math.max(0.7, 0.8 + programDraw / 180) * typePatternBoost;
   });
   const totalWeight = hourWeights.reduce((sum, weight) => sum + weight, 0);
   const visitorsByHour = plan.operatingHours.map((hour, index) => ({
@@ -181,6 +258,13 @@ export function createForecast(
         label: "프로그램 매력도",
         impact: Math.round(programScore),
         description: "프로그램 집객력을 시간대별 방문객 분포에 반영했습니다.",
+      },
+      {
+        label: "축제 유형별 시간대 패턴",
+        impact: Math.round((Math.max(...hourWeights) / average(hourWeights) - 1) * 100),
+        description:
+          `${timePattern.sourceLabel} 기준의 ${timePattern.label} 시간대 분포를 적용했습니다. ` +
+          "실측 시간대 방문객 집계가 아니라 사전 시뮬레이션 분포입니다.",
       },
     ],
   };

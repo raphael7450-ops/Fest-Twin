@@ -29,6 +29,9 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
           </div>
         ))}
       </div>
+      <p className="forecast-method-note">
+        지역축제 백데이터의 유형별 시간대 패턴과 프로그램 시간표를 결합한 사전 시뮬레이션입니다.
+      </p>
     </section>
   );
 }
