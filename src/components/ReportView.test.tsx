@@ -1,15 +1,15 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ForecastResult, PlanningReport } from "../domain/types";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
+import type { ForecastResult, PlanningReport } from "../domain/types";
 import { createMetricEvidenceSet } from "../services/metricEvidence";
 import { createSimulation } from "../services/simulation";
 import { ReportView } from "./ReportView";
 
 const report: PlanningReport = {
-  summary: "시각 일상문화축제 사전 진단 요약입니다.",
+  summary: "축제 사전 진단 요약입니다.",
   governmentReviewNote: "예산 집행 전 검토용 리포트입니다.",
   scores: [
     {
@@ -86,5 +86,16 @@ describe("ReportView", () => {
     expect(screen.getByText("흥행 예측 지수")).toBeInTheDocument();
     expect(screen.getByText("최고 밀집 위험도")).toBeInTheDocument();
     expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
+  });
+
+  it("renders TourAPI operating account evidence for submission review", () => {
+    renderReportView();
+
+    expect(screen.getByText("OpenAPI 운영계정 신청 증빙")).toBeInTheDocument();
+    expect(screen.getByText("Fest-Twin")).toBeInTheDocument();
+    expect(screen.getByText("https://cwserver.tail97dbc3.ts.net/")).toBeInTheDocument();
+    expect(screen.getByText(/지역 선택.*축제 후보.*상세 좌표.*주변 관광지/)).toBeInTheDocument();
+    expect(screen.getByText(/개발계정은 오퍼레이션별 일 1,000건/)).toBeInTheDocument();
+    expect(screen.getByText(/한국관광공사 TourAPI 4.0 출처/)).toBeInTheDocument();
   });
 });

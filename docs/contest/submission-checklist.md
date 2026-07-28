@@ -47,3 +47,12 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 - [ ] 파일 데이터만으로 구현된 서비스처럼 오해될 표현을 제거했다.
 - [ ] Instagram/X 실시간 연동은 v2.0 확장 예정으로만 표현한다.
 - [ ] 제출 전 `npm test`, `npm run build`, `npm run test:load`, `npm run deploy:check`를 실행한다.
+## TourAPI 운영계정 신청 체크
+
+- [ ] 활용 어플 URL `https://cwserver.tail97dbc3.ts.net/` 접속 가능 여부를 확인한다.
+- [ ] TourAPI 개발계정 호출 이력이 `areaCode2`, `searchFestival2`, `detailCommon2`, `locationBasedList2` 흐름으로 남는지 확인한다.
+- [ ] 개발계정 제한인 오퍼레이션별 일 1,000건 트래픽을 초과하지 않도록 데모 시나리오를 관리한다.
+- [ ] 운영계정은 한국관광공사 담당자 승인에 약 1~3일 소요될 수 있으므로 최종 제출 전 신청 일정을 확보한다.
+- [ ] 운영계정 승인 후 활용기간 24개월 및 만료 시 연장신청 필요 문구를 운영 문서에 남긴다.
+- [ ] 한국관광공사 TourAPI 4.0 출처 표기와 라이선스 표시 동의 내용을 대시보드/보고서에서 확인한다.
+- [ ] TourAPI 서비스키가 Git, 브라우저 번들, 보고서, 화면 근거에 노출되지 않는지 확인한다.

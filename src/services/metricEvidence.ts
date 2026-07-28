@@ -162,6 +162,45 @@ function trafficDerivedDetails(
   ];
 }
 
+function tourApiOperationsApprovalDetails(): MetricEvidence["sourceDetails"] {
+  return [
+    {
+      sourceId: "tourapi-operations-approval-evidence",
+      sourceName: "한국관광공사 TourAPI 4.0 운영계정 신청 증빙",
+      sourceType: "derived",
+      statusLabel: "운영계정 신청 준비",
+      records: [
+        {
+          label: "활용 어플 URL",
+          fields: [{ label: "URL", value: "https://cwserver.tail97dbc3.ts.net/" }],
+        },
+        {
+          label: "활용 오퍼레이션",
+          fields: [
+            {
+              label: "API",
+              value: "areaCode2, searchFestival2, detailCommon2, locationBasedList2",
+            },
+          ],
+        },
+        {
+          label: "개발계정 검증 기준",
+          fields: [{ label: "트래픽", value: "오퍼레이션별 일 1,000건" }],
+        },
+        {
+          label: "운영계정 승인 기준",
+          fields: [
+            { label: "승인 소요", value: "약 1~3일" },
+            { label: "활용 기간", value: "승인 후 24개월" },
+          ],
+        },
+      ],
+      note:
+        "공공데이터포털 운영계정 신청 시 활용 URL, 개발계정 호출 이력, App/Web 정상 동작, 라이선스 표시 동의를 함께 확인합니다. 인증키는 서버 환경변수로만 관리합니다.",
+    },
+  ];
+}
+
 export function createMetricEvidenceSet(
   plan: FestivalPlan,
   forecast: ForecastResult,
@@ -341,6 +380,7 @@ export function createMetricEvidenceSet(
         ...demandBackdataDetails,
         ...demandUserInputs,
         ...expectedVisitorsDetails,
+        ...tourApiOperationsApprovalDetails(),
       ],
       contributors: forecast.reasons.map((reason) => ({
         label: reason.label,

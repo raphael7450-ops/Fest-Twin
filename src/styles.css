@@ -733,6 +733,88 @@ a:focus-visible {
   padding-left: 18px;
 }
 
+.tourapi-operations-evidence,
+.openapi-operations-report {
+  background: #f8fbff;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.tourapi-operations-evidence h3,
+.openapi-operations-report h3 {
+  color: var(--color-primary-strong);
+  margin: 0;
+}
+
+.tourapi-operations-grid,
+.openapi-operations-grid {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.tourapi-operations-grid div,
+.openapi-operations-grid div {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 10px;
+}
+
+.tourapi-operations-grid dt,
+.openapi-operations-grid dt {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 850;
+  margin-bottom: 4px;
+}
+
+.tourapi-operations-grid dd,
+.openapi-operations-grid dd {
+  color: #1e293b;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.operation-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.operation-chip {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: #1d4ed8;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 850;
+  padding: 4px 8px;
+}
+
+.openapi-operations-heading {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.openapi-operations-heading strong {
+  background: #eaf7f4;
+  border: 1px solid #b8e2dc;
+  border-radius: 999px;
+  color: #0d5b48;
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
 .bar-chart {
   display: grid;
   gap: 10px;

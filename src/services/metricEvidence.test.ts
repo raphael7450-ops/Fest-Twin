@@ -112,6 +112,27 @@ describe("metricEvidence", () => {
     );
   });
 
+  it("includes TourAPI operating account application evidence for demand review", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+
+    const serialized = JSON.stringify(evidence["demand-index"].sourceDetails);
+
+    expect(serialized).toContain("한국관광공사 TourAPI 4.0 운영계정 신청 증빙");
+    expect(serialized).toContain("https://cwserver.tail97dbc3.ts.net/");
+    expect(serialized).toContain("areaCode2");
+    expect(serialized).toContain("searchFestival2");
+    expect(serialized).toContain("detailCommon2");
+    expect(serialized).toContain("locationBasedList2");
+    expect(serialized).toContain("운영계정 승인");
+    expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
+  });
+
   it("scopes user input evidence to fields used by each metric", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,
