@@ -16,7 +16,7 @@
 | 순서 | 과제 | 상태 | 산출물 |
 | --- | --- | --- | --- |
 | 1 | KPI 근거 매트릭스 강화 | 완료 | `src/services/metricEvidence.ts`, `src/components/DataBasisPanel.tsx`, `docs/specs/kpi-evidence-matrix.md` |
-| 2 | 축제 후보 변경 시 모든 컨텍스트 동기화 | 다음 작업 | TourAPI, 트렌드, 교통, 소비, 지도, 보고서 refresh key 정리 |
+| 2 | 축제 후보 변경 시 모든 컨텍스트 동기화 | 완료 | TourAPI, 트렌드, 교통, 소비, 지도, 보고서 refresh key 정리 |
 | 3 | B2G 공공검토 보고서 구조화 | 예정 | 예측 결과, 혼잡·안전, 예산·경제효과, 데이터 한계, 개선 권고 |
 | 4 | 시나리오 저장·공유 보존 | 예정 | 선택 축제 기준이 포함된 scenario save/share restore |
 | 5 | 운영 검증 게이트 안정화 | 일부 진행 | 공개 URL 기본 헬스체크 적용, 부하 테스트 설명 보정 필요 |
@@ -71,6 +71,14 @@ npm run deploy:check
 - `npm run deploy:check`: 공개 URL 4개 헬스체크 모두 HTTP 200
 - `logs/audit-2026-07-28.log`: 오류 패턴 0건, rate limit 경고는 정상 방어 동작으로 확인
 
+## Task 2 최종 QA 결과
+
+- `npm test`: 27개 파일 / 106개 테스트 통과
+- `npm run build`: TypeScript 빌드 및 Vite 번들 생성 성공
+- `npm run test:load`: TPS 386.12 req/s, HTTP 429 35회 확인
+- `npm run deploy:check`: 공개 URL 4개 헬스체크 모두 HTTP 200
+- `logs/audit-2026-07-28.log`: `ERROR/FATAL/EXCEPTION/UNHANDLED` 0건, rate limit 경고는 정상 방어 동작으로 확인
+
 ## 다음 추천 작업
 
-다음 작업은 “축제 후보 변경 시 모든 컨텍스트 동기화”다. 현재 사용자가 축제를 바꿨을 때 TourAPI 기준은 반영되지만, 트렌드·교통·소비·보고서 근거까지 완전히 같은 기준으로 갱신되는지 더 촘촘한 테스트가 필요하다.
+다음 작업은 “B2G 공공검토 보고서 구조화”다. 현재 대시보드 근거와 선택 축제 동기화는 강화되었으므로, 다음 단계에서는 보고서가 지자체 내부 검토 문서처럼 예측 결과, 혼잡·안전, 예산·경제효과, 사용 데이터와 한계, 개선 권고를 명확히 담도록 정리한다.

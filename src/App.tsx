@@ -117,7 +117,11 @@ export function App() {
     trafficState.planKey === trafficPlanKey ? trafficState.context : sampleTrafficContext;
   const spendingPlanKey = JSON.stringify({
     region: plan.region,
+    venueAddress: plan.venueAddress,
+    name: plan.name,
     startDate: plan.startDate,
+    endDate: plan.endDate,
+    selectedContentId: selectedFestivalBasis?.contentId,
   });
   const [spendingState, setSpendingState] = useState(() => ({
     planKey: spendingPlanKey,
