@@ -114,17 +114,33 @@ export function DataBasisPanel({
         </span>
       </div>
 
-      <ul className="evidence-list">
-        <li>{tourism.provenance.basisText}</li>
-        <li>{tourism.provenance.fallbackText}</li>
+      <ul className="data-basis-evidence-list">
+        <li>
+          <span>TourAPI 기준</span>
+          <p>{tourism.provenance.basisText}</p>
+        </li>
+        <li>
+          <span>Fallback 기준</span>
+          <p>{tourism.provenance.fallbackText}</p>
+        </li>
         {tourism.provenance.fallbackReason ? (
-          <li>보완 사유: {tourism.provenance.fallbackReason}</li>
+          <li>
+            <span>보완 사유</span>
+            <p>{tourism.provenance.fallbackReason}</p>
+          </li>
         ) : null}
         <li>
-          {trends.provenance.sourceName}: {trends.provenance.basisText}
+          <span>{trends.provenance.sourceName}</span>
+          <p>{trends.provenance.basisText}</p>
         </li>
-        <li>개인정보 수집 여부: 수집하지 않음</li>
-        <li>예측값 성격: 실제 집계값이 아닌 사전 의사결정용 추정값</li>
+        <li>
+          <span>개인정보 수집 여부</span>
+          <p>수집하지 않음</p>
+        </li>
+        <li>
+          <span>예측값 성격</span>
+          <p>실제 집계값이 아닌 사전 의사결정용 추정값</p>
+        </li>
       </ul>
 
       {selectedFestivalBasis ? (
