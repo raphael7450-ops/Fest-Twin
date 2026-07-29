@@ -1,7 +1,7 @@
 /**
  * 파일 : server/index.js
  * 내용 : Express 백엔드 서버 엔트리포인트 (Rate Limiter, Helmet/CSP, CORS Allowlist & SPA 정적 서빙)
- * 수정 : 2026-07-25. Winston/Morgan 중앙 로깅 연동, OpenAPI 프록시 30회/분 전용 제한
+ * 수정 : 2026-07-29. 공개 데모 후보 조회 흐름을 고려한 환경변수 기반 Rate Limit 조정
  */
 
 import express from "express";
@@ -17,6 +17,16 @@ import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const DEFAULT_GENERAL_RATE_LIMIT = 300;
+const DEFAULT_OPEN_API_RATE_LIMIT = 120;
+
+function readPositiveIntegerEnv(name, fallback) {
+  const rawValue = process.env[name];
+  if (!rawValue) return fallback;
+
+  const parsed = Number(rawValue);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 // 1. CORS Allowlist 허용 도메인 검증 미들웨어
 export function corsMiddleware(request, response, next) {
@@ -60,7 +70,7 @@ export function securityHeadersMiddleware(_request, response, next) {
 // 3. IP 기반 슬라이딩 윈도우 Rate Limiter 생성 함수
 export function createRateLimiter(options = {}) {
   const windowMs = options.windowMs ?? 60 * 1000; // 1분 슬라이딩 윈도우
-  const maxRequests = options.maxRequests ?? 100; // 기본 100회 (프록시는 30회)
+  const maxRequests = options.maxRequests ?? 100;
   const auditLog = options.auditLogger ?? noopLogger;
   const requestCounts = new Map();
 
@@ -120,21 +130,29 @@ export function createApp(options = {}) {
   }
 
   // Rate Limiting (테스트 환경에서는 옵션으로 오버라이드 가능)
+  const defaultGeneralLimit = readPositiveIntegerEnv(
+    "GENERAL_RATE_LIMIT_MAX",
+    DEFAULT_GENERAL_RATE_LIMIT,
+  );
+  const defaultOpenApiLimit = readPositiveIntegerEnv(
+    "OPEN_API_RATE_LIMIT_MAX",
+    DEFAULT_OPEN_API_RATE_LIMIT,
+  );
   const generalRateLimiter =
     options.generalRateLimiter ?? createRateLimiter({
-      ...(options.generalRateLimitOptions ?? { maxRequests: 100 }),
+      ...(options.generalRateLimitOptions ?? { maxRequests: defaultGeneralLimit }),
       auditLogger: auditLog,
     });
   const openApiRateLimiter =
     options.openApiRateLimiter ?? createRateLimiter({
-      ...(options.openApiRateLimitOptions ?? { maxRequests: 30 }),
+      ...(options.openApiRateLimitOptions ?? { maxRequests: defaultOpenApiLimit }),
       auditLogger: auditLog,
     });
 
-  // 1. 일반 API 라우트 (/api/scenarios 등) - 1분당 최대 100회
+  // 1. 일반 API 라우트 (/api/scenarios 등)
   app.use("/api", generalRateLimiter);
 
-  // 2. 외부 OpenAPI 중계 라우트 (/api/tour, /api/spending, /api/traffic) - 쿼터 보호용 1분당 최대 30회
+  // 2. 외부 OpenAPI 중계 라우트 (/api/tour, /api/spending, /api/traffic)
   app.use("/api/tour", openApiRateLimiter);
   app.use("/api/spending", openApiRateLimiter);
   app.use("/api/traffic", openApiRateLimiter);

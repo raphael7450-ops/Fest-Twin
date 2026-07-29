@@ -3,8 +3,8 @@
  * 내용 : Node.js 기반 k6-style 부하 테스트 러너 (Rate Limiter 방어 및 캐시 성능 검증)
  * 실행 : npm run test:load
  *
- * 시나리오 A — 일반 API 정상 부하 (/api/scenarios, 100회/분 이내)
- * 시나리오 B — OpenAPI Rate Limit 초과 방어 (/api/tour/area-code, 31번째부터 429)
+ * 시나리오 A — 일반 API 정상 부하 (/api/scenarios, 300회/분 이내)
+ * 시나리오 B — OpenAPI Rate Limit 초과 방어 (/api/tour/area-code, 121번째부터 429)
  * 시나리오 C — 인메모리 캐시 성능 (Cache Hit 평균 응답 ≤ 5ms)
  */
 
@@ -123,7 +123,7 @@ function stopServer(server) {
 async function scenarioA(port) {
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("📋 시나리오 A: 일반 API 정상 부하 (/api/scenarios)");
-  console.log("   임계값: 100회/분 이내 → 모두 HTTP 200");
+  console.log("   임계값: 300회/분 이내 → 모두 HTTP 200");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
   const TOTAL = 100;
@@ -181,12 +181,12 @@ async function scenarioA(port) {
 async function scenarioB(port) {
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("📋 시나리오 B: OpenAPI Rate Limit 초과 방어");
-  console.log("   대상: /api/tour/area-code (30회/분 제한)");
-  console.log("   검증: 31번째 요청부터 HTTP 429 + X-RateLimit-Limit: 30");
+  console.log("   대상: /api/tour/area-code (120회/분 제한)");
+  console.log("   검증: 121번째 요청부터 HTTP 429 + X-RateLimit-Limit: 120");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-  const TOTAL = 35;
-  const RATE_LIMIT = 30;
+  const TOTAL = 125;
+  const RATE_LIMIT = 120;
   const baseUrl = `http://127.0.0.1:${port}/api/tour/area-code`;
   const results = [];
 
@@ -202,10 +202,10 @@ async function scenarioB(port) {
     });
   }
 
-  // /api/tour 경로에는 일반 limiter(100) + openAPI limiter(30) 모두 적용됨
-  // openAPI limiter가 30회에서 차단 → 31번째부터 429 기대
-  // 단, 일반 limiter(100)는 시나리오 A에서 이미 소진되었을 수 있으므로
-  // openAPI limiter의 X-RateLimit-Limit: 30 헤더만 검증
+  // /api/tour 경로에는 일반 limiter(300) + OpenAPI limiter(120) 모두 적용됨
+  // OpenAPI limiter가 120회에서 차단 → 121번째부터 429 기대
+  // 단, 일반 limiter(300)는 시나리오 A에서 이미 소진되었을 수 있으므로
+  // OpenAPI limiter의 X-RateLimit-Limit: 120 헤더를 우선 검증
 
   let normalOk = 0;
   let rateLimited = 0;
@@ -214,8 +214,8 @@ async function scenarioB(port) {
   for (const r of results) {
     if (r.status === 429) {
       rateLimited++;
-      // 429 응답 시 X-RateLimit-Limit 헤더가 30 또는 100일 수 있음 (두 limiter 중 먼저 걸린 것)
-      if (r.rateLimitHeader === "30" || r.rateLimitHeader === "100") {
+      // 429 응답 시 X-RateLimit-Limit 헤더가 120 또는 300일 수 있음 (두 limiter 중 먼저 걸린 것)
+      if (r.rateLimitHeader === "120" || r.rateLimitHeader === "300") {
         headerCorrect++;
       }
     } else if (r.status === 200) {
@@ -223,13 +223,13 @@ async function scenarioB(port) {
     }
   }
 
-  // 검증: 31번째 이후는 모두 429여야 함
+  // 검증: 121번째 이후는 모두 429여야 함
   const limitedResults = results.filter((r) => r.index > RATE_LIMIT);
   const allLimitedAre429 = limitedResults.every((r) => r.status === 429);
 
   // 검증: X-RateLimit-Limit 헤더 존재
   const hasRateLimitHeader = results.some(
-    (r) => r.rateLimitHeader === "30" || r.rateLimitHeader === "100"
+    (r) => r.rateLimitHeader === "120" || r.rateLimitHeader === "300"
   );
 
   const passed = allLimitedAre429 && hasRateLimitHeader;
@@ -238,7 +238,7 @@ async function scenarioB(port) {
   console.log(`  🚫 차단 응답 (HTTP 429): ${rateLimited}회`);
   console.log(`  🏷  X-RateLimit-Limit 헤더 검증: ${headerCorrect}회 확인`);
   console.log(
-    `  📊 31번째 이후 전부 429: ${allLimitedAre429 ? "✅ YES" : "❌ NO"}`
+    `  📊 121번째 이후 전부 429: ${allLimitedAre429 ? "✅ YES" : "❌ NO"}`
   );
   console.log(`  🏁 결과: ${passed ? "✅ PASS" : "❌ FAIL"}`);
 
@@ -406,7 +406,7 @@ function generateReport(resultA, resultB, resultC) {
 | 총 소요 시간 | ${resultA.elapsedMs.toFixed(0)}ms |
 | 결과 | ${resultA.passed ? "PASS" : "FAIL"} |
 
-> 100회/분 임계값 이내에서 모든 요청이 HTTP 200으로 정상 수용됨을 확인합니다.
+> 300회/분 임계값 이내에서 모든 요청이 HTTP 200으로 정상 수용됨을 확인합니다.
 
 ---
 
@@ -420,10 +420,10 @@ function generateReport(resultA, resultB, resultC) {
 | 정상 응답 (HTTP 200) | ${resultB.normalOk}회 |
 | 차단 응답 (HTTP 429) | ${resultB.rateLimited}회 |
 | X-RateLimit-Limit 헤더 검증 | ${resultB.headerCorrect}회 |
-| 31번째 이후 전부 429 | ${resultB.allLimitedAre429 ? "YES" : "NO"} |
+| 121번째 이후 전부 429 | ${resultB.allLimitedAre429 ? "YES" : "NO"} |
 | 결과 | ${resultB.passed ? "PASS" : "FAIL"} |
 
-> OpenAPI 프록시 경로에 적용된 Rate Limiter(30회/분)가 정상 동작하여,
+> OpenAPI 프록시 경로에 적용된 Rate Limiter(120회/분)가 정상 동작하여,
 > 제한 초과 시 HTTP 429 + \`X-RateLimit-Limit\` 헤더를 반환합니다.
 
 ---

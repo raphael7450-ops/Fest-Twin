@@ -103,13 +103,36 @@ describe("server/index", () => {
     expect(third.jsonBody?.error?.code).toBe("TOO_MANY_REQUESTS");
   });
 
-  it("configures 30/min rate limit for OpenAPI endpoints", () => {
-    const dummyLimiter = (_req: any, _res: any, next: any) => next();
+  it("keeps the default OpenAPI limit high enough for repeated candidate refreshes", async () => {
     const app = createApp({
-      generalRateLimiter: dummyLimiter,
-      openApiRateLimiter: dummyLimiter,
+      generalRateLimitOptions: { maxRequests: 300 },
+      apiKey: "test-key",
+      fetchImpl: (async () =>
+        new Response(
+          JSON.stringify({
+            response: {
+              header: { resultCode: "0000", resultMsg: "OK" },
+              body: {
+                items: {
+                  item: [{ rnum: 1, code: "1", name: "서울" }],
+                },
+                totalCount: 1,
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        )) as typeof fetch,
+      disableHttpLogging: true,
     });
-    expect(app).toBeDefined();
+
+    await withAppServer(app, async (baseUrl) => {
+      const responses = await Promise.all(
+        Array.from({ length: 31 }, () => fetch(`${baseUrl}/api/tour/area-code?numOfRows=50&pageNo=1`)),
+      );
+
+      expect(responses.every((response) => response.status === 200)).toBe(true);
+      expect(responses[30].headers.get("X-RateLimit-Limit")).toBe("120");
+    });
   });
 
   it("parses JSON bodies for trend proxy requests mounted through createApp", async () => {

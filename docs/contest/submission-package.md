@@ -29,7 +29,7 @@ Fest-Twin (지자체 축제 기획 사전 진단 및 디지털 트윈 시뮬레�
 | 수치 산출 근거 | 예측 수치에 대한 투명한 근거 및 연산 수식 제시 | Metric Evidence Engine 구축. KPI별 원본 데이터, 사용자 입력값, 시뮬레이션 산출값을 분리하고 데이터 상태 요약과 근거 드로어 제공 | [data-and-simulation-methodology.md](../specs/data-and-simulation-methodology.md), [kpi-evidence-matrix.md](../specs/kpi-evidence-matrix.md) |
 | 안전사고 예방 | 인파 밀집 및 안전관리 사전 시뮬레이션 | 5ms 이내 그리드 체류 인원 밀도($명/m^2$) 및 위험도 등급(관심/주의/경계/심각) 실시간 시뮬레이션 | [data-and-simulation-methodology.md](../specs/data-and-simulation-methodology.md) |
 | 협업 및 영속성 | 부서 간 축제 기획안 공유 및 데이터 영속화 | SQLite REST API 기반 저장소 및 8자리 `share_token` 부서 공유 링크 복원 기능 구현 | [architecture-and-api.md](../specs/architecture-and-api.md) |
-| 시스템 안정성 | 보안 및 프록시 쿼터 보호, 무중단 배포 | OWASP CSP 헤더, 2단계 Rate Limiter(100회/30회), LRU 캐시 및 Docker 무중단 자동 배포 | [deployment-and-cicd.md](../guides/deployment-and-cicd.md) |
+| 시스템 안정성 | 보안 및 프록시 쿼터 보호, 무중단 배포 | OWASP CSP 헤더, 2단계 Rate Limiter(300회/120회), LRU 캐시 및 Docker 무중단 자동 배포 | [deployment-and-cicd.md](../guides/deployment-and-cicd.md) |
 
 ---
 
