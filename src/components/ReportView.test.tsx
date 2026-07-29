@@ -69,6 +69,20 @@ afterEach(() => {
 });
 
 describe("ReportView", () => {
+  it("structures the report into public-review sections", () => {
+    renderReportView();
+
+    [
+      "예측 결과",
+      "혼잡·안전 진단",
+      "예산·경제 효과",
+      "사용 데이터와 한계",
+      "개선 권고",
+    ].forEach((sectionName) => {
+      expect(screen.getByRole("heading", { name: sectionName })).toBeInTheDocument();
+    });
+  });
+
   it("prints the planning report for public review", () => {
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => undefined);
 

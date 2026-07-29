@@ -1409,6 +1409,93 @@ a:focus-visible {
   padding: 12px;
 }
 
+.report-section {
+  border-top: 1px solid #e5edf6;
+  display: grid;
+  gap: 14px;
+  padding: 18px 0;
+}
+
+.report-section:first-of-type {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+.report-section-heading {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.report-section-heading span {
+  align-items: center;
+  background: #eef6ff;
+  border: 1px solid #cfe3ff;
+  border-radius: 999px;
+  color: var(--color-primary-strong);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 900;
+  height: 28px;
+  justify-content: center;
+  width: 34px;
+}
+
+.report-section-heading h3 {
+  color: var(--color-primary-strong);
+  font-size: 17px;
+  margin: 0;
+}
+
+.report-kpi-strip {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-kpi-strip article {
+  background: #f8fafc;
+  border: 1px solid #e5edf6;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.report-kpi-strip span,
+.report-kpi-strip strong {
+  display: block;
+}
+
+.report-kpi-strip span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 850;
+  margin-bottom: 4px;
+}
+
+.report-kpi-strip strong {
+  color: var(--color-primary-strong);
+  font-size: 18px;
+}
+
+.report-finding-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.report-finding-list li {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  color: #7c2d12;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
 .score-table {
   margin-bottom: 12px;
 }
@@ -1448,6 +1535,7 @@ a:focus-visible {
   .score-table,
   .recommendation-grid,
   .guideline-grid,
+  .report-kpi-strip,
   .safety-grid,
   .submission-status-grid {
     grid-template-columns: 1fr 1fr;
@@ -1500,6 +1588,7 @@ a:focus-visible {
   .score-table,
   .recommendation-grid,
   .guideline-grid,
+  .report-kpi-strip,
   .safety-grid,
   .submission-status-grid {
     grid-template-columns: 1fr;
@@ -1575,12 +1664,19 @@ a:focus-visible {
     padding: 0;
   }
 
+  .report-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    padding: 14px 0;
+  }
+
   .panel-heading {
     align-items: flex-start;
   }
 
   .score-table,
-  .recommendation-grid {
+  .recommendation-grid,
+  .report-kpi-strip {
     grid-template-columns: 1fr 1fr;
   }
 }
