@@ -71,6 +71,8 @@ describe("App", () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    vi.unstubAllGlobals();
+    window.history.pushState({}, "", "/");
   });
 
   it("renders the government-guided Fest-Twin MVP dashboard", async () => {
@@ -241,6 +243,51 @@ describe("App", () => {
     const drawer = await screen.findByRole("dialog", { name: "지표 산출 근거" });
     expect(within(drawer).queryByText(/drawer-[a-z-]+-secret/)).not.toBeInTheDocument();
     expect(within(drawer).getAllByText("[비공개]").length).toBeGreaterThanOrEqual(12);
+  });
+
+  it("restores selected TourAPI festival basis from a shared scenario link", async () => {
+    window.history.pushState({}, "", "/?share_token=token_selected_festival");
+    const selectedFestivalBasis = {
+      contentId: "3439947",
+      title: "강남 미디어 윈터페스타",
+      address: "서울특별시 강남구 영동대로 511",
+      startDate: "2025-12-19",
+      endDate: "2026-01-03",
+      mapX: "127.0610512042",
+      mapY: "37.5103955843",
+      sourceName: "TourAPI selected festival candidate",
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes("/api/scenarios/share/token_selected_festival")) {
+        return {
+          ok: true,
+          json: async () => ({
+            parameters: {
+              plan: {
+                name: "강남 미디어 윈터페스타",
+                region: "서울",
+                venueAddress: "서울특별시 강남구 영동대로 511",
+                startDate: "2025-12-19",
+                endDate: "2026-01-03",
+              },
+              selectedHour: 20,
+              selectedFestivalBasis,
+            },
+          }),
+        } as Response;
+      }
+
+      return {
+        ok: false,
+        json: async () => ({}),
+      } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    expect((await screen.findAllByText("3439947")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("선택 TourAPI 축제 기준").length).toBeGreaterThan(0);
   });
 
   it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {

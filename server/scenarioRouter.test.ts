@@ -117,6 +117,24 @@ describe("server/scenarioRouter", () => {
     expect(res.jsonBody.share_token).toBeDefined();
   });
 
+  it("preserves selected TourAPI festival basis in scenario parameters", () => {
+    const selectedFestivalBasis = {
+      contentId: "3439947",
+      title: "Gangnam Media Winter Festa",
+      address: "Seoul Gangnam-gu Yeongdong-daero 511",
+      startDate: "2025-12-19",
+      endDate: "2026-01-03",
+      sourceName: "TourAPI selected festival candidate",
+    };
+    const res = callRoute("POST", "/", {
+      title: "Selected Festival Plan",
+      parameters: { selectedHour: 20, selectedFestivalBasis },
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.jsonBody.parameters.selectedFestivalBasis).toEqual(selectedFestivalBasis);
+  });
+
   it("DELETE /api/scenarios/:id - deletes existing scenario", () => {
     const res = callRoute("DELETE", "/scen_1");
     expect(res.status).toBe(200);

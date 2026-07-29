@@ -4,7 +4,7 @@
  * 수정 : 2026-07-24. REST API 연동, share_token 공유 링크 복사 지원 및 하이브리드 동기화 구현
  */
 
-import type { FestivalPlan } from "../domain/types";
+import type { FestivalPlan, SelectedFestivalBasis } from "../domain/types";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 
 const STORAGE_KEY = "fest-twin-scenarios";
@@ -16,6 +16,7 @@ export interface SavedScenario {
   selectedHour: number;
   plan: FestivalPlan;
   shareToken?: string;
+  selectedFestivalBasis?: SelectedFestivalBasis;
 }
 
 export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
@@ -86,6 +87,7 @@ function readRawScenarios(): SavedScenario[] {
     return parsed.map((item: any) => ({
       ...item,
       plan: normalizeFestivalPlan(item.plan),
+      selectedFestivalBasis: item.selectedFestivalBasis,
     }));
   } catch {
     return [];
@@ -121,6 +123,7 @@ export async function fetchServerScenarios(): Promise<SavedScenario[]> {
         selectedHour: item.parameters?.selectedHour ?? 20,
         plan: normalizeFestivalPlan(item.parameters?.plan),
         shareToken: item.share_token,
+        selectedFestivalBasis: item.parameters?.selectedFestivalBasis,
       }));
 
       // 서버 응답 성공 시 LocalStorage에도 최신화
@@ -138,11 +141,15 @@ export async function fetchServerScenarios(): Promise<SavedScenario[]> {
 export async function saveServerScenario(
   plan: FestivalPlan,
   selectedHour: number,
+  selectedFestivalBasisOrTitle?: SelectedFestivalBasis | null | string,
   title?: string,
 ): Promise<SavedScenario> {
-  const localSaved = saveScenario(plan, selectedHour);
+  const selectedFestivalBasis =
+    typeof selectedFestivalBasisOrTitle === "string" ? undefined : selectedFestivalBasisOrTitle;
+  const localSaved = saveScenario(plan, selectedHour, selectedFestivalBasis);
   const scenarioTitle =
-    title ?? localSaved.name;
+    (typeof selectedFestivalBasisOrTitle === "string" ? selectedFestivalBasisOrTitle : title) ??
+    localSaved.name;
 
   try {
     const response = await fetch(createApiUrl("/api/scenarios"), {
@@ -151,7 +158,7 @@ export async function saveServerScenario(
       body: JSON.stringify({
         title: scenarioTitle,
         description: `${plan.region} ${plan.venueAddress}`,
-        parameters: { plan, selectedHour },
+        parameters: { plan, selectedHour, selectedFestivalBasis },
         results_summary: {
           targetVisitors: plan.expectedCapacity,
           budgetKrw: plan.totalBudgetMillionKrw * 1000000,
@@ -168,6 +175,7 @@ export async function saveServerScenario(
         selectedHour,
         plan,
         shareToken: created.share_token,
+        selectedFestivalBasis: created.parameters?.selectedFestivalBasis ?? selectedFestivalBasis ?? undefined,
       };
 
       const updated = [serverSaved, ...readRawScenarios().filter((i) => i.id !== localSaved.id)].slice(0, 10);
@@ -217,6 +225,7 @@ export function loadScenarios(): SavedScenario[] {
 export function saveScenario(
   plan: FestivalPlan,
   selectedHour: number,
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): SavedScenario {
   const savedAt = new Date().toISOString();
   const scenario: SavedScenario = {
@@ -225,6 +234,7 @@ export function saveScenario(
     savedAt,
     selectedHour,
     plan,
+    selectedFestivalBasis: selectedFestivalBasis ?? undefined,
   };
   const scenarios = [scenario, ...readRawScenarios()].slice(0, 10);
 

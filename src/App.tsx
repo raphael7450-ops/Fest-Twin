@@ -25,7 +25,7 @@ import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleTrendContext } from "./data/sampleTrends";
-import type { MetricEvidenceId } from "./domain/types";
+import type { MetricEvidenceId, SelectedFestivalBasis } from "./domain/types";
 import { getDemandBackdataContext } from "./services/demandBackdataAdapter";
 import {
   applyFestivalCandidateToPlan,
@@ -46,6 +46,23 @@ import {
   type FestivalCandidate,
   type TourApiAreaCode,
 } from "./services/tourApiAdapter";
+
+function candidateFromSelectedBasis(
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
+): FestivalCandidate | null {
+  if (!selectedFestivalBasis) return null;
+
+  return {
+    id: selectedFestivalBasis.contentId,
+    title: selectedFestivalBasis.title,
+    address: selectedFestivalBasis.address,
+    startDate: selectedFestivalBasis.startDate,
+    endDate: selectedFestivalBasis.endDate,
+    mapX: selectedFestivalBasis.mapX,
+    mapY: selectedFestivalBasis.mapY,
+    searchScope: "exact-period",
+  };
+}
 
 export function App() {
   const [plan, setPlan] = useState(sampleFestivalPlan);
@@ -173,6 +190,7 @@ export function App() {
           if (data?.parameters?.plan) {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
             setPlan(restoredPlan);
+            setSelectedCandidate(candidateFromSelectedBasis(data.parameters.selectedFestivalBasis));
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
@@ -188,6 +206,7 @@ export function App() {
           if (data?.parameters?.plan) {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
             setPlan(restoredPlan);
+            setSelectedCandidate(candidateFromSelectedBasis(data.parameters.selectedFestivalBasis));
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
@@ -198,6 +217,7 @@ export function App() {
             const found = localScenarios.find((item) => item.id === scenarioId);
             if (found) {
               setPlan(normalizeFestivalPlan(found.plan));
+              setSelectedCandidate(candidateFromSelectedBasis(found.selectedFestivalBasis));
               setSelectedHour(found.selectedHour ?? 20);
               setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
             }
@@ -208,6 +228,7 @@ export function App() {
           const found = localScenarios.find((item) => item.id === scenarioId);
           if (found) {
             setPlan(normalizeFestivalPlan(found.plan));
+            setSelectedCandidate(candidateFromSelectedBasis(found.selectedFestivalBasis));
             setSelectedHour(found.selectedHour ?? 20);
             setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
           }
@@ -524,8 +545,10 @@ export function App() {
             <ScenarioLibrary
               plan={plan}
               selectedHour={selectedHour}
+              selectedFestivalBasis={selectedFestivalBasis}
               onLoadScenario={(scenario) => {
                 setPlan(normalizeFestivalPlan(scenario.plan));
+                setSelectedCandidate(candidateFromSelectedBasis(scenario.selectedFestivalBasis));
                 setSelectedHour(scenario.selectedHour ?? 20);
               }}
             />
@@ -584,8 +607,10 @@ export function App() {
             <ScenarioLibrary
               plan={plan}
               selectedHour={selectedHour}
+              selectedFestivalBasis={selectedFestivalBasis}
               onLoadScenario={(scenario) => {
                 setPlan(normalizeFestivalPlan(scenario.plan));
+                setSelectedCandidate(candidateFromSelectedBasis(scenario.selectedFestivalBasis));
                 setSelectedHour(scenario.selectedHour ?? 20);
               }}
             />
