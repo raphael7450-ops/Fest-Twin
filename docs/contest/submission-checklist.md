@@ -6,17 +6,20 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 
 ## 1. 코드 빌드 및 자동화 테스트 체크리스트
 
-- [x] 단위 및 통합 테스트 통과: `npm test` 실행 시 Vitest 21개 테스트 파일 84개 테스트 항목 100% 성공
+- [x] 단위 및 통합 테스트 통과: `npm test` 실행 시 Vitest 27개 테스트 파일 107개 테스트 항목 100% 성공
 - [x] TypeScript 및 프로덕션 빌드: `npm run build` 실행 시 tsc 및 vite bundle 정상 생성 (에러 없음)
-- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API TPS 1,000 req/s 이상, Rate Limiter 429 방어 및 캐시 히트 평균 0.58ms 통과 (`docs/LOAD_TEST_REPORT.md`)
+- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API TPS 971.32 req/s, Rate Limiter 429 방어 35회, 캐시 히트 평균 0.93ms 통과 (`docs/LOAD_TEST_REPORT.md`)
+- [x] KPI 근거 매트릭스 검증: KPI별 `sourceDetails`, 데이터 상태 요약, 선택 TourAPI 기준 표시 테스트 통과
+- [x] 선택 후보 기반 갱신 검증: TourAPI 후보 선택 후 trend, traffic, spending 로더가 후보 계획 기준으로 재호출되는 테스트 통과
 - [x] 이모티콘 및 강조 제한 준수: 소스 코드, 스크립트, 배포 로그 및 Markdown 문서 전체 이모티콘 및 볼드 표기 제거 완료 (`.agents/AGENTS.md`)
 
 ---
 
 ## 2. 배포 및 시스템 헬스체크
 
-- [x] 원격 Docker 컨테이너 재배포: `npm run deploy:remote` 실행 및 원격 서버(`192.168.55.223:18080`) 정상 구동
-- [x] 4대 엔드포인트 헬스체크 (`npm run deploy:check`):
+- [x] 원격 서버 기존 배포 헬스체크: `npm run deploy:check` 기준 원격 서버(`192.168.55.223:18080`) 정상 응답 확인
+- [ ] `codex/kpi-evidence-matrix` 브랜치 병합 후 원격 Docker 컨테이너 재배포 실행
+- [x] 4대 엔드포인트 헬스체크 (`npm run deploy:check`) 기준:
   - [x] `/api/scenarios` (HTTP 200)
   - [x] `/api/tour/area-code` (HTTP 200)
   - [x] `/api/scenarios/scen_sample_01` (HTTP 200)
@@ -39,14 +42,16 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 
 - [ ] 최종 서비스 URL이 별도 승인 절차 없이 접속 가능하다.
 - [ ] 지역·기간 선택 후 한국관광공사 TourAPI 축제 후보 조회 흐름이 동작한다.
-- [ ] 후보 선택 시 기획안, 지도, KPI, 데이터 근거가 함께 갱신된다.
-- [ ] Naver DataLab 검색량 기반 사전 관심도 지표가 실제 조회 또는 Fallback 상태로 표시된다.
+- [x] 후보 선택 시 기획안, 지도, KPI, 데이터 근거가 함께 갱신된다.
+- [x] Naver DataLab 검색량 기반 사전 관심도 지표가 실제 조회 또는 Fallback 상태로 표시된다.
+- [x] KPI별 원본 근거, 사용자 입력값, 산출값, 데이터 상태가 분리되어 표시된다.
 - [ ] 보고서에 활용 API명, 산출 근거, 데이터 해석 한계, Fallback 상태가 포함된다.
 - [ ] 기능설명서에 서비스명, 서비스 설명, 서비스 유형, 상세 기능, 활용 API, 관련 이미지가 포함되어 있다.
 - [ ] TourAPI 신청정보와 인증키는 제출 양식에만 기재하고 Git 저장소와 PDF에는 기록하지 않는다.
 - [ ] 파일 데이터만으로 구현된 서비스처럼 오해될 표현을 제거했다.
 - [ ] Instagram/X 실시간 연동은 v2.0 확장 예정으로만 표현한다.
 - [ ] 제출 전 `npm test`, `npm run build`, `npm run test:load`, `npm run deploy:check`를 실행한다.
+
 ## TourAPI 운영계정 신청 체크
 
 - [ ] 활용 어플 URL `https://cwserver.tail97dbc3.ts.net/` 접속 가능 여부를 확인한다.
