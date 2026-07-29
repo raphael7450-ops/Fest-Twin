@@ -347,10 +347,15 @@ function normalizeItems(operation: TourApiOperation, payload: unknown): TourApiI
 
   const totalCount = Number(body.totalCount);
   if (totalCount === 0) {
+    const emptyItemsObject =
+      isRecord(body.items) &&
+      (body.items.item === undefined ||
+        (Array.isArray(body.items.item) && body.items.item.length === 0));
     const validEmptyItems =
       body.items === "" ||
       body.items === null ||
-      (isRecord(body.items) && Array.isArray(body.items.item) && body.items.item.length === 0);
+      body.items === undefined ||
+      emptyItemsObject;
     if (!validEmptyItems) {
       throw new Error(`TourAPI ${operation} empty items shape is invalid`);
     }

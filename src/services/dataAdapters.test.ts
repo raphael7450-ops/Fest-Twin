@@ -461,6 +461,71 @@ describe("public data adapters", () => {
     expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
   });
 
+  it("treats TourAPI empty object items as an empty festival result before broadening candidates", async () => {
+    const responses = [
+      tourApiPayload([{ code: "6", name: "부산" }]),
+      {
+        response: {
+          header: { resultCode: "0000", resultMsg: "OK" },
+          body: {
+            items: {},
+            numOfRows: 10,
+            pageNo: 1,
+            totalCount: 0,
+          },
+        },
+      },
+      tourApiPayload([
+        {
+          contentid: "600",
+          title: "부산 바다 축제",
+          addr1: "부산광역시 해운대구",
+          eventstartdate: "20260801",
+          eventenddate: "20260807",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "600",
+          title: "부산 바다 축제",
+          addr1: "부산광역시 해운대구",
+          firstimage: "https://example.com/busan.jpg",
+          eventstartdate: "20260801",
+          eventenddate: "20260807",
+          mapx: "129.1604",
+          mapy: "35.1587",
+        },
+      ]),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "부산",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(candidates).toMatchObject([
+      {
+        id: "600",
+        title: "부산 바다 축제",
+        searchScope: "annual-region",
+      },
+    ]);
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/api/tour/area-code",
+      "/api/tour/festivals",
+      "/api/tour/festivals",
+      "/api/tour/detail",
+    ]);
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
+    expect(urls[2].searchParams.get("eventStartDate")).toBe("20250101");
+  });
+
   it("discloses the annual broadened search when missing detail coordinates require sample supplementation", async () => {
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),
