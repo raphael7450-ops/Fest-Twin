@@ -525,6 +525,9 @@ export function App() {
             <DataBasisPanel
               tourism={tourism}
               trends={trends}
+              traffic={traffic}
+              spending={spending}
+              demandBackdata={demandBackdata}
               selectedFestivalBasis={selectedFestivalBasis}
             />
           </aside>
@@ -597,6 +600,9 @@ export function App() {
             <DataBasisPanel
               tourism={tourism}
               trends={trends}
+              traffic={traffic}
+              spending={spending}
+              demandBackdata={demandBackdata}
               selectedFestivalBasis={selectedFestivalBasis}
             />
           </aside>

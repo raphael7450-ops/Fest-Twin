@@ -799,6 +799,61 @@ a:focus-visible {
   padding: 4px 8px;
 }
 
+.data-status-summary {
+  background: #f8fbff;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.data-status-summary h3 {
+  color: var(--color-primary-strong);
+  font-size: 14px;
+  margin: 0;
+}
+
+.data-status-grid {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.data-status-grid div {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.data-status-grid dt {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 850;
+  margin-bottom: 5px;
+}
+
+.data-status-grid dd {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.data-status-grid dd strong {
+  color: #1d4ed8;
+  font-size: 13px;
+}
+
+.data-status-grid dd span {
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .openapi-operations-heading {
   align-items: center;
   display: flex;

@@ -144,6 +144,39 @@ describe("metricEvidence", () => {
     expect(serialized).not.toMatch(/serviceKey|clientSecret|Authorization|Cookie/i);
   });
 
+  it("labels the demand evidence matrix with separated data source roles", () => {
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleTrafficContext,
+      sampleSpendingContext,
+      sampleDemandBackdataContext,
+      selectedFestivalBasis,
+    );
+
+    expect(Object.values(evidence).every((item) => item.sourceDetails.length > 0)).toBe(
+      true,
+    );
+
+    const demandSourceNames = evidence["demand-index"].sourceDetails.map(
+      (detail) => detail.sourceName,
+    );
+
+    expect(demandSourceNames).toEqual(
+      expect.arrayContaining([
+        "선택 TourAPI 축제 기준",
+        "주변 관광지 맥락",
+        "검색 관심도 보정",
+        "지역 수요 백데이터",
+        "사용자 입력값",
+        "시뮬레이션 산출값",
+      ]),
+    );
+  });
+
   it("includes the selected TourAPI festival basis in demand evidence", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,

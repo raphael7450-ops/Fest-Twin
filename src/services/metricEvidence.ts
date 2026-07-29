@@ -85,7 +85,7 @@ function userInputDetails(
   return [
     {
       sourceId,
-      sourceName: "축제 기획안 입력값",
+      sourceName: "사용자 입력값",
       sourceType: "user-input",
       statusLabel: "사용자 입력 기준",
       calculationInputs,
@@ -107,6 +107,22 @@ function derivedDetails(
       statusLabel: "시스템 산출값",
       calculationInputs,
       note,
+    },
+  ];
+}
+
+function roleSummaryDetails(
+  sourceId: string,
+  sourceName: string,
+  role: string,
+): MetricEvidence["sourceDetails"] {
+  return [
+    {
+      sourceId,
+      sourceName,
+      sourceType: "derived",
+      statusLabel: "근거 역할",
+      calculationInputs: [{ label: "역할", value: role }],
     },
   ];
 }
@@ -210,7 +226,7 @@ function selectedFestivalBasisDetails(
   return [
     {
       sourceId: "tourapi-selected-festival-basis",
-      sourceName: "TourAPI 선택 축제 기준",
+      sourceName: "선택 TourAPI 축제 기준",
       sourceType: "tourapi",
       statusLabel: "사용자 선택 후보 반영",
       records: [
@@ -257,6 +273,26 @@ export function createMetricEvidenceSet(
   const confidence = sourceConfidence(tourism, trends);
   const limitations = fallbackLimitations(tourism, trends);
   const tourismDetails = tourism.sourceDetails ?? [];
+  const trendDetails: MetricEvidence["sourceDetails"] =
+    trends.sourceDetails && trends.sourceDetails.length > 0
+      ? trends.sourceDetails
+      : [
+          {
+            sourceId: "trend-context-provenance",
+            sourceName: trends.provenance.sourceName,
+            sourceType: trends.provenance.sourceType === "trend-sample" ? "sample" : "derived",
+            statusLabel:
+              trends.provenance.sourceStatus === "live"
+                ? "실제 조회"
+                : trends.provenance.sourceStatus === "partial-fallback"
+                  ? "일부 보완"
+                  : "샘플 대체",
+            calculationInputs: [
+              { label: "근거", value: trends.provenance.basisText },
+              { label: "보완", value: trends.provenance.fallbackText },
+            ],
+          },
+      ];
   const trafficDetails = trafficDerivedDetails(traffic);
   const spendingDetails = spending?.sourceDetails ?? [];
   const demandBackdataDetails = demandBackdata?.sourceDetails ?? [];
@@ -293,6 +329,30 @@ export function createMetricEvidenceSet(
       value: `${plan.facilities.filter((facility) => facility.type === "entrance").length}곳`,
     },
   ]);
+  const demandSourceRoleDetails = [
+    ...roleSummaryDetails(
+      "role-nearby-tourism-context",
+      "주변 관광지 맥락",
+      "TourAPI 주변 관광지와 유사 축제 근거를 수요 매력도 보정에 사용합니다.",
+    ),
+    ...roleSummaryDetails(
+      "role-search-interest-correction",
+      "검색 관심도 보정",
+      "Naver DataLab 또는 샘플 검색 관심도를 수요 보정 계수에 사용합니다.",
+    ),
+    ...(demandBackdataDetails.length > 0
+      ? roleSummaryDetails(
+          "role-regional-demand-backdata",
+          "지역 수요 백데이터",
+          "지역축제 백데이터를 유사 축제 기준선에 사용합니다.",
+        )
+      : []),
+    ...roleSummaryDetails(
+      "role-demand-derived-output",
+      "시뮬레이션 산출값",
+      "예상 방문객과 피크 시간대 산출값을 KPI 결과로 표시합니다.",
+    ),
+  ];
   const layoutUserInputs = userInputDetails("user-layout-inputs", [
     { label: "격자 크기", value: `${plan.gridWidth} × ${plan.gridHeight}` },
     { label: "시설 수", value: `${plan.facilities.length}곳` },
@@ -418,7 +478,9 @@ export function createMetricEvidenceSet(
       limitations,
       sourceDetails: [
         ...selectedFestivalDetails,
+        ...demandSourceRoleDetails,
         ...tourismDetails,
+        ...trendDetails,
         ...demandBackdataDetails,
         ...demandUserInputs,
         ...expectedVisitorsDetails,

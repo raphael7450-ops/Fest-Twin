@@ -1,6 +1,9 @@
 import type {
   DataSourceStatus,
+  DemandBackdataContext,
   SelectedFestivalBasis,
+  SpendingContext,
+  TrafficContext,
   TourismContext,
   TrendContext,
 } from "../domain/types";
@@ -8,6 +11,9 @@ import type {
 interface DataBasisPanelProps {
   tourism: TourismContext;
   trends: TrendContext;
+  traffic?: TrafficContext;
+  spending?: SpendingContext;
+  demandBackdata?: DemandBackdataContext;
   selectedFestivalBasis?: SelectedFestivalBasis | null;
 }
 
@@ -22,14 +28,73 @@ const TOURAPI_OPERATIONS = [
 function statusLabel(status: DataSourceStatus | undefined) {
   if (status === "live") return "실제 TourAPI 조회 성공";
   if (status === "partial-fallback") return "실제 TourAPI 일부 조회 및 샘플 보완";
+  if (status === "file-normalized") return "파일 정규화";
   return "샘플 데이터 대체 사용";
+}
+
+function compactStatusLabel(status: DataSourceStatus | undefined) {
+  if (status === "live") return "실조회";
+  if (status === "partial-fallback") return "일부 보완";
+  if (status === "file-normalized") return "파일 정규화";
+  return "샘플 대체";
+}
+
+function trafficStatusLabel(status: TrafficContext["status"] | undefined) {
+  if (status === "live") return "실조회";
+  if (status === "mapped-sample") return "매핑 샘플";
+  return "샘플 대체";
 }
 
 export function DataBasisPanel({
   tourism,
   trends,
+  traffic,
+  spending,
+  demandBackdata,
   selectedFestivalBasis,
 }: DataBasisPanelProps) {
+  const statusRows = [
+    {
+      label: "TourAPI",
+      status: compactStatusLabel(tourism.provenance.sourceStatus),
+      basis: tourism.provenance.sourceName,
+    },
+    {
+      label: "검색 관심도",
+      status: compactStatusLabel(trends.provenance.sourceStatus),
+      basis: trends.provenance.sourceName,
+    },
+    ...(traffic
+      ? [
+          {
+            label: "교통 근거",
+            status: trafficStatusLabel(traffic.status),
+            basis: traffic.provenance.sourceName,
+          },
+        ]
+      : []),
+    ...(spending
+      ? [
+          {
+            label: "관광소비",
+            status: compactStatusLabel(spending.sourceStatus),
+            basis: spending.sourceName,
+          },
+        ]
+      : []),
+    ...(demandBackdata
+      ? [
+          {
+            label: "지역 수요 백데이터",
+            status: compactStatusLabel(demandBackdata.status),
+            basis:
+              demandBackdata.sourceDetails[0]?.sourceName ??
+              "지역축제 백데이터 기준",
+          },
+        ]
+      : []),
+  ];
+
   return (
     <section className="panel data-basis-panel">
       <div className="panel-heading">
@@ -56,6 +121,21 @@ export function DataBasisPanel({
         <li>개인정보 수집 여부: 수집하지 않음</li>
         <li>예측값 성격: 실제 집계값이 아닌 사전 의사결정용 추정값</li>
       </ul>
+
+      <div className="data-status-summary">
+        <h3>데이터 상태 요약</h3>
+        <dl className="data-status-grid">
+          {statusRows.map((row) => (
+            <div key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>
+                <strong>{row.status}</strong>
+                <span>{row.basis}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
 
       {selectedFestivalBasis ? (
         <div className="selected-festival-basis">
