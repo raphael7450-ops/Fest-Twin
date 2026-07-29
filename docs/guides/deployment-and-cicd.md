@@ -50,7 +50,32 @@ npm run deploy:remote
    - `fest-twin-demo:latest` 태그로 Docker 이미지를 생성합니다.
    - 기존 구동 중인 컨테이너(`fest-twin-demo`)를 안전하게 중지 및 삭제 후 신규 컨테이너를 구동(포트 18080:80)합니다.
 4. 배포 헬스체크 (`npm run deploy:check`):
-   - `/api/scenarios`, `/api/tour/area-code`, `/api/scenarios/scen_sample_01` 등 4개 주요 라우트에 HTTP GET 요청을 보내 정상 수신(HTTP 200 OK)을 검증합니다.
+   - 공개 루트(`/`)와 `/assets/*` 정적 번들이 정상 응답하는지 확인합니다.
+   - `/api/scenarios`, `/api/scenarios/scen_sample_01`, `/api/scenarios/share/token_gn_winter_2026` 응답을 파싱해 시나리오 목록, 상세, 공유 복원 흐름을 검증합니다.
+   - `/api/tour/area-code`는 TourAPI 정상 응답(`response.header.resultCode`) 또는 명시적 fallback-compatible 오류(`error.code`)를 허용해 운영 장애 시 화면 fallback 경로가 깨지지 않는지 확인합니다.
+
+### 2.3 운영 검증 게이트
+
+최종 제출 전에는 아래 명령을 순서대로 실행합니다.
+
+```bash
+npm test
+npm run build
+npm run test:load
+npm run deploy:check
+```
+
+`npm run deploy:check`는 원격 공개 URL 기준으로 다음 5개 게이트를 확인합니다.
+
+| 게이트 | 확인 내용 |
+|--------|-----------|
+| Public root | `/` HTTP 200, React mount element, JS/CSS 정적 asset 응답 |
+| Scenario list | `/api/scenarios` HTTP 200, `scenarios` 배열과 `count` 일치 |
+| TourAPI proxy | `/api/tour/area-code` 정상 TourAPI JSON 또는 fallback-compatible 오류 |
+| Scenario detail | `/api/scenarios/scen_sample_01` 기획안과 `selectedHour` 복원 |
+| Scenario share | `/api/scenarios/share/token_gn_winter_2026` 공유 토큰 복원 및 선택 축제 근거 fallback 상태 |
+
+`npm run test:load`는 로컬 격리 Express 인스턴스에서 Scenario API 수용량, OpenAPI Rate Limiter, TourAPI 캐시 응답성을 확인하고 `docs/LOAD_TEST_REPORT.md`를 자동 갱신합니다.
 
 ---
 
@@ -125,3 +150,4 @@ jobs:
 ### 3.2 사설망 배포 및 트러블슈팅
 - 사설 IP 접속 문제: GitHub Actions 클라우드 호스팅 러너는 192.168.x.x 대역의 사설 IP에 직접 도달할 수 없습니다. 따라서 사설망 배포 시에는 로컬/내부 개발 환경에서 `npm run deploy:remote` 스크립트를 사용하여 직접 배포하거나, Tailscale / Self-Hosted Runner를 연결하는 방식을 권장합니다.
 - 배포 헬스체크 타임아웃 지연: 외부 공공 API(TourAPI) 최초 연결 지연에 대비하여 `deploy-check.js`에는 10초 타임아웃 및 1회 자동 재시도 로직이 기본 내장되어 있습니다.
+- TourAPI 일시 장애: `deploy-check.js`는 TourAPI 프록시가 `429`, `502`, `503`, `504`와 함께 `error.code`를 반환하면 fallback-compatible 상태로 판정합니다. 이 경우 프론트엔드 fallback 데이터 경로가 동작하는지 별도 시연에서 확인합니다.

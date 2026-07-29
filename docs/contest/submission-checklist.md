@@ -6,24 +6,26 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 
 ## 1. 코드 빌드 및 자동화 테스트 체크리스트
 
-- [x] 단위 및 통합 테스트 통과: `npm test` 실행 시 Vitest 27개 테스트 파일 107개 테스트 항목 100% 성공
+- [x] 단위 및 통합 테스트 통과: `npm test` 실행 시 Vitest 28개 테스트 파일 115개 테스트 항목 100% 성공
 - [x] TypeScript 및 프로덕션 빌드: `npm run build` 실행 시 tsc 및 vite bundle 정상 생성 (에러 없음)
-- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API TPS 971.32 req/s, Rate Limiter 429 방어 35회, 캐시 히트 평균 0.93ms 통과 (`docs/LOAD_TEST_REPORT.md`)
+- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API TPS 1221.36 req/s, Rate Limiter 429 방어 35회, 캐시 히트 평균 0.63ms 통과 (`docs/LOAD_TEST_REPORT.md`)
 - [x] KPI 근거 매트릭스 검증: KPI별 `sourceDetails`, 데이터 상태 요약, 선택 TourAPI 기준 표시 테스트 통과
 - [x] 선택 후보 기반 갱신 검증: TourAPI 후보 선택 후 trend, traffic, spending 로더가 후보 계획 기준으로 재호출되는 테스트 통과
+- [x] 운영 검증 게이트 테스트: `scripts/deploy-check.test.js` 기준 공개 루트, 정적 번들, TourAPI 정상/fallback 응답, 시나리오 상세/공유 복원 검증 통과
 - [x] 이모티콘 및 강조 제한 준수: 소스 코드, 스크립트, 배포 로그 및 Markdown 문서 전체 이모티콘 및 볼드 표기 제거 완료 (`.agents/AGENTS.md`)
 
 ---
 
 ## 2. 배포 및 시스템 헬스체크
 
-- [x] 원격 서버 기존 배포 헬스체크: `npm run deploy:check` 기준 원격 서버(`192.168.55.223:18080`) 정상 응답 확인
+- [x] 원격 서버 기존 배포 헬스체크: `npm run deploy:check` 기준 원격 서버(`192.168.55.223:18080`) 5개 운영 게이트 정상 응답 확인
 - [ ] `codex/kpi-evidence-matrix` 브랜치 병합 후 원격 Docker 컨테이너 재배포 실행
-- [x] 4대 엔드포인트 헬스체크 (`npm run deploy:check`) 기준:
+- [x] 5대 운영 헬스체크 (`npm run deploy:check`) 기준:
+  - [x] `/` 공개 루트 및 `/assets/*` 정적 번들 참조 asset 응답 확인
   - [x] `/api/scenarios` (HTTP 200)
-  - [x] `/api/tour/area-code` (HTTP 200)
+  - [x] `/api/tour/area-code` (HTTP 200 또는 fallback-compatible error 허용)
   - [x] `/api/scenarios/scen_sample_01` (HTTP 200)
-  - [x] `/api/scenarios/share/token_gn_winter_2026` (HTTP 200)
+  - [x] `/api/scenarios/share/token_gn_winter_2026` (HTTP 200, legacy selectedFestivalBasis fallback-compatible 상태 확인)
 - [x] OWASP 보안 헤더 확인: CSP, X-Frame-Options, X-Content-Type-Options 헤더 정상 응답
 - [x] GitHub Actions 파이프라인: CI 파이프라인(`test-and-build`) 및 CD 구동 준비 완료
 
@@ -45,7 +47,7 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 - [x] 후보 선택 시 기획안, 지도, KPI, 데이터 근거가 함께 갱신된다.
 - [x] Naver DataLab 검색량 기반 사전 관심도 지표가 실제 조회 또는 Fallback 상태로 표시된다.
 - [x] KPI별 원본 근거, 사용자 입력값, 산출값, 데이터 상태가 분리되어 표시된다.
-- [ ] 보고서에 활용 API명, 산출 근거, 데이터 해석 한계, Fallback 상태가 포함된다.
+- [x] 보고서에 활용 API명, 산출 근거, 데이터 해석 한계, Fallback 상태가 포함된다.
 - [ ] 기능설명서에 서비스명, 서비스 설명, 서비스 유형, 상세 기능, 활용 API, 관련 이미지가 포함되어 있다.
 - [ ] TourAPI 신청정보와 인증키는 제출 양식에만 기재하고 Git 저장소와 PDF에는 기록하지 않는다.
 - [ ] 파일 데이터만으로 구현된 서비스처럼 오해될 표현을 제거했다.

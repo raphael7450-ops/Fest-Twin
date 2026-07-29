@@ -1,15 +1,15 @@
 # Fest-Twin 부하 테스트 결과 보고서
 
-> 자동 생성: 2026-07-29 07:10:26
+> 자동 생성: 2026-07-29 09:17:42
 > 스크립트: `scripts/load-test.js` (Node.js 기반 k6-style 부하 테스트 러너)
 
 ## 종합 결과: ALL PASS
 
 | 시나리오 | 결과 | 핵심 지표 |
 |---------|------|----------|
-| A. 일반 API 정상 부하 | PASS | 100/100 성공, TPS 971.32 |
+| A. 일반 API 정상 부하 | PASS | 100/100 성공, TPS 1221.36 |
 | B. Rate Limit 방어 | PASS | 429 응답 35회, 헤더 검증 35회 |
-| C. 캐시 성능 | PASS | 평균 0.93ms (임계값 <= 5ms) |
+| C. 캐시 성능 | PASS | 평균 0.63ms (임계값 <= 5ms) |
 
 ---
 
@@ -20,7 +20,7 @@
 | 대상 서버 | `http://127.0.0.1` (로컬 Express 테스트 인스턴스) |
 | 외부 API | Mock Fetch (네트워크 I/O 제거) |
 | Node.js | v24.14.0 |
-| 실행 일시 | 2026-07-29 07:10:26 |
+| 실행 일시 | 2026-07-29 09:17:42 |
 | OS | win32 x64 |
 
 ---
@@ -34,11 +34,11 @@
 | 동시 요청 (배치) | 10개 |
 | 성공 (HTTP 200) | 100회 |
 | 실패 | 0회 |
-| 평균 응답 시간 | 9.51ms |
-| 최대 응답 시간 | 27.81ms |
-| P95 응답 시간 | 26.77ms |
-| TPS | 971.32 req/s |
-| 총 소요 시간 | 103ms |
+| 평균 응답 시간 | 7.41ms |
+| 최대 응답 시간 | 24.94ms |
+| P95 응답 시간 | 23.04ms |
+| TPS | 1221.36 req/s |
+| 총 소요 시간 | 82ms |
 | 결과 | PASS |
 
 > 100회/분 임계값 이내에서 모든 요청이 HTTP 200으로 정상 수용됨을 확인합니다.
@@ -68,16 +68,16 @@
 | 지표 | 값 |
 |------|-----|
 | 대상 엔드포인트 | `/api/tour/area-code` |
-| Cold Start (첫 요청) | 3.14ms |
+| Cold Start (첫 요청) | 2.41ms |
 | Cache Hit 측정 횟수 | 19회 |
-| Cache Hit 평균 응답 | 0.93ms |
-| Cache Hit 최대 응답 | 1.96ms |
-| Cache Hit P95 응답 | 1.96ms |
+| Cache Hit 평균 응답 | 0.63ms |
+| Cache Hit 최대 응답 | 0.88ms |
+| Cache Hit P95 응답 | 0.88ms |
 | 임계값 | <= 5ms |
 | 결과 | PASS |
 
 > 인메모리 캐시를 통해 동일 요청의 반복 호출 시 네트워크 I/O 없이
-> 극도로 빠른 응답(평균 0.93ms)을 달성합니다.
+> 극도로 빠른 응답(평균 0.63ms)을 달성합니다.
 
 ---
 
@@ -87,6 +87,19 @@
 |-----------|------|
 | 부하 수용 능력 | 양호 — 100회 요청 안정 처리 |
 | Rate Limiter 방어 | 정상 — 초과 요청 100% 차단 |
-| 캐시 응답 속도 | 우수 — 평균 0.93ms |
-| TPS (초당 처리량) | 971.32 req/s |
+| 캐시 응답 속도 | 우수 — 평균 0.63ms |
+| TPS (초당 처리량) | 1221.36 req/s |
 | 종합 판정 | ALL PASS |
+
+---
+
+## 6. 운영 검증 게이트 연결
+
+| 게이트 | 결과 | 증빙 |
+|--------|------|------|
+| Scenario API readiness | PASS | 100/100 requests succeeded on /api/scenarios |
+| OpenAPI quota protection | PASS | 35 HTTP 429 responses with rate-limit headers |
+| TourAPI cache fallback readiness | PASS | cache-hit average 0.63ms, threshold <= 5ms |
+
+> `npm run deploy:check`는 공개 URL, 정적 번들, TourAPI proxy, 시나리오 상세/공유 복원 상태를 확인하고,
+> `npm run test:load`는 API 수용량, Rate Limiter, 캐시 응답성을 로컬 격리 환경에서 재현합니다.

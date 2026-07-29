@@ -345,6 +345,23 @@ function generateReport(resultA, resultB, resultC) {
   const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
   const overallPass =
     resultA.passed && resultB.passed && resultC.passed ? "ALL PASS" : "FAIL";
+  const operationalGates = [
+    {
+      gate: "Scenario API readiness",
+      result: resultA.passed ? "PASS" : "FAIL",
+      evidence: `${resultA.successCount}/${resultA.totalRequests} requests succeeded on /api/scenarios`,
+    },
+    {
+      gate: "OpenAPI quota protection",
+      result: resultB.passed ? "PASS" : "FAIL",
+      evidence: `${resultB.rateLimited} HTTP 429 responses with rate-limit headers`,
+    },
+    {
+      gate: "TourAPI cache fallback readiness",
+      result: resultC.passed ? "PASS" : "FAIL",
+      evidence: `cache-hit average ${resultC.avgCacheHit.toFixed(2)}ms, threshold <= ${resultC.thresholdMs}ms`,
+    },
+  ];
 
   const md = `# Fest-Twin 부하 테스트 결과 보고서
 
@@ -438,6 +455,19 @@ function generateReport(resultA, resultB, resultC) {
 | 캐시 응답 속도 | ${resultC.passed ? "우수" : "미달"} — 평균 ${resultC.avgCacheHit.toFixed(2)}ms |
 | TPS (초당 처리량) | ${resultA.tps} req/s |
 | 종합 판정 | ${overallPass} |
+
+---
+
+## 6. 운영 검증 게이트 연결
+
+| 게이트 | 결과 | 증빙 |
+|--------|------|------|
+${operationalGates
+  .map((gate) => `| ${gate.gate} | ${gate.result} | ${gate.evidence} |`)
+  .join("\n")}
+
+> \`npm run deploy:check\`는 공개 URL, 정적 번들, TourAPI proxy, 시나리오 상세/공유 복원 상태를 확인하고,
+> \`npm run test:load\`는 API 수용량, Rate Limiter, 캐시 응답성을 로컬 격리 환경에서 재현합니다.
 `;
 
   const reportPath = path.join(PROJECT_ROOT, "docs", "LOAD_TEST_REPORT.md");
@@ -466,6 +496,10 @@ async function main() {
 
     console.log("\n======================================================");
     const allPassed = resultA.passed && resultB.passed && resultC.passed;
+    console.log("  운영 검증 게이트 요약");
+    console.log(`  - Scenario API readiness: ${resultA.passed ? "PASS" : "FAIL"}`);
+    console.log(`  - OpenAPI quota protection: ${resultB.passed ? "PASS" : "FAIL"}`);
+    console.log(`  - TourAPI cache fallback readiness: ${resultC.passed ? "PASS" : "FAIL"}`);
     if (allPassed) {
       console.log("  모든 시나리오 PASS! 부하 테스트 성공                 ");
     } else {
