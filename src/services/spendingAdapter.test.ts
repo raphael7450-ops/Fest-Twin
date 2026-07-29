@@ -47,6 +47,43 @@ describe("spendingAdapter", () => {
     expect(requestUrl.searchParams.get("tarExpDsIxCd")).toBe("2203");
   });
 
+  it("uses the selected candidate region and start month for spending lookup", async () => {
+    const selectedPlan = {
+      ...sampleFestivalPlan,
+      name: "Busan Sea Light Festa",
+      region: "부산",
+      startDate: "2024-05-10",
+      endDate: "2024-05-19",
+    };
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse({
+        response: {
+          body: {
+            items: {
+              item: {
+                areaNm: "Busan",
+                baseYm: "202405",
+                tarExpDsIxNm: "visitor spend per visit",
+                tarExpDsIxVal: "61000",
+              },
+            },
+          },
+        },
+      }),
+    );
+
+    const spending = await getSpendingContext(selectedPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const calls = fetchImpl.mock.calls as unknown as Array<[RequestInfo | URL]>;
+    const requestUrl = new URL(String(calls[0][0]), "http://localhost");
+    expect(requestUrl.searchParams.get("areaCd")).toBe("26");
+    expect(requestUrl.searchParams.get("baseYm")).toBe("202405");
+    expect(spending.region).toBe("부산");
+    expect(spending.averageSpendPerVisitorKrw).toBe(61_000);
+  });
+
   it("falls back to the sample spending context when live data is unavailable", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({}, { ok: false, status: 502 }));
 

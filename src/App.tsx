@@ -104,8 +104,10 @@ export function App() {
     venueAddress: plan.venueAddress,
     name: plan.name,
     startDate: plan.startDate,
+    endDate: plan.endDate,
     selectedHour,
     selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
     selectedMapX: selectedFestivalBasis?.mapX,
     selectedMapY: selectedFestivalBasis?.mapY,
   });
@@ -117,7 +119,11 @@ export function App() {
     trafficState.planKey === trafficPlanKey ? trafficState.context : sampleTrafficContext;
   const spendingPlanKey = JSON.stringify({
     region: plan.region,
+    name: plan.name,
     startDate: plan.startDate,
+    endDate: plan.endDate,
+    selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
   });
   const [spendingState, setSpendingState] = useState(() => ({
     planKey: spendingPlanKey,
@@ -136,6 +142,7 @@ export function App() {
     endDate: plan.endDate,
     keywords: plan.keywords,
     selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
   });
   const [trendState, setTrendState] = useState(() => ({
     planKey: trendPlanKey,

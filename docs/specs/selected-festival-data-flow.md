@@ -66,6 +66,18 @@ sequenceDiagram
 - KPI 근거 Drawer: `tourapi-selected-festival-basis` source detail 표시
 - 리포트: OpenAPI 운영계정 신청 증빙 아래 선택 TourAPI 축제 기준 표시
 
+## 갱신 범위 매트릭스
+
+| 영역 | 후보 선택 후 갱신 기준 | 보존되는 선택 후보 값 | Fallback |
+| :--- | :--- | :--- | :--- |
+| TourAPI 관광 컨텍스트 | `contentId`, 축제명, 주소, 기간, 좌표가 refresh key에 포함된다. | `contentId`, `title`, `address`, `startDate`, `endDate`, `mapX`, `mapY` | 상세 조회 실패 시 후보 메타데이터와 샘플 주변 관광지로 보완한다. |
+| 검색 관심도 | 축제명, 기간, 키워드, `contentId`가 바뀌면 Naver DataLab 요청을 다시 만든다. | 선택 축제명이 첫 번째 keyword group 이름과 첫 번째 keyword로 들어간다. | 프록시 실패 시 같은 축제명 기준 keyword group을 가진 샘플 관심도를 사용한다. |
+| 교통 근거 | 축제명, 주소, 기간, 선택 시간, 좌표, `contentId`가 바뀌면 KTDB/View-T 조회 조건을 다시 만든다. | 행사장 주소와 선택 시간이 링크 매핑과 `time` 쿼리에 반영된다. | 링크 매핑 또는 조회 실패 시 후보 계획 기준 fallback 교통 근거를 표시한다. |
+| 관광소비 | 지역, 축제명, 기간, `contentId`가 바뀌면 지역 관광 수요 강도 조회를 다시 만든다. | 지역과 시작월이 `areaCd`, `baseYm` 쿼리에 반영된다. | 조회 실패 시 같은 지역 기준 샘플 소비 단가를 표시한다. |
+| 지도 | 선택 후보 좌표가 있으면 지도 중심과 마커 기준으로 사용한다. | `mapX`, `mapY`, `title`, `address` | 좌표가 없으면 입력 주소 중심 또는 기본 행사장 표시로 대체한다. |
+| 보고서 | 현재 plan과 `selectedFestivalBasis`를 함께 받아 출력한다. | 선택 축제명, `contentId`, 기간, 주소가 데이터 출처 섹션에 남는다. | 선택 후보가 없으면 신규 기획안 기준 보고서로 표시한다. |
+| KPI 근거 | `createMetricEvidenceSet`에 선택 후보 기준과 보조 데이터 컨텍스트를 함께 전달한다. | `tourapi-selected-festival-basis` source detail과 KPI별 원본 근거가 분리된다. | 후보 기준이 없으면 TourAPI/샘플/사용자 입력 근거만 표시한다. |
+
 ## 수요 예측 반영 범위
 
 TourAPI는 축제별 실제 방문객 수를 직접 제공하지 않는다. 따라서 선택 후보 기준은 실제 방문객 집계값이 아니라 다음 산식의 설명 가능한 입력 근거로 사용된다.

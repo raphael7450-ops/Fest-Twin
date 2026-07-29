@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
+import { sampleTrendContext } from "./data/sampleTrends";
 
 const {
   getTourismContextMock,
@@ -10,12 +11,14 @@ const {
   getFestivalCandidatesMock,
   getTrafficContextMock,
   getSpendingContextMock,
+  getTrendContextMock,
 } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
   getFestivalCandidatesMock: vi.fn(),
   getTrafficContextMock: vi.fn(),
   getSpendingContextMock: vi.fn(),
+  getTrendContextMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -35,6 +38,11 @@ vi.mock("./services/spendingAdapter", async (importOriginal) => ({
   getSpendingContext: getSpendingContextMock,
 }));
 
+vi.mock("./services/trendAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/trendAdapter")>()),
+  getTrendContext: getTrendContextMock,
+}));
+
 import { App } from "./App";
 
 describe("App selected festival basis", () => {
@@ -44,9 +52,11 @@ describe("App selected festival basis", () => {
     getFestivalCandidatesMock.mockReset();
     getTrafficContextMock.mockReset();
     getSpendingContextMock.mockReset();
+    getTrendContextMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
     getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
     getSpendingContextMock.mockResolvedValue(sampleSpendingContext);
+    getTrendContextMock.mockResolvedValue(sampleTrendContext);
     getTourApiAreaCodesMock.mockResolvedValue([{ code: "1", name: "서울" }]);
     getFestivalCandidatesMock.mockResolvedValue([
       {
@@ -58,6 +68,16 @@ describe("App selected festival basis", () => {
         mapX: "127.0610512042",
         mapY: "37.5103955843",
         searchScope: "exact-period",
+      },
+      {
+        id: "9990001",
+        title: "Seoul Light Hangang Festa",
+        address: "Seoul Yeongdeungpo-gu Yeouidong-ro 330",
+        startDate: "2026-02-11",
+        endDate: "2026-02-18",
+        mapX: "126.9348123000",
+        mapY: "37.5260341000",
+        searchScope: "annual-region",
       },
     ]);
   });
@@ -96,6 +116,104 @@ describe("App selected festival basis", () => {
           title: "Gangnam Media Winter Festa",
         }),
       }),
+    );
+  });
+
+  it("refreshes trend, traffic, and spending contexts from the selected candidate plan", async () => {
+    vi.useFakeTimers();
+    const view = render(<App />);
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /TourAPI/ }));
+    const selectButtons = () =>
+      Array.from(view.container.querySelectorAll<HTMLButtonElement>(".candidate-card .secondary-button"));
+
+    fireEvent.click(selectButtons()[0]);
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(getTourismContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Gangnam Media Winter Festa",
+        venueAddress: "Seoul Gangnam-gu Yeongdong-daero 511",
+        startDate: "2025-12-19",
+        endDate: "2026-01-03",
+      }),
+      expect.objectContaining({
+        selectedCandidate: expect.objectContaining({ id: "3439947" }),
+      }),
+    );
+    expect(getTrendContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Gangnam Media Winter Festa",
+        startDate: "2025-12-19",
+        endDate: "2026-01-03",
+      }),
+      expect.any(Object),
+    );
+    expect(getTrafficContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Gangnam Media Winter Festa",
+        venueAddress: "Seoul Gangnam-gu Yeongdong-daero 511",
+        startDate: "2025-12-19",
+      }),
+      expect.objectContaining({ hour: 20 }),
+    );
+    expect(getSpendingContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Gangnam Media Winter Festa",
+        region: "서울",
+        startDate: "2025-12-19",
+      }),
+      expect.any(Object),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /TourAPI/ }));
+    fireEvent.click(selectButtons()[1]);
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(getTourismContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Seoul Light Hangang Festa",
+        venueAddress: "Seoul Yeongdeungpo-gu Yeouidong-ro 330",
+        startDate: "2026-02-11",
+        endDate: "2026-02-18",
+      }),
+      expect.objectContaining({
+        selectedCandidate: expect.objectContaining({ id: "9990001" }),
+      }),
+    );
+    expect(getTrendContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Seoul Light Hangang Festa",
+        startDate: "2026-02-11",
+        endDate: "2026-02-18",
+      }),
+      expect.any(Object),
+    );
+    expect(getTrafficContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Seoul Light Hangang Festa",
+        venueAddress: "Seoul Yeongdeungpo-gu Yeouidong-ro 330",
+        startDate: "2026-02-11",
+      }),
+      expect.objectContaining({ hour: 20 }),
+    );
+    expect(getSpendingContextMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        name: "Seoul Light Hangang Festa",
+        region: "서울",
+        startDate: "2026-02-11",
+      }),
+      expect.any(Object),
     );
   });
 });
