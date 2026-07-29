@@ -20,10 +20,10 @@ Fest-Twin은 지자체 축제 담당자가 지역과 기간을 선택해 한국�
 | 선택 후보 기반 데이터 갱신 | 필수, 완료 | 후보 선택 시 TourAPI, 검색 관심도, 교통, 소비, KPI 근거가 같은 후보 계획 기준으로 갱신 |
 | KPI 근거 매트릭스 | 필수, 완료 | KPI별 원본 데이터, 사용자 입력값, 산출값, 데이터 상태가 분리 표시 |
 | Naver DataLab 검색량 | 필수 보조, 완료 | 사전 관심도 지수와 보정 계수 표시 |
-| YouTube 검색 반응 | 선택 | API 키 준비 시 보조 소셜 언급 지표 표시 |
+| YouTube 검색 반응 | 제외 | v2 확장 후보로만 문서화, 제출판 완료 기능으로 표현하지 않음 |
 | Instagram/X | 제외 | v2.0 확장 예정으로만 문서화 |
-| 보고서 출력 | 필수, 진행 예정 | 활용 API, 산출 근거, 한계, Fallback 상태 포함 |
-| 공유 링크 복원 | 필수 | 저장된 시나리오가 `share_token`으로 복원 |
+| 보고서 출력 | 필수, 완료 | 활용 API, 산출 근거, 한계, Fallback 상태 포함 |
+| 공유 링크 복원 | 필수, 완료 | 저장된 시나리오가 `share_token`으로 복원되고 선택 TourAPI 기준을 보존 |
 | 공개 URL | 필수 | 심사자가 별도 승인 없이 접속 가능 |
 
 ## 현재 진행 상태
@@ -32,10 +32,10 @@ Fest-Twin은 지자체 축제 담당자가 지역과 기간을 선택해 한국�
 | :--- | :--- | :--- |
 | 1. KPI Evidence Matrix | 완료 | `docs/specs/kpi-evidence-matrix.md`, 데이터 상태 요약 UI, KPI 근거 테스트 |
 | 2. Candidate-Driven Context Refresh | 완료 | `docs/specs/selected-festival-data-flow.md`, App/adapter 갱신 테스트 |
-| 3. Public-Review Report Structure | 다음 작업 | 심사용 보고서 섹션 재정렬, 출력/인쇄 품질 보강 |
-| 4. Scenario Share Preservation | 후속 작업 | 공유 링크 복원 시 선택 TourAPI 기준 유지 |
-| 5. Health Check and Deploy Verification | 후속 작업 | 배포 스모크 테스트와 공개 URL 검증 강화 |
-| 6. Submission Package Refresh | 후속 작업 | 기능설명서, 이미지, 제출 체크리스트 최종 동기화 |
+| 3. Public-Review Report Structure | 완료 | 심사용 보고서 섹션 재정렬, 출력/인쇄 품질 보강 |
+| 4. Scenario Share Preservation | 완료 | 공유 링크 복원 시 선택 TourAPI 기준 유지 |
+| 5. Health Check and Deploy Verification | 완료 | 배포 스모크 테스트와 공개 URL 검증 강화 |
+| 6. Submission Package Refresh | 진행 중 | 기능설명서, 이미지, 제출 체크리스트 최종 동기화 |
 
 ## 주차별 일정
 

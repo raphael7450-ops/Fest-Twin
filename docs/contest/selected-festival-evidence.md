@@ -34,10 +34,12 @@ Fest-Twin은 지역·기간 기반으로 한국관광공사 TourAPI 축제 후�
 
 ## 검증 결과
 
-2026-07-28 기준 다음 테스트로 검증했다.
+2026-07-29 기준 다음 테스트로 검증했다.
 
 - `src/services/dataAdapters.test.ts`: 선택 후보가 있으면 `detailCommon2`와 `locationBasedList2`가 선택 후보 기준으로 호출되는지 검증
 - `src/App.selectedBasis.test.tsx`: 후보 선택 후 `getTourismContext`에 `selectedCandidate`가 전달되는지 검증
 - `src/services/metricEvidence.test.ts`: KPI 근거에 선택 축제 기준 source detail이 포함되는지 검증
 - `src/components/DataBasisPanel.test.tsx`: 데이터 근거 패널에 선택 축제 기준이 표시되는지 검증
 - `src/components/ReportView.selectedBasis.test.tsx`: 리포트에 선택 축제 기준이 표시되는지 검증
+- `src/services/scenarioStorage.test.ts`, `server/scenarioRouter.test.ts`, `src/App.test.tsx`: 저장·공유 링크 복원 시 선택 축제 기준이 유지되는지 검증
+- `scripts/deploy-check.test.js`: 공유 시나리오가 legacy 데이터라도 fallback-compatible 상태로 복원되는지 검증

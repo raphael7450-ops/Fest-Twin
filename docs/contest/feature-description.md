@@ -48,7 +48,7 @@ Fest-Twin 보고서는 단순 화면 캡처가 아니라 지자체 내부 검토
 ### 검색량·소셜 관심도 보조 API
 
 - Naver DataLab 통합검색어 트렌드: 축제명과 지역명 검색량 기반 사전 관심도 보정
-- YouTube Data API Search: 축제 관련 영상 콘텐츠 언급 보조 지표
+- YouTube Data API Search: v2 확장 후보로 검토 중이며 제출판 완료 기능에는 포함하지 않음
 
 ## 데이터 해석 한계
 
@@ -59,6 +59,20 @@ Naver DataLab 검색량은 실제 방문객 수가 아니라 개최 전 관심�
 ## Fallback 정책
 
 외부 API 키가 없거나 호출이 실패해도 서비스 화면은 중단되지 않는다. 이 경우 검증 스냅샷 또는 샘플 데이터를 사용하며, 화면과 보고서에 실제 조회, 일부 보완, 샘플 대체 상태를 명확히 표시한다.
+
+## 관련 이미지
+
+제출용 화면 증빙 이미지는 `docs/assets/submission/`에 정리한다.
+
+| 이미지 | 설명 |
+| :--- | :--- |
+| `desktop-full.png` | 대시보드 전체 화면 |
+| `tourapi-candidates.png` | TourAPI 후보 조회 패널 |
+| `selected-festival-basis.png` | 선택 축제 기준 데이터 |
+| `evidence-drawer.png` | KPI 산출 근거 Drawer |
+| `heatmap.png` | 지도와 혼잡 시뮬레이션 |
+| `report.png` | 공개검토용 보고서 |
+| `mobile-viewport.png` | 모바일 반응형 화면 |
 
 ## 제출판 제외 범위
 

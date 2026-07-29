@@ -2,7 +2,7 @@
 
 ## 기본 원칙
 
-한국관광공사 OpenAPI는 공모전 필수 활용 API이며, Fest-Twin의 축제 후보 조회와 관광지 근거 산출의 중심 데이터로 사용한다. Naver DataLab과 YouTube는 수요 예측을 보강하는 외부 관심도 보조 API로 분리한다.
+한국관광공사 OpenAPI는 공모전 필수 활용 API이며, Fest-Twin의 축제 후보 조회와 관광지 근거 산출의 중심 데이터로 사용한다. Naver DataLab은 수요 예측을 보강하는 외부 관심도 보조 API로 분리한다. YouTube, Instagram, X 등 소셜 채널은 제출판 완료 기능이 아니라 v2 확장 후보로만 설명한다.
 
 비밀키는 서버 환경변수로만 관리하며, 브라우저 번들, Git 저장소, PDF, 기능설명서 본문에는 기록하지 않는다.
 
@@ -20,7 +20,7 @@
 | API | 서비스 내 활용 위치 | 제출 증빙 |
 | :--- | :--- | :--- |
 | Naver DataLab 통합검색어 트렌드 | 축제명·지역명 기반 사전 관심도 지수 산출 | KPI 근거, Metric Evidence Drawer, 보고서 |
-| YouTube Data API Search | 축제 관련 영상 콘텐츠 언급 보조 지표 | 선택 기능, v1.0 일정 내 가능 시 포함 |
+| YouTube Data API Search | 축제 관련 영상 콘텐츠 언급 보조 지표 | v2 확장 후보, 제출판 완료 기능으로 표현하지 않음 |
 | Instagram/X | v2.0 확장 예정 | 제출판 완료 기능으로 표현하지 않음 |
 
 ## 화면 증빙 캡처 대상

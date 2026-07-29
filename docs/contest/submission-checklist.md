@@ -8,7 +8,7 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 
 - [x] 단위 및 통합 테스트 통과: `npm test` 실행 시 Vitest 28개 테스트 파일 115개 테스트 항목 100% 성공
 - [x] TypeScript 및 프로덕션 빌드: `npm run build` 실행 시 tsc 및 vite bundle 정상 생성 (에러 없음)
-- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API TPS 1221.36 req/s, Rate Limiter 429 방어 35회, 캐시 히트 평균 0.63ms 통과 (`docs/LOAD_TEST_REPORT.md`)
+- [x] 부하 테스트 검증: `npm run test:load` 실행 시 일반 API TPS 571.27 req/s, Rate Limiter 429 방어 35회, 캐시 히트 평균 1.81ms 통과 (`docs/LOAD_TEST_REPORT.md`)
 - [x] KPI 근거 매트릭스 검증: KPI별 `sourceDetails`, 데이터 상태 요약, 선택 TourAPI 기준 표시 테스트 통과
 - [x] 선택 후보 기반 갱신 검증: TourAPI 후보 선택 후 trend, traffic, spending 로더가 후보 계획 기준으로 재호출되는 테스트 통과
 - [x] 운영 검증 게이트 테스트: `scripts/deploy-check.test.js` 기준 공개 루트, 정적 번들, TourAPI 정상/fallback 응답, 시나리오 상세/공유 복원 검증 통과
@@ -48,10 +48,10 @@ Fest-Twin 프로젝트의 빌드, 단위 테스트, 원격 Docker 배포, API �
 - [x] Naver DataLab 검색량 기반 사전 관심도 지표가 실제 조회 또는 Fallback 상태로 표시된다.
 - [x] KPI별 원본 근거, 사용자 입력값, 산출값, 데이터 상태가 분리되어 표시된다.
 - [x] 보고서에 활용 API명, 산출 근거, 데이터 해석 한계, Fallback 상태가 포함된다.
-- [ ] 기능설명서에 서비스명, 서비스 설명, 서비스 유형, 상세 기능, 활용 API, 관련 이미지가 포함되어 있다.
+- [x] 기능설명서에 서비스명, 서비스 설명, 서비스 유형, 상세 기능, 활용 API, 관련 이미지가 포함되어 있다.
 - [ ] TourAPI 신청정보와 인증키는 제출 양식에만 기재하고 Git 저장소와 PDF에는 기록하지 않는다.
 - [ ] 파일 데이터만으로 구현된 서비스처럼 오해될 표현을 제거했다.
-- [ ] Instagram/X 실시간 연동은 v2.0 확장 예정으로만 표현한다.
+- [x] Instagram/X 실시간 연동은 v2.0 확장 예정으로만 표현한다.
 - [ ] 제출 전 `npm test`, `npm run build`, `npm run test:load`, `npm run deploy:check`를 실행한다.
 
 ## TourAPI 운영계정 신청 체크

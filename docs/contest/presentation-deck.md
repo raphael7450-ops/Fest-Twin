@@ -78,9 +78,9 @@ Fest-Twin은 지자체 문화관광·안전 담당자 및 B2G 사업 평가위�
 > B2G 요구사항을 100% 충족하는 고성능·고보안 인프라
 
 ### 주요 검증 지표
-- **2,052 TPS**: 대용량 트래픽 처리 성능 확보
-- **0.36ms**: 평균 응답 지연 (인메모리 프록시 캐싱 적용 달성)
-- **70 테스트 PASS**: 18개 파일, Vitest 단위/통합 테스트 100% 통과
+- **571.27 TPS**: 로컬 격리 Express 인스턴스 기준 Scenario API 부하 테스트 통과
+- **1.81ms**: TourAPI 프록시 캐시 히트 평균 응답
+- **115 테스트 PASS**: 28개 파일, Vitest 단위/통합 테스트 100% 통과
 
 ### 보안 및 규정 준수 (Security & Rate Limit)
 - **2단계 계층형 Rate Limiter**: 일반 API 100회/분, 외부 OpenAPI 프록시 30회/분 차단
@@ -88,9 +88,9 @@ Fest-Twin은 지자체 문화관광·안전 담당자 및 B2G 사업 평가위�
 - **strict CSP (Content Security Policy)** 적용
 
 ### 품질 검증 (Quality Assurance)
-- **18개 파일, 70개 Vitest 단위/통합 테스트 100% PASS**
+- **28개 파일, 115개 Vitest 단위/통합 테스트 100% PASS**
 - GitHub Actions CI/CD 기반 자동 빌드
-- 원격 Docker 라이브 배포 완료
+- 원격 Docker 라이브 배포 및 5개 운영 검증 게이트 통과
 
 *(추천 시각 자산: docs/assets/presentation/fest_twin_architecture.jpg)*
 
@@ -136,7 +136,8 @@ Step 4: Final_Output = { 방문객 추정치(명), 밀집도(명/m²), ROI 파�
 
 ### v2.0 트렌드 연동 확장 아키텍처 (Roadmap)
 - **현재 (v1.0)**: TourAPI 4.0 + KTDB 연동, 4단계 산출 근거 시각화, share_token 협업 파이프라인 운영 중
-- **v2.0 연동 예정**: Naver DataLab Trend & Social Buzz 연동 — 네이버 데이터랩 키워드 검색 가속도를 사전 관심도 계수로 수용하는 백엔드 프록시 인터페이스 연동 준비 완료
+- **현재 (v1.0)**: Naver DataLab 통합검색어 트렌드 프록시를 사전 관심도 보정 근거로 사용
+- **v2.0 연동 예정**: YouTube, Instagram, X 등 소셜 버즈 확장 검토
 
 *(추천 시각 자산: docs/assets/presentation/b2g_collaboration.jpg)*
 
@@ -154,9 +155,9 @@ Step 4: Final_Output = { 방문객 추정치(명), 밀집도(명/m²), ROI 파�
 - **Q2. 수치 산출 근거를 감사 기관에 증빙할 수 있나요?**
   - **답변**: 네. Metric Evidence Drawer의 수식, 계수, 출처 데이터를 통해 행정적 근거를 완벽히 입증할 수 있습니다. 4단계 연산 흐름 전체가 투명하게 공개되어 감사 대응에 즉시 활용 가능합니다.
 - **Q3. 동시 접속자가 몰려도 서버가 안전한가요?**
-  - **답변**: 네. 2단계 Rate Limiter 방어 기작(일반 API 100회/분, 외부 OpenAPI 30회/분)과 0.36ms 캐시 응답 속도로 대규모 부하를 안정적으로 수용합니다. 2,052 TPS 처리 성능이 검증되어 있습니다.
+  - **답변**: 네. 2단계 Rate Limiter 방어 기작(일반 API 100회/분, 외부 OpenAPI 30회/분)과 1.81ms 캐시 응답 속도로 대규모 부하를 안정적으로 수용합니다. 로컬 격리 테스트 기준 571.27 TPS 처리 성능이 검증되어 있습니다.
 
 ### 핵심 가치 요약
 - **투명성**: 4단계 산출 근거 완전 공개
 - **연속성**: Fallback + share_token 영속 협업
-- **성능**: 2,052 TPS · 0.36ms · 70테스트 PASS
+- **성능**: 571.27 TPS · 1.81ms · 115테스트 PASS
