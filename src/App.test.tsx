@@ -126,6 +126,11 @@ describe("App", () => {
     expect(screen.getByLabelText("시작일")).toBeInTheDocument();
     expect(screen.getByLabelText("종료일")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 후보 보기")).toBeInTheDocument();
+    expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
+
+    openDashboardSection("예측");
+    expect(screen.getByText("진단 시간대")).toBeInTheDocument();
+    expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
 
     openDashboardSection("현장");
     expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();

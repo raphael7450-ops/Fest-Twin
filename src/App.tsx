@@ -695,11 +695,6 @@ export function App() {
                     />
                   </aside>
                   <section className="main-column">
-                    <ScenarioControls
-                      hours={plan.operatingHours}
-                      selectedHour={selectedHour}
-                      onSelectedHourChange={setSelectedHour}
-                    />
                     <ScenarioLibrary
                       plan={plan}
                       selectedHour={selectedHour}
@@ -718,7 +713,14 @@ export function App() {
             {activeDashboardSection === "forecast" && (
               <section className="dashboard-section-panel active">
                 <div className="workspace-grid workspace-grid--dashboard">
-                  <ForecastChart forecast={forecast} />
+                  <div className="main-column">
+                    <ScenarioControls
+                      hours={plan.operatingHours}
+                      selectedHour={selectedHour}
+                      onSelectedHourChange={setSelectedHour}
+                    />
+                    <ForecastChart forecast={forecast} />
+                  </div>
                   <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
                 </div>
               </section>
