@@ -45,6 +45,10 @@ vi.mock("./services/trendAdapter", async (importOriginal) => ({
 
 import { App } from "./App";
 
+const openDashboardSection = (label: string) => {
+  fireEvent.click(screen.getByRole("button", { name: `대시보드 섹션: ${label}` }));
+};
+
 describe("App selected festival basis", () => {
   beforeEach(() => {
     getTourismContextMock.mockReset();
@@ -90,6 +94,7 @@ describe("App selected festival basis", () => {
   it("shows selected TourAPI contentId after a festival candidate is selected", async () => {
     vi.useFakeTimers();
     const view = render(<App />);
+    openDashboardSection("기획");
 
     await act(async () => {
       vi.advanceTimersByTime(300);
@@ -106,6 +111,7 @@ describe("App selected festival basis", () => {
       vi.advanceTimersByTime(300);
     });
 
+    openDashboardSection("근거");
     expect(screen.getAllByText("3439947").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Gangnam Media Winter Festa").length).toBeGreaterThan(0);
     expect(getTourismContextMock).toHaveBeenLastCalledWith(
@@ -122,6 +128,7 @@ describe("App selected festival basis", () => {
   it("refreshes trend, traffic, and spending contexts from the selected candidate plan", async () => {
     vi.useFakeTimers();
     const view = render(<App />);
+    openDashboardSection("기획");
 
     await act(async () => {
       vi.advanceTimersByTime(300);
