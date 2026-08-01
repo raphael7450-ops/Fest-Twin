@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleSpendingContext } from "./data/sampleSpending";
+import { sampleTrendContext } from "./data/sampleTrends";
 
 const {
   getTourismContextMock,
@@ -11,12 +12,14 @@ const {
   getFestivalCandidatesMock,
   getTrafficContextMock,
   getSpendingContextMock,
+  getTrendContextMock,
 } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
   getFestivalCandidatesMock: vi.fn(),
   getTrafficContextMock: vi.fn(),
   getSpendingContextMock: vi.fn(),
+  getTrendContextMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -36,6 +39,11 @@ vi.mock("./services/spendingAdapter", async (importOriginal) => ({
   getSpendingContext: getSpendingContextMock,
 }));
 
+vi.mock("./services/trendAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/trendAdapter")>()),
+  getTrendContext: getTrendContextMock,
+}));
+
 import { App } from "./App";
 
 describe("App", () => {
@@ -45,9 +53,11 @@ describe("App", () => {
     getFestivalCandidatesMock.mockReset();
     getTrafficContextMock.mockReset();
     getSpendingContextMock.mockReset();
+    getTrendContextMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
     getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
     getSpendingContextMock.mockResolvedValue(sampleSpendingContext);
+    getTrendContextMock.mockResolvedValue(sampleTrendContext);
     getTourApiAreaCodesMock.mockResolvedValue([
       { code: "1", name: "서울" },
       { code: "1-legacy", name: "서울시" },
@@ -133,6 +143,82 @@ describe("App", () => {
 
       expect(screen.queryByRole("dialog", { name: "TourAPI 축제 후보" })).not.toBeInTheDocument();
       expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the region selector usable while live area codes are still loading", () => {
+    getTourApiAreaCodesMock.mockReturnValue(new Promise(() => {}));
+
+    render(<App />);
+
+    const regionSelect = screen.getByLabelText("개최 지역");
+    expect(regionSelect.tagName).toBe("SELECT");
+    expect(within(regionSelect).getByRole("option", { name: "부산" })).toBeInTheDocument();
+  });
+
+  it("does not request candidates or show a failure state while dates are incomplete", async () => {
+    vi.useFakeTimers();
+
+    try {
+      render(<App />);
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+        await Promise.resolve();
+      });
+      expect(getFestivalCandidatesMock).toHaveBeenCalled();
+      getFestivalCandidatesMock.mockClear();
+      getTourismContextMock.mockClear();
+      getTrafficContextMock.mockClear();
+      getSpendingContextMock.mockClear();
+      getTrendContextMock.mockClear();
+
+      fireEvent.change(screen.getByLabelText("종료일"), {
+        target: { value: "0020-01-03" },
+      });
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+        await Promise.resolve();
+      });
+
+      expect(getFestivalCandidatesMock).not.toHaveBeenCalled();
+      expect(getTourismContextMock).not.toHaveBeenCalled();
+      expect(getTrafficContextMock).not.toHaveBeenCalled();
+      expect(getSpendingContextMock).not.toHaveBeenCalled();
+      expect(getTrendContextMock).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+
+      expect(screen.getByRole("dialog", { name: "TourAPI 축제 후보" })).toBeInTheDocument();
+      expect(screen.queryByText("후보 조회에 실패했습니다.")).not.toBeInTheDocument();
+      expect(screen.getByText("해당 조건의 후보가 없습니다.")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps candidate lookup non-blocking when TourAPI candidate loading fails", async () => {
+    vi.useFakeTimers();
+    getFestivalCandidatesMock.mockRejectedValue(new Error("rate limited"));
+
+    try {
+      render(<App />);
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+        await Promise.resolve();
+      });
+
+      expect(getFestivalCandidatesMock).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+
+      expect(screen.getByRole("dialog", { name: "TourAPI 축제 후보" })).toBeInTheDocument();
+      expect(screen.queryByText("후보 조회에 실패했습니다.")).not.toBeInTheDocument();
+      expect(screen.getByText("해당 조건의 후보가 없습니다.")).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

@@ -77,6 +77,7 @@ type ValidNearbyItem = TourApiItem & {
 
 const FESTIVAL_SEARCH_ROWS = 50;
 const MAX_FESTIVAL_CANDIDATES = 20;
+const MAX_FESTIVAL_CANDIDATE_DETAILS = 5;
 const MAX_SIMILAR_FESTIVALS = 5;
 const MAX_NEARBY_SPOTS = 6;
 
@@ -835,8 +836,9 @@ export async function getFestivalCandidates(
   }
 
   const candidateItems = sortFestivalItemsForPlan(festivalItems, plan).slice(0, MAX_FESTIVAL_CANDIDATES);
+  const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
   const detailLookups = await Promise.all(
-    candidateItems.map((item) =>
+    detailCandidateItems.map((item) =>
       fetchTourApiItems(
         "detail",
         { contentId: item.contentid },
@@ -847,7 +849,10 @@ export async function getFestivalCandidates(
         .catch(() => ({ item, succeeded: false })),
     ),
   );
-  const detailItems = detailLookups.map((lookup) => lookup.item);
+  const detailItems = [
+    ...detailLookups.map((lookup) => lookup.item),
+    ...candidateItems.slice(MAX_FESTIVAL_CANDIDATE_DETAILS),
+  ];
 
   const searchSourceDetail = createTourApiSourceDetail({
     sourceId: "tourapi-festival-candidates",
@@ -861,7 +866,7 @@ export async function getFestivalCandidates(
   });
   const detailSourceDetails = createFestivalDetailSources(
     "tourapi-festival-candidate-detail",
-    detailItems,
+    detailLookups.map((lookup) => lookup.item),
     detailLookups.map((lookup) => lookup.succeeded),
   );
   const sourceDetails = [searchSourceDetail, ...detailSourceDetails];

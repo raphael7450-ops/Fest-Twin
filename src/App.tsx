@@ -47,6 +47,26 @@ import {
   type TourApiAreaCode,
 } from "./services/tourApiAdapter";
 
+const DEFAULT_AREA_CODES: TourApiAreaCode[] = [
+  { code: "1", name: "서울" },
+  { code: "2", name: "인천" },
+  { code: "3", name: "대전" },
+  { code: "4", name: "대구" },
+  { code: "5", name: "광주" },
+  { code: "6", name: "부산" },
+  { code: "7", name: "울산" },
+  { code: "8", name: "세종" },
+  { code: "31", name: "경기" },
+  { code: "32", name: "강원" },
+  { code: "33", name: "충북" },
+  { code: "34", name: "충남" },
+  { code: "35", name: "경북" },
+  { code: "36", name: "경남" },
+  { code: "37", name: "전북" },
+  { code: "38", name: "전남" },
+  { code: "39", name: "제주" },
+];
+
 function candidateFromSelectedBasis(
   selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): FestivalCandidate | null {
@@ -64,10 +84,21 @@ function candidateFromSelectedBasis(
   };
 }
 
+function isValidPlanDateRange(startDate: string, endDate: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+    return false;
+  }
+
+  const start = Date.parse(`${startDate}T00:00:00.000Z`);
+  const end = Date.parse(`${endDate}T00:00:00.000Z`);
+
+  return Number.isFinite(start) && Number.isFinite(end) && start <= end;
+}
+
 export function App() {
   const [plan, setPlan] = useState(sampleFestivalPlan);
   const [selectedHour, setSelectedHour] = useState(20);
-  const [areaCodes, setAreaCodes] = useState<TourApiAreaCode[]>([]);
+  const [areaCodes, setAreaCodes] = useState<TourApiAreaCode[]>(DEFAULT_AREA_CODES);
   const [isAreaLoading, setIsAreaLoading] = useState(true);
   const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
@@ -260,6 +291,15 @@ export function App() {
     const controller = new AbortController();
     const planSnapshot = plan;
     const timeoutId = window.setTimeout(() => {
+      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
+        setCandidateState({
+          planKey: candidatePlanKey,
+          candidates: [],
+          isLoading: false,
+        });
+        return;
+      }
+
       setCandidateState((current) => ({
         planKey: candidatePlanKey,
         candidates: current.planKey === candidatePlanKey ? current.candidates : [],
@@ -285,7 +325,6 @@ export function App() {
               planKey: candidatePlanKey,
               candidates: [],
               isLoading: false,
-              errorMessage: "TourAPI 후보 조회에 실패해 신규 기획안 입력을 유지합니다.",
             });
           }
         });
@@ -301,6 +340,10 @@ export function App() {
     const controller = new AbortController();
     const planSnapshot = plan;
     const timeoutId = window.setTimeout(() => {
+      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
+        return;
+      }
+
       getTourismContext(planSnapshot, {
         signal: controller.signal,
         selectedCandidate,
@@ -331,6 +374,10 @@ export function App() {
     const controller = new AbortController();
     const planSnapshot = plan;
     const timeoutId = window.setTimeout(() => {
+      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
+        return;
+      }
+
       getTrafficContext(planSnapshot, {
         signal: controller.signal,
         hour: selectedHour,
@@ -360,6 +407,10 @@ export function App() {
     const controller = new AbortController();
     const planSnapshot = plan;
     const timeoutId = window.setTimeout(() => {
+      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
+        return;
+      }
+
       getSpendingContext(planSnapshot, { signal: controller.signal })
         .then((nextSpending) => {
           if (!controller.signal.aborted) {
@@ -386,6 +437,10 @@ export function App() {
     const controller = new AbortController();
     const planSnapshot = plan;
     const timeoutId = window.setTimeout(() => {
+      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
+        return;
+      }
+
       getTrendContext(planSnapshot, { signal: controller.signal })
         .then((nextTrends) => {
           if (!controller.signal.aborted) {

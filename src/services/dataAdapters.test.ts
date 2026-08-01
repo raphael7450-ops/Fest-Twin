@@ -317,10 +317,10 @@ describe("public data adapters", () => {
       endpoint: "/api/tour/festivals",
     });
     expect(searchDetail?.records).toHaveLength(8);
-    expect(festivalDetails).toHaveLength(8);
+    expect(festivalDetails).toHaveLength(5);
     expect(
       festivalDetails.map((detail) => detail.query?.find((field) => field.label === "contentId")?.value),
-    ).toEqual(festivalItems.map((item) => item.contentid));
+    ).toEqual(festivalItems.slice(0, 5).map((item) => item.contentid));
     expect(JSON.stringify(sourceDetails)).toContain("eventStartDate");
     expect(JSON.stringify(sourceDetails)).not.toMatch(/serviceKey/i);
   });
