@@ -26,7 +26,10 @@ import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleTrendContext } from "./data/sampleTrends";
 import type { MetricEvidenceId, SelectedFestivalBasis } from "./domain/types";
-import { getDemandBackdataContext } from "./services/demandBackdataAdapter";
+import {
+  getDemandBackdataContext,
+  getDemandBackdataContextFromApi,
+} from "./services/demandBackdataAdapter";
 import {
   applyFestivalCandidateToPlan,
   createSelectedFestivalBasis,
@@ -179,10 +182,28 @@ export function App() {
   }));
   const spending =
     spendingState.planKey === spendingPlanKey ? spendingState.context : sampleSpendingContext;
-  const demandBackdata = useMemo(
+  const demandBackdataPlanKey = JSON.stringify({
+    region: plan.region,
+    name: plan.name,
+    startDate: plan.startDate,
+    endDate: plan.endDate,
+    totalBudgetMillionKrw: plan.totalBudgetMillionKrw,
+    keywords: plan.keywords,
+    selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
+  });
+  const pendingDemandBackdata = useMemo(
     () => getDemandBackdataContext(plan),
-    [plan.region, plan.name, plan.startDate, plan.totalBudgetMillionKrw, plan.keywords],
+    [demandBackdataPlanKey],
   );
+  const [demandBackdataState, setDemandBackdataState] = useState(() => ({
+    planKey: demandBackdataPlanKey,
+    context: getDemandBackdataContext(plan),
+  }));
+  const demandBackdata =
+    demandBackdataState.planKey === demandBackdataPlanKey
+      ? demandBackdataState.context
+      : pendingDemandBackdata;
   const trendPlanKey = JSON.stringify({
     region: plan.region,
     name: plan.name,
@@ -433,6 +454,35 @@ export function App() {
     };
   }, [spendingPlanKey]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const planSnapshot = plan;
+    const timeoutId = window.setTimeout(() => {
+      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
+        return;
+      }
+
+      getDemandBackdataContextFromApi(planSnapshot, { signal: controller.signal })
+        .then((nextDemandBackdata) => {
+          if (!controller.signal.aborted) {
+            setDemandBackdataState({ planKey: demandBackdataPlanKey, context: nextDemandBackdata });
+          }
+        })
+        .catch((error: unknown) => {
+          if (
+            !controller.signal.aborted &&
+            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+          ) {
+            console.error("Regional festival backdata loading failed", error);
+          }
+        });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [demandBackdataPlanKey]);
   useEffect(() => {
     const controller = new AbortController();
     const planSnapshot = plan;

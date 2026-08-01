@@ -12,6 +12,7 @@ import { createTrafficProxyRouter } from "./trafficProxy.js";
 import { createTourProxyRouter } from "./tourProxy.js";
 import { createTrendProxyRouter } from "./trendProxy.js";
 import { createScenarioRouter } from "./scenarioRouter.js";
+import { createRegionalFestivalRouter } from "./regionalFestivalRouter.js";
 import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
 import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
@@ -202,6 +203,8 @@ export function createApp(options = {}) {
       logger: log,
     }),
   );
+  app.use("/api/regional-festivals", createRegionalFestivalRouter({ db: options.regionalFestivalDb }));
+
   app.use(
     "/api/scenarios",
     createScenarioRouter({
