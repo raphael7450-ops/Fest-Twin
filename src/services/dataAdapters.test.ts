@@ -526,6 +526,64 @@ describe("public data adapters", () => {
     expect(urls[2].searchParams.get("eventStartDate")).toBe("20250101");
   });
 
+  it("fetches a broader festival page and returns deterministic period-overlap candidates", async () => {
+    const festivalItems = [
+      {
+        contentid: "old-1",
+        title: "가을 축제",
+        addr1: "충청남도 공주시",
+        eventstartdate: "20251001",
+        eventenddate: "20251003",
+      },
+      {
+        contentid: "period-2",
+        title: "겨울 바다 야간 축제",
+        addr1: "충청남도 보령시",
+        eventstartdate: "20251224",
+        eventenddate: "20251228",
+      },
+      {
+        contentid: "period-1",
+        title: "연말 해돋이 행사",
+        addr1: "충청남도 서천군",
+        eventstartdate: "20241231",
+        eventenddate: "20250101",
+      },
+      ...Array.from({ length: 13 }, (_, index) => ({
+        contentid: `filler-${index}`,
+        title: `가을 후보 ${index}`,
+        addr1: "충청남도",
+        eventstartdate: "20250901",
+        eventenddate: "20250902",
+      })),
+    ];
+    const responses = [
+      tourApiPayload([{ code: "34", name: "충남" }]),
+      tourApiPayload(festivalItems),
+      ...festivalItems.map((item) => tourApiPayload([{ ...item, mapx: "126.1", mapy: "36.3" }])),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "충남",
+        startDate: "2025-12-19",
+        endDate: "2026-01-03",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(candidates.map((candidate) => candidate.id).slice(0, 2)).toEqual([
+      "period-2",
+      "period-1",
+    ]);
+    expect(candidates).toHaveLength(16);
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls[1].searchParams.get("numOfRows")).toBe("50");
+  });
+
   it("discloses the annual broadened search when missing detail coordinates require sample supplementation", async () => {
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),

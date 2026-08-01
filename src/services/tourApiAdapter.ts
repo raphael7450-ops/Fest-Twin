@@ -75,7 +75,8 @@ type ValidNearbyItem = TourApiItem & {
   dist: string | number;
 };
 
-const MAX_FESTIVAL_CANDIDATES = 8;
+const FESTIVAL_SEARCH_ROWS = 50;
+const MAX_FESTIVAL_CANDIDATES = 20;
 const MAX_SIMILAR_FESTIVALS = 5;
 const MAX_NEARBY_SPOTS = 6;
 
@@ -279,9 +280,77 @@ function formatTourApiDateForInput(date: string | number | undefined) {
   return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
 }
 
+function parseTourApiDate(value: string | number | undefined) {
+  const normalized = String(value ?? "").replace(/-/g, "");
+  if (!/^\d{8}$/.test(normalized)) return undefined;
+
+  const year = Number(normalized.slice(0, 4));
+  const month = Number(normalized.slice(4, 6)) - 1;
+  const day = Number(normalized.slice(6, 8));
+  const timestamp = Date.UTC(year, month, day);
+
+  return Number.isFinite(timestamp) ? timestamp : undefined;
+}
+
+function dateOverlapDays(
+  startA: string | number | undefined,
+  endA: string | number | undefined,
+  startB: string,
+  endB: string,
+) {
+  const aStart = parseTourApiDate(startA);
+  const aEnd = parseTourApiDate(endA);
+  const bStart = parseTourApiDate(startB);
+  const bEnd = parseTourApiDate(endB);
+
+  if (aStart === undefined || aEnd === undefined || bStart === undefined || bEnd === undefined) {
+    return 0;
+  }
+
+  const overlapStart = Math.max(aStart, bStart);
+  const overlapEnd = Math.min(aEnd, bEnd);
+
+  if (overlapEnd < overlapStart) return 0;
+
+  return Math.floor((overlapEnd - overlapStart) / 86_400_000) + 1;
+}
+
+function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
+  return [...items].sort((left, right) => {
+    const overlapDifference =
+      dateOverlapDays(right.eventstartdate, right.eventenddate, plan.startDate, plan.endDate) -
+      dateOverlapDays(left.eventstartdate, left.eventenddate, plan.startDate, plan.endDate);
+    if (overlapDifference !== 0) return overlapDifference;
+
+    const leftStart = parseTourApiDate(left.eventstartdate) ?? Number.MAX_SAFE_INTEGER;
+    const rightStart = parseTourApiDate(right.eventstartdate) ?? Number.MAX_SAFE_INTEGER;
+    if (leftStart !== rightStart) return leftStart - rightStart;
+
+    const titleDifference = String(left.title ?? "").localeCompare(String(right.title ?? ""), "ko");
+    if (titleDifference !== 0) return titleDifference;
+
+    return String(left.contentid ?? "").localeCompare(String(right.contentid ?? ""));
+  });
+}
+
+function mergeMatchingFestivalDetail(searchItem: TourApiItem, detailItem: TourApiItem | undefined) {
+  if (
+    !detailItem ||
+    String(detailItem.contentid ?? "") !== String(searchItem.contentid ?? "")
+  ) {
+    return searchItem;
+  }
+
+  return {
+    ...searchItem,
+    ...detailItem,
+    contentid: searchItem.contentid,
+  };
+}
+
 function buildExactFestivalSearchParams(plan: FestivalPlan, areaCode: string | number) {
   return {
-    numOfRows: 10,
+    numOfRows: FESTIVAL_SEARCH_ROWS,
     pageNo: 1,
     arrange: "A",
     areaCode,
@@ -294,7 +363,7 @@ function buildAnnualFestivalSearchParams(plan: FestivalPlan, areaCode: string | 
   const year = plan.startDate.slice(0, 4);
 
   return {
-    numOfRows: 10,
+    numOfRows: FESTIVAL_SEARCH_ROWS,
     pageNo: 1,
     arrange: "A",
     areaCode,
@@ -765,7 +834,7 @@ export async function getFestivalCandidates(
     );
   }
 
-  const candidateItems = festivalItems.slice(0, MAX_FESTIVAL_CANDIDATES);
+  const candidateItems = sortFestivalItemsForPlan(festivalItems, plan).slice(0, MAX_FESTIVAL_CANDIDATES);
   const detailLookups = await Promise.all(
     candidateItems.map((item) =>
       fetchTourApiItems(
@@ -774,7 +843,7 @@ export async function getFestivalCandidates(
         fetchImpl,
         options.signal,
       )
-        .then((items) => ({ item: { ...item, ...items[0] }, succeeded: true }))
+        .then((items) => ({ item: mergeMatchingFestivalDetail(item, items[0]), succeeded: true }))
         .catch(() => ({ item, succeeded: false })),
     ),
   );
@@ -857,7 +926,7 @@ export async function getTourismContext(
           },
           fetchImpl,
           options.signal,
-        ).then((items) => ({ ...item, ...items[0] })),
+        ).then((items) => mergeMatchingFestivalDetail(item, items[0])),
       ),
     );
     const firstLocatedItem = detailItems.find((item) => item.mapx && item.mapy);

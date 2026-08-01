@@ -135,6 +135,45 @@ describe("server/index", () => {
     });
   });
 
+  it("does not return 304 for API JSON when the browser revalidates a prior response", async () => {
+    const app = createApp({
+      apiKey: "test-key",
+      fetchImpl: (async () =>
+        new Response(
+          JSON.stringify({
+            response: {
+              header: { resultCode: "0000", resultMsg: "OK" },
+              body: {
+                items: {
+                  item: [{ rnum: 1, code: "1", name: "서울" }],
+                },
+                totalCount: 1,
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        )) as typeof fetch,
+      disableHttpLogging: true,
+    });
+
+    await withAppServer(app, async (baseUrl) => {
+      const first = await fetch(`${baseUrl}/api/tour/area-code?numOfRows=50&pageNo=1`);
+      const etag = first.headers.get("etag");
+      expect(first.status).toBe(200);
+      expect(etag).toBeTruthy();
+
+      const second = await fetch(`${baseUrl}/api/tour/area-code?numOfRows=50&pageNo=1`, {
+        headers: { "If-None-Match": etag ?? "" },
+      });
+
+      expect(second.status).toBe(200);
+      expect(second.headers.get("Cache-Control")).toContain("no-store");
+      await expect(second.json()).resolves.toMatchObject({
+        response: { header: { resultCode: "0000" } },
+      });
+    });
+  });
+
   it("parses JSON bodies for trend proxy requests mounted through createApp", async () => {
     const dummyLimiter = (_req: any, _res: any, next: any) => next();
     const app = createApp({

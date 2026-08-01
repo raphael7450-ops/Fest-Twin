@@ -67,6 +67,15 @@ export function securityHeadersMiddleware(_request, response, next) {
   next();
 }
 
+function apiNoStoreMiddleware(request, response, next) {
+  delete request.headers["if-none-match"];
+  delete request.headers["if-modified-since"];
+  response.setHeader("Cache-Control", "no-store, max-age=0");
+  response.setHeader("Pragma", "no-cache");
+  response.setHeader("Expires", "0");
+  next();
+}
+
 // 3. IP 기반 슬라이딩 윈도우 Rate Limiter 생성 함수
 export function createRateLimiter(options = {}) {
   const windowMs = options.windowMs ?? 60 * 1000; // 1분 슬라이딩 윈도우
@@ -148,6 +157,8 @@ export function createApp(options = {}) {
       ...(options.openApiRateLimitOptions ?? { maxRequests: defaultOpenApiLimit }),
       auditLogger: auditLog,
     });
+
+  app.use("/api", apiNoStoreMiddleware);
 
   // 1. 일반 API 라우트 (/api/scenarios 등)
   app.use("/api", generalRateLimiter);
