@@ -109,6 +109,8 @@ describe("App", () => {
     expect(screen.queryByText("정부 지침 반영 현황")).not.toBeInTheDocument();
     expect(screen.queryByText("제출 데모 검증 현황")).not.toBeInTheDocument();
     expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
+    expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
+    expect(screen.getByText("서울특별시 강남구 영동대로 511 (삼성동)")).toBeInTheDocument();
     expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
     expect(screen.getAllByText("안전관리 요원 추천 배치").length).toBeGreaterThan(0);
     expect(screen.getAllByText("의료/구급 인력 추천 배치").length).toBeGreaterThan(0);

@@ -652,6 +652,7 @@ export function App() {
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <ForecastChart forecast={forecast} />
+                    <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
                   </div>
                   <aside className="right-column">
                     <SafetyLogisticsPanel
