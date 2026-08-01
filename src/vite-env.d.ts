@@ -6,6 +6,7 @@ interface ImportMetaEnv {
 }
 
 interface Window {
+  __FEST_TWIN_VWORLD_API_KEY__?: string;
   vworldIsValid?: string;
   vworldErrMsg?: string;
   vw?: {

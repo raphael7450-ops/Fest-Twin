@@ -30,43 +30,29 @@ export function isVWorldKeyRejected(scriptText: string) {
   return /vworldIsValid\s*=\s*["']false["']/.test(scriptText);
 }
 
-function loadVWorldMap(apiKey: string) {
+function waitForVWorldMap() {
   if (window.vw?.ol3 && window.ol) {
     return Promise.resolve();
   }
 
-  const existingScript = document.querySelector<HTMLScriptElement>(
-    "script[data-fest-twin-vworld-map]",
-  );
-  if (existingScript) {
-    return new Promise<void>((resolve, reject) => {
-      existingScript.addEventListener("load", () => resolve(), { once: true });
-      existingScript.addEventListener("error", () => reject(new Error("VWorld map load failed")), {
-        once: true,
-      });
-    });
-  }
-
   return new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.async = true;
-    script.dataset.festTwinVworldMap = "true";
-    script.src = buildVWorldScriptUrl(apiKey);
-    script.addEventListener(
-      "load",
-      () => {
-        if (window.vworldIsValid === "false") {
-          reject(new Error("VWORLD_KEY_REJECTED"));
-          return;
-        }
+    const startedAt = window.performance.now();
+    const poll = () => {
+      if (window.vworldIsValid === "false") {
+        reject(new Error("VWORLD_KEY_REJECTED"));
+        return;
+      }
+      if (window.vw?.ol3 && window.ol) {
         resolve();
-      },
-      { once: true },
-    );
-    script.addEventListener("error", () => reject(new Error("VWorld map load failed")), {
-      once: true,
-    });
-    document.head.appendChild(script);
+        return;
+      }
+      if (window.performance.now() - startedAt > 8000) {
+        reject(new Error("VWorld map load timed out"));
+        return;
+      }
+      window.setTimeout(poll, 100);
+    };
+    poll();
   });
 }
 
@@ -92,7 +78,7 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
     let cancelled = false;
 
     setStatus("loading");
-    loadVWorldMap(vworldApiKey)
+    waitForVWorldMap()
       .then(() => {
         if (cancelled || !mapContainerRef.current || !window.vw?.ol3 || !window.ol) return;
 
