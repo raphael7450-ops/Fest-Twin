@@ -51,7 +51,7 @@ interface Window {
     };
     style: {
       Style: new (options: Record<string, unknown>) => unknown;
-      Circle: new (options: Record<string, unknown>) => unknown;
+      Icon: new (options: Record<string, unknown>) => unknown;
       Fill: new (options: Record<string, unknown>) => unknown;
       Stroke: new (options: Record<string, unknown>) => unknown;
       Text: new (options: Record<string, unknown>) => unknown;

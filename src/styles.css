@@ -984,10 +984,18 @@ a:focus-visible {
   width: 100% !important;
 }
 
+.venue-map-stage {
+  inset: 0;
+  position: absolute;
+}
+
 .venue-map-fallback {
+  background: #eef4fb;
   display: grid;
   gap: 6px;
   padding: 18px;
+  position: relative;
+  z-index: 1;
 }
 
 .venue-map-fallback strong,

@@ -25,7 +25,7 @@ const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim();
 interface VenueMarkerStyleOl {
   style: {
     Style: new (options: Record<string, unknown>) => unknown;
-    Circle: new (options: Record<string, unknown>) => unknown;
+    Icon: new (options: Record<string, unknown>) => unknown;
     Fill: new (options: Record<string, unknown>) => unknown;
     Stroke: new (options: Record<string, unknown>) => unknown;
     Text: new (options: Record<string, unknown>) => unknown;
@@ -40,16 +40,28 @@ export function isVWorldKeyRejected(scriptText: string) {
   return /vworldIsValid\s*=\s*["']false["']/.test(scriptText);
 }
 
+export function resetVenueMapContainer(container: HTMLDivElement) {
+  container.replaceChildren();
+}
+
 export function buildVenueMarkerStyle(ol: VenueMarkerStyleOl, label: string) {
+  const arrowSvg = encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 42 42">
+      <path d="M21 39 8 14h8V4h10v10h8L21 39Z" fill="#ef4444" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M21 34 12 17h7V7h4v10h7L21 34Z" fill="#dc2626"/>
+    </svg>
+  `);
+
   return new ol.style.Style({
-    image: new ol.style.Circle({
-      radius: 10,
-      fill: new ol.style.Fill({ color: "#ef4444" }),
-      stroke: new ol.style.Stroke({ color: "#ffffff", width: 3 }),
+    image: new ol.style.Icon({
+      anchor: [0.5, 1],
+      anchorXUnits: "fraction",
+      anchorYUnits: "fraction",
+      src: `data:image/svg+xml;charset=UTF-8,${arrowSvg}`,
     }),
     text: new ol.style.Text({
       text: label,
-      offsetY: -24,
+      offsetY: -44,
       font: "700 13px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
       fill: new ol.style.Fill({ color: "#111827" }),
       stroke: new ol.style.Stroke({ color: "#ffffff", width: 4 }),
@@ -84,7 +96,7 @@ function waitForVWorldMap() {
 }
 
 export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapStageRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<MapStatus>(vworldApiKey ? "loading" : "missing-key");
   const venue = useMemo(() => {
     const latitude = Number(selectedCandidate?.mapY);
@@ -104,13 +116,17 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
 
     let cancelled = false;
 
+    if (mapStageRef.current) {
+      resetVenueMapContainer(mapStageRef.current);
+    }
     setStatus("loading");
     waitForVWorldMap()
       .then(() => {
-        if (cancelled || !mapContainerRef.current || !window.vw?.ol3 || !window.ol) return;
+        if (cancelled || !mapStageRef.current || !window.vw?.ol3 || !window.ol) return;
 
-        const mapId = mapContainerRef.current.id || "fest-twin-vworld-map";
-        mapContainerRef.current.id = mapId;
+        const mapId = mapStageRef.current.id || "fest-twin-vworld-map";
+        resetVenueMapContainer(mapStageRef.current);
+        mapStageRef.current.id = mapId;
 
         window.vw.ol3.MapOptions = {
           basemapType: window.vw.ol3.BasemapType.GRAPHIC,
@@ -146,7 +162,7 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
 
         // 모바일 브라우저 뷰포트 크기 계산 지연 보정 (Android/iOS Safari)
         window.setTimeout(() => {
-          if (!cancelled && mapContainerRef.current) {
+          if (!cancelled && mapStageRef.current) {
             window.dispatchEvent(new Event("resize"));
           }
         }, 300);
@@ -179,7 +195,8 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
         <h2>실제 행사장 지도</h2>
         <span>TourAPI 좌표 + VWorld 2D 지도 API</span>
       </div>
-      <div className="venue-map-canvas" ref={mapContainerRef}>
+      <div className="venue-map-canvas">
+        <div className="venue-map-stage" ref={mapStageRef} />
         {status !== "ready" ? (
           <div className="venue-map-fallback">
             <strong>{statusText}</strong>
