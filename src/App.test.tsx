@@ -129,12 +129,14 @@ describe("App", () => {
     expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
 
     openDashboardSection("예측");
-    expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
+    expect(screen.getByText("진단 시간대")).toBeInTheDocument();
     expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
+    expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();
 
     openDashboardSection("현장");
-    expect(screen.getByText("진단 시간대")).toBeInTheDocument();
-    expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();
+    expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
+    expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
+    expect(screen.getByText("주요 리스크")).toBeInTheDocument();
 
     openDashboardSection("근거");
     expect(screen.getByText("데이터 신뢰도")).toBeInTheDocument();

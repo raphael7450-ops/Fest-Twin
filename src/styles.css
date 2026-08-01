@@ -108,10 +108,10 @@ button {
   background:
     linear-gradient(180deg, #5a48f9, #312787);
   border-radius: 0 28px 28px 0;
-  height: 335px;
+  height: 390px;
   left: 0;
   position: absolute;
-  top: 92px;
+  top: 78px;
   width: 60px;
 }
 
@@ -138,11 +138,11 @@ button {
 .dashboard-rail__nav {
   align-items: center;
   display: grid;
-  gap: 17px;
+  gap: 14px;
   justify-items: center;
   left: 0;
   position: sticky;
-  top: 170px;
+  top: 152px;
   width: 60px;
   z-index: 1;
 }

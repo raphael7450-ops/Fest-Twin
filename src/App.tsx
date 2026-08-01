@@ -714,7 +714,13 @@ export function App() {
               <section className="dashboard-section-panel active">
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
+                    <ScenarioControls
+                      hours={plan.operatingHours}
+                      selectedHour={selectedHour}
+                      onSelectedHourChange={setSelectedHour}
+                    />
                     <ForecastChart forecast={forecast} />
+                    <Heatmap plan={plan} simulation={simulation} />
                   </div>
                 </div>
               </section>
@@ -724,15 +730,6 @@ export function App() {
               <section className="dashboard-section-panel active">
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
-                    <ScenarioControls
-                      hours={plan.operatingHours}
-                      selectedHour={selectedHour}
-                      onSelectedHourChange={setSelectedHour}
-                    />
-                    <Heatmap plan={plan} simulation={simulation} />
-                    <RiskPanel report={report} />
-                  </div>
-                  <aside className="right-column">
                     <SafetyLogisticsPanel
                       plan={plan}
                       forecast={forecast}
@@ -740,6 +737,9 @@ export function App() {
                       traffic={traffic}
                       onOpenEvidence={setSelectedEvidenceId}
                     />
+                  </div>
+                  <aside className="right-column">
+                    <RiskPanel report={report} />
                   </aside>
                 </div>
               </section>
