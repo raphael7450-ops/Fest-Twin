@@ -36,7 +36,10 @@ describe("server/index", () => {
     expect(responseHeaders.get("X-Frame-Options")).toBe("DENY");
     expect(responseHeaders.get("X-XSS-Protection")).toBe("1; mode=block");
     expect(responseHeaders.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
-    expect(responseHeaders.get("Content-Security-Policy")).toContain("oapi.map.naver.com");
+    const csp = responseHeaders.get("Content-Security-Policy") ?? "";
+    expect(csp).toContain("oapi.map.naver.com");
+    expect(csp).toContain("map.pstatic.net");
+    expect(csp).toContain("nrbe.pstatic.net");
   });
 
   it("handles CORS allowlist for trusted origins", () => {
