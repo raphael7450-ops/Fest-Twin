@@ -24,6 +24,10 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-y: scroll;
+}
+
 body {
   background:
     linear-gradient(116deg, transparent 0 58%, rgba(90, 72, 249, 0.98) 58% 66%, transparent 66%),
