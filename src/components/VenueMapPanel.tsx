@@ -45,10 +45,28 @@ export function resetVenueMapContainer(container: HTMLDivElement) {
 }
 
 export function buildVenueMarkerStyle(ol: VenueMarkerStyleOl, label: string) {
-  const arrowSvg = encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 42 42">
-      <path d="M21 39 8 14h8V4h10v10h8L21 39Z" fill="#ef4444" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M21 34 12 17h7V7h4v10h7L21 34Z" fill="#dc2626"/>
+  const markerSvg = encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="54" height="68" viewBox="0 0 54 68" data-marker="festival-pin">
+      <filter id="pin-shadow" x="-30%" y="-20%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#111827" flood-opacity="0.28"/>
+      </filter>
+      <path
+        d="M27 65C21 55 9 43 9 28 9 17.5 17.2 9 27 9s18 8.5 18 19c0 15-12 27-18 37Z"
+        fill="#ef4444"
+        stroke="#ffffff"
+        stroke-width="4"
+        filter="url(#pin-shadow)"
+      />
+      <circle cx="27" cy="28" r="14" fill="#ffffff"/>
+      <g data-icon="festival-sparkles" fill="none" stroke="#ef4444" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4">
+        <path d="M19 33h16"/>
+        <path d="M21 33v-7c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v7"/>
+        <path d="M24 22v-4"/>
+        <path d="M30 22v-4"/>
+        <path d="M17 20l2.2-2.2"/>
+        <path d="M37 20l-2.2-2.2"/>
+        <path d="M27 15v-3"/>
+      </g>
     </svg>
   `);
 
@@ -57,11 +75,11 @@ export function buildVenueMarkerStyle(ol: VenueMarkerStyleOl, label: string) {
       anchor: [0.5, 1],
       anchorXUnits: "fraction",
       anchorYUnits: "fraction",
-      src: `data:image/svg+xml;charset=UTF-8,${arrowSvg}`,
+      src: `data:image/svg+xml;charset=UTF-8,${markerSvg}`,
     }),
     text: new ol.style.Text({
       text: label,
-      offsetY: -44,
+      offsetY: -72,
       font: "700 13px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
       fill: new ol.style.Fill({ color: "#111827" }),
       stroke: new ol.style.Stroke({ color: "#ffffff", width: 4 }),

@@ -20,7 +20,7 @@ describe("VenueMapPanel VWorld integration", () => {
     ).toBe(true);
     expect(isVWorldKeyRejected("var vworldIsValid = 'true';")).toBe(false);
   });
-  it("builds a visible arrow venue marker style with a festival label", () => {
+  it("builds a festival map pin marker style with a venue label", () => {
     const created: Record<string, unknown>[] = [];
     const fakeOl = {
       style: {
@@ -58,6 +58,9 @@ describe("VenueMapPanel VWorld integration", () => {
     };
 
     buildVenueMarkerStyle(fakeOl, "보령머드축제");
+    const icon = created.find((entry) => entry.type === "Icon");
+    const iconOptions = icon?.options as { src?: string } | undefined;
+    const svg = decodeURIComponent(iconOptions?.src?.split(",")[1] ?? "");
 
     expect(created).toContainEqual(
       expect.objectContaining({
@@ -68,6 +71,8 @@ describe("VenueMapPanel VWorld integration", () => {
         }),
       }),
     );
+    expect(svg).toContain('data-marker="festival-pin"');
+    expect(svg).toContain('data-icon="festival-sparkles"');
     expect(created).toContainEqual(
       expect.objectContaining({
         type: "Text",
