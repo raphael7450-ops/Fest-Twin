@@ -33,7 +33,7 @@ function normalizeRegion(value) {
 
 function overlapsDateRange(record, startDate, endDate) {
   if (!startDate && !endDate) return true;
-  if (!record.startDate && !record.endDate) return true;
+  if (!record.startDate && !record.endDate) return false;
   const recordStart = record.startDate ?? record.endDate;
   const recordEnd = record.endDate ?? record.startDate;
   return (!endDate || recordStart <= endDate) && (!startDate || recordEnd >= startDate);
@@ -45,6 +45,14 @@ function keywordScore(record, keywords) {
     const normalized = normalizeText(keyword);
     return normalized && haystack.includes(normalized) ? score + 12 : score;
   }, 0);
+}
+
+function matchesRequestedYear(record, startDate, endDate) {
+  const recordYear = String(record.year ?? "");
+  return (
+    (startDate && String(startDate).startsWith(recordYear)) ||
+    (endDate && String(endDate).startsWith(recordYear))
+  );
 }
 
 export class RegionalFestivalDatabase {
@@ -81,13 +89,20 @@ export class RegionalFestivalDatabase {
     return this.records
       .filter((record) => !normalizedRegion || record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion))
       .filter((record) => !Number.isFinite(requestedYear) || record.year === requestedYear)
-      .filter((record) => overlapsDateRange(record, startDate, endDate))
+      .map((record) => ({
+        ...record,
+        keywordMatchScore: keywordScore(record, normalizedKeywords),
+      }))
+      .filter((record) => {
+        if (overlapsDateRange(record, startDate, endDate)) return true;
+        return record.keywordMatchScore > 0 && matchesRequestedYear(record, startDate, endDate);
+      })
       .map((record) => ({
         ...record,
         matchScore:
           (record.visitors ? Math.min(record.visitors / 10000, 60) : 0) +
           (record.budgetMillionKrw ? Math.min(record.budgetMillionKrw / 80, 25) : 0) +
-          keywordScore(record, normalizedKeywords),
+          record.keywordMatchScore,
       }))
       .sort((a, b) => b.matchScore - a.matchScore || b.year - a.year)
       .slice(0, Math.min(Math.max(Number(limit) || 20, 1), 100));
