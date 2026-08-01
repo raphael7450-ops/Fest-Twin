@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FestivalPlan } from "../domain/types";
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 
-type MapStatus = "missing-key" | "loading" | "ready" | "failed";
+type MapStatus = "missing-key" | "loading" | "ready" | "failed" | "key-rejected";
 
 interface VenueMapPanelProps {
   plan: FestivalPlan;
@@ -24,6 +24,19 @@ const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim();
 
 export function buildVWorldScriptUrl(apiKey: string) {
   return `https://map.vworld.kr/js/vworldMapInit.js.do?version=2.0&apiKey=${encodeURIComponent(apiKey)}`;
+}
+
+export function isVWorldKeyRejected(scriptText: string) {
+  return /vworldIsValid\s*=\s*["']false["']/.test(scriptText);
+}
+
+async function validateVWorldKey(apiKey: string) {
+  const response = await fetch(buildVWorldScriptUrl(apiKey), { cache: "no-store" });
+  if (!response.ok) throw new Error(`VWorld map script HTTP ${response.status}`);
+  const scriptText = await response.text();
+  if (isVWorldKeyRejected(scriptText)) {
+    throw new Error("VWORLD_KEY_REJECTED");
+  }
 }
 
 function loadVWorldMap(apiKey: string) {
@@ -78,7 +91,8 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
     let cancelled = false;
 
     setStatus("loading");
-    loadVWorldMap(vworldApiKey)
+    validateVWorldKey(vworldApiKey)
+      .then(() => loadVWorldMap(vworldApiKey))
       .then(() => {
         if (cancelled || !mapContainerRef.current || !window.vw?.ol3 || !window.ol) return;
 
@@ -135,11 +149,13 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
   const statusText =
     status === "ready"
       ? "VWorld 지도 표시 중"
-      : status === "failed"
-        ? "VWorld 지도 로드 실패"
-        : status === "loading"
-          ? "VWorld 지도 로드 중"
-          : "VWorld 지도 API 키 미설정";
+      : status === "key-rejected"
+        ? "VWorld API 키와 등록 도메인이 일치하지 않습니다"
+        : status === "failed"
+          ? "VWorld 지도 로드 실패"
+          : status === "loading"
+            ? "VWorld 지도 로드 중"
+            : "VWorld 지도 API 키 미설정";
 
   return (
     <section className="panel venue-map-shell">
