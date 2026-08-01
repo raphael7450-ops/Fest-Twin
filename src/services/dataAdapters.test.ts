@@ -584,6 +584,73 @@ describe("public data adapters", () => {
     expect(urls[1].searchParams.get("numOfRows")).toBe("50");
   });
 
+  it("supplements sparse TourAPI spring results with regional festival candidates", async () => {
+    const responses = [
+      tourApiPayload([{ code: "34", name: "충청남도" }]),
+      tourApiPayload([
+        {
+          contentid: "140682",
+          title: "서천 마량진항 해넘이 해돋이 행사",
+          addr1: "충청남도 서천군 서면 서인로 58",
+          eventstartdate: "20241231",
+          eventenddate: "20250101",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "140682",
+          title: "서천 마량진항 해넘이 해돋이 행사",
+          addr1: "충청남도 서천군 서면 서인로 58",
+          eventstartdate: "20241231",
+          eventenddate: "20250101",
+        },
+      ]),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "충청남도",
+        startDate: "2025-01-01",
+        endDate: "2025-05-31",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(candidates.map((candidate) => candidate.title)).toEqual(
+      expect.arrayContaining([
+        "논산딸기축제",
+        "서천 동백꽃주꾸미축제",
+        "태안 세계튤립꽃박람회",
+        "공주 석장리 구석기축제",
+      ]),
+    );
+    expect(candidates.some((candidate) => candidate.searchScope === "regional-supplement")).toBe(true);
+  });
+
+  it("matches abbreviated Korean regions to official TourAPI area names", async () => {
+    const responses = [
+      tourApiPayload([{ code: "34", name: "충청남도" }]),
+      tourApiPayload([], 0),
+      tourApiPayload([], 0),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "충남",
+        startDate: "2025-01-01",
+        endDate: "2025-05-31",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls[1].searchParams.get("areaCode")).toBe("34");
+  });
+
   it("discloses the annual broadened search when missing detail coordinates require sample supplementation", async () => {
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),

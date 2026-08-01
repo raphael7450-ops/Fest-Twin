@@ -5,6 +5,7 @@
  */
 
 import { sampleTourismContext } from "../data/sampleTourApi";
+import { regionalFestivalCandidateRecords } from "../data/regionalFestivalCandidates";
 import type {
   FestivalPlan,
   MetricEvidenceSourceDetail,
@@ -60,7 +61,7 @@ type TourApiOperation =
   | "detail"
   | "nearby";
 
-type FestivalSearchScope = "exact-period" | "annual-region";
+type FestivalSearchScope = "exact-period" | "annual-region" | "regional-supplement";
 
 type ValidFestivalItem = TourApiItem & {
   contentid: string | number;
@@ -332,6 +333,85 @@ function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
 
     return String(left.contentid ?? "").localeCompare(String(right.contentid ?? ""));
   });
+}
+
+function normalizeRegionText(value: string | undefined) {
+  return String(value ?? "")
+    .replace(/\s+/g, "")
+    .replace(/특별자치도|특별자치시|광역시|특별시|자치도|도|시|군|구/g, "")
+    .toLowerCase();
+}
+
+const REGION_ALIASES: Record<string, string[]> = {
+  충남: ["충남", "충청남"],
+  충청남: ["충남", "충청남"],
+  충북: ["충북", "충청북"],
+  충청북: ["충북", "충청북"],
+  경남: ["경남", "경상남"],
+  경상남: ["경남", "경상남"],
+  경북: ["경북", "경상북"],
+  경상북: ["경북", "경상북"],
+  전남: ["전남", "전라남"],
+  전라남: ["전남", "전라남"],
+  전북: ["전북", "전라북"],
+  전라북: ["전북", "전라북"],
+};
+
+function regionAliases(value: string) {
+  const normalized = normalizeRegionText(value);
+  return new Set([normalized, ...(REGION_ALIASES[normalized] ?? [])]);
+}
+
+function regionMatches(planRegion: string, candidateRegion: string) {
+  const planAliases = regionAliases(planRegion);
+  const candidateAliases = regionAliases(candidateRegion);
+
+  return Array.from(planAliases).some((planAlias) =>
+    Array.from(candidateAliases).some(
+      (candidateAlias) =>
+        planAlias.length > 0 &&
+        candidateAlias.length > 0 &&
+        (planAlias.includes(candidateAlias) || candidateAlias.includes(planAlias)),
+    ),
+  );
+}
+
+function createRegionalSupplementSourceDetail(items: TourApiItem[]): MetricEvidenceSourceDetail {
+  return {
+    sourceId: "regional-festival-candidate-supplement",
+    sourceName: "지역축제 공식/표준 후보 보강 데이터",
+    sourceType: "sample",
+    statusLabel: "TourAPI 후보 보강",
+    retrievedAt: new Date().toISOString(),
+    endpoint: "regional-festival-candidates",
+    records: items.map((item) => ({
+      label: String(item.title ?? item.contentid ?? "지역축제 후보"),
+      fields: [
+        { label: "contentid", value: String(item.contentid ?? "-") },
+        { label: "title", value: item.title ?? "-" },
+        { label: "addr1", value: item.addr1 ?? "-" },
+        { label: "eventstartdate", value: formatTourApiDate(item.eventstartdate) },
+        { label: "eventenddate", value: formatTourApiDate(item.eventenddate) },
+        { label: "source", value: item.overview ?? "-" },
+      ],
+    })),
+    note:
+      "TourAPI searchFestival2가 특정 지역/기간 후보를 충분히 반환하지 않는 경우 공식 지역축제 정보를 후보 탐색용으로 보강합니다.",
+  };
+}
+
+function getRegionalSupplementFestivalItems(plan: FestivalPlan): TourApiItem[] {
+  return regionalFestivalCandidateRecords
+    .filter((record) => regionMatches(plan.region, record.region))
+    .filter((record) => dateOverlapDays(record.startDate, record.endDate, plan.startDate, plan.endDate) > 0)
+    .map((record) => ({
+      contentid: record.id,
+      title: record.title,
+      addr1: record.address,
+      eventstartdate: record.startDate.replace(/-/g, ""),
+      eventenddate: record.endDate.replace(/-/g, ""),
+      overview: `${record.sourceName} (${record.sourceUrl})`,
+    }));
 }
 
 function mergeMatchingFestivalDetail(searchItem: TourApiItem, detailItem: TourApiItem | undefined) {
@@ -646,7 +726,7 @@ async function resolveAreaCode(
     signal,
   ));
 
-  return items.find((item) => item.name && plan.region.includes(item.name))?.code;
+  return items.find((item) => item.name && regionMatches(plan.region, String(item.name)))?.code;
 }
 
 export async function getTourApiAreaCodes(
@@ -835,7 +915,21 @@ export async function getFestivalCandidates(
     );
   }
 
-  const candidateItems = sortFestivalItemsForPlan(festivalItems, plan).slice(0, MAX_FESTIVAL_CANDIDATES);
+  const supplementalItems = getRegionalSupplementFestivalItems(plan);
+  const supplementalIds = new Set(
+    festivalItems.map((item) => String(item.contentid ?? "")).concat(
+      festivalItems.map((item) => String(item.title ?? "").replace(/\s+/g, "")),
+    ),
+  );
+  const uniqueSupplementalItems = supplementalItems.filter(
+    (item) =>
+      !supplementalIds.has(String(item.contentid ?? "")) &&
+      !supplementalIds.has(String(item.title ?? "").replace(/\s+/g, "")),
+  );
+  const candidateItems = sortFestivalItemsForPlan(
+    [...festivalItems, ...uniqueSupplementalItems],
+    plan,
+  ).slice(0, MAX_FESTIVAL_CANDIDATES);
   const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
   const detailLookups = await Promise.all(
     detailCandidateItems.map((item) =>
@@ -869,10 +963,22 @@ export async function getFestivalCandidates(
     detailLookups.map((lookup) => lookup.item),
     detailLookups.map((lookup) => lookup.succeeded),
   );
-  const sourceDetails = [searchSourceDetail, ...detailSourceDetails];
+  const supplementSourceDetails =
+    uniqueSupplementalItems.length > 0
+      ? [createRegionalSupplementSourceDetail(uniqueSupplementalItems)]
+      : [];
+  const sourceDetails = [searchSourceDetail, ...supplementSourceDetails, ...detailSourceDetails];
 
   return detailItems
-    .map((item) => mapFestivalCandidate(item, festivalSearchScope, sourceDetails))
+    .map((item) =>
+      mapFestivalCandidate(
+        item,
+        uniqueSupplementalItems.some((supplement) => supplement.contentid === item.contentid)
+          ? "regional-supplement"
+          : festivalSearchScope,
+        sourceDetails,
+      ),
+    )
     .filter((item): item is FestivalCandidate => Boolean(item));
 }
 

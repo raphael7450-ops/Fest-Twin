@@ -98,6 +98,8 @@ export function FestivalCandidatePanel({
                     <span>
                       {candidate.searchScope === "annual-region"
                         ? "연간 지역 후보"
+                        : candidate.searchScope === "regional-supplement"
+                          ? "지역축제 보강 후보"
                         : "기간 일치 후보"}
                     </span>
                     <h3>{candidate.title}</h3>
