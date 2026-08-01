@@ -30,15 +30,6 @@ export function isVWorldKeyRejected(scriptText: string) {
   return /vworldIsValid\s*=\s*["']false["']/.test(scriptText);
 }
 
-async function validateVWorldKey(apiKey: string) {
-  const response = await fetch(buildVWorldScriptUrl(apiKey), { cache: "no-store" });
-  if (!response.ok) throw new Error(`VWorld map script HTTP ${response.status}`);
-  const scriptText = await response.text();
-  if (isVWorldKeyRejected(scriptText)) {
-    throw new Error("VWORLD_KEY_REJECTED");
-  }
-}
-
 function loadVWorldMap(apiKey: string) {
   if (window.vw?.ol3 && window.ol) {
     return Promise.resolve();
@@ -61,7 +52,17 @@ function loadVWorldMap(apiKey: string) {
     script.async = true;
     script.dataset.festTwinVworldMap = "true";
     script.src = buildVWorldScriptUrl(apiKey);
-    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener(
+      "load",
+      () => {
+        if (window.vworldIsValid === "false") {
+          reject(new Error("VWORLD_KEY_REJECTED"));
+          return;
+        }
+        resolve();
+      },
+      { once: true },
+    );
     script.addEventListener("error", () => reject(new Error("VWorld map load failed")), {
       once: true,
     });
@@ -91,8 +92,7 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
     let cancelled = false;
 
     setStatus("loading");
-    validateVWorldKey(vworldApiKey)
-      .then(() => loadVWorldMap(vworldApiKey))
+    loadVWorldMap(vworldApiKey)
       .then(() => {
         if (cancelled || !mapContainerRef.current || !window.vw?.ol3 || !window.ol) return;
 
@@ -137,8 +137,10 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
           }
         }, 300);
       })
-      .catch(() => {
-        if (!cancelled) setStatus("failed");
+      .catch((error: Error) => {
+        if (!cancelled) {
+          setStatus(error.message === "VWORLD_KEY_REJECTED" ? "key-rejected" : "failed");
+        }
       });
 
     return () => {

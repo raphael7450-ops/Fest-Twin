@@ -6,6 +6,8 @@ interface ImportMetaEnv {
 }
 
 interface Window {
+  vworldIsValid?: string;
+  vworldErrMsg?: string;
   vw?: {
     ol3: {
       MapOptions: Record<string, unknown>;
