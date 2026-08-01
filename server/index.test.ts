@@ -40,6 +40,8 @@ describe("server/index", () => {
     expect(csp).toContain("oapi.map.naver.com");
     expect(csp).toContain("map.pstatic.net");
     expect(csp).toContain("nrbe.pstatic.net");
+    expect(csp).toContain("map.vworld.kr");
+    expect(csp).toContain("*.vworld.kr");
   });
 
   it("handles CORS allowlist for trusted origins", () => {

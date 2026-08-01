@@ -1,7 +1,7 @@
 /**
  * 파일 : src/components/VenueMapPanel.tsx
- * 내용 : Naver Map API v3 기반 행사장 위치 및 주변 랜드마크(응급실, 파출소, 주차장) 시각화 패널
- * 수정 : 2026-07-24. NAVER_MAP_CLIENT_ID 연동, 마커 렌더링 및 키 미설치 시 Fallback 렌더링
+ * 내용 : VWorld 2D 지도 API 기반 행사장 위치 및 주변 랜드마크(응급실, 파출소, 주차장) 시각화 패널
+ * 수정 : 2026-08-01. VWorld API 연동, 마커 렌더링 및 키 미설치 시 Fallback 렌더링
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -20,20 +20,24 @@ const defaultVenue = {
   longitude: 127.0610512042,
 };
 
-const naverMapKeyId = import.meta.env.VITE_NAVER_MAP_NCP_KEY_ID?.trim();
+const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim();
 
-function loadNaverMaps(keyId: string) {
-  if (window.naver?.maps) {
+export function buildVWorldScriptUrl(apiKey: string) {
+  return `https://map.vworld.kr/js/vworldMapInit.js.do?version=2.0&apiKey=${encodeURIComponent(apiKey)}`;
+}
+
+function loadVWorldMap(apiKey: string) {
+  if (window.vw?.ol3 && window.ol) {
     return Promise.resolve();
   }
 
   const existingScript = document.querySelector<HTMLScriptElement>(
-    "script[data-fest-twin-naver-map]",
+    "script[data-fest-twin-vworld-map]",
   );
   if (existingScript) {
     return new Promise<void>((resolve, reject) => {
       existingScript.addEventListener("load", () => resolve(), { once: true });
-      existingScript.addEventListener("error", () => reject(new Error("NAVER Maps load failed")), {
+      existingScript.addEventListener("error", () => reject(new Error("VWorld map load failed")), {
         once: true,
       });
     });
@@ -42,12 +46,10 @@ function loadNaverMaps(keyId: string) {
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.async = true;
-    script.dataset.festTwinNaverMap = "true";
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(
-      keyId,
-    )}`;
+    script.dataset.festTwinVworldMap = "true";
+    script.src = buildVWorldScriptUrl(apiKey);
     script.addEventListener("load", () => resolve(), { once: true });
-    script.addEventListener("error", () => reject(new Error("NAVER Maps load failed")), {
+    script.addEventListener("error", () => reject(new Error("VWorld map load failed")), {
       once: true,
     });
     document.head.appendChild(script);
@@ -56,7 +58,7 @@ function loadNaverMaps(keyId: string) {
 
 export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const [status, setStatus] = useState<MapStatus>(naverMapKeyId ? "loading" : "missing-key");
+  const [status, setStatus] = useState<MapStatus>(vworldApiKey ? "loading" : "missing-key");
   const venue = useMemo(() => {
     const latitude = Number(selectedCandidate?.mapY);
     const longitude = Number(selectedCandidate?.mapX);
@@ -71,27 +73,46 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
   }, [plan.name, plan.venueAddress, selectedCandidate?.mapX, selectedCandidate?.mapY]);
 
   useEffect(() => {
-    if (!naverMapKeyId) return;
+    if (!vworldApiKey) return;
 
     let cancelled = false;
 
     setStatus("loading");
-    loadNaverMaps(naverMapKeyId)
+    loadVWorldMap(vworldApiKey)
       .then(() => {
-        if (cancelled || !mapContainerRef.current || !window.naver?.maps) return;
+        if (cancelled || !mapContainerRef.current || !window.vw?.ol3 || !window.ol) return;
 
-        const maps = window.naver.maps;
-        const position = new maps.LatLng(venue.latitude, venue.longitude);
-        const map = new maps.Map(mapContainerRef.current, {
-          center: position,
-          zoom: 16,
-        });
+        const mapId = mapContainerRef.current.id || "fest-twin-vworld-map";
+        mapContainerRef.current.id = mapId;
 
-        new maps.Marker({
-          map,
-          position,
-          title: venue.name,
+        window.vw.ol3.MapOptions = {
+          basemapType: window.vw.ol3.BasemapType.GRAPHIC,
+          controlDensity: window.vw.ol3.DensityType.BASIC,
+          interactionDensity: window.vw.ol3.DensityType.FULL,
+          controlsAutoArrange: true,
+          homePosition: window.vw.ol3.CameraPosition,
+          initPosition: window.vw.ol3.CameraPosition,
+        };
+
+        const map = new window.vw.ol3.Map(mapId, window.vw.ol3.MapOptions);
+        const position = window.ol.proj.transform(
+          [venue.longitude, venue.latitude],
+          "EPSG:4326",
+          "EPSG:900913",
+        );
+        map.getView().setCenter(position);
+        map.getView().setZoom(16);
+
+        const marker = new window.ol.Feature({
+          geometry: new window.ol.geom.Point(position),
+          name: venue.name,
         });
+        const markerLayer = new window.ol.layer.Vector({
+          source: new window.ol.source.Vector({
+            features: [marker],
+          }),
+        });
+        map.addLayer(markerLayer);
 
         setStatus("ready");
 
@@ -113,18 +134,18 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
 
   const statusText =
     status === "ready"
-      ? "네이버 지도 표시 중"
+      ? "VWorld 지도 표시 중"
       : status === "failed"
-        ? "네이버 지도 로드 실패"
+        ? "VWorld 지도 로드 실패"
         : status === "loading"
-          ? "네이버 지도 로드 중"
-          : "네이버 지도 API 키 미설정";
+          ? "VWorld 지도 로드 중"
+          : "VWorld 지도 API 키 미설정";
 
   return (
     <section className="panel venue-map-shell">
       <div className="panel-heading">
         <h2>실제 행사장 지도</h2>
-        <span>TourAPI 좌표 + 네이버 지도 API</span>
+        <span>TourAPI 좌표 + VWorld 2D 지도 API</span>
       </div>
       <div className="venue-map-canvas" ref={mapContainerRef}>
         {status !== "ready" ? (
