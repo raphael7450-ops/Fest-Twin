@@ -729,15 +729,19 @@ export function App() {
 
             {activeDashboardSection === "operations" && (
               <section className="dashboard-section-panel active">
-                <div className="workspace-grid workspace-grid--operations">
-                  <SafetyLogisticsPanel
-                    plan={plan}
-                    forecast={forecast}
-                    simulation={simulation}
-                    traffic={traffic}
-                    onOpenEvidence={setSelectedEvidenceId}
-                  />
-                  <RiskPanel report={report} />
+                <div className="workspace-grid workspace-grid--dashboard">
+                  <div className="main-column">
+                    <SafetyLogisticsPanel
+                      plan={plan}
+                      forecast={forecast}
+                      simulation={simulation}
+                      traffic={traffic}
+                      onOpenEvidence={setSelectedEvidenceId}
+                    />
+                  </div>
+                  <aside className="right-column">
+                    <RiskPanel report={report} />
+                  </aside>
                 </div>
               </section>
             )}
