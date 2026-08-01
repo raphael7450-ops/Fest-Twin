@@ -37,7 +37,9 @@ interface Window {
         targetProjection: string,
       ) => unknown;
     };
-    Feature: new (options: Record<string, unknown>) => unknown;
+    Feature: new (options: Record<string, unknown>) => {
+      setStyle: (style: unknown) => void;
+    };
     geom: {
       Point: new (position: unknown) => unknown;
     };
@@ -46,6 +48,13 @@ interface Window {
     };
     source: {
       Vector: new (options: Record<string, unknown>) => unknown;
+    };
+    style: {
+      Style: new (options: Record<string, unknown>) => unknown;
+      Circle: new (options: Record<string, unknown>) => unknown;
+      Fill: new (options: Record<string, unknown>) => unknown;
+      Stroke: new (options: Record<string, unknown>) => unknown;
+      Text: new (options: Record<string, unknown>) => unknown;
     };
   };
 }

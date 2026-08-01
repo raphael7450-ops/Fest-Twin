@@ -22,12 +22,39 @@ const defaultVenue = {
 
 const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim();
 
+interface VenueMarkerStyleOl {
+  style: {
+    Style: new (options: Record<string, unknown>) => unknown;
+    Circle: new (options: Record<string, unknown>) => unknown;
+    Fill: new (options: Record<string, unknown>) => unknown;
+    Stroke: new (options: Record<string, unknown>) => unknown;
+    Text: new (options: Record<string, unknown>) => unknown;
+  };
+}
+
 export function buildVWorldScriptUrl(apiKey: string) {
   return `https://map.vworld.kr/js/vworldMapInit.js.do?version=2.0&apiKey=${encodeURIComponent(apiKey)}`;
 }
 
 export function isVWorldKeyRejected(scriptText: string) {
   return /vworldIsValid\s*=\s*["']false["']/.test(scriptText);
+}
+
+export function buildVenueMarkerStyle(ol: VenueMarkerStyleOl, label: string) {
+  return new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: 10,
+      fill: new ol.style.Fill({ color: "#ef4444" }),
+      stroke: new ol.style.Stroke({ color: "#ffffff", width: 3 }),
+    }),
+    text: new ol.style.Text({
+      text: label,
+      offsetY: -24,
+      font: "700 13px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      fill: new ol.style.Fill({ color: "#111827" }),
+      stroke: new ol.style.Stroke({ color: "#ffffff", width: 4 }),
+    }),
+  });
 }
 
 function waitForVWorldMap() {
@@ -107,6 +134,7 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
           geometry: new window.ol.geom.Point(position),
           name: venue.name,
         });
+        marker.setStyle(buildVenueMarkerStyle(window.ol, venue.name));
         const markerLayer = new window.ol.layer.Vector({
           source: new window.ol.source.Vector({
             features: [marker],
