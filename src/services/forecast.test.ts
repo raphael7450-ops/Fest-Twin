@@ -126,4 +126,53 @@ describe("createForecast", () => {
       "Naver DataLab 검색량 보정",
     );
   });
+  it("keeps MCST visitor baselines distinct when selected festivals change", () => {
+    const smallBackdata = {
+      ...sampleDemandBackdataContext,
+      similarFestivalBaselines: [
+        {
+          id: "mcst-small-festival",
+          name: "소규모 지역축제",
+          region: sampleFestivalPlan.region,
+          type: "문화예술",
+          periodLabel: "봄",
+          budgetMillionKrw: 300,
+          visitors: 30000,
+          similarityScore: 90,
+          sourceName: "문화체육관광부_지역축제 정보",
+        },
+      ],
+    };
+    const largeBackdata = {
+      ...sampleDemandBackdataContext,
+      similarFestivalBaselines: [
+        {
+          id: "mcst-large-festival",
+          name: "대규모 지역축제",
+          region: sampleFestivalPlan.region,
+          type: "문화예술",
+          periodLabel: "봄",
+          budgetMillionKrw: 1800,
+          visitors: 450000,
+          similarityScore: 90,
+          sourceName: "문화체육관광부_지역축제 정보",
+        },
+      ],
+    };
+
+    const smallForecast = createForecast(
+      sampleFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+      smallBackdata,
+    );
+    const largeForecast = createForecast(
+      sampleFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+      largeBackdata,
+    );
+
+    expect(largeForecast.expectedVisitors).toBeGreaterThan(smallForecast.expectedVisitors * 2);
+  });
 });

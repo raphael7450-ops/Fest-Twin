@@ -105,8 +105,12 @@ export function createForecast(
     (0.8 + programScore / 400) *
     budgetScale *
     entranceFactor;
+  const upperDemandBound = Math.max(
+    plan.expectedCapacity * 1.45,
+    demandBackdataBaseline > 0 ? demandBackdataBaseline * 1.12 : 0,
+  );
   const expectedVisitors = Math.round(
-    clamp(baseDemand, 5000, plan.expectedCapacity * 1.45),
+    clamp(baseDemand, 5000, upperDemandBound),
   );
   const hourWeights = plan.operatingHours.map((hour) => {
     const programDraw = plan.programs
