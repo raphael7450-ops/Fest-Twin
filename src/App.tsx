@@ -652,7 +652,6 @@ export function App() {
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <ForecastChart forecast={forecast} />
-                    <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
                   </div>
                   <aside className="right-column">
                     <SafetyLogisticsPanel
@@ -695,6 +694,7 @@ export function App() {
                     />
                   </aside>
                   <section className="main-column">
+                    <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
                     <ScenarioLibrary
                       plan={plan}
                       selectedHour={selectedHour}
@@ -714,14 +714,8 @@ export function App() {
               <section className="dashboard-section-panel active">
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
-                    <ScenarioControls
-                      hours={plan.operatingHours}
-                      selectedHour={selectedHour}
-                      onSelectedHourChange={setSelectedHour}
-                    />
                     <ForecastChart forecast={forecast} />
                   </div>
-                  <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
                 </div>
               </section>
             )}
@@ -730,6 +724,11 @@ export function App() {
               <section className="dashboard-section-panel active">
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
+                    <ScenarioControls
+                      hours={plan.operatingHours}
+                      selectedHour={selectedHour}
+                      onSelectedHourChange={setSelectedHour}
+                    />
                     <Heatmap plan={plan} simulation={simulation} />
                     <RiskPanel report={report} />
                   </div>
