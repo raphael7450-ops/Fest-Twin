@@ -175,4 +175,35 @@ describe("createForecast", () => {
 
     expect(largeForecast.expectedVisitors).toBeGreaterThan(smallForecast.expectedVisitors * 2);
   });
+
+  it("changes hourly demand profile when the selected festival theme changes", () => {
+    const daytimeFestivalPlan = {
+      ...sampleFestivalPlan,
+      name: "논산딸기축제",
+      keywords: ["논산딸기축제", "딸기", "지역특산물", "가족체험"],
+    };
+    const nighttimeFestivalPlan = {
+      ...sampleFestivalPlan,
+      name: "강남 미디어 윈터페스타",
+      keywords: ["미디어아트", "빛축제", "야간관광", "겨울축제"],
+    };
+
+    const daytimeForecast = createForecast(
+      daytimeFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleDemandBackdataContext,
+    );
+    const nighttimeForecast = createForecast(
+      nighttimeFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleDemandBackdataContext,
+    );
+
+    expect(daytimeForecast.peakHour).toBeLessThan(nighttimeForecast.peakHour);
+    expect(daytimeForecast.visitorsByHour.map((item) => item.visitors)).not.toEqual(
+      nighttimeForecast.visitorsByHour.map((item) => item.visitors),
+    );
+  });
 });

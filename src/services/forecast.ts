@@ -74,6 +74,59 @@ function searchTrendMultiplier(trends: TrendContext, socialInterest: number) {
   return 1 + interestCorrection + accelerationCorrection;
 }
 
+function normalizeText(value: string) {
+  return value.replace(/\s+/g, "").toLowerCase();
+}
+
+function keywordMatchCount(text: string, keywords: string[]) {
+  return keywords.filter((keyword) => text.includes(keyword)).length;
+}
+
+function festivalTimeProfileMultiplier(plan: FestivalPlan, hour: number) {
+  const text = normalizeText(`${plan.name} ${plan.keywords.join(" ")}`);
+  const daytimeScore = keywordMatchCount(text, [
+    "딸기",
+    "튤립",
+    "꽃",
+    "주꾸미",
+    "구석기",
+    "체험",
+    "가족",
+    "어린이",
+    "농산",
+    "특산",
+    "전통",
+    "역사",
+  ]);
+  const nighttimeScore = keywordMatchCount(text, [
+    "미디어",
+    "빛",
+    "라이트",
+    "야간",
+    "겨울",
+    "카운트다운",
+    "불꽃",
+  ]);
+
+  if (daytimeScore > nighttimeScore) {
+    if (hour <= 14) return 1.28;
+    if (hour <= 16) return 1.22;
+    if (hour <= 18) return 0.95;
+    if (hour <= 20) return 0.72;
+    return 0.55;
+  }
+
+  if (nighttimeScore > daytimeScore) {
+    if (hour <= 14) return 0.65;
+    if (hour <= 16) return 0.82;
+    if (hour <= 18) return 1.2;
+    if (hour <= 20) return 1.35;
+    return 1.1;
+  }
+
+  return 1;
+}
+
 export function createForecast(
   plan: FestivalPlan,
   tourism: TourismContext,
@@ -117,8 +170,9 @@ export function createForecast(
       .filter((program) => hour >= program.startHour && hour <= program.endHour)
       .reduce((sum, program) => sum + program.expectedDraw, 0);
     const eveningBoost = hour >= 18 && hour <= 20 ? 1.28 : 1;
+    const festivalTimeProfile = festivalTimeProfileMultiplier(plan, hour);
 
-    return Math.max(0.7, 0.8 + programDraw / 180) * eveningBoost;
+    return Math.max(0.7, 0.8 + programDraw / 180) * eveningBoost * festivalTimeProfile;
   });
   const totalWeight = hourWeights.reduce((sum, weight) => sum + weight, 0);
   const visitorsByHour = plan.operatingHours.map((hour, index) => ({
