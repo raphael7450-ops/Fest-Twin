@@ -240,6 +240,99 @@ function selectedFestivalBasisDetails(
   ];
 }
 
+function formatOperatingHours(hours: number[]) {
+  if (hours.length === 0) return "-";
+  return hours.map((hour) => `${hour}:00`).join(", ");
+}
+
+function selectedSafetyLogisticsBasisDetails(
+  plan: FestivalPlan,
+  forecast: ForecastResult,
+  simulation: SimulationResult,
+  safety: ReturnType<typeof createSafetyLogisticsMetrics>,
+  traffic?: TrafficContext,
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
+): MetricEvidence["sourceDetails"] {
+  const peakHour =
+    forecast.peakHour || simulation.hour || plan.operatingHours[0] || 0;
+  const selectedRecord = selectedFestivalBasis
+    ? [
+        {
+          label: selectedFestivalBasis.title,
+          fields: [
+            { label: "contentId", value: selectedFestivalBasis.contentId },
+            { label: "축제명", value: selectedFestivalBasis.title },
+            { label: "주소", value: selectedFestivalBasis.address },
+            {
+              label: "기간",
+              value: `${selectedFestivalBasis.startDate} ~ ${selectedFestivalBasis.endDate}`,
+            },
+            {
+              label: "좌표",
+              value:
+                selectedFestivalBasis.mapX && selectedFestivalBasis.mapY
+                  ? `${selectedFestivalBasis.mapX}, ${selectedFestivalBasis.mapY}`
+                  : "-",
+            },
+          ],
+        },
+      ]
+    : [];
+
+  return [
+    {
+      sourceId: "selected-safety-logistics-basis",
+      sourceName: "안전 및 물류 분석 기준",
+      sourceType: "derived",
+      statusLabel: selectedFestivalBasis ? "선택 축제 기준 반영" : "기획안 기준 반영",
+      records: [
+        ...selectedRecord,
+        {
+          label: "현재 안전/물류 산출 입력",
+          fields: [
+            { label: "기획안 축제명", value: plan.name },
+            { label: "행사장", value: plan.venueAddress },
+            { label: "지역", value: plan.region },
+            { label: "운영시간", value: formatOperatingHours(plan.operatingHours) },
+            {
+              label: "예상 수용 인원",
+              value: `${plan.expectedCapacity.toLocaleString("ko-KR")}명`,
+            },
+            {
+              label: "예상 방문객",
+              value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+            },
+            { label: "피크 시간", value: `${peakHour}:00` },
+            {
+              label: "피크 방문객",
+              value: `${safety.peakVisitors.toLocaleString("ko-KR")}명`,
+            },
+            {
+              label: "최고 밀집도",
+              value: `${safety.peakDensity}명/m²`,
+            },
+            { label: "병목 후보", value: `${simulation.bottlenecks.length}곳` },
+            {
+              label: "선택 교통 시간",
+              value: traffic?.time ?? `${peakHour}:00`,
+            },
+            {
+              label: "교통 기준 도로",
+              value: traffic?.links[0]?.roadName ?? safety.trafficRoadName,
+            },
+            {
+              label: "교통 데이터 상태",
+              value: traffic?.status ?? "교통 데이터 미연동",
+            },
+          ],
+        },
+      ],
+      note:
+        "축제 후보를 변경하면 현재 기획안의 운영시간, 수용 인원, 피크 방문객, 행사장 주소, 교통 시간 조건을 다시 반영해 안전요원·의료인력·주차·접근 교통 근거를 갱신합니다.",
+    },
+  ];
+}
+
 function cleanStatusLabel(status?: string) {
   if (status === "live") return "실데이터";
   if (status === "partial-fallback") return "부분 보완";
@@ -331,6 +424,14 @@ export function createMetricEvidenceSet(
   const spendingDetails = spending?.sourceDetails ?? [];
   const demandBackdataDetails = demandBackdata?.sourceDetails ?? [];
   const selectedFestivalDetails = selectedFestivalBasisDetails(selectedFestivalBasis);
+  const safetyLogisticsBasisDetails = selectedSafetyLogisticsBasisDetails(
+    plan,
+    forecast,
+    simulation,
+    safety,
+    traffic,
+    selectedFestivalBasis,
+  );
   const demandEvidenceMatrixDetails = createDemandEvidenceMatrixDetails(
     tourism,
     trends,
@@ -607,7 +708,11 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...layoutUserInputs, ...safetyStaffDetails],
+      sourceDetails: [
+        ...safetyLogisticsBasisDetails,
+        ...layoutUserInputs,
+        ...safetyStaffDetails,
+      ],
       contributors: [
         {
           label: "피크 방문객",
@@ -632,7 +737,11 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...layoutUserInputs, ...medicalStaffDetails],
+      sourceDetails: [
+        ...safetyLogisticsBasisDetails,
+        ...layoutUserInputs,
+        ...medicalStaffDetails,
+      ],
       contributors: [
         {
           label: "최고 밀집도",
@@ -664,7 +773,7 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: trafficDetails,
+      sourceDetails: [...safetyLogisticsBasisDetails, ...trafficDetails],
       contributors: [
         {
           label: "위험도",
@@ -698,7 +807,12 @@ export function createMetricEvidenceSet(
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
-      sourceDetails: [...parkingUserInputs, ...parkingDetails, ...trafficDetails],
+      sourceDetails: [
+        ...safetyLogisticsBasisDetails,
+        ...parkingUserInputs,
+        ...parkingDetails,
+        ...trafficDetails,
+      ],
       contributors: [
         {
           label: "주차 차오름",

@@ -167,6 +167,65 @@ describe("metricEvidence", () => {
     expect(JSON.stringify(source)).toContain("127.0610512042, 37.5103955843");
   });
 
+  it("includes the selected festival basis in safety and logistics evidence", () => {
+    const countdownPlan = {
+      ...sampleFestivalPlan,
+      name: "Countdown Busan",
+      region: "Busan",
+      venueAddress: "Busan Suyeong-gu Gwanganhaebyeon-ro 219",
+      startDate: "2025-12-31",
+      endDate: "2026-01-01",
+      operatingHours: [18, 20, 22, 23, 24],
+      expectedCapacity: 52000,
+    };
+    const countdownBasis: SelectedFestivalBasis = {
+      contentId: "3456789",
+      title: "Countdown Busan",
+      address: "Busan Suyeong-gu Gwanganhaebyeon-ro 219",
+      startDate: "2025-12-31",
+      endDate: "2026-01-01",
+      mapX: "129.1187",
+      mapY: "35.1532",
+      sourceName: "TourAPI selected festival candidate",
+    };
+    const forecast = createForecast(
+      countdownPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+    const simulation = createSimulation(countdownPlan, forecast, forecast.peakHour);
+    const evidence = createMetricEvidenceSet(
+      countdownPlan,
+      forecast,
+      simulation,
+      sampleTourismContext,
+      sampleTrendContext,
+      sampleTrafficContext,
+      undefined,
+      undefined,
+      countdownBasis,
+    );
+
+    const safetySerialized = JSON.stringify(evidence["safety-staff"].sourceDetails);
+    const medicalSerialized = JSON.stringify(evidence["medical-staff"].sourceDetails);
+    const trafficSerialized = JSON.stringify(evidence["traffic-risk"].sourceDetails);
+    const parkingSerialized = JSON.stringify(evidence["parking-occupancy"].sourceDetails);
+
+    for (const serialized of [
+      safetySerialized,
+      medicalSerialized,
+      trafficSerialized,
+      parkingSerialized,
+    ]) {
+      expect(serialized).toContain("selected-safety-logistics-basis");
+      expect(serialized).toContain("Countdown Busan");
+      expect(serialized).toContain("3456789");
+      expect(serialized).toContain("18:00, 20:00, 22:00, 23:00, 24:00");
+      expect(serialized).toContain("52,000");
+      expect(serialized).toContain(`${forecast.peakHour}:00`);
+    }
+  });
+
   it("provides a source detail for every top-level KPI", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,
