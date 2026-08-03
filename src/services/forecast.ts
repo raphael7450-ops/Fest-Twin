@@ -85,6 +85,30 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
   );
 
   if (
+    evidenceText.includes("카운트다운") ||
+    evidenceText.includes("countdown") ||
+    evidenceText.includes("새해") ||
+    evidenceText.includes("연말") ||
+    evidenceText.includes("불꽃") ||
+    evidenceText.includes("midnight") ||
+    evidenceText.includes("newyear")
+  ) {
+    return {
+      label: bestBackdata?.type ?? "야간 카운트다운형",
+      sourceLabel: bestBackdata
+        ? `${bestBackdata.sourceName} ${bestBackdata.type}`
+        : "축제명/키워드",
+      weightForHour: (hour: number) => {
+        if (hour === 24 || hour === 0) return 2.2;
+        if (hour === 23) return 1.55;
+        if (hour === 22) return 1.28;
+        if (hour >= 18 && hour <= 21) return 1.08;
+        return 0.78;
+      },
+    };
+  }
+
+  if (
     evidenceText.includes("먹거리") ||
     evidenceText.includes("특산물") ||
     evidenceText.includes("푸드")

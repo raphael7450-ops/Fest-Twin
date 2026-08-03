@@ -120,6 +120,47 @@ describe("createForecast", () => {
     );
   });
 
+  it("shifts countdown and new year festivals toward a late-night midnight peak", () => {
+    const countdownPlan = {
+      ...sampleFestivalPlan,
+      name: "부산 카운트다운 축제",
+      keywords: ["부산", "카운트다운", "새해", "불꽃"],
+      operatingHours: [18, 20, 22, 23, 24],
+      programs: [
+        { id: "music", name: "야간 공연", startHour: 20, endHour: 23, expectedDraw: 82 },
+        { id: "countdown", name: "새해 카운트다운", startHour: 23, endHour: 24, expectedDraw: 96 },
+      ],
+    };
+    const countdownBackdata = {
+      ...sampleDemandBackdataContext,
+      similarFestivalBaselines: [
+        {
+          id: "busan-countdown",
+          name: "부산 카운트다운 축제",
+          region: "부산",
+          type: "야간/카운트다운",
+          periodLabel: "연말 야간",
+          budgetMillionKrw: 900,
+          visitors: 120000,
+          similarityScore: 98,
+          sourceName: "지역축제 DB",
+        },
+      ],
+    };
+
+    const forecast = createForecast(
+      countdownPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+      countdownBackdata,
+    );
+    const visitorsAt = new Map(forecast.visitorsByHour.map((item) => [item.hour, item.visitors]));
+
+    expect(forecast.peakHour).toBe(24);
+    expect(visitorsAt.get(24)).toBeGreaterThan(visitorsAt.get(20)!);
+    expect(visitorsAt.get(23)).toBeGreaterThan(visitorsAt.get(18)!);
+  });
+
   it("applies bounded search trend correction to demand forecasting", () => {
     const scalablePlan = {
       ...sampleFestivalPlan,

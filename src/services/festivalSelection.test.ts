@@ -86,6 +86,31 @@ describe("festivalSelection", () => {
     expect(nextPlan.expectedCapacity).toBe(338072);
   });
 
+  it("extends operating hours and adds a midnight program for countdown festivals", () => {
+    const countdownCandidate: FestivalCandidate = {
+      id: "busan-countdown-2026",
+      title: "부산 카운트다운 축제",
+      address: "부산광역시 해운대구",
+      startDate: "2026-12-31",
+      endDate: "2027-01-01",
+      searchScope: "regional-supplement",
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, countdownCandidate);
+
+    expect(nextPlan.operatingHours).toEqual([18, 20, 22, 23, 24]);
+    expect(nextPlan.programs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "countdown-midnight",
+          startHour: 23,
+          endHour: 24,
+          expectedDraw: 96,
+        }),
+      ]),
+    );
+  });
+
   it("preserves user-edited planning values when applying backdata recommendations", () => {
     const seoulLightCandidate: FestivalCandidate = {
       id: "4000001",

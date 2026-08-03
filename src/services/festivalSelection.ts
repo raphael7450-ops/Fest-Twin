@@ -48,6 +48,7 @@ export function applyFestivalCandidateToPlan(
   } = {},
 ): FestivalPlan {
   const recommendation = createBackdataPlanningRecommendation(candidate, options.demandBackdata);
+  const planningPatch = createFestivalTypePlanningPatch(currentPlan, candidate);
 
   return {
     ...currentPlan,
@@ -64,7 +65,51 @@ export function applyFestivalCandidateToPlan(
       !options.preserveExpectedCapacity && recommendation?.expectedCapacity
         ? recommendation.expectedCapacity
         : currentPlan.expectedCapacity,
+    ...planningPatch,
   };
+}
+
+function createFestivalTypePlanningPatch(
+  currentPlan: FestivalPlan,
+  candidate: FestivalCandidate,
+): Partial<FestivalPlan> {
+  if (!isCountdownFestival(candidate)) return {};
+
+  const countdownProgram = {
+    id: "countdown-midnight",
+    name: "새해 카운트다운",
+    startHour: 23,
+    endHour: 24,
+    expectedDraw: 96,
+  };
+  const programs = currentPlan.programs.some((program) => program.id === countdownProgram.id)
+    ? currentPlan.programs
+    : [
+        ...currentPlan.programs.filter((program) => program.endHour >= 18),
+        countdownProgram,
+      ];
+
+  return {
+    operatingHours: [18, 20, 22, 23, 24],
+    programs,
+  };
+}
+
+function isCountdownFestival(candidate: FestivalCandidate) {
+  const text = normalizeText(
+    `${candidate.title} ${candidate.address} ${candidate.startDate} ${candidate.endDate}`,
+  );
+
+  return (
+    text.includes("카운트다운") ||
+    text.includes("countdown") ||
+    text.includes("새해") ||
+    text.includes("연말") ||
+    text.includes("불꽃") ||
+    text.includes("midnight") ||
+    text.includes("newyear") ||
+    text.includes("12-31")
+  );
 }
 
 function createBackdataPlanningRecommendation(
