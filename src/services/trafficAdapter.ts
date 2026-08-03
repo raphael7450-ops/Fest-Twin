@@ -33,12 +33,30 @@ interface ViewTRecord {
   };
 }
 
+interface ViewTOdRecord {
+  ZONEID?: string | number;
+  ZONENAME?: string;
+  ZONE_NAME?: string;
+  VALUE_IN?: string | number;
+  VALUE_OUT?: string | number;
+  VALUE?: {
+    IN?: string | number;
+    OUT?: string | number;
+  };
+}
+
 interface EffectiveTrafficMapping {
   id: string;
   linkId: string;
   roadName: string;
   note: string;
   isLocalLinkMapping: boolean;
+}
+
+interface OdZoneMapping {
+  zoneId: string;
+  zoneName: string;
+  note: string;
 }
 
 const DEFAULT_YEAR = 2024;
@@ -111,6 +129,46 @@ function createEffectiveTrafficMapping(plan: FestivalPlan): EffectiveTrafficMapp
       "행사장 LINKID 매핑 전 단계입니다. View-T 검증 링크 교통량을 호출한 뒤 축제 지역, 수용 인원, 피크 시간 조건으로 보정합니다.",
     isLocalLinkMapping: false,
   };
+}
+
+function getOdZoneMapping(plan: FestivalPlan): OdZoneMapping | null {
+  const basis = `${plan.region} ${plan.venueAddress} ${plan.name}`;
+  if (basis.includes("광안") || basis.includes("수영구")) {
+    return {
+      zoneId: "2607065",
+      zoneName: "부산광역시 수영구 광안2동",
+      note: "광안리 일대 축제장 후보의 개최지 행정동 차량 유입량 기준입니다.",
+    };
+  }
+  if (basis.includes("부산")) {
+    return {
+      zoneId: "2607065",
+      zoneName: "부산광역시 수영구 광안2동",
+      note: "부산권 축제 데모의 개최지 행정동 차량 유입량 기준입니다.",
+    };
+  }
+  if (basis.includes("태안") || basis.includes("꽃지")) {
+    return {
+      zoneId: "4482530",
+      zoneName: "충청남도 태안군 안면읍",
+      note: "태안 안면읍권 축제 후보의 개최지 행정동 차량 유입량 기준입니다.",
+    };
+  }
+  if (basis.includes("강남") || basis.includes("삼성")) {
+    return {
+      zoneId: "1123078",
+      zoneName: "서울특별시 강남구 삼성1동",
+      note: "강남 삼성동 축제장 후보의 개최지 행정동 차량 유입량 기준입니다.",
+    };
+  }
+  if (basis.includes("서울") || basis.includes("광화문")) {
+    return {
+      zoneId: "1101053",
+      zoneName: "서울특별시 종로구 사직동",
+      note: "서울 도심 축제장 후보의 개최지 행정동 차량 유입량 기준입니다.",
+    };
+  }
+  return null;
 }
 
 function numberValue(value: unknown) {
@@ -199,6 +257,85 @@ function normalizeViewTRecords(
   });
 }
 
+function normalizeOdRecords(records: ViewTOdRecord[]) {
+  return records
+    .map((record) => {
+      const value = record.VALUE && typeof record.VALUE === "object" ? record.VALUE : {};
+      const inboundVolume = numberValue(record.VALUE_IN ?? value.IN);
+      const outboundVolume = numberValue(record.VALUE_OUT ?? value.OUT);
+      return {
+        zoneId: String(record.ZONEID ?? "-"),
+        zoneName: record.ZONENAME ?? record.ZONE_NAME ?? "-",
+        inboundVolume,
+        outboundVolume,
+        totalVolume: inboundVolume + outboundVolume,
+      };
+    })
+    .filter((record) => record.totalVolume > 0);
+}
+
+function createOdSourceDetails({
+  zoneId,
+  zoneName,
+  year,
+  weekType,
+  time,
+  records,
+  note,
+}: {
+  zoneId: string;
+  zoneName: string;
+  year: number;
+  weekType: "weekday" | "weekend";
+  time: string;
+  records: ReturnType<typeof normalizeOdRecords>;
+  note: string;
+}): MetricEvidenceSourceDetail[] {
+  const totalInbound = records.reduce((sum, record) => sum + record.inboundVolume, 0);
+  const totalOutbound = records.reduce((sum, record) => sum + record.outboundVolume, 0);
+  return [
+    {
+      sourceId: "ktdb-viewt-emd-od-inflow",
+      sourceName: "KTDB/View-T 개최지 행정동 차량 유입량",
+      sourceType: "ktdb",
+      statusLabel: "기준연도 OD 유입량 조회 성공",
+      retrievedAt: new Date().toISOString(),
+      endpoint: "/api/traffic/od-emd",
+      query: [
+        { label: "zoneId", value: zoneId },
+        { label: "year", value: String(year) },
+        { label: "weekType", value: weekType },
+        { label: "time", value: time },
+      ],
+      records: [
+        {
+          label: zoneName,
+          fields: [
+            { label: "ZONEID", value: zoneId },
+            { label: "개최지 행정동", value: zoneName },
+            { label: "진입 차량량", value: `${totalInbound.toLocaleString("ko-KR")}대/일` },
+            { label: "진출 차량량", value: `${totalOutbound.toLocaleString("ko-KR")}대/일` },
+            {
+              label: "총 차량 이동량",
+              value: `${(totalInbound + totalOutbound).toLocaleString("ko-KR")}대/일`,
+            },
+          ],
+        },
+        ...records.slice(0, 3).map((record) => ({
+          label: record.zoneName,
+          fields: [
+            { label: "ZONEID", value: record.zoneId },
+            { label: "진입", value: `${record.inboundVolume.toLocaleString("ko-KR")}대/일` },
+            { label: "진출", value: `${record.outboundVolume.toLocaleString("ko-KR")}대/일` },
+          ],
+        })),
+      ],
+      note:
+        `${note} 특정 월/일 행사일 실측이 아니라 View-T 기준연도 주중/주말·시간대별 행정동 OD 유입량입니다.`,
+    },
+  ];
+}
+
 function createTrafficSourceDetails({
   linkId,
   year,
@@ -245,6 +382,72 @@ function createTrafficSourceDetails({
       note,
     },
   ];
+}
+
+async function getOdInflowSourceDetails({
+  plan,
+  fetchImpl,
+  signal,
+  year,
+  weekType,
+  time,
+}: {
+  plan: FestivalPlan;
+  fetchImpl: typeof fetch;
+  signal?: AbortSignal;
+  year: number;
+  weekType: "weekday" | "weekend";
+  time: string;
+}): Promise<{ sourceDetails: MetricEvidenceSourceDetail[]; riskAdjustment: number }> {
+  const zone = getOdZoneMapping(plan);
+  if (!zone) return { sourceDetails: [], riskAdjustment: 0 };
+
+  const url = new URL("/api/traffic/od-emd", window.location.origin);
+  url.searchParams.set("zoneId", zone.zoneId);
+  url.searchParams.set("year", String(year));
+  url.searchParams.set("weekType", weekType);
+  url.searchParams.set("time", time);
+
+  try {
+    const response = await fetchImpl(`${url.pathname}${url.search}`, { signal });
+    if (!response.ok) throw new Error(`Traffic OD proxy HTTP ${response.status}`);
+    const payload = (await response.json()) as {
+      result?: ViewTOdRecord[];
+      RESULT?: ViewTOdRecord[];
+    };
+    const records = normalizeOdRecords(
+      Array.isArray(payload.result)
+        ? payload.result
+        : Array.isArray(payload.RESULT)
+          ? payload.RESULT
+          : [],
+    );
+    if (records.length === 0) return { sourceDetails: [], riskAdjustment: 0 };
+    const totalInbound = records.reduce((sum, record) => sum + record.inboundVolume, 0);
+    return {
+      sourceDetails: createOdSourceDetails({
+        zoneId: zone.zoneId,
+        zoneName: zone.zoneName,
+        year,
+        weekType,
+        time,
+        records,
+        note: zone.note,
+      }),
+      riskAdjustment: clamp(Math.round(totalInbound / 1200), 0, 16),
+    };
+  } catch (error) {
+    if (
+      signal?.aborted ||
+      (typeof error === "object" &&
+        error !== null &&
+        "name" in error &&
+        error.name === "AbortError")
+    ) {
+      throw error;
+    }
+    return { sourceDetails: [], riskAdjustment: 0 };
+  }
 }
 
 export function createFallbackTrafficContext(
@@ -315,14 +518,23 @@ export async function getTrafficContext(
       throw new Error("Traffic response did not include usable link records");
     }
     const riskScore = calculateTrafficRisk(links, weekType, time);
+    const odInflow = await getOdInflowSourceDetails({
+      plan,
+      fetchImpl,
+      signal: options.signal,
+      year: DEFAULT_YEAR,
+      weekType,
+      time,
+    });
+    const adjustedRiskScore = clamp(riskScore + odInflow.riskAdjustment, 0, 100);
 
     return {
       status: mapping.isLocalLinkMapping ? "mapped-sample" : "sample-fallback",
       year: DEFAULT_YEAR,
       weekType,
       time,
-      riskScore,
-      riskLabel: riskLabel(riskScore),
+      riskScore: adjustedRiskScore,
+      riskLabel: riskLabel(adjustedRiskScore),
       links,
       provenance: {
         sourceName: mapping.isLocalLinkMapping
@@ -337,19 +549,22 @@ export async function getTrafficContext(
         retrievedAt: new Date().toISOString(),
         collectedPersonalData: false,
       },
-      sourceDetails: createTrafficSourceDetails({
-        linkId: mapping.linkId,
-        year: DEFAULT_YEAR,
-        weekType,
-        time,
-        links,
-        statusLabel: mapping.isLocalLinkMapping
-          ? "기준연도 교통량 조회 성공"
-          : "View-T 호출 성공 · 축제 규모 보정",
-        note: mapping.isLocalLinkMapping
-          ? "기준연도 교통량 기반 접근 리스크이며 실시간 교통정보가 아닙니다."
-          : mapping.note,
-      }),
+      sourceDetails: [
+        ...odInflow.sourceDetails,
+        ...createTrafficSourceDetails({
+          linkId: mapping.linkId,
+          year: DEFAULT_YEAR,
+          weekType,
+          time,
+          links,
+          statusLabel: mapping.isLocalLinkMapping
+            ? "기준연도 교통량 조회 성공"
+            : "View-T 호출 성공 · 축제 규모 보정",
+          note: mapping.isLocalLinkMapping
+            ? "기준연도 교통량 기반 접근 리스크이며 실시간 교통정보가 아닙니다."
+            : mapping.note,
+        }),
+      ],
     };
   } catch (error) {
     if (

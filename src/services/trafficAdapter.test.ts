@@ -157,12 +157,71 @@ describe("trafficAdapter", () => {
       hour: 14,
     });
 
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
     expect(busanTraffic.riskScore).toBeGreaterThan(taeanTraffic.riskScore);
     expect(busanTraffic.links[0].roadName).toContain("부산");
     expect(taeanTraffic.links[0].roadName).toContain("태안");
-    expect(busanTraffic.sourceDetails[0].statusLabel).toContain("축제 규모 보정");
+    expect(
+      busanTraffic.sourceDetails.find(
+        (detail) => detail.sourceId === "ktdb-viewt-selected-link",
+      )?.statusLabel,
+    ).toContain("축제 규모 보정");
     expect(JSON.stringify(busanTraffic.sourceDetails)).toContain("행사장 LINKID 매핑 전");
+  });
+
+  it("adds EMD origin-destination inflow evidence and risk adjustment for the host area", async () => {
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/traffic/od-emd") {
+        return jsonResponse({
+          zoneId: "2607065",
+          result: [
+            {
+              ZONEID: "2607065",
+              ZONENAME: "부산광역시 수영구 광안2동",
+              VALUE_IN: "8400",
+              VALUE_OUT: "3100",
+            },
+          ],
+        });
+      }
+      return jsonResponse({
+        result: [
+          {
+            LINKID: "8890310",
+            ROAD_NAME: "하모중앙로",
+            ROAD_RANK: "시군도",
+            LANES: "2",
+            VALUE_IN: "900",
+            VALUE_OUT: "700",
+          },
+        ],
+      });
+    });
+    const busanCountdownPlan = {
+      ...sampleFestivalPlan,
+      name: "부산 카운트다운 축제",
+      region: "부산",
+      venueAddress: "부산광역시 수영구 광안해변로 219",
+      expectedCapacity: 52000,
+      startDate: "2025-12-31",
+      endDate: "2026-01-01",
+    };
+
+    const traffic = await getTrafficContext(busanCountdownPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      hour: 23,
+    });
+
+    const calledPaths = fetchImpl.mock.calls.map((call) =>
+      new URL(String(call[0]), "http://localhost").pathname,
+    );
+    expect(calledPaths).toContain("/api/traffic/selected-link");
+    expect(calledPaths).toContain("/api/traffic/od-emd");
+    expect(JSON.stringify(traffic.sourceDetails)).toContain("ktdb-viewt-emd-od-inflow");
+    expect(JSON.stringify(traffic.sourceDetails)).toContain("부산광역시 수영구 광안2동");
+    expect(JSON.stringify(traffic.sourceDetails)).toContain("8,400대/일");
+    expect(traffic.riskScore).toBeGreaterThan(60);
   });
 
   it("creates fallback traffic context without personal data", () => {
