@@ -63,7 +63,7 @@ export function ReportView({
     <section className="panel report-panel" aria-label="공공검토 보고서">
       <div className="panel-heading report-heading">
         <div>
-          <h2>공공검토 보고서</h2>
+          <h2>기획 보완 리포트</h2>
           <p>지자체 축제 사전 검토용 예측, 안전, 예산 근거 요약</p>
         </div>
         <div className="panel-actions">

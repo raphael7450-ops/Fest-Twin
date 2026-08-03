@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleSpendingContext } from "./data/sampleSpending";
+import { sampleTrendContext } from "./data/sampleTrends";
 
 const {
   getTourismContextMock,
@@ -11,12 +12,14 @@ const {
   getFestivalCandidatesMock,
   getTrafficContextMock,
   getSpendingContextMock,
+  getTrendContextMock,
 } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
   getFestivalCandidatesMock: vi.fn(),
   getTrafficContextMock: vi.fn(),
   getSpendingContextMock: vi.fn(),
+  getTrendContextMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -36,7 +39,16 @@ vi.mock("./services/spendingAdapter", async (importOriginal) => ({
   getSpendingContext: getSpendingContextMock,
 }));
 
+vi.mock("./services/trendAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/trendAdapter")>()),
+  getTrendContext: getTrendContextMock,
+}));
+
 import { App } from "./App";
+
+const openDashboardSection = (label: string) => {
+  fireEvent.click(screen.getByRole("button", { name: `대시보드 섹션: ${label}` }));
+};
 
 describe("App", () => {
   beforeEach(() => {
@@ -45,9 +57,11 @@ describe("App", () => {
     getFestivalCandidatesMock.mockReset();
     getTrafficContextMock.mockReset();
     getSpendingContextMock.mockReset();
+    getTrendContextMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
     getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
     getSpendingContextMock.mockResolvedValue(sampleSpendingContext);
+    getTrendContextMock.mockResolvedValue(sampleTrendContext);
     getTourApiAreaCodesMock.mockResolvedValue([
       { code: "1", name: "서울" },
       { code: "1-legacy", name: "서울시" },
@@ -71,6 +85,8 @@ describe("App", () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
+    vi.unstubAllGlobals();
+    window.history.pushState({}, "", "/");
   });
 
   it("renders the government-guided Fest-Twin MVP dashboard", async () => {
@@ -79,14 +95,30 @@ describe("App", () => {
     expect(screen.getByText("페스트트윈(Fest-Twin)")).toBeInTheDocument();
     expect(screen.getByText("공공 검토 대시보드")).toBeInTheDocument();
     expect(screen.getByText("실데이터 우선")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 요약" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 기획" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 예측" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 현장" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 근거" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 리포트" })).toBeInTheDocument();
     expect(screen.getAllByText("흥행 예측 지수").length).toBeGreaterThan(0);
     expect(screen.getAllByText("최고 밀집 위험도").length).toBeGreaterThan(0);
     expect(screen.getByText("예산 효율성 점수")).toBeInTheDocument();
     expect(screen.getByText("지역 상권 유출 연계도")).toBeInTheDocument();
     expect(screen.getByLabelText("핵심 진단 지표")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
     expect(screen.queryByText("정부 지침 반영 현황")).not.toBeInTheDocument();
     expect(screen.queryByText("제출 데모 검증 현황")).not.toBeInTheDocument();
+    expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
+    expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
+    expect(screen.getByText("서울특별시 강남구 영동대로 511 (삼성동)")).toBeInTheDocument();
+    expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
+    expect(screen.getAllByText("안전관리 요원 추천 배치").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("의료/구급 인력 추천 배치").length).toBeGreaterThan(0);
+    expect(screen.getByText("주차 수용 차오름 비율")).toBeInTheDocument();
+
+    openDashboardSection("기획");
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 기획" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
     expect(screen.getByText("축제 기획안 입력")).toBeInTheDocument();
     expect(screen.getByText("지역 우선 조회")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 지역 기반 후보 조회")).toBeInTheDocument();
@@ -94,22 +126,31 @@ describe("App", () => {
     expect(screen.getByLabelText("시작일")).toBeInTheDocument();
     expect(screen.getByLabelText("종료일")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 후보 보기")).toBeInTheDocument();
-    expect(screen.getByText("데이터 근거")).toBeInTheDocument();
-    expect((await screen.findAllByText("샘플 보완")).length).toBeGreaterThan(0);
-    expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
     expect(screen.getByText("서울특별시 강남구 영동대로 511 (삼성동)")).toBeInTheDocument();
+    expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
+
+    openDashboardSection("예측");
+    expect(screen.getByText("진단 시간대")).toBeInTheDocument();
+    expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
     expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();
+
+    openDashboardSection("현장");
+    expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
     expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
-    expect(screen.getAllByText("안전관리 요원 추천 배치").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("의료/구급 인력 추천 배치").length).toBeGreaterThan(0);
-    expect(screen.getByText("주차 수용 차오름 비율")).toBeInTheDocument();
+    expect(screen.getByText("주요 리스크")).toBeInTheDocument();
+
+    openDashboardSection("근거");
+    expect(screen.getByText("데이터 신뢰도")).toBeInTheDocument();
+    expect(await screen.findByText("샘플 데이터 대체 사용")).toBeInTheDocument();
+
+    openDashboardSection("리포트");
+    expect(screen.getByText("기획 보완 리포트")).toBeInTheDocument();
     expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
     expect(screen.getAllByText("총 투입 예산").length).toBeGreaterThan(0);
     expect(screen.getByText("예상 지역 상권 소비 창출액")).toBeInTheDocument();
     expect(screen.getByText(/지역 관광 소비 강도 기반/)).toBeInTheDocument();
     expect(screen.getAllByText(/58,400원/).length).toBeGreaterThan(0);
-    expect(screen.getByText("공공검토 보고서")).toBeInTheDocument();
   });
 
   it("opens TourAPI festival candidates in a right-side selection panel", async () => {
@@ -117,6 +158,7 @@ describe("App", () => {
 
     try {
       render(<App />);
+      openDashboardSection("기획");
 
       await act(async () => {
         vi.advanceTimersByTime(300);
@@ -131,6 +173,85 @@ describe("App", () => {
 
       expect(screen.queryByRole("dialog", { name: "TourAPI 축제 후보" })).not.toBeInTheDocument();
       expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the region selector usable while live area codes are still loading", () => {
+    getTourApiAreaCodesMock.mockReturnValue(new Promise(() => {}));
+
+    render(<App />);
+    openDashboardSection("기획");
+
+    const regionSelect = screen.getByLabelText("개최 지역");
+    expect(regionSelect.tagName).toBe("SELECT");
+    expect(within(regionSelect).getByRole("option", { name: "부산" })).toBeInTheDocument();
+  });
+
+  it("does not request candidates or show a failure state while dates are incomplete", async () => {
+    vi.useFakeTimers();
+
+    try {
+      render(<App />);
+      openDashboardSection("기획");
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+        await Promise.resolve();
+      });
+      expect(getFestivalCandidatesMock).toHaveBeenCalled();
+      getFestivalCandidatesMock.mockClear();
+      getTourismContextMock.mockClear();
+      getTrafficContextMock.mockClear();
+      getSpendingContextMock.mockClear();
+      getTrendContextMock.mockClear();
+
+      fireEvent.change(screen.getByLabelText("종료일"), {
+        target: { value: "0020-01-03" },
+      });
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+        await Promise.resolve();
+      });
+
+      expect(getFestivalCandidatesMock).not.toHaveBeenCalled();
+      expect(getTourismContextMock).not.toHaveBeenCalled();
+      expect(getTrafficContextMock).not.toHaveBeenCalled();
+      expect(getSpendingContextMock).not.toHaveBeenCalled();
+      expect(getTrendContextMock).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+
+      expect(screen.getByRole("dialog", { name: "TourAPI 축제 후보" })).toBeInTheDocument();
+      expect(screen.queryByText("후보 조회에 실패했습니다.")).not.toBeInTheDocument();
+      expect(screen.getByText("해당 조건의 후보가 없습니다.")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps candidate lookup non-blocking when TourAPI candidate loading fails", async () => {
+    vi.useFakeTimers();
+    getFestivalCandidatesMock.mockRejectedValue(new Error("rate limited"));
+
+    try {
+      render(<App />);
+      openDashboardSection("기획");
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+        await Promise.resolve();
+      });
+
+      expect(getFestivalCandidatesMock).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+
+      expect(screen.getByRole("dialog", { name: "TourAPI 축제 후보" })).toBeInTheDocument();
+      expect(screen.queryByText("후보 조회에 실패했습니다.")).not.toBeInTheDocument();
+      expect(screen.getByText("해당 조건의 후보가 없습니다.")).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -161,7 +282,6 @@ describe("App", () => {
     const evidenceButtons = within(safetyPanel).getAllByRole("button", { name: "근거 보기" });
     await userEvent.click(evidenceButtons[2]);
 
-    expect(await screen.findByRole("heading", { name: "접근 교통 위험도" })).toBeInTheDocument();
     expect(await screen.findByText("사용 데이터 상세")).toBeInTheDocument();
     expect(screen.getAllByText(/KTDB\/View-T/).length).toBeGreaterThan(0);
     expect(screen.getByText(/LINKID/)).toBeInTheDocument();
@@ -186,7 +306,7 @@ describe("App", () => {
     });
     render(<App />);
 
-    await screen.findByText(/축제 기획안 입력/);
+    await waitFor(() => expect(getTourismContextMock).toHaveBeenCalled());
 
     await userEvent.click(screen.getAllByRole("button", { name: /근거 보기/ })[0]);
 
@@ -244,6 +364,52 @@ describe("App", () => {
     expect(within(drawer).getAllByText("[비공개]").length).toBeGreaterThanOrEqual(12);
   });
 
+  it("restores selected TourAPI festival basis from a shared scenario link", async () => {
+    window.history.pushState({}, "", "/?share_token=token_selected_festival");
+    const selectedFestivalBasis = {
+      contentId: "3439947",
+      title: "강남 미디어 윈터페스타",
+      address: "서울특별시 강남구 영동대로 511",
+      startDate: "2025-12-19",
+      endDate: "2026-01-03",
+      mapX: "127.0610512042",
+      mapY: "37.5103955843",
+      sourceName: "TourAPI selected festival candidate",
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes("/api/scenarios/share/token_selected_festival")) {
+        return {
+          ok: true,
+          json: async () => ({
+            parameters: {
+              plan: {
+                name: "강남 미디어 윈터페스타",
+                region: "서울",
+                venueAddress: "서울특별시 강남구 영동대로 511",
+                startDate: "2025-12-19",
+                endDate: "2026-01-03",
+              },
+              selectedHour: 20,
+              selectedFestivalBasis,
+            },
+          }),
+        } as Response;
+      }
+
+      return {
+        ok: false,
+        json: async () => ({}),
+      } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+    openDashboardSection("근거");
+
+    expect((await screen.findAllByText("3439947")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("선택 TourAPI 축제 기준").length).toBeGreaterThan(0);
+  });
+
   it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {
     vi.useFakeTimers();
     getTourismContextMock.mockResolvedValue({
@@ -257,13 +423,16 @@ describe("App", () => {
 
     try {
       const view = render(<App />);
+      openDashboardSection("기획");
 
       expect(getTourismContextMock).not.toHaveBeenCalled();
       await act(async () => {
         vi.advanceTimersByTime(300);
       });
 
-      expect(screen.getAllByText("실데이터").length).toBeGreaterThan(0);
+      openDashboardSection("근거");
+      expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
+      openDashboardSection("기획");
       expect(getTourismContextMock).toHaveBeenCalledTimes(1);
       const initialSignal = getTourismContextMock.mock.calls[0][1].signal as AbortSignal;
 
@@ -321,17 +490,21 @@ describe("App", () => {
 
     try {
       const view = render(<App />);
+      openDashboardSection("기획");
       await act(async () => {
         vi.advanceTimersByTime(300);
       });
-      expect(screen.getAllByText("실데이터").length).toBeGreaterThan(0);
+      openDashboardSection("근거");
+      expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
+      openDashboardSection("기획");
 
       fireEvent.change(view.getByLabelText("개최 지역"), {
         target: { value: "부산광역시" },
       });
 
-      expect(screen.queryByText("실데이터")).not.toBeInTheDocument();
-      expect(screen.getAllByText("샘플 보완").length).toBeGreaterThan(0);
+      openDashboardSection("근거");
+      expect(screen.queryByText("실제 TourAPI 조회 성공")).not.toBeInTheDocument();
+      expect(screen.getByText("샘플 데이터 대체 사용")).toBeInTheDocument();
 
       await act(async () => {
         vi.advanceTimersByTime(300);

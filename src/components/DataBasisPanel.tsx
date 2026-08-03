@@ -25,22 +25,24 @@ const TOURAPI_OPERATIONS = [
   "locationBasedList2",
 ];
 
-type EvidenceStatus = DataSourceStatus | TrafficContext["status"] | undefined;
-
-function statusLabel(status: EvidenceStatus) {
-  if (status === "live") return "실데이터";
-  if (status === "partial-fallback") return "부분 보완";
+function statusLabel(status: DataSourceStatus | undefined) {
+  if (status === "live") return "실제 TourAPI 조회 성공";
+  if (status === "partial-fallback") return "실제 TourAPI 일부 조회 및 샘플 보완";
   if (status === "file-normalized") return "파일 정규화";
-  if (status === "mapped-sample") return "지역 매핑 샘플";
-  return "샘플 보완";
+  return "샘플 데이터 대체 사용";
 }
 
-function statusTone(status: EvidenceStatus) {
-  if (status === "live") return "good";
-  if (status === "partial-fallback" || status === "file-normalized" || status === "mapped-sample") {
-    return "warn";
-  }
-  return "sample";
+function compactStatusLabel(status: DataSourceStatus | undefined) {
+  if (status === "live") return "실조회";
+  if (status === "partial-fallback") return "일부 보완";
+  if (status === "file-normalized") return "파일 정규화";
+  return "샘플 대체";
+}
+
+function trafficStatusLabel(status: TrafficContext["status"] | undefined) {
+  if (status === "live") return "실조회";
+  if (status === "mapped-sample") return "매핑 샘플";
+  return "샘플 대체";
 }
 
 export function DataBasisPanel({
@@ -53,59 +55,53 @@ export function DataBasisPanel({
 }: DataBasisPanelProps) {
   const statusRows = [
     {
-      label: "TourAPI 축제·관광지",
-      value: statusLabel(tourism.provenance.sourceStatus),
-      tone: statusTone(tourism.provenance.sourceStatus),
-      detail: tourism.provenance.sourceName,
+      label: "TourAPI",
+      status: compactStatusLabel(tourism.provenance.sourceStatus),
+      basis: tourism.provenance.sourceName,
     },
     {
-      label: "검색·소셜 트렌드",
-      value: statusLabel(trends.provenance.sourceStatus),
-      tone: statusTone(trends.provenance.sourceStatus),
-      detail: trends.provenance.sourceName,
+      label: "검색 관심도",
+      status: compactStatusLabel(trends.provenance.sourceStatus),
+      basis: trends.provenance.sourceName,
     },
-    {
-      label: "KTDB/View-T 교통",
-      value: traffic ? statusLabel(traffic.status) : "미연동",
-      tone: traffic ? statusTone(traffic.status) : "sample",
-      detail: traffic ? `${traffic.year}년 ${traffic.weekType} ${traffic.time}` : "교통 컨텍스트 없음",
-    },
-    {
-      label: "관광소비 객단가",
-      value: spending ? statusLabel(spending.sourceStatus) : "미연동",
-      tone: spending ? statusTone(spending.sourceStatus) : "sample",
-      detail: spending?.sourceName ?? "소비 컨텍스트 없음",
-    },
-    {
-      label: "지역 수요 백데이터",
-      value: demandBackdata ? statusLabel(demandBackdata.status) : "미연동",
-      tone: demandBackdata ? statusTone(demandBackdata.status) : "sample",
-      detail: demandBackdata
-        ? `${demandBackdata.similarFestivalBaselines.length}건 비교`
-        : "비교 축제 백데이터 없음",
-    },
+    ...(traffic
+      ? [
+          {
+            label: "교통 근거",
+            status: trafficStatusLabel(traffic.status),
+            basis: traffic.provenance.sourceName,
+          },
+        ]
+      : []),
+    ...(spending
+      ? [
+          {
+            label: "관광소비",
+            status: compactStatusLabel(spending.sourceStatus),
+            basis: spending.sourceName,
+          },
+        ]
+      : []),
+    ...(demandBackdata
+      ? [
+          {
+            label: "지역 수요 백데이터",
+            status: compactStatusLabel(demandBackdata.status),
+            basis:
+              demandBackdata.sourceDetails[0]?.sourceName ??
+              "지역축제 백데이터 기준",
+          },
+        ]
+      : []),
   ];
 
   return (
     <section className="panel data-basis-panel">
       <div className="panel-heading">
-        <h2>데이터 근거</h2>
+        <h2>데이터 신뢰도</h2>
         <span>{statusLabel(tourism.provenance.sourceStatus)}</span>
       </div>
-
-      <div className="data-status-grid" aria-label="데이터 출처 상태">
-        {statusRows.map((row) => (
-          <div className="data-status-card" key={row.label}>
-            <div className="data-status-card-header">
-              <strong>{row.label}</strong>
-              <span className={`data-status-badge ${row.tone}`}>{row.value}</span>
-            </div>
-            <p>{row.detail}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="evidence-source-status data-basis-source-status">
+      <div className="evidence-source-status">
         <strong>{tourism.provenance.sourceName}</strong>
         <span>
           {tourism.provenance.retrievedAt
@@ -113,35 +109,33 @@ export function DataBasisPanel({
             : "샘플 기준"}
         </span>
       </div>
-
-      <ul className="data-basis-evidence-list">
-        <li>
-          <span>TourAPI 기준</span>
-          <p>{tourism.provenance.basisText}</p>
-        </li>
-        <li>
-          <span>Fallback 기준</span>
-          <p>{tourism.provenance.fallbackText}</p>
-        </li>
+      <ul className="evidence-list">
+        <li>{tourism.provenance.basisText}</li>
+        <li>{tourism.provenance.fallbackText}</li>
         {tourism.provenance.fallbackReason ? (
-          <li>
-            <span>보완 사유</span>
-            <p>{tourism.provenance.fallbackReason}</p>
-          </li>
+          <li>보완 사유: {tourism.provenance.fallbackReason}</li>
         ) : null}
         <li>
-          <span>{trends.provenance.sourceName}</span>
-          <p>{trends.provenance.basisText}</p>
+          {trends.provenance.sourceName}: {trends.provenance.basisText}
         </li>
-        <li>
-          <span>개인정보 수집 여부</span>
-          <p>수집하지 않음</p>
-        </li>
-        <li>
-          <span>예측값 성격</span>
-          <p>실제 집계값이 아닌 사전 의사결정용 추정값</p>
-        </li>
+        <li>개인정보 수집 여부: 수집하지 않음</li>
+        <li>예측값 성격: 실제 집계값이 아닌 사전 의사결정용 추정값</li>
       </ul>
+
+      <div className="data-status-summary">
+        <h3>데이터 상태 요약</h3>
+        <dl className="data-status-grid">
+          {statusRows.map((row) => (
+            <div key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>
+                <strong>{row.status}</strong>
+                <span>{row.basis}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
 
       {selectedFestivalBasis ? (
         <div className="selected-festival-basis">
@@ -181,7 +175,7 @@ export function DataBasisPanel({
             <dd>{TOURAPI_PUBLIC_URL}</dd>
           </div>
           <div>
-            <dt>사용 오퍼레이션</dt>
+            <dt>활용 오퍼레이션</dt>
             <dd className="operation-chip-row">
               {TOURAPI_OPERATIONS.map((operation) => (
                 <span className="operation-chip" key={operation}>
@@ -196,7 +190,7 @@ export function DataBasisPanel({
           </div>
           <div>
             <dt>운영계정 전환</dt>
-            <dd>운영계정 승인에는 약 1~3일이 필요하며 승인 후 24개월 사용 가능합니다.</dd>
+            <dd>운영계정 승인에는 약 1~3일이 소요되며 승인 후 24개월 활용 가능합니다.</dd>
           </div>
           <div>
             <dt>키 관리</dt>
