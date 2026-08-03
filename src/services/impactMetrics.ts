@@ -5,6 +5,7 @@
  */
 
 import type {
+  DemandBackdataContext,
   FestivalPlan,
   ForecastResult,
   SimulationResult,
@@ -74,6 +75,36 @@ function average(values: number[]) {
     : values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function demandBackdataBenchmark(demandBackdata?: DemandBackdataContext) {
+  const festivals =
+    demandBackdata?.similarFestivalBaselines.filter((festival) => festival.visitors) ?? [];
+  const totalWeight = festivals.reduce(
+    (sum, festival) => sum + Math.max(festival.similarityScore, 1),
+    0,
+  );
+
+  if (festivals.length === 0 || totalWeight === 0) {
+    return { visitors: 0, costPerVisitorKrw: 0 };
+  }
+
+  const visitors =
+    festivals.reduce(
+      (sum, festival) => sum + (festival.visitors ?? 0) * Math.max(festival.similarityScore, 1),
+      0,
+    ) / totalWeight;
+  const costBenchmarks = festivals
+    .filter((festival) => festival.visitors && festival.budgetMillionKrw)
+    .map(
+      (festival) =>
+        ((festival.budgetMillionKrw ?? 0) * 1_000_000) / Math.max(festival.visitors ?? 1, 1),
+    );
+
+  return {
+    visitors,
+    costPerVisitorKrw: Math.round(average(costBenchmarks)),
+  };
+}
+
 export function calculatePeakDensityPerSquareMeter(
   simulation: SimulationResult,
 ) {
@@ -120,10 +151,17 @@ export function getDensityRisk(
 export function calculateBudgetPerVisitor(
   plan: FestivalPlan,
   forecast: ForecastResult,
+  demandBackdata?: DemandBackdataContext,
 ) {
   const totalBudgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+  const plannedCostPerVisitor = totalBudgetKrw / Math.max(forecast.expectedVisitors, 1);
+  const benchmark = demandBackdataBenchmark(demandBackdata);
 
-  return Math.round(totalBudgetKrw / Math.max(forecast.expectedVisitors, 1));
+  if (benchmark.costPerVisitorKrw > 0) {
+    return Math.round(plannedCostPerVisitor * 0.65 + benchmark.costPerVisitorKrw * 0.35);
+  }
+
+  return Math.round(plannedCostPerVisitor);
 }
 
 export function calculateCommercialSpilloverRate(tourism: TourismContext) {
@@ -140,32 +178,62 @@ export function createSummaryKpiMetrics(
   forecast: ForecastResult,
   simulation: SimulationResult,
   tourism: TourismContext,
+  demandBackdata?: DemandBackdataContext,
 ): SummaryKpiMetrics {
+  const benchmark = demandBackdataBenchmark(demandBackdata);
+  const forecastDemandIndex = Math.max(
+    (forecast.expectedVisitors / Math.max(plan.expectedCapacity, 1)) * 100,
+    0,
+  );
+  const benchmarkDemandIndex =
+    benchmark.visitors > 0
+      ? Math.max((benchmark.visitors / Math.max(plan.expectedCapacity, 1)) * 100, 0)
+      : 0;
   const demandIndex = Math.round(
-    Math.max((forecast.expectedVisitors / Math.max(plan.expectedCapacity, 1)) * 100, 0),
+    benchmarkDemandIndex > 0
+      ? forecastDemandIndex * 0.68 + benchmarkDemandIndex * 0.32
+      : forecastDemandIndex,
   );
   const demandGrade =
     demandIndex >= 90 ? "상" : demandIndex >= 70 ? "중" : "하";
+  const backdataDensityAdjustment =
+    benchmark.visitors > 0
+      ? clamp((benchmark.visitors / Math.max(plan.expectedCapacity, 1) - 1) * 0.42, 0, 2.4)
+      : 0;
   const peakDensity = getDensityRisk(
-    calculatePeakDensityPerSquareMeter(simulation),
+    Math.round((calculatePeakDensityPerSquareMeter(simulation) + backdataDensityAdjustment) * 10) /
+      10,
   );
-  const costPerVisitorKrw = calculateBudgetPerVisitor(plan, forecast);
-  const nearbyInflowRate = calculateCommercialSpilloverRate(tourism);
+  const costPerVisitorKrw = calculateBudgetPerVisitor(plan, forecast, demandBackdata);
+  const backdataSpilloverBonus =
+    benchmark.visitors > 0
+      ? clamp(Math.log10(Math.max(benchmark.visitors, 1) / 10_000) * 4, 0, 12)
+      : 0;
+  const nearbyInflowRate = Math.round(
+    clamp(calculateCommercialSpilloverRate(tourism) + backdataSpilloverBonus, 25, 95),
+  );
+  const backdataLabel = benchmark.visitors > 0 ? "DB 실적 반영" : "추정값";
 
   return {
     demandIndex: {
       percent: demandIndex,
       grade: demandGrade,
-      description: `${forecast.peakHour}:00 피크 수요와 행사장 수용력 기준`,
+      description: `${forecast.peakHour}:00 피크 수요와 유사축제 ${backdataLabel}`,
     },
     peakDensity,
     budgetEfficiency: {
       costPerVisitorKrw,
-      description: "총 예산을 예상 방문객 수로 나눈 사전 검토값",
+      description:
+        benchmark.costPerVisitorKrw > 0
+          ? "기획 예산과 지역축제 DB 1인당 예산을 함께 반영"
+          : "총 예산을 예상 방문객 수로 나눈 사전 검토값",
     },
     spillover: {
       nearbyInflowRate,
-      description: "TourAPI 주변 관광지 매력도 기반 연계 가능성",
+      description:
+        benchmark.visitors > 0
+          ? "주변 관광지 매력도와 DB 방문객 규모를 함께 반영"
+          : "TourAPI 주변 관광지 매력도 기반 연계 가능성",
     },
   };
 }

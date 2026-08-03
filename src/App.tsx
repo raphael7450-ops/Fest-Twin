@@ -631,6 +631,7 @@ export function App() {
             forecast={forecast}
             simulation={simulation}
             tourism={tourism}
+            demandBackdata={demandBackdata}
             onOpenEvidence={setSelectedEvidenceId}
           />
           <div className="dashboard-section-tabs" aria-label="대시보드 섹션">

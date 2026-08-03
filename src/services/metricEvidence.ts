@@ -321,7 +321,7 @@ export function createMetricEvidenceSet(
   demandBackdata?: DemandBackdataContext,
   selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): Record<MetricEvidenceId, MetricEvidence> {
-  const summary = createSummaryKpiMetrics(plan, forecast, simulation, tourism);
+  const summary = createSummaryKpiMetrics(plan, forecast, simulation, tourism, demandBackdata);
   const safety = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic);
   const economy = createEconomicImpactMetrics(plan, forecast, spending);
   const confidence = sourceConfidence(tourism, trends);

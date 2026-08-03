@@ -6,6 +6,7 @@
 
 // 핵심 도메인 인터페이스 및 타입 정의 불러오기
 import type {
+  DemandBackdataContext,
   FestivalPlan, // 축제 기획안 모델
   ForecastResult, // 수요 예측 결과 모델
   MetricEvidenceId, // 근거 보기 지표 ID
@@ -23,6 +24,7 @@ interface SummaryKpiCardsProps {
   forecast: ForecastResult; // 수요 예측 결과
   simulation: SimulationResult; // 피크 혼잡 시뮬레이션 결과
   tourism: TourismContext; // 주변 관광 매력도 정보
+  demandBackdata?: DemandBackdataContext;
   onOpenEvidence: (metricId: MetricEvidenceId) => void; // 근거 모달 오픈 콜백
 }
 
@@ -37,9 +39,10 @@ export function SummaryKpiCards({
   forecast,
   simulation,
   tourism,
+  demandBackdata,
   onOpenEvidence,
 }: SummaryKpiCardsProps) {
-  const metrics = createSummaryKpiMetrics(plan, forecast, simulation, tourism);
+  const metrics = createSummaryKpiMetrics(plan, forecast, simulation, tourism, demandBackdata);
   const demandTone =
     metrics.demandIndex.grade === "상"
       ? "high"
