@@ -5,12 +5,15 @@
  */
 
 import http from "node:http";
+import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const TARGET_HOST = process.env.DEPLOY_TARGET_HOST || "192.168.55.223";
-const TARGET_PORT = process.env.DEPLOY_TARGET_PORT || "18080";
-const TARGET_BASE_URL = process.env.DEPLOY_TARGET_URL || `http://${TARGET_HOST}:${TARGET_PORT}`;
+const TARGET_BASE_URL =
+  process.env.DEPLOY_TARGET_URL ||
+  (process.env.DEPLOY_TARGET_HOST
+    ? `http://${process.env.DEPLOY_TARGET_HOST}:${process.env.DEPLOY_TARGET_PORT || "18080"}`
+    : "https://cwserver.tail97dbc3.ts.net");
 
 const CHECKS = [
   {
@@ -133,7 +136,8 @@ export function validateSharedScenario(result) {
 function requestEndpoint(endpoint) {
   return new Promise((resolve, reject) => {
     const url = new URL(endpoint, TARGET_BASE_URL);
-    const req = http.get(url, { timeout: 10000 }, (res) => {
+    const transport = url.protocol === "https:" ? https : http;
+    const req = transport.get(url, { timeout: 10000 }, (res) => {
       let data = "";
       res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
