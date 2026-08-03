@@ -6,8 +6,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-ARG NAVER_MAP_CLIENT_ID
-RUN VITE_NAVER_MAP_NCP_KEY_ID=$NAVER_MAP_CLIENT_ID npm run build
+ARG VWORLD_API_KEY
+RUN VITE_VWORLD_API_KEY=$VWORLD_API_KEY npm run build
 
 FROM node:20-alpine AS runtime
 
@@ -19,6 +19,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY server ./server
+COPY data ./data
 COPY --from=build /app/dist ./dist
 
 EXPOSE 80

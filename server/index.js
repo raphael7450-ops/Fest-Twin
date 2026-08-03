@@ -52,7 +52,7 @@ export function securityHeadersMiddleware(_request, response, next) {
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   response.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://oapi.map.naver.com https://openapi.map.naver.com https://ncp-docs.map.naver.com https://*.map.naver.com https://*.naver.com https://*.naver.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: https://*.map.naver.com https://*.naver.com https://*.naver.net; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://apis.data.go.kr https://viewt.ktdb.go.kr https://oapi.map.naver.com https://openapi.map.naver.com https://*.map.naver.com https://*.naver.com https://*.naver.net;",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://map.vworld.kr https://*.vworld.kr; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://map.vworld.kr https://*.vworld.kr; img-src 'self' data: blob: https: https://map.vworld.kr https://*.vworld.kr; font-src 'self' https://fonts.gstatic.com https://map.vworld.kr https://*.vworld.kr; connect-src 'self' https://apis.data.go.kr https://viewt.ktdb.go.kr https://map.vworld.kr https://*.vworld.kr;",
   );
   next();
 }

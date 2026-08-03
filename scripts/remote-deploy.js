@@ -50,7 +50,7 @@ async function main() {
       "tar -xf $HOME/fest-twin-demo.tar -C $staging_dir",
       "rm -f $HOME/fest-twin-demo.tar",
       "echo '==> Docker 이미지 빌드 시작...'",
-      "docker build --build-arg NAVER_MAP_CLIENT_ID=5mcwlg6qwo -t $new_image $staging_dir",
+      "docker build --build-arg VWORLD_API_KEY=2BEE395D-834A-3F75-BC64-CAC185A7A442 -t $new_image $staging_dir",
       "existing=$(docker ps -aq --filter name=^fest-twin-demo$)",
       "if [ -n \"$existing\" ]; then echo '==> 기존 컨테이너 중지 및 제거...'; docker stop $existing; docker rm $existing; fi",
       "rm -rf $release_dir",

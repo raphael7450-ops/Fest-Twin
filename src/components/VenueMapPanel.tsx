@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FestivalPlan } from "../domain/types";
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 
-type MapStatus = "missing-key" | "loading" | "ready" | "failed";
+type MapStatus = "missing-key" | "loading" | "ready" | "failed" | "key-rejected";
 
 interface VenueMapPanelProps {
   plan: FestivalPlan;
@@ -14,43 +14,103 @@ const defaultVenue = {
   longitude: 127.0610512042,
 };
 
-const naverMapKeyId = import.meta.env.VITE_NAVER_MAP_NCP_KEY_ID?.trim();
+const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim();
 
-function loadNaverMaps(keyId: string) {
-  if (window.naver?.maps) {
+interface VenueMarkerStyleOl {
+  style: {
+    Style: new (options: Record<string, unknown>) => unknown;
+    Icon: new (options: Record<string, unknown>) => unknown;
+    Fill: new (options: Record<string, unknown>) => unknown;
+    Stroke: new (options: Record<string, unknown>) => unknown;
+    Text: new (options: Record<string, unknown>) => unknown;
+  };
+}
+
+export function buildVWorldScriptUrl(apiKey: string) {
+  return `https://map.vworld.kr/js/vworldMapInit.js.do?version=2.0&apiKey=${encodeURIComponent(apiKey)}`;
+}
+
+export function isVWorldKeyRejected(scriptText: string) {
+  return /vworldIsValid\s*=\s*["']false["']/.test(scriptText);
+}
+
+export function resetVenueMapContainer(container: HTMLDivElement) {
+  container.replaceChildren();
+}
+
+export function buildVenueMarkerStyle(ol: VenueMarkerStyleOl, label: string) {
+  const arrowSvg = encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 42 42">
+      <path d="M21 39 8 14h8V4h10v10h8L21 39Z" fill="#ef4444" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M21 34 12 17h7V7h4v10h7L21 34Z" fill="#dc2626"/>
+    </svg>
+  `);
+
+  return new ol.style.Style({
+    image: new ol.style.Icon({
+      anchor: [0.5, 1],
+      anchorXUnits: "fraction",
+      anchorYUnits: "fraction",
+      src: `data:image/svg+xml;charset=UTF-8,${arrowSvg}`,
+    }),
+    text: new ol.style.Text({
+      text: label,
+      offsetY: -44,
+      font: "700 13px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      fill: new ol.style.Fill({ color: "#111827" }),
+      stroke: new ol.style.Stroke({ color: "#ffffff", width: 4 }),
+    }),
+  });
+}
+
+function loadVWorldMap(apiKey: string) {
+  if (window.vw?.ol3 && window.ol) {
     return Promise.resolve();
   }
 
   const existingScript = document.querySelector<HTMLScriptElement>(
-    "script[data-fest-twin-naver-map]",
+    "script[data-fest-twin-vworld-map]",
   );
-  if (existingScript) {
-    return new Promise<void>((resolve, reject) => {
-      existingScript.addEventListener("load", () => resolve(), { once: true });
-      existingScript.addEventListener("error", () => reject(new Error("NAVER Maps load failed")), {
-        once: true,
-      });
-    });
+  if (!existingScript) {
+    const script = document.createElement("script");
+    script.async = true;
+    script.dataset.festTwinVworldMap = "true";
+    script.src = buildVWorldScriptUrl(apiKey);
+    document.head.appendChild(script);
+  }
+
+  return waitForVWorldMap();
+}
+
+function waitForVWorldMap() {
+  if (window.vw?.ol3 && window.ol) {
+    return Promise.resolve();
   }
 
   return new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.async = true;
-    script.dataset.festTwinNaverMap = "true";
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(
-      keyId,
-    )}`;
-    script.addEventListener("load", () => resolve(), { once: true });
-    script.addEventListener("error", () => reject(new Error("NAVER Maps load failed")), {
-      once: true,
-    });
-    document.head.appendChild(script);
+    const startedAt = window.performance.now();
+    const poll = () => {
+      if (window.vworldIsValid === "false") {
+        reject(new Error("VWORLD_KEY_REJECTED"));
+        return;
+      }
+      if (window.vw?.ol3 && window.ol) {
+        resolve();
+        return;
+      }
+      if (window.performance.now() - startedAt > 8000) {
+        reject(new Error("VWorld map load timed out"));
+        return;
+      }
+      window.setTimeout(poll, 100);
+    };
+    poll();
   });
 }
 
 export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const [status, setStatus] = useState<MapStatus>(naverMapKeyId ? "loading" : "missing-key");
+  const mapStageRef = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState<MapStatus>(vworldApiKey ? "loading" : "missing-key");
   const venue = useMemo(() => {
     const latitude = Number(selectedCandidate?.mapY);
     const longitude = Number(selectedCandidate?.mapX);
@@ -65,38 +125,64 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
   }, [plan.name, plan.venueAddress, selectedCandidate?.mapX, selectedCandidate?.mapY]);
 
   useEffect(() => {
-    if (!naverMapKeyId) return;
+    if (!vworldApiKey) return;
 
     let cancelled = false;
 
+    if (mapStageRef.current) {
+      resetVenueMapContainer(mapStageRef.current);
+    }
     setStatus("loading");
-    loadNaverMaps(naverMapKeyId)
+    loadVWorldMap(vworldApiKey)
       .then(() => {
-        if (cancelled || !mapContainerRef.current || !window.naver?.maps) return;
+        if (cancelled || !mapStageRef.current || !window.vw?.ol3 || !window.ol) return;
 
-        const maps = window.naver.maps;
-        const position = new maps.LatLng(venue.latitude, venue.longitude);
-        const map = new maps.Map(mapContainerRef.current, {
-          center: position,
-          zoom: 16,
-        });
+        const mapId = mapStageRef.current.id || "fest-twin-vworld-map";
+        resetVenueMapContainer(mapStageRef.current);
+        mapStageRef.current.id = mapId;
 
-        new maps.Marker({
-          map,
-          position,
-          title: venue.name,
+        window.vw.ol3.MapOptions = {
+          basemapType: window.vw.ol3.BasemapType.GRAPHIC,
+          controlDensity: window.vw.ol3.DensityType.BASIC,
+          interactionDensity: window.vw.ol3.DensityType.FULL,
+          controlsAutoArrange: true,
+          homePosition: window.vw.ol3.CameraPosition,
+          initPosition: window.vw.ol3.CameraPosition,
+        };
+
+        const map = new window.vw.ol3.Map(mapId, window.vw.ol3.MapOptions);
+        const position = window.ol.proj.transform(
+          [venue.longitude, venue.latitude],
+          "EPSG:4326",
+          "EPSG:900913",
+        );
+        map.getView().setCenter(position);
+        map.getView().setZoom(16);
+
+        const marker = new window.ol.Feature({
+          geometry: new window.ol.geom.Point(position),
+          name: venue.name,
         });
+        marker.setStyle(buildVenueMarkerStyle(window.ol, venue.name));
+        const markerLayer = new window.ol.layer.Vector({
+          source: new window.ol.source.Vector({
+            features: [marker],
+          }),
+        });
+        map.addLayer(markerLayer);
 
         setStatus("ready");
 
         window.setTimeout(() => {
-          if (!cancelled && mapContainerRef.current) {
+          if (!cancelled && mapStageRef.current) {
             window.dispatchEvent(new Event("resize"));
           }
         }, 300);
       })
-      .catch(() => {
-        if (!cancelled) setStatus("failed");
+      .catch((error: Error) => {
+        if (!cancelled) {
+          setStatus(error.message === "VWORLD_KEY_REJECTED" ? "key-rejected" : "failed");
+        }
       });
 
     return () => {
@@ -106,21 +192,23 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
 
   const statusText =
     status === "ready"
-      ? "네이버 지도 표시 중"
-      : status === "failed"
-        ? "네이버 지도 로드 실패"
-        : status === "loading"
-          ? "네이버 지도 로드 중"
-          : "네이버 지도 API 키 미설정";
+      ? "VWorld 지도 표시 중"
+      : status === "key-rejected"
+        ? "VWorld API 키와 등록 도메인이 일치하지 않습니다"
+        : status === "failed"
+          ? "VWorld 지도 로드 실패"
+          : status === "loading"
+            ? "VWorld 지도 로드 중"
+            : "VWorld 지도 API 키 미설정";
 
   return (
     <section className="panel venue-map-shell">
       <div className="panel-heading">
         <h2>실제 행사장 지도</h2>
-        <span>TourAPI 좌표 + 네이버 지도 API</span>
+        <span>TourAPI 좌표 + VWorld 2D 지도 API</span>
       </div>
       <div className="venue-map-canvas">
-        <div className="venue-map-stage" ref={mapContainerRef} />
+        <div className="venue-map-stage" ref={mapStageRef} />
         {status !== "ready" ? (
           <div className="venue-map-fallback">
             <strong>{statusText}</strong>
@@ -139,8 +227,8 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
       <ul className="venue-map-points">
         <li>행사장 중심 구역: {venue.name}</li>
         <li>주요 진출입 병목: 삼성역 5·6번 출입구 및 영동대로 진입로</li>
-        <li>피크 밀집 예상: COEX 동문 광장 및 주요 관람 구역</li>
-        <li>상권 연계 분산: 먹거리 부스와 주변 상업 시설 연계 동선</li>
+        <li>피크 밀집 예상: COEX 동문 광장 및 K-POP 미디어월 관람 구역</li>
+        <li>상권 연계 분산: 먹거리 부스 및 주변 상업 시설 연계 동선</li>
       </ul>
     </section>
   );
