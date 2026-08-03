@@ -115,6 +115,30 @@ describe("trafficAdapter", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps sample fallback traffic evidence aligned with the selected festival region", async () => {
+    const daejeonPlan = {
+      ...sampleFestivalPlan,
+      name: "2025 대덕물빛축제",
+      region: "대전",
+      venueAddress: "대전 대덕구 대청공원 일원",
+      expectedCapacity: 140393,
+      startDate: "2025-03-28",
+      endDate: "2025-04-26",
+    };
+    const fetchImpl = vi.fn(async () => jsonResponse({ result: [] }));
+
+    const traffic = await getTrafficContext(daejeonPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      hour: 16,
+    });
+
+    const serialized = JSON.stringify(traffic.sourceDetails);
+    expect(traffic.status).toBe("sample-fallback");
+    expect(traffic.links[0].roadName).toContain("대전");
+    expect(serialized).toContain("대전 대덕구");
+    expect(serialized).not.toContain("테헤란로");
+  });
+
   it("uses View-T validation traffic with festival-scale adjustment when no local LINKID mapping exists", async () => {
     const apiPayload = {
       result: [

@@ -1,6 +1,5 @@
 import {
   sampleTrafficContext,
-  sampleTrafficSourceDetails,
   trafficLinkMappings,
 } from "../data/sampleTraffic";
 import type {
@@ -97,6 +96,8 @@ function hashText(value: string) {
 
 function inferredAccessRoadName(plan: FestivalPlan) {
   const basis = `${plan.region} ${plan.venueAddress} ${plan.name}`;
+  if (basis.includes("대덕") || basis.includes("대청공원")) return "대전 대덕구 대청공원 접근도로 추정";
+  if (basis.includes("대전")) return "대전 행사장 접근도로 추정";
   if (basis.includes("광안")) return "부산 광안리 접근도로 추정";
   if (basis.includes("해운대")) return "부산 해운대 접근도로 추정";
   if (basis.includes("부산")) return "부산 행사장 접근도로 추정";
@@ -133,6 +134,20 @@ function createEffectiveTrafficMapping(plan: FestivalPlan): EffectiveTrafficMapp
 
 function getOdZoneMapping(plan: FestivalPlan): OdZoneMapping | null {
   const basis = `${plan.region} ${plan.venueAddress} ${plan.name}`;
+  if (basis.includes("대덕") || basis.includes("대청공원")) {
+    return {
+      zoneId: "3023060",
+      zoneName: "대전광역시 대덕구",
+      note: "대전 대덕구 대청공원권 축제 후보의 개최지 행정구 차량 유입량 기준입니다. 세부 행정동 ZONEID 확정 전까지 구 단위 후보값으로 표시합니다.",
+    };
+  }
+  if (basis.includes("대전")) {
+    return {
+      zoneId: "3000000",
+      zoneName: "대전광역시",
+      note: "대전권 축제 후보의 개최지 행정구역 차량 유입량 후보 기준입니다. 세부 행정동 ZONEID 확정 전까지 광역 단위 후보값으로 표시합니다.",
+    };
+  }
   if (basis.includes("광안") || basis.includes("수영구")) {
     return {
       zoneId: "2607065",
@@ -384,6 +399,71 @@ function createTrafficSourceDetails({
   ];
 }
 
+function createPlanFallbackLinks(plan: FestivalPlan, time: string): TrafficLinkRecord[] {
+  const roadName = inferredAccessRoadName(plan);
+  const baseInboundVolume = Math.round(sampleTrafficContext.links[0].inboundVolume * 0.72);
+  const baseOutboundVolume = Math.round(sampleTrafficContext.links[0].outboundVolume * 0.72);
+  return applyFestivalScaleToLinks(
+    [
+      {
+        ...sampleTrafficContext.links[0],
+        roadName,
+        roadRank: "행사장 접근도로",
+        inboundVolume: baseInboundVolume,
+        outboundVolume: baseOutboundVolume,
+        totalVolume: baseInboundVolume + baseOutboundVolume,
+      },
+    ],
+    plan,
+    time,
+    roadName,
+  );
+}
+
+function createPlanFallbackSourceDetails({
+  plan,
+  reason,
+  weekType,
+  time,
+  links,
+}: {
+  plan: FestivalPlan;
+  reason: string;
+  weekType: "weekday" | "weekend";
+  time: string;
+  links: TrafficLinkRecord[];
+}): MetricEvidenceSourceDetail[] {
+  return [
+    {
+      sourceId: "sample-traffic-link",
+      sourceName: "지역 보정 샘플 교통량 근거",
+      sourceType: "sample",
+      statusLabel: "샘플 교통량 사용",
+      endpoint: "/api/traffic/selected-link",
+      query: [
+        { label: "linkId", value: "View-T 링크 매핑 대기" },
+        { label: "year", value: String(DEFAULT_YEAR) },
+        { label: "weekType", value: weekType },
+        { label: "time", value: time },
+      ],
+      records: links.map((link) => ({
+        label: link.roadName,
+        fields: [
+          { label: "행사장", value: plan.venueAddress },
+          { label: "도로명", value: link.roadName },
+          { label: "도로등급", value: link.roadRank ?? "-" },
+          { label: "차로수", value: link.lanes ? String(link.lanes) : "-" },
+          { label: "진입 차량량", value: `${link.inboundVolume.toLocaleString("ko-KR")}대` },
+          { label: "진출 차량량", value: `${link.outboundVolume.toLocaleString("ko-KR")}대` },
+          { label: "총 교통량", value: `${link.totalVolume.toLocaleString("ko-KR")}대` },
+        ],
+      })),
+      note:
+        `View-T 링크/행정동 자동 매핑이 실패해도 서울 기본 샘플을 쓰지 않고, 선택 축제의 지역·주소·수용 인원·시간대를 반영해 보정합니다. 사유: ${reason}`,
+    },
+  ];
+}
+
 async function getOdInflowSourceDetails({
   plan,
   fetchImpl,
@@ -457,28 +537,26 @@ export function createFallbackTrafficContext(
 ): TrafficContext {
   const weekType = isWeekendPlan(plan) ? "weekend" : "weekday";
   const time = normalizeTime(hour);
+  const links = createPlanFallbackLinks(plan, time);
+  const riskScore = calculateTrafficRisk(links, weekType, time);
 
   return {
     ...sampleTrafficContext,
     weekType,
     time,
+    riskScore,
+    riskLabel: riskLabel(riskScore),
+    links,
     provenance: {
       ...sampleTrafficContext.provenance,
+      basisText:
+        "View-T 조회 실패 시 선택 축제의 지역, 행사장 주소, 수용 인원, 피크 시간 조건을 반영한 보정 교통량을 사용합니다.",
+      fallbackText:
+        "실제 링크 교통량을 확보하지 못한 경우에도 서울 기본 도로명으로 표시하지 않고 개최지 기준 샘플로 대체합니다.",
       fallbackReason: reason,
       retrievedAt: new Date().toISOString(),
     },
-    sourceDetails: sampleTrafficSourceDetails.map((detail) => ({
-      ...detail,
-      query: detail.query?.map((item) =>
-        item.label === "time"
-          ? { ...item, value: time }
-          : item.label === "weekType"
-            ? { ...item, value: weekType }
-            : item,
-      ),
-      statusLabel: "샘플 교통량 사용",
-      note: `${detail.note} 사유: ${reason}`,
-    })),
+    sourceDetails: createPlanFallbackSourceDetails({ plan, reason, weekType, time, links }),
   };
 }
 
