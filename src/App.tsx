@@ -554,7 +554,9 @@ export function App() {
   );
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
-    setPlan((currentPlan) => applyFestivalCandidateToPlan(currentPlan, candidate));
+    setPlan((currentPlan) =>
+      applyFestivalCandidateToPlan(currentPlan, candidate, { demandBackdata }),
+    );
     setIsCandidatePanelOpen(false);
   };
 

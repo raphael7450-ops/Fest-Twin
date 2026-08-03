@@ -12,6 +12,7 @@ const {
   getTrafficContextMock,
   getSpendingContextMock,
   getTrendContextMock,
+  getDemandBackdataContextFromApiMock,
 } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
@@ -19,6 +20,7 @@ const {
   getTrafficContextMock: vi.fn(),
   getSpendingContextMock: vi.fn(),
   getTrendContextMock: vi.fn(),
+  getDemandBackdataContextFromApiMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -43,6 +45,11 @@ vi.mock("./services/trendAdapter", async (importOriginal) => ({
   getTrendContext: getTrendContextMock,
 }));
 
+vi.mock("./services/demandBackdataAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/demandBackdataAdapter")>()),
+  getDemandBackdataContextFromApi: getDemandBackdataContextFromApiMock,
+}));
+
 import { App } from "./App";
 
 const openDashboardSection = (label: string) => {
@@ -57,10 +64,28 @@ describe("App selected festival basis", () => {
     getTrafficContextMock.mockReset();
     getSpendingContextMock.mockReset();
     getTrendContextMock.mockReset();
+    getDemandBackdataContextFromApiMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
     getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
     getSpendingContextMock.mockResolvedValue(sampleSpendingContext);
     getTrendContextMock.mockResolvedValue(sampleTrendContext);
+    getDemandBackdataContextFromApiMock.mockResolvedValue({
+      status: "file-normalized",
+      similarFestivalBaselines: [
+        {
+          id: "regional-benchmark-festa",
+          name: "Regional Benchmark Festa",
+          region: "Seoul",
+          type: "culture",
+          periodLabel: "2026",
+          budgetMillionKrw: 4321,
+          visitors: 100000,
+          similarityScore: 95,
+          sourceName: "Regional festival DB",
+        },
+      ],
+      sourceDetails: [],
+    });
     getTourApiAreaCodesMock.mockResolvedValue([{ code: "1", name: "서울" }]);
     getFestivalCandidatesMock.mockResolvedValue([
       {
@@ -75,7 +100,7 @@ describe("App selected festival basis", () => {
       },
       {
         id: "9990001",
-        title: "Seoul Light Hangang Festa",
+        title: "Regional Benchmark Festa",
         address: "Seoul Yeongdeungpo-gu Yeouidong-ro 330",
         startDate: "2026-02-11",
         endDate: "2026-02-18",
@@ -123,6 +148,26 @@ describe("App selected festival basis", () => {
         }),
       }),
     );
+  });
+
+  it("updates budget and expected capacity inputs when a selected TourAPI candidate matches DB backdata", async () => {
+    vi.useFakeTimers();
+    const view = render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "대시보드 섹션: 기획" }));
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /TourAPI/ }));
+    const selectButtons = Array.from(
+      view.container.querySelectorAll<HTMLButtonElement>(".candidate-card .secondary-button"),
+    );
+    fireEvent.click(selectButtons[1]);
+
+    const numberInputs = screen.getAllByRole("spinbutton") as HTMLInputElement[];
+    expect(numberInputs[0]).toHaveValue(4321);
+    expect(numberInputs[1]).toHaveValue(20000);
   });
 
   it("refreshes trend, traffic, and spending contexts from the selected candidate plan", async () => {
@@ -189,7 +234,7 @@ describe("App selected festival basis", () => {
 
     expect(getTourismContextMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        name: "Seoul Light Hangang Festa",
+        name: "Regional Benchmark Festa",
         venueAddress: "Seoul Yeongdeungpo-gu Yeouidong-ro 330",
         startDate: "2026-02-11",
         endDate: "2026-02-18",
@@ -200,7 +245,7 @@ describe("App selected festival basis", () => {
     );
     expect(getTrendContextMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        name: "Seoul Light Hangang Festa",
+        name: "Regional Benchmark Festa",
         startDate: "2026-02-11",
         endDate: "2026-02-18",
       }),
@@ -208,7 +253,7 @@ describe("App selected festival basis", () => {
     );
     expect(getTrafficContextMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        name: "Seoul Light Hangang Festa",
+        name: "Regional Benchmark Festa",
         venueAddress: "Seoul Yeongdeungpo-gu Yeouidong-ro 330",
         startDate: "2026-02-11",
       }),
@@ -216,7 +261,7 @@ describe("App selected festival basis", () => {
     );
     expect(getSpendingContextMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        name: "Seoul Light Hangang Festa",
+        name: "Regional Benchmark Festa",
         region: "서울",
         startDate: "2026-02-11",
       }),
