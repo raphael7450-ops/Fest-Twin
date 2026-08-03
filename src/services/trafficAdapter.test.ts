@@ -94,13 +94,13 @@ describe("trafficAdapter", () => {
     expect(traffic.links[0].roadName).toBe("세종대로");
   });
 
-  it("returns sample fallback evidence when no mapping or upstream data is available", async () => {
+  it("returns sample fallback evidence when upstream data is unavailable", async () => {
     const plan = {
       ...sampleFestivalPlan,
       region: "매핑없는지역",
       venueAddress: "매핑없는주소",
     };
-    const fetchImpl = vi.fn();
+    const fetchImpl = vi.fn(async () => jsonResponse({ result: [] }));
 
     const traffic = await getTrafficContext(plan, {
       fetchImpl: fetchImpl as unknown as typeof fetch,
@@ -112,7 +112,57 @@ describe("trafficAdapter", () => {
     expect(traffic.sourceDetails[0].sourceType).toBe("sample");
     expect(traffic.sourceDetails[0].query).toContainEqual({ label: "time", value: "14" });
     expect(JSON.stringify(traffic.sourceDetails)).toContain("샘플 교통량");
-    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses View-T validation traffic with festival-scale adjustment when no local LINKID mapping exists", async () => {
+    const apiPayload = {
+      result: [
+        {
+          LINKID: "8890310",
+          ROAD_NAME: "하모중앙로",
+          ROAD_RANK: "시군도",
+          LANES: "2",
+          VALUE_IN: "900",
+          VALUE_OUT: "700",
+        },
+      ],
+    };
+    const fetchImpl = vi.fn(async () => jsonResponse(apiPayload));
+    const busanCountdownPlan = {
+      ...sampleFestivalPlan,
+      name: "부산 카운트다운 축제",
+      region: "부산",
+      venueAddress: "부산광역시 수영구 광안해변로 219",
+      expectedCapacity: 52000,
+      startDate: "2025-12-31",
+      endDate: "2026-01-01",
+    };
+    const taeanTulipPlan = {
+      ...sampleFestivalPlan,
+      name: "태안 세계튤립꽃박람회",
+      region: "충남 태안군",
+      venueAddress: "충청남도 태안군 안면읍 꽃지해안로",
+      expectedCapacity: 12000,
+      startDate: "2026-04-10",
+      endDate: "2026-05-10",
+    };
+
+    const busanTraffic = await getTrafficContext(busanCountdownPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      hour: 23,
+    });
+    const taeanTraffic = await getTrafficContext(taeanTulipPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      hour: 14,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(busanTraffic.riskScore).toBeGreaterThan(taeanTraffic.riskScore);
+    expect(busanTraffic.links[0].roadName).toContain("부산");
+    expect(taeanTraffic.links[0].roadName).toContain("태안");
+    expect(busanTraffic.sourceDetails[0].statusLabel).toContain("축제 규모 보정");
+    expect(JSON.stringify(busanTraffic.sourceDetails)).toContain("행사장 LINKID 매핑 전");
   });
 
   it("creates fallback traffic context without personal data", () => {
