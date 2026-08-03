@@ -231,6 +231,15 @@ describe("public data adapters", () => {
           contentid: "100",
           title: "강남 미디어 윈터페스타",
           addr1: "서울특별시 강남구 영동대로 511",
+          eventstartdate: "20251219",
+          eventenddate: "20260103",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "100",
+          title: "강남 미디어 윈터페스타",
+          addr1: "서울특별시 강남구 영동대로 511",
           firstimage: "https://example.com/festival.jpg",
           eventstartdate: "20251219",
           eventenddate: "20260103",
@@ -265,12 +274,14 @@ describe("public data adapters", () => {
     expect(urls.map((url) => url.pathname)).toEqual([
       "/api/tour/area-code",
       "/api/tour/festivals",
+      "/api/tour/detail",
     ]);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
+    expect(urls[2].searchParams.get("contentId")).toBe("100");
   });
 
-  it("returns candidate records without blocking on per-candidate detail lookups", async () => {
+  it("attaches every processed candidate record with separate search and detail attribution", async () => {
     const festivalItems = Array.from({ length: 8 }, (_, index) => ({
       contentid: String(3439947 + index),
       title: `축제 후보 ${index + 1}`,
@@ -283,6 +294,7 @@ describe("public data adapters", () => {
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),
       tourApiPayload(festivalItems),
+      ...festivalItems.map((item) => tourApiPayload([{ ...item, overview: "상세 설명" }])),
     ];
     const fetchImpl = vi.fn(async () => jsonResponse(responses.shift()));
 
@@ -299,14 +311,16 @@ describe("public data adapters", () => {
     );
 
     expect(candidates).toHaveLength(8);
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect(searchDetail).toMatchObject({
       sourceName: "TourAPI 축제 정보 조회",
       sourceType: "tourapi",
       endpoint: "/api/tour/festivals",
     });
     expect(searchDetail?.records).toHaveLength(8);
-    expect(festivalDetails).toHaveLength(0);
+    expect(festivalDetails).toHaveLength(5);
+    expect(
+      festivalDetails.map((detail) => detail.query?.find((field) => field.label === "contentId")?.value),
+    ).toEqual(festivalItems.slice(0, 5).map((item) => item.contentid));
     expect(JSON.stringify(sourceDetails)).toContain("eventStartDate");
     expect(JSON.stringify(sourceDetails)).not.toMatch(/serviceKey/i);
   });
@@ -445,6 +459,196 @@ describe("public data adapters", () => {
     expect(urls[2].searchParams.get("eventStartDate")).toBe("20250101");
     expect(urls[2].searchParams.get("eventEndDate")).toBe("20251231");
     expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
+  });
+
+  it("treats TourAPI empty object items as an empty festival result before broadening candidates", async () => {
+    const responses = [
+      tourApiPayload([{ code: "6", name: "부산" }]),
+      {
+        response: {
+          header: { resultCode: "0000", resultMsg: "OK" },
+          body: {
+            items: {},
+            numOfRows: 10,
+            pageNo: 1,
+            totalCount: 0,
+          },
+        },
+      },
+      tourApiPayload([
+        {
+          contentid: "600",
+          title: "부산 바다 축제",
+          addr1: "부산광역시 해운대구",
+          eventstartdate: "20260801",
+          eventenddate: "20260807",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "600",
+          title: "부산 바다 축제",
+          addr1: "부산광역시 해운대구",
+          firstimage: "https://example.com/busan.jpg",
+          eventstartdate: "20260801",
+          eventenddate: "20260807",
+          mapx: "129.1604",
+          mapy: "35.1587",
+        },
+      ]),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "부산",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(candidates).toMatchObject([
+      {
+        id: "600",
+        title: "부산 바다 축제",
+        searchScope: "annual-region",
+      },
+    ]);
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/api/tour/area-code",
+      "/api/tour/festivals",
+      "/api/tour/festivals",
+      "/api/tour/detail",
+    ]);
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
+    expect(urls[2].searchParams.get("eventStartDate")).toBe("20250101");
+  });
+
+  it("fetches a broader festival page and returns deterministic period-overlap candidates", async () => {
+    const festivalItems = [
+      {
+        contentid: "old-1",
+        title: "가을 축제",
+        addr1: "충청남도 공주시",
+        eventstartdate: "20251001",
+        eventenddate: "20251003",
+      },
+      {
+        contentid: "period-2",
+        title: "겨울 바다 야간 축제",
+        addr1: "충청남도 보령시",
+        eventstartdate: "20251224",
+        eventenddate: "20251228",
+      },
+      {
+        contentid: "period-1",
+        title: "연말 해돋이 행사",
+        addr1: "충청남도 서천군",
+        eventstartdate: "20241231",
+        eventenddate: "20250101",
+      },
+      ...Array.from({ length: 13 }, (_, index) => ({
+        contentid: `filler-${index}`,
+        title: `가을 후보 ${index}`,
+        addr1: "충청남도",
+        eventstartdate: "20250901",
+        eventenddate: "20250902",
+      })),
+    ];
+    const responses = [
+      tourApiPayload([{ code: "34", name: "충남" }]),
+      tourApiPayload(festivalItems),
+      ...festivalItems.map((item) => tourApiPayload([{ ...item, mapx: "126.1", mapy: "36.3" }])),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "충남",
+        startDate: "2025-12-19",
+        endDate: "2026-01-03",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(candidates.map((candidate) => candidate.id).slice(0, 2)).toEqual([
+      "period-2",
+      "period-1",
+    ]);
+    expect(candidates).toHaveLength(16);
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls[1].searchParams.get("numOfRows")).toBe("50");
+  });
+
+  it("supplements sparse TourAPI spring results with regional festival candidates", async () => {
+    const responses = [
+      tourApiPayload([{ code: "34", name: "충청남도" }]),
+      tourApiPayload([
+        {
+          contentid: "140682",
+          title: "서천 마량진항 해넘이 해돋이 행사",
+          addr1: "충청남도 서천군 서면 서인로 58",
+          eventstartdate: "20241231",
+          eventenddate: "20250101",
+        },
+      ]),
+      tourApiPayload([
+        {
+          contentid: "140682",
+          title: "서천 마량진항 해넘이 해돋이 행사",
+          addr1: "충청남도 서천군 서면 서인로 58",
+          eventstartdate: "20241231",
+          eventenddate: "20250101",
+        },
+      ]),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "충청남도",
+        startDate: "2025-01-01",
+        endDate: "2025-05-31",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(candidates.map((candidate) => candidate.title)).toEqual(
+      expect.arrayContaining([
+        "논산딸기축제",
+        "서천 동백꽃주꾸미축제",
+        "태안 세계튤립꽃박람회",
+        "공주 석장리 구석기축제",
+      ]),
+    );
+    expect(candidates.some((candidate) => candidate.searchScope === "regional-supplement")).toBe(true);
+  });
+
+  it("matches abbreviated Korean regions to official TourAPI area names", async () => {
+    const responses = [
+      tourApiPayload([{ code: "34", name: "충청남도" }]),
+      tourApiPayload([], 0),
+      tourApiPayload([], 0),
+    ];
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
+
+    await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "충남",
+        startDate: "2025-01-01",
+        endDate: "2025-05-31",
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
+    expect(urls[1].searchParams.get("areaCode")).toBe("34");
   });
 
   it("discloses the annual broadened search when missing detail coordinates require sample supplementation", async () => {

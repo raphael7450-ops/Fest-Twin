@@ -58,6 +58,42 @@ describe("trafficAdapter", () => {
     expect(requestUrl.searchParams.get("time")).toBe("20");
   });
 
+  it("uses the selected candidate address, date, and hour for traffic lookup", async () => {
+    const selectedPlan = {
+      ...sampleFestivalPlan,
+      name: "Seoul Light Hangang Festa",
+      venueAddress: "서울특별시 종로구 광화문광장",
+      startDate: "2026-02-11",
+      endDate: "2026-02-12",
+    };
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse({
+        result: [
+          {
+            LINKID: "1000001",
+            ROAD_NAME: "세종대로",
+            ROAD_RANK: "주간선도로",
+            LANES: "8",
+            VALUE_IN: "1400",
+            VALUE_OUT: "1100",
+          },
+        ],
+      }),
+    );
+
+    const traffic = await getTrafficContext(selectedPlan, {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      hour: 9,
+    });
+
+    const calls = fetchImpl.mock.calls as unknown as Array<[RequestInfo | URL]>;
+    const requestUrl = new URL(String(calls[0][0]), "http://localhost");
+    expect(requestUrl.searchParams.get("linkId")).toBe("1000001");
+    expect(requestUrl.searchParams.get("weekType")).toBe("weekday");
+    expect(requestUrl.searchParams.get("time")).toBe("9");
+    expect(traffic.links[0].roadName).toBe("세종대로");
+  });
+
   it("returns sample fallback evidence when no mapping or upstream data is available", async () => {
     const plan = {
       ...sampleFestivalPlan,

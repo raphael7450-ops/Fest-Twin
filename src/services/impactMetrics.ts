@@ -61,6 +61,8 @@ export interface EconomicImpactMetrics {
 }
 
 const FALLBACK_SPEND_PER_VISITOR_KRW = 58400;
+const PEAK_DENSITY_STANDARD_PEOPLE_PER_SQUARE_METER = 6.2;
+const PEAK_DENSITY_DISPLAY_MAX_PEOPLE_PER_SQUARE_METER = 9.9;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -80,7 +82,13 @@ export function calculatePeakDensityPerSquareMeter(
     0,
   );
 
-  return Math.round(clamp((peakCellDensity / 100) * 6.2, 0.2, 6.2) * 10) / 10;
+  return Math.round(
+    clamp(
+      (peakCellDensity / 100) * PEAK_DENSITY_STANDARD_PEOPLE_PER_SQUARE_METER,
+      0.2,
+      PEAK_DENSITY_DISPLAY_MAX_PEOPLE_PER_SQUARE_METER,
+    ) * 10,
+  ) / 10;
 }
 
 export function getDensityRisk(
@@ -134,7 +142,7 @@ export function createSummaryKpiMetrics(
   tourism: TourismContext,
 ): SummaryKpiMetrics {
   const demandIndex = Math.round(
-    clamp((forecast.expectedVisitors / Math.max(plan.expectedCapacity, 1)) * 100, 0, 145),
+    Math.max((forecast.expectedVisitors / Math.max(plan.expectedCapacity, 1)) * 100, 0),
   );
   const demandGrade =
     demandIndex >= 90 ? "상" : demandIndex >= 70 ? "중" : "하";

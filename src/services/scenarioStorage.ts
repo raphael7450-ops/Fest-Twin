@@ -15,8 +15,8 @@ export interface SavedScenario {
   savedAt: string;
   selectedHour: number;
   plan: FestivalPlan;
-  selectedFestivalBasis?: SelectedFestivalBasis | null;
   shareToken?: string;
+  selectedFestivalBasis?: SelectedFestivalBasis;
 }
 
 export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
@@ -76,31 +76,6 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
   };
 }
 
-export function normalizeSelectedFestivalBasis(rawBasis: any): SelectedFestivalBasis | null {
-  if (!rawBasis || typeof rawBasis !== "object") return null;
-  const contentId = typeof rawBasis.contentId === "string" ? rawBasis.contentId.trim() : "";
-  const title = typeof rawBasis.title === "string" ? rawBasis.title.trim() : "";
-  const address = typeof rawBasis.address === "string" ? rawBasis.address.trim() : "";
-  const startDate = typeof rawBasis.startDate === "string" ? rawBasis.startDate : "";
-  const endDate = typeof rawBasis.endDate === "string" ? rawBasis.endDate : "";
-
-  if (!contentId || !title || !address) return null;
-
-  return {
-    contentId,
-    title,
-    address,
-    startDate,
-    endDate,
-    mapX: typeof rawBasis.mapX === "string" ? rawBasis.mapX : undefined,
-    mapY: typeof rawBasis.mapY === "string" ? rawBasis.mapY : undefined,
-    sourceName:
-      typeof rawBasis.sourceName === "string" && rawBasis.sourceName.trim()
-        ? rawBasis.sourceName
-        : "TourAPI selected festival candidate",
-  };
-}
-
 function readRawScenarios(): SavedScenario[] {
   const raw = localStorage.getItem(STORAGE_KEY);
 
@@ -112,7 +87,7 @@ function readRawScenarios(): SavedScenario[] {
     return parsed.map((item: any) => ({
       ...item,
       plan: normalizeFestivalPlan(item.plan),
-      selectedFestivalBasis: normalizeSelectedFestivalBasis(item.selectedFestivalBasis),
+      selectedFestivalBasis: item.selectedFestivalBasis,
     }));
   } catch {
     return [];
@@ -147,8 +122,8 @@ export async function fetchServerScenarios(): Promise<SavedScenario[]> {
         savedAt: item.created_at ?? new Date().toISOString(),
         selectedHour: item.parameters?.selectedHour ?? 20,
         plan: normalizeFestivalPlan(item.parameters?.plan),
-        selectedFestivalBasis: normalizeSelectedFestivalBasis(item.parameters?.selectedFestivalBasis),
         shareToken: item.share_token,
+        selectedFestivalBasis: item.parameters?.selectedFestivalBasis,
       }));
 
       // 서버 응답 성공 시 LocalStorage에도 최신화
@@ -166,12 +141,15 @@ export async function fetchServerScenarios(): Promise<SavedScenario[]> {
 export async function saveServerScenario(
   plan: FestivalPlan,
   selectedHour: number,
+  selectedFestivalBasisOrTitle?: SelectedFestivalBasis | null | string,
   title?: string,
-  selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): Promise<SavedScenario> {
+  const selectedFestivalBasis =
+    typeof selectedFestivalBasisOrTitle === "string" ? undefined : selectedFestivalBasisOrTitle;
   const localSaved = saveScenario(plan, selectedHour, selectedFestivalBasis);
   const scenarioTitle =
-    title ?? localSaved.name;
+    (typeof selectedFestivalBasisOrTitle === "string" ? selectedFestivalBasisOrTitle : title) ??
+    localSaved.name;
 
   try {
     const response = await fetch(createApiUrl("/api/scenarios"), {
@@ -180,7 +158,7 @@ export async function saveServerScenario(
       body: JSON.stringify({
         title: scenarioTitle,
         description: `${plan.region} ${plan.venueAddress}`,
-        parameters: { plan, selectedHour, selectedFestivalBasis: selectedFestivalBasis ?? null },
+        parameters: { plan, selectedHour, selectedFestivalBasis },
         results_summary: {
           targetVisitors: plan.expectedCapacity,
           budgetKrw: plan.totalBudgetMillionKrw * 1000000,
@@ -196,8 +174,8 @@ export async function saveServerScenario(
         savedAt: created.created_at,
         selectedHour,
         plan,
-        selectedFestivalBasis: selectedFestivalBasis ?? null,
         shareToken: created.share_token,
+        selectedFestivalBasis: created.parameters?.selectedFestivalBasis ?? selectedFestivalBasis ?? undefined,
       };
 
       const updated = [serverSaved, ...readRawScenarios().filter((i) => i.id !== localSaved.id)].slice(0, 10);
@@ -256,7 +234,7 @@ export function saveScenario(
     savedAt,
     selectedHour,
     plan,
-    selectedFestivalBasis: selectedFestivalBasis ?? null,
+    selectedFestivalBasis: selectedFestivalBasis ?? undefined,
   };
   const scenarios = [scenario, ...readRawScenarios()].slice(0, 10);
 

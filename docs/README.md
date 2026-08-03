@@ -32,7 +32,7 @@ docs/
 
 - [architecture-and-api.md](specs/architecture-and-api.md)
   - React 18 / Vite 6 SPA 프론트엔드 및 Express 백엔드 전체 시스템 블록 다이어그램 기술
-  - OWASP CSP 보안 헤더 및 2단계 계층형 Rate Limiter(분당 100회/30회) 설계
+  - OWASP CSP 보안 헤더 및 2단계 계층형 Rate Limiter(분당 300회/120회) 설계
   - SQLite 시나리오 보관 및 공유 토큰(`share_token`) RESTful API 상세 규격 명세
 
 - [data-and-simulation-methodology.md](specs/data-and-simulation-methodology.md)

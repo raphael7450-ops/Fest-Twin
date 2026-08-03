@@ -20,23 +20,20 @@ import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
-import {
-  loadScenarios,
-  normalizeFestivalPlan,
-  normalizeSelectedFestivalBasis,
-  type SavedScenario,
-} from "./services/scenarioStorage";
+import { loadScenarios, normalizeFestivalPlan } from "./services/scenarioStorage";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleTrendContext } from "./data/sampleTrends";
-import type { MetricEvidenceId } from "./domain/types";
-import { getDemandBackdataContext } from "./services/demandBackdataAdapter";
+import type { MetricEvidenceId, SelectedFestivalBasis } from "./domain/types";
+import {
+  getDemandBackdataContext,
+  getDemandBackdataContextFromApi,
+} from "./services/demandBackdataAdapter";
 import {
   applyFestivalCandidateToPlan,
   createSelectedFestivalBasis,
-  selectedFestivalBasisToCandidate,
 } from "./services/festivalSelection";
 import { createForecast } from "./services/forecast";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
@@ -76,6 +73,23 @@ const DEFAULT_AREA_CODES: TourApiAreaCode[] = [
   { code: "39", name: "제주특별자치도" },
 ];
 
+function candidateFromSelectedBasis(
+  selectedFestivalBasis?: SelectedFestivalBasis | null,
+): FestivalCandidate | null {
+  if (!selectedFestivalBasis) return null;
+
+  return {
+    id: selectedFestivalBasis.contentId,
+    title: selectedFestivalBasis.title,
+    address: selectedFestivalBasis.address,
+    startDate: selectedFestivalBasis.startDate,
+    endDate: selectedFestivalBasis.endDate,
+    mapX: selectedFestivalBasis.mapX,
+    mapY: selectedFestivalBasis.mapY,
+    searchScope: "exact-period",
+  };
+}
+
 function isValidPlanDateRange(startDate: string, endDate: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
     return false;
@@ -114,10 +128,6 @@ export function App() {
     candidates: [],
     isLoading: true,
   }));
-  const [manualPlanningFields, setManualPlanningFields] = useState({
-    totalBudget: false,
-    expectedCapacity: false,
-  });
   const tourApiPlanKey = JSON.stringify({
     region: plan.region,
     venueAddress: plan.venueAddress,
@@ -148,8 +158,10 @@ export function App() {
     venueAddress: plan.venueAddress,
     name: plan.name,
     startDate: plan.startDate,
+    endDate: plan.endDate,
     selectedHour,
     selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
     selectedMapX: selectedFestivalBasis?.mapX,
     selectedMapY: selectedFestivalBasis?.mapY,
   });
@@ -161,11 +173,11 @@ export function App() {
     trafficState.planKey === trafficPlanKey ? trafficState.context : sampleTrafficContext;
   const spendingPlanKey = JSON.stringify({
     region: plan.region,
-    venueAddress: plan.venueAddress,
     name: plan.name,
     startDate: plan.startDate,
     endDate: plan.endDate,
     selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
   });
   const [spendingState, setSpendingState] = useState(() => ({
     planKey: spendingPlanKey,
@@ -173,10 +185,28 @@ export function App() {
   }));
   const spending =
     spendingState.planKey === spendingPlanKey ? spendingState.context : sampleSpendingContext;
-  const demandBackdata = useMemo(
+  const demandBackdataPlanKey = JSON.stringify({
+    region: plan.region,
+    name: plan.name,
+    startDate: plan.startDate,
+    endDate: plan.endDate,
+    totalBudgetMillionKrw: plan.totalBudgetMillionKrw,
+    keywords: plan.keywords,
+    selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
+  });
+  const pendingDemandBackdata = useMemo(
     () => getDemandBackdataContext(plan),
-    [plan.region, plan.name, plan.startDate, plan.totalBudgetMillionKrw, plan.keywords],
+    [demandBackdataPlanKey],
   );
+  const [demandBackdataState, setDemandBackdataState] = useState(() => ({
+    planKey: demandBackdataPlanKey,
+    context: getDemandBackdataContext(plan),
+  }));
+  const demandBackdata =
+    demandBackdataState.planKey === demandBackdataPlanKey
+      ? demandBackdataState.context
+      : pendingDemandBackdata;
   const trendPlanKey = JSON.stringify({
     region: plan.region,
     name: plan.name,
@@ -184,6 +214,7 @@ export function App() {
     endDate: plan.endDate,
     keywords: plan.keywords,
     selectedContentId: selectedFestivalBasis?.contentId,
+    selectedTitle: selectedFestivalBasis?.title,
   });
   const [trendState, setTrendState] = useState(() => ({
     planKey: trendPlanKey,
@@ -199,12 +230,6 @@ export function App() {
 
   const [restoredNotice, setRestoredNotice] = useState<string | null>(null);
 
-  function restoreSavedScenario(scenario: Pick<SavedScenario, "plan" | "selectedHour" | "selectedFestivalBasis">) {
-    setPlan(normalizeFestivalPlan(scenario.plan));
-    setSelectedHour(scenario.selectedHour ?? 20);
-    setSelectedCandidate(selectedFestivalBasisToCandidate(scenario.selectedFestivalBasis));
-  }
-
   useEffect(() => {
     const controller = new AbortController();
 
@@ -219,11 +244,11 @@ export function App() {
         .then((data) => {
           if (data?.parameters?.plan) {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
-            restoreSavedScenario({
-              plan: restoredPlan,
-              selectedHour: data.parameters.selectedHour ?? 20,
-              selectedFestivalBasis: normalizeSelectedFestivalBasis(data.parameters.selectedFestivalBasis),
-            });
+            setPlan(restoredPlan);
+            setSelectedCandidate(candidateFromSelectedBasis(data.parameters.selectedFestivalBasis));
+            if (data.parameters.selectedHour !== undefined) {
+              setSelectedHour(data.parameters.selectedHour);
+            }
             setRestoredNotice(`[공유 시나리오] [${restoredPlan.name}] 기획안이 복원되었습니다.`);
           }
         })
@@ -235,18 +260,20 @@ export function App() {
         .then((data) => {
           if (data?.parameters?.plan) {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
-            restoreSavedScenario({
-              plan: restoredPlan,
-              selectedHour: data.parameters.selectedHour ?? 20,
-              selectedFestivalBasis: normalizeSelectedFestivalBasis(data.parameters.selectedFestivalBasis),
-            });
+            setPlan(restoredPlan);
+            setSelectedCandidate(candidateFromSelectedBasis(data.parameters.selectedFestivalBasis));
+            if (data.parameters.selectedHour !== undefined) {
+              setSelectedHour(data.parameters.selectedHour);
+            }
             setRestoredNotice(`[공유 시나리오] [${restoredPlan.name}] 기획안이 복원되었습니다.`);
           } else {
             // LocalStorage fallback
             const localScenarios = loadScenarios();
             const found = localScenarios.find((item) => item.id === scenarioId);
             if (found) {
-              restoreSavedScenario(found);
+              setPlan(normalizeFestivalPlan(found.plan));
+              setSelectedCandidate(candidateFromSelectedBasis(found.selectedFestivalBasis));
+              setSelectedHour(found.selectedHour ?? 20);
               setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
             }
           }
@@ -255,7 +282,9 @@ export function App() {
           const localScenarios = loadScenarios();
           const found = localScenarios.find((item) => item.id === scenarioId);
           if (found) {
-            restoreSavedScenario(found);
+            setPlan(normalizeFestivalPlan(found.plan));
+            setSelectedCandidate(candidateFromSelectedBasis(found.selectedFestivalBasis));
+            setSelectedHour(found.selectedHour ?? 20);
             setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
           }
         });
@@ -436,6 +465,35 @@ export function App() {
         return;
       }
 
+      getDemandBackdataContextFromApi(planSnapshot, { signal: controller.signal })
+        .then((nextDemandBackdata) => {
+          if (!controller.signal.aborted) {
+            setDemandBackdataState({ planKey: demandBackdataPlanKey, context: nextDemandBackdata });
+          }
+        })
+        .catch((error: unknown) => {
+          if (
+            !controller.signal.aborted &&
+            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+          ) {
+            console.error("Regional festival backdata loading failed", error);
+          }
+        });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [demandBackdataPlanKey]);
+  useEffect(() => {
+    const controller = new AbortController();
+    const planSnapshot = plan;
+    const timeoutId = window.setTimeout(() => {
+      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
+        return;
+      }
+
       getTrendContext(planSnapshot, { signal: controller.signal })
         .then((nextTrends) => {
           if (!controller.signal.aborted) {
@@ -494,37 +552,9 @@ export function App() {
     () => createPlanningReport(plan, forecast, simulation),
     [forecast, plan, simulation],
   );
-  const handlePlanChange = (nextPlan: typeof plan) => {
-    setPlan(nextPlan);
-    if (nextPlan.totalBudgetMillionKrw !== plan.totalBudgetMillionKrw) {
-      setManualPlanningFields((current) => ({ ...current, totalBudget: true }));
-    }
-    if (nextPlan.expectedCapacity !== plan.expectedCapacity) {
-      setManualPlanningFields((current) => ({ ...current, expectedCapacity: true }));
-    }
-    if (
-      nextPlan.region !== plan.region ||
-      nextPlan.name !== plan.name ||
-      nextPlan.venueAddress !== plan.venueAddress ||
-      nextPlan.startDate !== plan.startDate ||
-      nextPlan.endDate !== plan.endDate
-    ) {
-      setSelectedCandidate(null);
-    }
-  };
-
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
-    setPlan((currentPlan) => {
-      const candidatePlan = applyFestivalCandidateToPlan(currentPlan, candidate);
-      const candidateBackdata = getDemandBackdataContext(candidatePlan);
-
-      return applyFestivalCandidateToPlan(currentPlan, candidate, {
-        demandBackdata: candidateBackdata,
-        preserveBudget: manualPlanningFields.totalBudget,
-        preserveExpectedCapacity: manualPlanningFields.expectedCapacity,
-      });
-    });
+    setPlan((currentPlan) => applyFestivalCandidateToPlan(currentPlan, candidate));
     setIsCandidatePanelOpen(false);
   };
 
@@ -551,9 +581,7 @@ export function App() {
                 <button
                   aria-label={`대시보드 섹션: ${item.label}`}
                   aria-pressed={activeDashboardSection === item.section}
-                  className={`dashboard-rail__button${
-                    activeDashboardSection === item.section ? " dashboard-rail__button--active" : ""
-                  }`}
+                  className={`dashboard-rail__button${activeDashboardSection === item.section ? " dashboard-rail__button--active" : ""}`}
                   key={item.label}
                   onClick={() => setActiveDashboardSection(item.section as DashboardSection)}
                   type="button"
@@ -566,172 +594,187 @@ export function App() {
           </nav>
         </aside>
         <div className="dashboard-content">
-      <GovernmentHeader />
-      {restoredNotice && (
-        <div
-          style={{
-            margin: "12px 24px 0 24px",
-            padding: "12px 16px",
-            background: "#eff6ff",
-            border: "1px solid #93c5fd",
-            borderRadius: "8px",
-            color: "#1e40af",
-            fontWeight: 600,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span>{restoredNotice}</span>
-          <button
-            type="button"
-            onClick={() => setRestoredNotice(null)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "1rem",
-              color: "#1e40af",
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-      <SummaryKpiCards
-        plan={plan}
-        forecast={forecast}
-        simulation={simulation}
-        tourism={tourism}
-        onOpenEvidence={setSelectedEvidenceId}
-      />
-      <div className="dashboard-section-tabs" aria-label="대시보드 섹션">
-        {railItems.map((item) => (
-          <button
-            className={`dashboard-section-tab${
-              activeDashboardSection === item.section ? " dashboard-section-tab--active" : ""
-            }`}
-            key={item.label}
-            onClick={() => setActiveDashboardSection(item.section as DashboardSection)}
-            type="button"
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-      <div className="dashboard-section-stack">
-        {activeDashboardSection === "overview" && (
-          <section className="dashboard-section-panel dashboard-section-panel--overview active">
-            <div className="workspace-grid workspace-grid--dashboard">
-              <div className="main-column">
-                <ForecastChart forecast={forecast} />
-                <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
-              </div>
-              <aside className="right-column">
-                <SafetyLogisticsPanel
-                  plan={plan}
-                  forecast={forecast}
-                  simulation={simulation}
-                  traffic={traffic}
-                  onOpenEvidence={setSelectedEvidenceId}
-                />
-                <RiskPanel report={report} />
-              </aside>
+          <GovernmentHeader />
+          {restoredNotice && (
+            <div
+              style={{
+                margin: "12px 24px 0 24px",
+                padding: "12px 16px",
+                background: "#eff6ff",
+                border: "1px solid #93c5fd",
+                borderRadius: "8px",
+                color: "#1e40af",
+                fontWeight: 600,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span>{restoredNotice}</span>
+              <button
+                type="button"
+                onClick={() => setRestoredNotice(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  color: "#1e40af",
+                }}
+              >
+                ✕
+              </button>
             </div>
-          </section>
-        )}
+          )}
+          <SummaryKpiCards
+            plan={plan}
+            forecast={forecast}
+            simulation={simulation}
+            tourism={tourism}
+            onOpenEvidence={setSelectedEvidenceId}
+          />
+          <div className="dashboard-section-tabs" aria-label="대시보드 섹션">
+            {railItems.map((item) => (
+              <button
+                className={`dashboard-section-tab${activeDashboardSection === item.section ? " dashboard-section-tab--active" : ""}`}
+                key={item.label}
+                onClick={() => setActiveDashboardSection(item.section as DashboardSection)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
 
-        {activeDashboardSection === "planning" && (
-          <section className="dashboard-section-panel active">
-            <div className="workspace-grid workspace-grid--2col">
-              <aside className="left-column">
-                <PlanForm
-                  plan={plan}
-                  onPlanChange={handlePlanChange}
-                  areaCodes={areaCodes}
-                  isAreaLoading={isAreaLoading}
-                  isCandidateLoading={isCandidateLoading}
-                  candidateCount={candidates.length}
-                  selectedCandidateTitle={selectedCandidate?.title}
-                  onOpenCandidates={() => setIsCandidatePanelOpen(true)}
-                />
-              </aside>
-              <section className="main-column">
-                <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
-                <ScenarioLibrary
-                  plan={plan}
-                  selectedHour={selectedHour}
+          <div className="dashboard-section-stack">
+            {activeDashboardSection === "overview" && (
+              <section className="dashboard-section-panel dashboard-section-panel--overview active">
+                <div className="workspace-grid workspace-grid--dashboard">
+                  <div className="main-column">
+                    <ForecastChart forecast={forecast} />
+                    <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
+                  </div>
+                  <aside className="right-column">
+                    <SafetyLogisticsPanel
+                      plan={plan}
+                      forecast={forecast}
+                      simulation={simulation}
+                      traffic={traffic}
+                      onOpenEvidence={setSelectedEvidenceId}
+                    />
+                    <RiskPanel report={report} />
+                  </aside>
+                </div>
+              </section>
+            )}
+
+            {activeDashboardSection === "planning" && (
+              <section className="dashboard-section-panel active">
+                <div className="workspace-grid workspace-grid--2col">
+                  <aside className="left-column">
+                    <PlanForm
+                      plan={plan}
+                      onPlanChange={(nextPlan) => {
+                        setPlan(nextPlan);
+                        if (
+                          nextPlan.region !== plan.region ||
+                          nextPlan.name !== plan.name ||
+                          nextPlan.venueAddress !== plan.venueAddress ||
+                          nextPlan.startDate !== plan.startDate ||
+                          nextPlan.endDate !== plan.endDate
+                        ) {
+                          setSelectedCandidate(null);
+                        }
+                      }}
+                      areaCodes={areaCodes}
+                      isAreaLoading={isAreaLoading}
+                      isCandidateLoading={isCandidateLoading}
+                      candidateCount={candidates.length}
+                      selectedCandidateTitle={selectedCandidate?.title}
+                      onOpenCandidates={() => setIsCandidatePanelOpen(true)}
+                    />
+                  </aside>
+                  <section className="main-column">
+                    <VenueMapPanel plan={plan} selectedCandidate={selectedCandidate} />
+                    <ScenarioLibrary
+                      plan={plan}
+                      selectedHour={selectedHour}
+                      selectedFestivalBasis={selectedFestivalBasis}
+                      onLoadScenario={(scenario) => {
+                        setPlan(normalizeFestivalPlan(scenario.plan));
+                        setSelectedCandidate(candidateFromSelectedBasis(scenario.selectedFestivalBasis));
+                        setSelectedHour(scenario.selectedHour ?? 20);
+                      }}
+                    />
+                  </section>
+                </div>
+              </section>
+            )}
+
+            {activeDashboardSection === "forecast" && (
+              <section className="dashboard-section-panel active">
+                <div className="workspace-grid workspace-grid--dashboard">
+                  <div className="main-column">
+                    <ScenarioControls
+                      hours={plan.operatingHours}
+                      selectedHour={selectedHour}
+                      onSelectedHourChange={setSelectedHour}
+                    />
+                    <ForecastChart forecast={forecast} />
+                    <Heatmap plan={plan} simulation={simulation} />
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeDashboardSection === "operations" && (
+              <section className="dashboard-section-panel active">
+                <div className="workspace-grid workspace-grid--dashboard">
+                  <div className="main-column">
+                    <SafetyLogisticsPanel
+                      plan={plan}
+                      forecast={forecast}
+                      simulation={simulation}
+                      traffic={traffic}
+                      onOpenEvidence={setSelectedEvidenceId}
+                    />
+                  </div>
+                  <aside className="right-column">
+                    <RiskPanel report={report} />
+                  </aside>
+                </div>
+              </section>
+            )}
+
+            {activeDashboardSection === "evidence" && (
+              <section className="dashboard-section-panel active">
+                <DataBasisPanel
+                  tourism={tourism}
+                  trends={trends}
+                  traffic={traffic}
+                  spending={spending}
+                  demandBackdata={demandBackdata}
                   selectedFestivalBasis={selectedFestivalBasis}
-                  onLoadScenario={(scenario) => {
-                    restoreSavedScenario(scenario);
-                  }}
                 />
               </section>
-            </div>
-          </section>
-        )}
+            )}
 
-        {activeDashboardSection === "forecast" && (
-          <section className="dashboard-section-panel active">
-            <div className="workspace-grid workspace-grid--dashboard">
-              <div className="main-column">
-                <ScenarioControls
-                  hours={plan.operatingHours}
-                  selectedHour={selectedHour}
-                  onSelectedHourChange={setSelectedHour}
-                />
-                <ForecastChart forecast={forecast} />
-                <Heatmap plan={plan} simulation={simulation} />
-              </div>
-            </div>
-          </section>
-        )}
-
-        {activeDashboardSection === "operations" && (
-          <section className="dashboard-section-panel active">
-            <div className="workspace-grid workspace-grid--dashboard">
-              <div className="main-column">
-                <SafetyLogisticsPanel
+            {activeDashboardSection === "report" && (
+              <section className="dashboard-section-panel active">
+                <ReportView
+                  report={report}
                   plan={plan}
                   forecast={forecast}
-                  simulation={simulation}
-                  traffic={traffic}
+                  spending={spending}
+                  selectedFestivalBasis={selectedFestivalBasis}
+                  evidenceSet={metricEvidence}
                   onOpenEvidence={setSelectedEvidenceId}
                 />
-              </div>
-              <aside className="right-column">
-                <RiskPanel report={report} />
-              </aside>
-            </div>
-          </section>
-        )}
+              </section>
+            )}
 
-        {activeDashboardSection === "evidence" && (
-          <section className="dashboard-section-panel active">
-            <DataBasisPanel
-              tourism={tourism}
-              trends={trends}
-              traffic={traffic}
-              spending={spending}
-              demandBackdata={demandBackdata}
-              selectedFestivalBasis={selectedFestivalBasis}
-            />
-          </section>
-        )}
-
-        {activeDashboardSection === "report" && (
-          <section className="dashboard-section-panel active">
-            <ReportView
-              report={report}
-              plan={plan}
-              forecast={forecast}
-              spending={spending}
-              selectedFestivalBasis={selectedFestivalBasis}
-              evidenceSet={metricEvidence}
-              onOpenEvidence={setSelectedEvidenceId}
-            />
-          </section>
-        )}
+          </div>
+        </div>
       </div>
       <FestivalCandidatePanel
         isOpen={isCandidatePanelOpen}
@@ -747,8 +790,6 @@ export function App() {
         isOpen={selectedEvidenceId !== null}
         onClose={() => setSelectedEvidenceId(null)}
       />
-        </div>
-      </div>
     </main>
   );
 }

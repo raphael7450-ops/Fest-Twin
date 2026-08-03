@@ -10,12 +10,100 @@ import {
   sampleRegionalFestivalRecords,
 } from "../data/sampleDemandBackdata";
 import type {
+  DataSourceStatus,
   DemandBackdataContext,
   DemandBackdataSimilarFestival,
   FestivalPlan,
   MetricEvidenceSourceDetail,
 } from "../domain/types";
 
+
+interface DemandBackdataOptions {
+  fetchImpl?: typeof fetch;
+  signal?: AbortSignal;
+}
+
+interface RegionalFestivalApiRecord {
+  id: string;
+  year: number;
+  name: string;
+  region: string;
+  localGovernment?: string;
+  type: string;
+  venue?: string;
+  startDate?: string;
+  endDate?: string;
+  periodLabel?: string;
+  budgetMillionKrw?: number;
+  visitors?: number;
+  sourceName: string;
+  sourceFile?: string;
+}
+
+function buildRegionalFestivalsUrl(plan: FestivalPlan) {
+  const url = new URL("/api/regional-festivals", window.location.origin);
+  url.searchParams.set("region", plan.region);
+  url.searchParams.set("startDate", plan.startDate);
+  url.searchParams.set("endDate", plan.endDate);
+  url.searchParams.set("keywords", plan.keywords.join(","));
+  url.searchParams.set("limit", "8");
+  return url;
+}
+
+function createApiSourceDetails(
+  festivals: DemandBackdataSimilarFestival[],
+  records: RegionalFestivalApiRecord[],
+  status: DataSourceStatus,
+): MetricEvidenceSourceDetail[] {
+  return [
+    {
+      sourceId: "mcst-regional-festival-server-db",
+      sourceName: "문화체육관광부_지역축제 정보",
+      sourceType: status === "file-normalized" ? "derived" : "sample",
+      statusLabel: "서버 DB 파일 정규화 조회 성공",
+      retrievedAt: new Date().toISOString(),
+      endpoint: "/api/regional-festivals",
+      records: festivals.map((festival, index) => ({
+        label: festival.name,
+        fields: [
+          { label: "지역", value: festival.region },
+          { label: "유형", value: festival.type },
+          { label: "기간", value: festival.periodLabel },
+          {
+            label: "방문객 수",
+            value: festival.visitors ? `${festival.visitors.toLocaleString("ko-KR")}명` : "-",
+          },
+          {
+            label: "예산",
+            value: festival.budgetMillionKrw
+              ? `${festival.budgetMillionKrw.toLocaleString("ko-KR")}백만원`
+              : "-",
+          },
+          { label: "원천 파일", value: records[index]?.sourceFile ?? "-" },
+          { label: "유사도", value: `${festival.similarityScore}점` },
+        ],
+      })),
+      note: "문화체육관광부 지역축제 엑셀 파일을 서버 JSON DB로 정규화해 수요 예측 기준선으로 사용합니다.",
+    },
+  ];
+}
+
+function apiRecordToFestival(record: RegionalFestivalApiRecord): DemandBackdataSimilarFestival {
+  return {
+    id: record.id,
+    name: record.name,
+    region: [record.region, record.localGovernment].filter(Boolean).join(" "),
+    type: record.type,
+    periodLabel:
+      record.periodLabel ??
+      [record.startDate, record.endDate].filter(Boolean).join(" ~ ") ??
+      String(record.year),
+    budgetMillionKrw: record.budgetMillionKrw,
+    visitors: record.visitors,
+    similarityScore: 50,
+    sourceName: record.sourceName,
+  };
+}
 function normalizeText(value: string) {
   return value.replace(/\s+/g, "").toLowerCase();
 }
@@ -135,4 +223,40 @@ export function getDemandBackdataContext(plan: FestivalPlan): DemandBackdataCont
       "문화체육관광부 지역축제 정보의 방문객 수, 예산, 유형을 수요 예측 기준선으로 사용합니다.",
     ),
   };
+}
+
+export async function getDemandBackdataContextFromApi(
+  plan: FestivalPlan,
+  options: DemandBackdataOptions = {},
+): Promise<DemandBackdataContext> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+
+  try {
+    const url = buildRegionalFestivalsUrl(plan);
+    const response = await fetchImpl(`${url.pathname}${url.search}`, { signal: options.signal });
+    if (!response.ok) throw new Error(`Regional festival DB HTTP ${response.status}`);
+    const payload = (await response.json()) as { records?: RegionalFestivalApiRecord[] };
+    const records = Array.isArray(payload.records) ? payload.records : [];
+    const festivals = records
+      .map(apiRecordToFestival)
+      .map((festival) => rescoreFestival(plan, festival))
+      .filter((festival) => (festival.visitors ?? 0) > 0)
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, 3);
+
+    if (festivals.length === 0) {
+      return createFallbackDemandBackdataContext(plan, "서버 DB에 사용 가능한 방문객 수 레코드 없음");
+    }
+
+    return {
+      status: "file-normalized",
+      similarFestivalBaselines: festivals,
+      sourceDetails: createApiSourceDetails(festivals, records, "file-normalized"),
+    };
+  } catch (error) {
+    if (options.signal?.aborted || (typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")) {
+      throw error;
+    }
+    return createFallbackDemandBackdataContext(plan, "문화체육관광부 지역축제 서버 DB 조회 실패");
+  }
 }

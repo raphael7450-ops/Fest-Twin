@@ -17,7 +17,7 @@ graph TD
 
     subgraph Security & Cache Middleware
         Proxy --> SecHeader[OWASP CSP & Security Headers]
-        Proxy --> RateLimiter[Dual-Tier Rate Limiter - 100/min & 30/min]
+        Proxy --> RateLimiter[Dual-Tier Rate Limiter - 300/min & 120/min]
         Proxy --> CacheStore[TTL In-Memory Cache Store]
     end
 
@@ -56,8 +56,8 @@ graph TD
 
 ### 2.3 백엔드 및 보안 계층 (Express Backend & OWASP Security)
 - 2단계 계층형 Rate Limiter가 적용되어 시스템 및 공공데이터 쿼터를 보호합니다:
-  - 일반 API (`/api/*`): IP당 1분당 최대 100회 요청 허용
-  - 공공데이터 프록시 (`/api/tour`, `/api/spending`, `/api/traffic`): IP당 1분당 최대 30회 요청 제한
+  - 일반 API (`/api/*`): IP당 1분당 최대 300회 요청 허용
+  - 공공데이터 프록시 (`/api/tour`, `/api/spending`, `/api/traffic`, `/api/trends`): IP당 1분당 최대 120회 요청 제한
 - 보안 강화를 위해 X-Content-Type-Options(nosniff), X-Frame-Options(DENY), X-XSS-Protection, Referrer-Policy 및 인가된 도메인만 통과시키는 Content-Security-Policy(CSP) 헤더를 설정했습니다.
 - CORS 허용 출처: 개발 로컬 환경, Tailscale 도메인(`*.ts.net`), 원격 Docker 서버 IP (`192.168.55.223`).
 
@@ -115,7 +115,7 @@ graph TD
 
 ### 3.3 공공데이터 프록시 API
 
-외부 OpenAPI 쿼터 보호 및 빠른 응답을 위하여 10분 LRU 인메모리 캐시 및 분당 30회 제한 프록시를 구동합니다.
+외부 OpenAPI 쿼터 보호 및 빠른 응답을 위하여 10분 LRU 인메모리 캐시 및 분당 120회 제한 프록시를 구동합니다.
 
 | 메소드 | 엔드포인트 | 데이터 연동 출처 | 설명 |
 | :--- | :--- | :--- | :--- |

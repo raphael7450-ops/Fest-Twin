@@ -17,6 +17,8 @@ import type {
 // 수치 범주 제한 클램프 헬퍼 함수 불러오기
 import { clamp } from "./forecast";
 
+const MAX_CELL_DENSITY_SCORE = 160;
+
 // 격자 밀집 수치(명/m²)를 기준으로 위험 등급을 분류하는 헬퍼 함수
 export function riskLevelFromDensity(density: number): RiskLevel {
   if (density >= 85) return "critical";
@@ -56,7 +58,7 @@ export function createSimulation(
       const density = clamp(
         (visitors / plan.expectedCapacity) * 42 + attraction * 19,
         0,
-        100,
+        MAX_CELL_DENSITY_SCORE,
       );
 
       cells.push({

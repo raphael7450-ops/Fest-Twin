@@ -5,6 +5,7 @@
  */
 
 import { sampleTourismContext } from "../data/sampleTourApi";
+import { regionalFestivalCandidateRecords } from "../data/regionalFestivalCandidates";
 import type {
   FestivalPlan,
   MetricEvidenceSourceDetail,
@@ -60,7 +61,7 @@ type TourApiOperation =
   | "detail"
   | "nearby";
 
-type FestivalSearchScope = "exact-period" | "annual-region";
+type FestivalSearchScope = "exact-period" | "annual-region" | "regional-supplement";
 
 type ValidFestivalItem = TourApiItem & {
   contentid: string | number;
@@ -75,7 +76,9 @@ type ValidNearbyItem = TourApiItem & {
   dist: string | number;
 };
 
-const MAX_FESTIVAL_CANDIDATES = 8;
+const FESTIVAL_SEARCH_ROWS = 50;
+const MAX_FESTIVAL_CANDIDATES = 20;
+const MAX_FESTIVAL_CANDIDATE_DETAILS = 5;
 const MAX_SIMILAR_FESTIVALS = 5;
 const MAX_NEARBY_SPOTS = 6;
 
@@ -279,9 +282,156 @@ function formatTourApiDateForInput(date: string | number | undefined) {
   return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
 }
 
+function parseTourApiDate(value: string | number | undefined) {
+  const normalized = String(value ?? "").replace(/-/g, "");
+  if (!/^\d{8}$/.test(normalized)) return undefined;
+
+  const year = Number(normalized.slice(0, 4));
+  const month = Number(normalized.slice(4, 6)) - 1;
+  const day = Number(normalized.slice(6, 8));
+  const timestamp = Date.UTC(year, month, day);
+
+  return Number.isFinite(timestamp) ? timestamp : undefined;
+}
+
+function dateOverlapDays(
+  startA: string | number | undefined,
+  endA: string | number | undefined,
+  startB: string,
+  endB: string,
+) {
+  const aStart = parseTourApiDate(startA);
+  const aEnd = parseTourApiDate(endA);
+  const bStart = parseTourApiDate(startB);
+  const bEnd = parseTourApiDate(endB);
+
+  if (aStart === undefined || aEnd === undefined || bStart === undefined || bEnd === undefined) {
+    return 0;
+  }
+
+  const overlapStart = Math.max(aStart, bStart);
+  const overlapEnd = Math.min(aEnd, bEnd);
+
+  if (overlapEnd < overlapStart) return 0;
+
+  return Math.floor((overlapEnd - overlapStart) / 86_400_000) + 1;
+}
+
+function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
+  return [...items].sort((left, right) => {
+    const overlapDifference =
+      dateOverlapDays(right.eventstartdate, right.eventenddate, plan.startDate, plan.endDate) -
+      dateOverlapDays(left.eventstartdate, left.eventenddate, plan.startDate, plan.endDate);
+    if (overlapDifference !== 0) return overlapDifference;
+
+    const leftStart = parseTourApiDate(left.eventstartdate) ?? Number.MAX_SAFE_INTEGER;
+    const rightStart = parseTourApiDate(right.eventstartdate) ?? Number.MAX_SAFE_INTEGER;
+    if (leftStart !== rightStart) return leftStart - rightStart;
+
+    const titleDifference = String(left.title ?? "").localeCompare(String(right.title ?? ""), "ko");
+    if (titleDifference !== 0) return titleDifference;
+
+    return String(left.contentid ?? "").localeCompare(String(right.contentid ?? ""));
+  });
+}
+
+function normalizeRegionText(value: string | undefined) {
+  return String(value ?? "")
+    .replace(/\s+/g, "")
+    .replace(/특별자치도|특별자치시|광역시|특별시|자치도|도|시|군|구/g, "")
+    .toLowerCase();
+}
+
+const REGION_ALIASES: Record<string, string[]> = {
+  충남: ["충남", "충청남"],
+  충청남: ["충남", "충청남"],
+  충북: ["충북", "충청북"],
+  충청북: ["충북", "충청북"],
+  경남: ["경남", "경상남"],
+  경상남: ["경남", "경상남"],
+  경북: ["경북", "경상북"],
+  경상북: ["경북", "경상북"],
+  전남: ["전남", "전라남"],
+  전라남: ["전남", "전라남"],
+  전북: ["전북", "전라북"],
+  전라북: ["전북", "전라북"],
+};
+
+function regionAliases(value: string) {
+  const normalized = normalizeRegionText(value);
+  return new Set([normalized, ...(REGION_ALIASES[normalized] ?? [])]);
+}
+
+function regionMatches(planRegion: string, candidateRegion: string) {
+  const planAliases = regionAliases(planRegion);
+  const candidateAliases = regionAliases(candidateRegion);
+
+  return Array.from(planAliases).some((planAlias) =>
+    Array.from(candidateAliases).some(
+      (candidateAlias) =>
+        planAlias.length > 0 &&
+        candidateAlias.length > 0 &&
+        (planAlias.includes(candidateAlias) || candidateAlias.includes(planAlias)),
+    ),
+  );
+}
+
+function createRegionalSupplementSourceDetail(items: TourApiItem[]): MetricEvidenceSourceDetail {
+  return {
+    sourceId: "regional-festival-candidate-supplement",
+    sourceName: "지역축제 공식/표준 후보 보강 데이터",
+    sourceType: "sample",
+    statusLabel: "TourAPI 후보 보강",
+    retrievedAt: new Date().toISOString(),
+    endpoint: "regional-festival-candidates",
+    records: items.map((item) => ({
+      label: String(item.title ?? item.contentid ?? "지역축제 후보"),
+      fields: [
+        { label: "contentid", value: String(item.contentid ?? "-") },
+        { label: "title", value: item.title ?? "-" },
+        { label: "addr1", value: item.addr1 ?? "-" },
+        { label: "eventstartdate", value: formatTourApiDate(item.eventstartdate) },
+        { label: "eventenddate", value: formatTourApiDate(item.eventenddate) },
+        { label: "source", value: item.overview ?? "-" },
+      ],
+    })),
+    note:
+      "TourAPI searchFestival2가 특정 지역/기간 후보를 충분히 반환하지 않는 경우 공식 지역축제 정보를 후보 탐색용으로 보강합니다.",
+  };
+}
+
+function getRegionalSupplementFestivalItems(plan: FestivalPlan): TourApiItem[] {
+  return regionalFestivalCandidateRecords
+    .filter((record) => regionMatches(plan.region, record.region))
+    .filter((record) => dateOverlapDays(record.startDate, record.endDate, plan.startDate, plan.endDate) > 0)
+    .map((record) => ({
+      contentid: record.id,
+      title: record.title,
+      addr1: record.address,
+      eventstartdate: record.startDate.replace(/-/g, ""),
+      eventenddate: record.endDate.replace(/-/g, ""),
+      overview: `${record.sourceName} (${record.sourceUrl})`,
+    }));
+}
+
+function mergeMatchingFestivalDetail(searchItem: TourApiItem, detailItem: TourApiItem | undefined) {
+  if (
+    !detailItem ||
+    String(detailItem.contentid ?? "") !== String(searchItem.contentid ?? "")
+  ) {
+    return searchItem;
+  }
+
+  return {
+    ...searchItem,
+    ...detailItem,
+    contentid: searchItem.contentid,
+  };
+}
+
 function buildExactFestivalSearchParams(plan: FestivalPlan, areaCode: string | number) {
   return {
-    numOfRows: 10,
+    numOfRows: FESTIVAL_SEARCH_ROWS,
     pageNo: 1,
     arrange: "A",
     areaCode,
@@ -294,7 +444,7 @@ function buildAnnualFestivalSearchParams(plan: FestivalPlan, areaCode: string | 
   const year = plan.startDate.slice(0, 4);
 
   return {
-    numOfRows: 10,
+    numOfRows: FESTIVAL_SEARCH_ROWS,
     pageNo: 1,
     arrange: "A",
     areaCode,
@@ -347,10 +497,15 @@ function normalizeItems(operation: TourApiOperation, payload: unknown): TourApiI
 
   const totalCount = Number(body.totalCount);
   if (totalCount === 0) {
+    const emptyItemsObject =
+      isRecord(body.items) &&
+      (body.items.item === undefined ||
+        (Array.isArray(body.items.item) && body.items.item.length === 0));
     const validEmptyItems =
       body.items === "" ||
       body.items === null ||
-      (isRecord(body.items) && Array.isArray(body.items.item) && body.items.item.length === 0);
+      body.items === undefined ||
+      emptyItemsObject;
     if (!validEmptyItems) {
       throw new Error(`TourAPI ${operation} empty items shape is invalid`);
     }
@@ -571,7 +726,7 @@ async function resolveAreaCode(
     signal,
   ));
 
-  return items.find((item) => item.name && plan.region.includes(item.name))?.code;
+  return items.find((item) => item.name && regionMatches(plan.region, String(item.name)))?.code;
 }
 
 export async function getTourApiAreaCodes(
@@ -760,7 +915,39 @@ export async function getFestivalCandidates(
     );
   }
 
-  const candidateItems = festivalItems.slice(0, MAX_FESTIVAL_CANDIDATES);
+  const supplementalItems = getRegionalSupplementFestivalItems(plan);
+  const supplementalIds = new Set(
+    festivalItems.map((item) => String(item.contentid ?? "")).concat(
+      festivalItems.map((item) => String(item.title ?? "").replace(/\s+/g, "")),
+    ),
+  );
+  const uniqueSupplementalItems = supplementalItems.filter(
+    (item) =>
+      !supplementalIds.has(String(item.contentid ?? "")) &&
+      !supplementalIds.has(String(item.title ?? "").replace(/\s+/g, "")),
+  );
+  const candidateItems = sortFestivalItemsForPlan(
+    [...festivalItems, ...uniqueSupplementalItems],
+    plan,
+  ).slice(0, MAX_FESTIVAL_CANDIDATES);
+  const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
+  const detailLookups = await Promise.all(
+    detailCandidateItems.map((item) =>
+      fetchTourApiItems(
+        "detail",
+        { contentId: item.contentid },
+        fetchImpl,
+        options.signal,
+      )
+        .then((items) => ({ item: mergeMatchingFestivalDetail(item, items[0]), succeeded: true }))
+        .catch(() => ({ item, succeeded: false })),
+    ),
+  );
+  const detailItems = [
+    ...detailLookups.map((lookup) => lookup.item),
+    ...candidateItems.slice(MAX_FESTIVAL_CANDIDATE_DETAILS),
+  ];
+
   const searchSourceDetail = createTourApiSourceDetail({
     sourceId: "tourapi-festival-candidates",
     sourceName: "TourAPI 축제 정보 조회",
@@ -771,10 +958,27 @@ export async function getFestivalCandidates(
       fields: festivalRecordFields(item),
     })),
   });
-  const sourceDetails = [searchSourceDetail];
+  const detailSourceDetails = createFestivalDetailSources(
+    "tourapi-festival-candidate-detail",
+    detailLookups.map((lookup) => lookup.item),
+    detailLookups.map((lookup) => lookup.succeeded),
+  );
+  const supplementSourceDetails =
+    uniqueSupplementalItems.length > 0
+      ? [createRegionalSupplementSourceDetail(uniqueSupplementalItems)]
+      : [];
+  const sourceDetails = [searchSourceDetail, ...supplementSourceDetails, ...detailSourceDetails];
 
-  return candidateItems
-    .map((item) => mapFestivalCandidate(item, festivalSearchScope, sourceDetails))
+  return detailItems
+    .map((item) =>
+      mapFestivalCandidate(
+        item,
+        uniqueSupplementalItems.some((supplement) => supplement.contentid === item.contentid)
+          ? "regional-supplement"
+          : festivalSearchScope,
+        sourceDetails,
+      ),
+    )
     .filter((item): item is FestivalCandidate => Boolean(item));
 }
 
@@ -833,7 +1037,7 @@ export async function getTourismContext(
           },
           fetchImpl,
           options.signal,
-        ).then((items) => ({ ...item, ...items[0] })),
+        ).then((items) => mergeMatchingFestivalDetail(item, items[0])),
       ),
     );
     const firstLocatedItem = detailItems.find((item) => item.mapx && item.mapy);

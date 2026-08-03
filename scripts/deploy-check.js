@@ -1,223 +1,201 @@
-import fs from "node:fs";
+/**
+ * 파일 : scripts/deploy-check.js
+ * 내용 : CI/CD 파이프라인 무중단 배포 및 API 라우트 헬스체크 검증 스크립트
+ * 수정 : 2026-07-29. 공개 루트, 정적 번들, TourAPI fallback, 공유 시나리오 복원 게이트 추가
+ */
+
 import http from "node:http";
-import https from "node:https";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DEFAULT_TARGET_URL = "https://cwserver.tail97dbc3.ts.net";
-const legacyTargetHost = process.env.DEPLOY_TARGET_HOST;
-const legacyTargetPort = process.env.DEPLOY_TARGET_PORT || "18080";
-const TARGET_BASE_URL =
-  process.env.DEPLOY_TARGET_URL ||
-  (legacyTargetHost
-    ? `http://${legacyTargetHost}:${legacyTargetPort}`
-    : DEFAULT_TARGET_URL);
+const TARGET_HOST = process.env.DEPLOY_TARGET_HOST || "192.168.55.223";
+const TARGET_PORT = process.env.DEPLOY_TARGET_PORT || "18080";
+const TARGET_BASE_URL = process.env.DEPLOY_TARGET_URL || `http://${TARGET_HOST}:${TARGET_PORT}`;
 
-const REQUEST_TIMEOUT_MS = 10000;
-const DIST_INDEX_PATH = path.resolve("dist", "index.html");
-
-const API_CHECKS = [
+const CHECKS = [
   {
-    label: "Scenario list",
+    id: "public-root",
+    endpoint: "/",
+    validate: validatePublicRoot,
+  },
+  {
+    id: "scenario-list",
     endpoint: "/api/scenarios",
-    validate: (body) =>
-      Array.isArray(body.scenarios) && typeof body.count === "number",
-    expected: "JSON with scenarios[] and count",
+    validate: validateScenarioList,
   },
   {
-    label: "TourAPI area-code proxy",
+    id: "tour-area-code",
     endpoint: "/api/tour/area-code",
-    validate: (body) => {
-      const resultCode = body?.response?.header?.resultCode;
-      const items = body?.response?.body?.items?.item;
-      const explicitFallbackError =
-        typeof body?.code === "string" &&
-        ["TOUR_API_KEY_MISSING", "TOUR_API_UPSTREAM_ERROR"].includes(body.code);
-      return (resultCode === "0000" && Array.isArray(items)) || explicitFallbackError;
-    },
-    expected: "TourAPI resultCode 0000 with area items or explicit fallback-compatible error",
+    validate: validateTourAreaCode,
   },
   {
-    label: "Sample scenario detail",
+    id: "scenario-detail",
     endpoint: "/api/scenarios/scen_sample_01",
-    validate: (body) => Boolean(body?.id && body?.parameters),
-    expected: "JSON scenario detail with parameters",
+    validate: validateScenarioDetail,
   },
   {
-    label: "Shared scenario restore",
+    id: "scenario-share",
     endpoint: "/api/scenarios/share/token_gn_winter_2026",
-    validate: (body) => Boolean(body?.share_token && body?.parameters?.plan),
-    expected: "JSON shared scenario with plan parameters",
+    validate: validateSharedScenario,
   },
 ];
 
-function requestPath(endpoint) {
+function parseJson(body, endpoint) {
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new Error(`${endpoint} returned non-JSON response`);
+  }
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+export function validateStatus(result, allowedStatuses = []) {
+  assert(
+    allowedStatuses.includes(result.statusCode),
+    `${result.endpoint} returned HTTP ${result.statusCode}`,
+  );
+}
+
+export async function validatePublicRoot(result, request) {
+  validateStatus(result, [200]);
+  assert(result.body.includes('id="root"'), "public root does not include React mount element");
+
+  const assetPaths = Array.from(
+    result.body.matchAll(/(?:src|href)="([^"]*\/assets\/[^"]+)"/g),
+    (match) => match[1],
+  );
+  const scriptPath = assetPaths.find((assetPath) => assetPath.endsWith(".js"));
+  const stylePath = assetPaths.find((assetPath) => assetPath.endsWith(".css"));
+
+  assert(scriptPath, "public root does not reference a JavaScript bundle");
+  assert(stylePath, "public root does not reference a CSS bundle");
+
+  const assetResults = await Promise.all([request(scriptPath), request(stylePath)]);
+  for (const assetResult of assetResults) {
+    validateStatus(assetResult, [200]);
+    assert(assetResult.body.length > 0, `${assetResult.endpoint} returned an empty static asset`);
+  }
+
+  return `React root + static bundle references OK (${assetPaths.length} assets)`;
+}
+
+export function validateScenarioList(result) {
+  validateStatus(result, [200]);
+  const payload = parseJson(result.body, result.endpoint);
+  assert(Array.isArray(payload.scenarios), "scenario list does not include scenarios array");
+  assert(Number.isInteger(payload.count), "scenario list does not include count");
+  assert(payload.count === payload.scenarios.length, "scenario count does not match scenarios array length");
+  return `${payload.count} scenario(s) listed`;
+}
+
+export function validateTourAreaCode(result) {
+  if (result.statusCode >= 200 && result.statusCode < 300) {
+    const payload = parseJson(result.body, result.endpoint);
+    const header = payload?.response?.header;
+    assert(header?.resultCode, "TourAPI proxy response does not include response.header.resultCode");
+    return `TourAPI proxy response OK (resultCode ${header.resultCode})`;
+  }
+
+  validateStatus(result, [429, 502, 503, 504]);
+  const payload = parseJson(result.body, result.endpoint);
+  assert(payload?.error?.code, "TourAPI fallback-compatible error does not include error.code");
+  return `TourAPI fallback-compatible error OK (${payload.error.code})`;
+}
+
+export function validateScenarioDetail(result) {
+  validateStatus(result, [200]);
+  const payload = parseJson(result.body, result.endpoint);
+  assert(payload.id === "scen_sample_01", "scenario detail id does not match baseline scenario");
+  assert(payload.parameters?.plan?.name, "scenario detail does not include plan parameters");
+  assert(Number.isFinite(Number(payload.parameters?.selectedHour)), "scenario detail does not include selectedHour");
+  return `scenario ${payload.id} restores plan "${payload.parameters.plan.name}"`;
+}
+
+export function validateSharedScenario(result) {
+  validateStatus(result, [200]);
+  const payload = parseJson(result.body, result.endpoint);
+  assert(payload.share_token === "token_gn_winter_2026", "shared scenario token does not match baseline token");
+  assert(payload.parameters?.plan?.name, "shared scenario does not include plan parameters");
+
+  const basis = payload.parameters?.selectedFestivalBasis;
+  const selectedFestivalStatus = basis?.contentId
+    ? `selected festival basis preserved (${basis.contentId})`
+    : "legacy scenario fallback-compatible: selectedFestivalBasis not present";
+
+  return `share restore OK, ${selectedFestivalStatus}`;
+}
+
+function requestEndpoint(endpoint) {
   return new Promise((resolve, reject) => {
     const url = new URL(endpoint, TARGET_BASE_URL);
-    const client = url.protocol === "https:" ? https : http;
-    const req = client.get(url, { timeout: REQUEST_TIMEOUT_MS }, (res) => {
+    const req = http.get(url, { timeout: 10000 }, (res) => {
       let data = "";
-      res.on("data", (chunk) => {
-        data += chunk;
-      });
+      res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
         resolve({
           endpoint,
-          url: url.toString(),
-          statusCode: res.statusCode ?? 0,
-          contentType: String(res.headers["content-type"] ?? ""),
-          bytes: Buffer.byteLength(data),
-          bodyText: data,
+          statusCode: res.statusCode,
+          headers: res.headers,
+          body: data,
+          bytes: data.length,
         });
       });
     });
 
-    req.on("error", (err) =>
-      reject(new Error(`${endpoint} connection error: ${err.message}`)),
-    );
+    req.on("error", (err) => reject(new Error(`[FAIL] ${endpoint} connection error: ${err.message}`)));
     req.on("timeout", () => {
       req.destroy();
-      reject(new Error(`${endpoint} timed out after ${REQUEST_TIMEOUT_MS}ms`));
+      reject(new Error(`[FAIL] ${endpoint} connection timed out after 10000ms`));
     });
   });
 }
 
-async function withRetry(checkFn, label) {
-  let lastError;
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    try {
-      return await checkFn();
-    } catch (error) {
-      lastError = error;
-      if (attempt < 2) {
-        console.log(`  [RETRY] ${label} retrying (attempt ${attempt + 1})...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+export async function runDeployCheck() {
+  console.log(`[CHECK] Checking deployment health on ${TARGET_BASE_URL}...`);
+  let successCount = 0;
+
+  for (const check of CHECKS) {
+    let attempts = 0;
+    let success = false;
+
+    while (attempts < 2 && !success) {
+      attempts += 1;
+      try {
+        const result = await requestEndpoint(check.endpoint);
+        const detail = await check.validate(result, requestEndpoint);
+        console.log(
+          `  [OK] ${check.id} ${result.endpoint} -> HTTP ${result.statusCode} (${result.bytes} bytes) | ${detail}`,
+        );
+        successCount += 1;
+        success = true;
+      } catch (error) {
+        if (attempts >= 2) {
+          console.error(`  [FAIL] ${check.id}: ${error.message}`);
+        } else {
+          console.log(`  [RETRY] ${check.id} retrying (attempt ${attempts + 1})...`);
+          await new Promise((r) => setTimeout(r, 1000));
+        }
       }
     }
   }
-  throw lastError;
-}
 
-function assertStatusOk(result) {
-  if (result.statusCode < 200 || result.statusCode >= 400) {
-    throw new Error(`${result.endpoint} returned HTTP ${result.statusCode}`);
-  }
-}
-
-function extractBundleAssets(html) {
-  return Array.from(
-    html.matchAll(/assets\/(index-[A-Za-z0-9_-]+\.(?:js|css))/g),
-    (match) => match[1],
-  );
-}
-
-function getExpectedLocalAssets() {
-  if (!fs.existsSync(DIST_INDEX_PATH)) return [];
-  return extractBundleAssets(fs.readFileSync(DIST_INDEX_PATH, "utf8"));
-}
-
-async function checkRootAndBundle() {
-  const root = await requestPath("/");
-  assertStatusOk(root);
-  if (!root.contentType.includes("text/html")) {
-    throw new Error(`root content-type is ${root.contentType || "missing"}`);
-  }
-
-  const remoteAssets = extractBundleAssets(root.bodyText);
-  if (remoteAssets.length === 0) {
-    throw new Error("root HTML does not reference hashed JS/CSS assets");
-  }
-
-  const localAssets = getExpectedLocalAssets();
-  if (localAssets.length > 0) {
-    const missing = localAssets.filter((asset) => !remoteAssets.includes(asset));
-    if (missing.length > 0) {
-      throw new Error(
-        `remote bundle differs from local dist: missing ${missing.join(", ")}`,
-      );
-    }
-  }
-
-  for (const asset of remoteAssets) {
-    const assetResult = await requestPath(`/assets/${asset}`);
-    assertStatusOk(assetResult);
-    if (assetResult.bytes === 0) {
-      throw new Error(`/assets/${asset} returned an empty response`);
-    }
-  }
-
-  return {
-    statusCode: root.statusCode,
-    bytes: root.bytes,
-    remoteAssets,
-    localAssets,
-  };
-}
-
-async function checkApi({ label, endpoint, validate, expected }) {
-  const result = await requestPath(endpoint);
-  assertStatusOk(result);
-
-  let parsed;
-  try {
-    parsed = JSON.parse(result.bodyText);
-  } catch {
-    throw new Error(`${endpoint} did not return valid JSON`);
-  }
-
-  if (!validate(parsed)) {
-    throw new Error(`${endpoint} did not match expected shape: ${expected}`);
-  }
-
-  return {
-    label,
-    endpoint,
-    statusCode: result.statusCode,
-    bytes: result.bytes,
-  };
-}
-
-async function runDeployCheck() {
-  console.log(`[CHECK] Checking deployment health on ${TARGET_BASE_URL}...`);
-  const passed = [];
-
-  try {
-    const bundle = await withRetry(checkRootAndBundle, "Public root and static bundle");
-    console.log(
-      `  [OK] / -> HTTP ${bundle.statusCode} (${bundle.bytes} bytes), assets: ${bundle.remoteAssets.join(", ")}`,
-    );
-    if (bundle.localAssets.length > 0) {
-      console.log(`  [OK] Static bundle matches local dist: ${bundle.localAssets.join(", ")}`);
-    } else {
-      console.log("  [INFO] Local dist/index.html not found; verified remote assets only.");
-    }
-    passed.push("root+bundle");
-  } catch (error) {
-    console.error(`  [FAIL] ${error.message}`);
-  }
-
-  for (const check of API_CHECKS) {
-    try {
-      const result = await withRetry(() => checkApi(check), check.endpoint);
-      console.log(
-        `  [OK] ${result.endpoint} (${result.label}) -> HTTP ${result.statusCode} (${result.bytes} bytes)`,
-      );
-      passed.push(check.endpoint);
-    } catch (error) {
-      console.error(`  [FAIL] ${error.message}`);
-    }
-  }
-
-  const totalChecks = API_CHECKS.length + 1;
-  if (passed.length === totalChecks) {
-    console.log(`\n[SUCCESS] All ${totalChecks} deployment verification gates PASSED.`);
-    console.log(
-      "[SUMMARY] public_url=PASS static_bundle=PASS api_endpoints=PASS selected_festival_flow=PASS",
-    );
+  if (successCount === CHECKS.length) {
+    console.log(`\n[SUCCESS] All ${CHECKS.length} deployment health checks PASSED successfully!`);
     process.exit(0);
+  } else {
+    console.error(`\n[WARNING] Health check failed (${successCount}/${CHECKS.length} checks passed).`);
+    process.exit(1);
   }
-
-  console.error(`\n[WARNING] Deployment verification failed (${passed.length}/${totalChecks} gates passed).`);
-  process.exit(1);
 }
 
-runDeployCheck();
+const currentFile = fileURLToPath(import.meta.url);
+const invokedFile = process.argv[1] ? path.resolve(process.argv[1]) : "";
+
+if (path.resolve(currentFile) === invokedFile) {
+  runDeployCheck();
+}

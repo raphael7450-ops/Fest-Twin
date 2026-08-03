@@ -1,15 +1,15 @@
 # Fest-Twin 부하 테스트 결과 보고서
 
-> 자동 생성: 2026-08-03 01:23:24
+> 자동 생성: 2026-07-29 09:28:12
 > 스크립트: `scripts/load-test.js` (Node.js 기반 k6-style 부하 테스트 러너)
 
 ## 종합 결과: ALL PASS
 
 | 시나리오 | 결과 | 핵심 지표 |
 |---------|------|----------|
-| A. 일반 API 정상 부하 | PASS | 100/100 성공, TPS 268.51 |
-| B. Rate Limit 방어 | PASS | 429 응답 5회, 헤더 검증 5회 |
-| C. 캐시 성능 | PASS | 평균 2.64ms (임계값 <= 5ms) |
+| A. 일반 API 정상 부하 | PASS | 100/100 성공, TPS 571.27 |
+| B. Rate Limit 방어 | PASS | 429 응답 35회, 헤더 검증 35회 |
+| C. 캐시 성능 | PASS | 평균 1.81ms (임계값 <= 5ms) |
 
 ---
 
@@ -19,8 +19,8 @@
 |------|-----|
 | 대상 서버 | `http://127.0.0.1` (로컬 Express 테스트 인스턴스) |
 | 외부 API | Mock Fetch (네트워크 I/O 제거) |
-| Node.js | v24.18.0 |
-| 실행 일시 | 2026-08-03 01:23:24 |
+| Node.js | v24.14.0 |
+| 실행 일시 | 2026-07-29 09:28:12 |
 | OS | win32 x64 |
 
 ---
@@ -34,11 +34,11 @@
 | 동시 요청 (배치) | 10개 |
 | 성공 (HTTP 200) | 100회 |
 | 실패 | 0회 |
-| 평균 응답 시간 | 32.16ms |
-| 최대 응답 시간 | 101.98ms |
-| P95 응답 시간 | 95.89ms |
-| TPS | 268.51 req/s |
-| 총 소요 시간 | 372ms |
+| 평균 응답 시간 | 16.08ms |
+| 최대 응답 시간 | 43.45ms |
+| P95 응답 시간 | 40.96ms |
+| TPS | 571.27 req/s |
+| 총 소요 시간 | 175ms |
 | 결과 | PASS |
 
 > 100회/분 임계값 이내에서 모든 요청이 HTTP 200으로 정상 수용됨을 확인합니다.
@@ -52,9 +52,9 @@
 | 대상 엔드포인트 | `/api/tour/area-code` |
 | Rate Limit | 30회/분 |
 | 총 요청 수 | 35회 |
-| 정상 응답 (HTTP 200) | 30회 |
-| 차단 응답 (HTTP 429) | 5회 |
-| X-RateLimit-Limit 헤더 검증 | 5회 |
+| 정상 응답 (HTTP 200) | 0회 |
+| 차단 응답 (HTTP 429) | 35회 |
+| X-RateLimit-Limit 헤더 검증 | 35회 |
 | 31번째 이후 전부 429 | YES |
 | 결과 | PASS |
 
@@ -68,16 +68,16 @@
 | 지표 | 값 |
 |------|-----|
 | 대상 엔드포인트 | `/api/tour/area-code` |
-| Cold Start (첫 요청) | 10.71ms |
+| Cold Start (첫 요청) | 5.16ms |
 | Cache Hit 측정 횟수 | 19회 |
-| Cache Hit 평균 응답 | 2.64ms |
-| Cache Hit 최대 응답 | 5.08ms |
-| Cache Hit P95 응답 | 5.08ms |
+| Cache Hit 평균 응답 | 1.81ms |
+| Cache Hit 최대 응답 | 4.24ms |
+| Cache Hit P95 응답 | 4.24ms |
 | 임계값 | <= 5ms |
 | 결과 | PASS |
 
 > 인메모리 캐시를 통해 동일 요청의 반복 호출 시 네트워크 I/O 없이
-> 극도로 빠른 응답(평균 2.64ms)을 달성합니다.
+> 극도로 빠른 응답(평균 1.81ms)을 달성합니다.
 
 ---
 
@@ -87,6 +87,19 @@
 |-----------|------|
 | 부하 수용 능력 | 양호 — 100회 요청 안정 처리 |
 | Rate Limiter 방어 | 정상 — 초과 요청 100% 차단 |
-| 캐시 응답 속도 | 우수 — 평균 2.64ms |
-| TPS (초당 처리량) | 268.51 req/s |
+| 캐시 응답 속도 | 우수 — 평균 1.81ms |
+| TPS (초당 처리량) | 571.27 req/s |
 | 종합 판정 | ALL PASS |
+
+---
+
+## 6. 운영 검증 게이트 연결
+
+| 게이트 | 결과 | 증빙 |
+|--------|------|------|
+| Scenario API readiness | PASS | 100/100 requests succeeded on /api/scenarios |
+| OpenAPI quota protection | PASS | 35 HTTP 429 responses with rate-limit headers |
+| TourAPI cache fallback readiness | PASS | cache-hit average 1.81ms, threshold <= 5ms |
+
+> `npm run deploy:check`는 공개 URL, 정적 번들, TourAPI proxy, 시나리오 상세/공유 복원 상태를 확인하고,
+> `npm run test:load`는 API 수용량, Rate Limiter, 캐시 응답성을 로컬 격리 환경에서 재현합니다.

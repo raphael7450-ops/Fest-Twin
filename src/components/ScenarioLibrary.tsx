@@ -24,7 +24,7 @@ import {
 interface ScenarioLibraryProps {
   plan: FestivalPlan; // 현재 축제 기획안
   selectedHour: number; // 선택된 피크 시간대
-  selectedFestivalBasis?: SelectedFestivalBasis | null; // 선택된 TourAPI 축제 기준
+  selectedFestivalBasis?: SelectedFestivalBasis | null; // 선택 TourAPI 축제 기준
   onLoadScenario: (scenario: SavedScenario) => void; // 시나리오 불러오기 콜백
 }
 
@@ -58,7 +58,7 @@ export function ScenarioLibrary({
     setCopyNotice({ text: "시나리오가 저장되었습니다. 하단 목록의 [공유 링크]를 눌러 URL을 복사하거나 열 수 있습니다." });
     setTimeout(() => setCopyNotice(null), 4000);
 
-    saveServerScenario(plan, selectedHour, undefined, selectedFestivalBasis).then((serverSaved) => {
+    saveServerScenario(plan, selectedHour, selectedFestivalBasis).then((serverSaved) => {
       setScenarios((current) =>
         [serverSaved, ...current.filter((item) => item.id !== serverSaved.id && item.id !== localSaved.id)].slice(0, 10),
       );

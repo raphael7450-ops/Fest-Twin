@@ -2,9 +2,7 @@ export function GovernmentHeader() {
   return (
     <header className="government-header">
       <div className="government-header__brand">
-        <span className="government-header__mark" aria-hidden="true">
-          FT
-        </span>
+        <span className="government-header__mark" aria-hidden="true">FT</span>
         <div className="government-header__content">
           <p className="eyebrow">B2G SaaS Control Center</p>
           <h1>페스트트윈(Fest-Twin)</h1>
