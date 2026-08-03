@@ -55,6 +55,19 @@ interface TourApiItem {
   mapy?: string | number;
 }
 
+interface RegionalFestivalApiRecord {
+  id: string;
+  name: string;
+  region: string;
+  localGovernment?: string;
+  venue?: string;
+  startDate?: string;
+  endDate?: string;
+  periodLabel?: string;
+  sourceName?: string;
+  sourceFile?: string;
+}
+
 type TourApiOperation =
   | "area-code"
   | "festivals"
@@ -412,6 +425,64 @@ function getRegionalSupplementFestivalItems(plan: FestivalPlan): TourApiItem[] {
       eventenddate: record.endDate.replace(/-/g, ""),
       overview: `${record.sourceName} (${record.sourceUrl})`,
     }));
+}
+
+function planRangeDays(plan: FestivalPlan) {
+  const start = Date.parse(`${plan.startDate}T00:00:00.000Z`);
+  const end = Date.parse(`${plan.endDate}T00:00:00.000Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return 0;
+  return Math.floor((end - start) / 86400000) + 1;
+}
+
+function shouldFetchRegionalSupplement(plan: FestivalPlan, festivalItems: TourApiItem[]) {
+  return festivalItems.length === 0 || planRangeDays(plan) >= 30;
+}
+
+function buildRegionalFestivalSupplementUrl(plan: FestivalPlan) {
+  const params = new URLSearchParams();
+  params.set("region", plan.region);
+  params.set("startDate", plan.startDate);
+  params.set("endDate", plan.endDate);
+  params.set("keywords", plan.keywords.join(","));
+  params.set("limit", String(MAX_FESTIVAL_CANDIDATES));
+  return `/api/regional-festivals?${params.toString()}`;
+}
+
+function regionalFestivalRecordToTourApiItem(record: RegionalFestivalApiRecord): TourApiItem {
+  return {
+    contentid: record.id,
+    title: record.name,
+    addr1: [record.region, record.localGovernment, record.venue].filter(Boolean).join(" "),
+    eventstartdate: record.startDate?.replace(/-/g, ""),
+    eventenddate: record.endDate?.replace(/-/g, ""),
+    overview: `${record.sourceName ?? "문화체육관광부_지역축제 정보"}${
+      record.sourceFile ? ` (${record.sourceFile})` : ""
+    }`,
+  };
+}
+
+async function fetchRegionalSupplementFestivalItems(
+  plan: FestivalPlan,
+  fetchImpl: typeof fetch,
+  signal?: AbortSignal,
+): Promise<TourApiItem[]> {
+  try {
+    const response = await fetchImpl(buildRegionalFestivalSupplementUrl(plan), { signal });
+    if (!response.ok) throw new Error(`Regional festival DB HTTP ${response.status}`);
+    const payload = (await response.json()) as { records?: RegionalFestivalApiRecord[] };
+    const records = Array.isArray(payload.records) ? payload.records : [];
+    return records.length > 0
+      ? records.map(regionalFestivalRecordToTourApiItem)
+      : getRegionalSupplementFestivalItems(plan);
+  } catch (error) {
+    if (
+      signal?.aborted ||
+      (typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
+    ) {
+      throw error;
+    }
+    return getRegionalSupplementFestivalItems(plan);
+  }
 }
 
 function mergeMatchingFestivalDetail(searchItem: TourApiItem, detailItem: TourApiItem | undefined) {
@@ -915,7 +986,9 @@ export async function getFestivalCandidates(
     );
   }
 
-  const supplementalItems = getRegionalSupplementFestivalItems(plan);
+  const supplementalItems = shouldFetchRegionalSupplement(plan, festivalItems)
+    ? await fetchRegionalSupplementFestivalItems(plan, fetchImpl, options.signal)
+    : [];
   const supplementalIds = new Set(
     festivalItems.map((item) => String(item.contentid ?? "")).concat(
       festivalItems.map((item) => String(item.title ?? "").replace(/\s+/g, "")),

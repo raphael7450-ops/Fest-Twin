@@ -1,0 +1,94 @@
+import { describe, expect, it, vi } from "vitest";
+import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import { getFestivalCandidates } from "./tourApiAdapter";
+
+function tourApiPayload(items: unknown, totalCount?: number) {
+  const normalizedCount = totalCount ?? (Array.isArray(items) ? items.length : 1);
+
+  return {
+    response: {
+      header: { resultCode: "0000", resultMsg: "OK" },
+      body: {
+        items: normalizedCount === 0 ? "" : { item: items },
+        numOfRows: 10,
+        pageNo: 1,
+        totalCount: normalizedCount,
+      },
+    },
+  };
+}
+
+function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number } = {}) {
+  return {
+    ok: options.ok ?? true,
+    status: options.status ?? 200,
+    json: async () => payload,
+  } as Response;
+}
+
+describe("TourAPI candidate regional DB supplement", () => {
+  it("uses server regional festival DB records as selectable candidates", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "34", name: "충청남도" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        return jsonResponse(tourApiPayload([], 0));
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({
+          count: 1,
+          records: [
+            {
+              id: "mcst-boryeong-mud-2026",
+              year: 2026,
+              name: "제29회 보령머드축제",
+              region: "충청남도",
+              localGovernment: "보령시",
+              type: "문화예술",
+              venue: "대천해수욕장일원",
+              startDate: "2026-07-24",
+              endDate: "2026-08-09",
+              budgetMillionKrw: 3500,
+              visitors: 1690359,
+              sourceName: "문화체육관광부_지역축제 정보",
+              sourceFile: "2026년 지역축제 개최 계획 현황(공개용).xlsx",
+            },
+          ],
+        });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "보령머드축제",
+        region: "충청남도",
+        startDate: "2026-07-01",
+        endDate: "2026-07-31",
+        keywords: ["보령", "머드"],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost").pathname)).toContain(
+      "/api/regional-festivals",
+    );
+    expect(candidates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "mcst-boryeong-mud-2026",
+          title: "제29회 보령머드축제",
+          address: "충청남도 보령시 대천해수욕장일원",
+          searchScope: "regional-supplement",
+        }),
+      ]),
+    );
+  });
+});
