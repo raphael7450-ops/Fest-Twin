@@ -188,6 +188,7 @@ export interface DemandBackdataSimilarFestival {
   visitors?: number;
   similarityScore: number;
   sourceName: string;
+  sourceFile?: string;
 }
 
 export interface DemandBackdataContext {
