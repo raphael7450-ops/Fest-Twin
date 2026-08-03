@@ -275,6 +275,7 @@ describe("public data adapters", () => {
       "/api/tour/area-code",
       "/api/tour/festivals",
       "/api/tour/detail",
+      "/api/tour/detail-intro",
     ]);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
@@ -521,6 +522,7 @@ describe("public data adapters", () => {
       "/api/tour/festivals",
       "/api/tour/festivals",
       "/api/tour/detail",
+      "/api/tour/detail-intro",
     ]);
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
     expect(urls[2].searchParams.get("eventStartDate")).toBe("20250101");

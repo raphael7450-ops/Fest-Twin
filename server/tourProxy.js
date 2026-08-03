@@ -32,6 +32,10 @@ const endpointConfig = {
     operation: "detailCommon2",
     allowedParams: new Set(["contentId"]),
   },
+  "detail-intro": {
+    operation: "detailIntro2",
+    allowedParams: new Set(["contentId", "contentTypeId"]),
+  },
   nearby: {
     operation: "locationBasedList2",
     allowedParams: new Set(["numOfRows", "pageNo", "arrange", "mapX", "mapY", "radius"]),
@@ -43,6 +47,7 @@ const numericParams = new Set([
   "pageNo",
   "areaCode",
   "contentId",
+  "contentTypeId",
   "mapX",
   "mapY",
   "radius",
@@ -87,6 +92,10 @@ function buildTourApiUrl(endpoint, apiKey, query) {
   url.searchParams.set("MobileOS", MOBILE_OS);
   url.searchParams.set("MobileApp", MOBILE_APP);
   url.searchParams.set("_type", "json");
+
+  for (const [key, value] of Object.entries(config.defaultParams ?? {})) {
+    url.searchParams.set(key, String(value));
+  }
 
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== "") {

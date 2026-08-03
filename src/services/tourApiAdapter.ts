@@ -37,6 +37,9 @@ export interface FestivalCandidate {
   imageUrl?: string;
   budgetMillionKrw?: number;
   visitors?: number;
+  operatingTimeText?: string;
+  openingHour?: number;
+  closingHour?: number;
   searchScope: FestivalSearchScope;
   sourceDetails?: MetricEvidenceSourceDetail[];
 }
@@ -53,6 +56,9 @@ interface TourApiItem {
   eventstartdate?: string;
   eventenddate?: string;
   overview?: string;
+  playtime?: string;
+  eventplace?: string;
+  usetimefestival?: string;
   mapx?: string | number;
   mapy?: string | number;
   budgetMillionKrw?: number;
@@ -78,6 +84,7 @@ type TourApiOperation =
   | "area-code"
   | "festivals"
   | "detail"
+  | "detail-intro"
   | "nearby";
 
 type FestivalSearchScope = "exact-period" | "annual-region" | "regional-supplement";
@@ -172,6 +179,7 @@ function festivalRecordFields(item: TourApiItem) {
     { label: "addr1", value: item.addr1 ?? "-" },
     { label: "eventstartdate", value: formatTourApiDate(item.eventstartdate) },
     { label: "eventenddate", value: formatTourApiDate(item.eventenddate) },
+    { label: "playtime", value: item.playtime ?? "-" },
     { label: "mapx/mapy", value: `${item.mapx ?? "-"}, ${item.mapy ?? "-"}` },
   ];
 }
@@ -299,6 +307,23 @@ function formatTourApiDateForInput(date: string | number | undefined) {
   if (!/^\d{8}$/.test(value)) return "";
 
   return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+}
+
+function parseOperatingHoursFromText(value?: string) {
+  if (!value) return undefined;
+
+  const normalized = value.replace(/[：]/g, ":").replace(/\s+/g, " ").trim();
+  const matches = [...normalized.matchAll(/(\d{1,2})(?::(\d{2}))?\s*(?:시)?/g)]
+    .map((match) => Number(match[1]))
+    .filter((hour) => Number.isFinite(hour) && hour >= 0 && hour <= 24);
+
+  if (matches.length < 2) return undefined;
+
+  const openingHour = Math.floor(matches[0]);
+  const closingHour = Math.floor(matches[1]);
+  if (closingHour <= openingHour) return undefined;
+
+  return { openingHour, closingHour };
 }
 
 function parseTourApiDate(value: string | number | undefined) {
@@ -508,6 +533,17 @@ function mergeMatchingFestivalDetail(searchItem: TourApiItem, detailItem: TourAp
   };
 }
 
+function mergeMatchingFestivalIntro(searchItem: TourApiItem, introItem: TourApiItem | undefined) {
+  if (!introItem) return searchItem;
+
+  return {
+    ...searchItem,
+    playtime: introItem.playtime ?? searchItem.playtime,
+    eventplace: introItem.eventplace ?? searchItem.eventplace,
+    usetimefestival: introItem.usetimefestival ?? searchItem.usetimefestival,
+  };
+}
+
 function buildExactFestivalSearchParams(plan: FestivalPlan, areaCode: string | number) {
   return {
     numOfRows: FESTIVAL_SEARCH_ROWS,
@@ -543,6 +579,10 @@ function validateItem(operation: TourApiOperation, value: unknown): TourApiItem 
     if (!hasText(item.code) || !hasText(item.name)) {
       throw new Error(`TourAPI ${operation} item is missing code or name`);
     }
+    return item;
+  }
+
+  if (operation === "detail-intro") {
     return item;
   }
 
@@ -833,6 +873,9 @@ function mapFestivalCandidate(
   sourceDetails: MetricEvidenceSourceDetail[],
 ): FestivalCandidate | undefined {
   if (!isValidContentItem(item)) return undefined;
+  const operatingHours = parseOperatingHoursFromText(
+    typeof item.playtime === "string" ? item.playtime : undefined,
+  );
 
   const address =
     (typeof item.addr1 === "string" && item.addr1.trim().length > 0)
@@ -854,6 +897,8 @@ function mapFestivalCandidate(
       ? Number(item.budgetMillionKrw)
       : undefined,
     visitors: hasFiniteNumber(item.visitors) ? Number(item.visitors) : undefined,
+    operatingTimeText: typeof item.playtime === "string" ? item.playtime : undefined,
+    ...operatingHours,
     searchScope,
     sourceDetails,
   };
@@ -1018,14 +1063,28 @@ export async function getFestivalCandidates(
   const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
   const detailLookups = await Promise.all(
     detailCandidateItems.map((item) =>
-      fetchTourApiItems(
-        "detail",
-        { contentId: item.contentid },
-        fetchImpl,
-        options.signal,
-      )
-        .then((items) => ({ item: mergeMatchingFestivalDetail(item, items[0]), succeeded: true }))
-        .catch(() => ({ item, succeeded: false })),
+      Promise.allSettled([
+        fetchTourApiItems(
+          "detail",
+          { contentId: item.contentid },
+          fetchImpl,
+          options.signal,
+        ),
+        fetchTourApiItems(
+          "detail-intro",
+          { contentId: item.contentid, contentTypeId: 15 },
+          fetchImpl,
+          options.signal,
+        ),
+      ]).then(([detailResult, introResult]) => {
+        const detailItem = detailResult.status === "fulfilled" ? detailResult.value[0] : undefined;
+        const introItem = introResult.status === "fulfilled" ? introResult.value[0] : undefined;
+
+        return {
+          item: mergeMatchingFestivalIntro(mergeMatchingFestivalDetail(item, detailItem), introItem),
+          succeeded: detailResult.status === "fulfilled" || introResult.status === "fulfilled",
+        };
+      }),
     ),
   );
   const detailItems = [

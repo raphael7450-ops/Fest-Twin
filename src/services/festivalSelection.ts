@@ -76,6 +76,9 @@ function createFestivalTypePlanningPatch(
   candidate: FestivalCandidate,
   demandBackdata?: DemandBackdataContext,
 ): Partial<FestivalPlan> {
+  const verifiedOperatingTimePatch = createVerifiedOperatingTimePatch(candidate);
+  if (verifiedOperatingTimePatch) return verifiedOperatingTimePatch;
+
   const profile = classifyFestivalScheduleProfile(candidate, demandBackdata);
 
   if (profile === "countdown") {
@@ -122,6 +125,41 @@ function createFestivalTypePlanningPatch(
   }
 
   return {};
+}
+
+function createVerifiedOperatingTimePatch(candidate: FestivalCandidate): Partial<FestivalPlan> | undefined {
+  if (
+    typeof candidate.openingHour !== "number" ||
+    typeof candidate.closingHour !== "number" ||
+    candidate.closingHour <= candidate.openingHour
+  ) {
+    return undefined;
+  }
+
+  const hours = createOperatingHours(candidate.openingHour, candidate.closingHour);
+  return {
+    operatingHours: hours,
+    programs: [
+      {
+        id: "verified-operating-time",
+        name: candidate.operatingTimeText
+          ? `공식 운영시간 ${candidate.operatingTimeText}`
+          : "공식 운영시간 기준",
+        startHour: candidate.openingHour,
+        endHour: candidate.closingHour,
+        expectedDraw: 80,
+      },
+    ],
+  };
+}
+
+function createOperatingHours(openingHour: number, closingHour: number) {
+  const hours: number[] = [];
+  for (let hour = openingHour; hour < closingHour; hour += 2) {
+    hours.push(hour);
+  }
+  if (!hours.includes(closingHour)) hours.push(closingHour);
+  return hours;
 }
 
 function classifyFestivalScheduleProfile(

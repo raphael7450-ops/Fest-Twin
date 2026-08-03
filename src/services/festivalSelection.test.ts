@@ -140,6 +140,33 @@ describe("festivalSelection", () => {
     );
   });
 
+  it("uses verified operating time from the selected festival detail when available", () => {
+    const timedCandidate: FestivalCandidate = {
+      id: "timed-festival-2026",
+      title: "일반 지역문화축제",
+      address: "경기도 의정부시",
+      startDate: "2026-05-18",
+      endDate: "2026-05-25",
+      operatingTimeText: "09:30 ~ 22:00",
+      openingHour: 9,
+      closingHour: 22,
+      searchScope: "exact-period",
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, timedCandidate);
+
+    expect(nextPlan.operatingHours).toEqual([9, 11, 13, 15, 17, 19, 21, 22]);
+    expect(nextPlan.programs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "verified-operating-time",
+          startHour: 9,
+          endHour: 22,
+        }),
+      ]),
+    );
+  });
+
   it("preserves user-edited planning values when applying backdata recommendations", () => {
     const seoulLightCandidate: FestivalCandidate = {
       id: "4000001",

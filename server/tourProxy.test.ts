@@ -115,6 +115,25 @@ describe("TourAPI server proxy", () => {
     expect(upstreamUrl.searchParams.has("mapinfoYN")).toBe(false);
   });
 
+  it("forwards detailIntro2 for festival playtime without exposing the server key", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(tourApiPayload([{ contentid: "3439947", title: "Gangnam", playtime: "09:00~22:00" }])),
+    );
+
+    const { response, body } = await request(
+      "/api/tour/detail-intro?contentId=3439947&contentTypeId=15",
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(response.status).toBe(200);
+    expect(JSON.stringify(body)).not.toContain("server-key+/=");
+    const upstreamUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(upstreamUrl.pathname.endsWith("/detailIntro2")).toBe(true);
+    expect(upstreamUrl.searchParams.get("contentId")).toBe("3439947");
+    expect(upstreamUrl.searchParams.get("contentTypeId")).toBe("15");
+    expect(upstreamUrl.searchParams.has("introYN")).toBe(false);
+  });
+
   it.each([
     ["whitespace", "/api/tour/nearby?mapX=%20%20%20&mapY=37.52&radius=5000"],
     ["Infinity", "/api/tour/nearby?mapX=126.92&mapY=Infinity&radius=5000"],
