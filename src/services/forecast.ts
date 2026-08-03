@@ -1,32 +1,22 @@
-/**
- * 파일 : src/services/forecast.ts
- * 내용 : 유사 축제 실적, 주변 관광 정보, 기후 예보 및 소셜 트렌드를 결합한 시간대별 수요 예측 알고리즘 엔진
- * 수정 : 2026-07-24. 문체부 지역축제 실적 백데이터 연동 및 기후 가감율 산출 공식 통합
- */
-
-// 핵심 도메인 인터페이스 및 타입 정의 불러오기
 import type {
-  DemandBackdataContext, // 문체부 실적 백데이터 매칭 맥락
-  FestivalPlan, // 입력 축제 기획안 모델
-  ForecastResult, // 수요 예측 결과 DTO
-  RiskLevel, // 예측 신뢰도 및 위험 등급 타입
-  TourismContext, // TourAPI 관광 자원 맥락
-  TrendContext, // 소셜 트렌드 맥락
+  DemandBackdataContext,
+  FestivalPlan,
+  ForecastResult,
+  RiskLevel,
+  TourismContext,
+  TrendContext,
 } from "../domain/types";
 
-// 수치를 최소값(min)과 최대값(max) 사이에 제한하는 유틸리티 클램프 함수
 export function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-// 수치 배열의 산술 평균을 구하는 유틸리티 함수
 function average(values: number[]) {
   return values.length === 0
     ? 0
     : values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-// 연동된 공공데이터 수량 및 데이터 연동 상태(live/sample)에 따라 예측 신뢰도를 산출하는 함수
 function confidenceFromEvidence(
   tourism: TourismContext,
   trends: TrendContext,
@@ -78,26 +68,34 @@ function normalizeText(value: string) {
   return value.replace(/\s+/g, "").toLowerCase();
 }
 
+function hasAny(text: string, keywords: string[]) {
+  return keywords.some((keyword) => text.includes(normalizeText(keyword)));
+}
+
 function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBackdataContext) {
   const bestBackdata = demandBackdata?.similarFestivalBaselines[0];
   const evidenceText = normalizeText(
-    `${bestBackdata?.type ?? ""} ${bestBackdata?.periodLabel ?? ""} ${plan.name} ${plan.keywords.join(" ")}`,
+    `${bestBackdata?.type ?? ""} ${bestBackdata?.periodLabel ?? ""} ${bestBackdata?.name ?? ""} ${plan.name} ${plan.keywords.join(" ")}`,
   );
 
   if (
-    evidenceText.includes("카운트다운") ||
-    evidenceText.includes("countdown") ||
-    evidenceText.includes("새해") ||
-    evidenceText.includes("연말") ||
-    evidenceText.includes("불꽃") ||
-    evidenceText.includes("midnight") ||
-    evidenceText.includes("newyear")
+    hasAny(evidenceText, [
+      "카운트다운",
+      "countdown",
+      "새해",
+      "연말",
+      "타종",
+      "제야",
+      "해맞이",
+      "midnight",
+      "newyear",
+    ])
   ) {
     return {
       label: bestBackdata?.type ?? "야간 카운트다운형",
       sourceLabel: bestBackdata
         ? `${bestBackdata.sourceName} ${bestBackdata.type}`
-        : "축제명/키워드",
+        : "축제명 키워드",
       weightForHour: (hour: number) => {
         if (hour === 24 || hour === 0) return 2.2;
         if (hour === 23) return 1.55;
@@ -109,15 +107,26 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
   }
 
   if (
-    evidenceText.includes("먹거리") ||
-    evidenceText.includes("특산물") ||
-    evidenceText.includes("푸드")
+    hasAny(evidenceText, [
+      "먹거리",
+      "음식",
+      "푸드",
+      "미식",
+      "커피",
+      "맥주",
+      "와인",
+      "수산물",
+      "축산물",
+      "농산물",
+      "한우",
+      "김치",
+    ])
   ) {
     return {
-      label: bestBackdata?.type ?? "먹거리/특산물",
+      label: bestBackdata?.type ?? "먹거리·특산물형",
       sourceLabel: bestBackdata
         ? `${bestBackdata.sourceName} ${bestBackdata.type}`
-        : "축제명·키워드",
+        : "축제명 키워드",
       weightForHour: (hour: number) => {
         if (hour >= 11 && hour <= 13) return 1.32;
         if (hour >= 18 && hour <= 20) return 1.28;
@@ -127,17 +136,12 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
     };
   }
 
-  if (
-    evidenceText.includes("미디어") ||
-    evidenceText.includes("빛") ||
-    evidenceText.includes("야간") ||
-    evidenceText.includes("라이트")
-  ) {
+  if (hasAny(evidenceText, ["야간", "밤", "빛", "라이트", "미디어", "조명", "드론", "불꽃"])) {
     return {
       label: bestBackdata?.type ?? "야간 미디어형",
       sourceLabel: bestBackdata
         ? `${bestBackdata.sourceName} ${bestBackdata.type}`
-        : "축제명·키워드",
+        : "축제명 키워드",
       weightForHour: (hour: number) => {
         if (hour === 20) return 1.4;
         if (hour >= 18 && hour <= 22) return 1.22;
@@ -148,19 +152,31 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
   }
 
   if (
-    evidenceText.includes("가족") ||
-    evidenceText.includes("체험") ||
-    evidenceText.includes("어린이")
+    hasAny(evidenceText, [
+      "꽃",
+      "튤립",
+      "벚꽃",
+      "장미",
+      "국화",
+      "유채",
+      "정원",
+      "가족",
+      "어린이",
+      "체험",
+      "낮",
+      "주간",
+    ])
   ) {
     return {
-      label: bestBackdata?.type ?? "가족/체험형",
+      label: bestBackdata?.type ?? "주간 가족·체험형",
       sourceLabel: bestBackdata
         ? `${bestBackdata.sourceName} ${bestBackdata.type}`
-        : "축제명·키워드",
+        : "축제명 키워드",
       weightForHour: (hour: number) => {
+        if (hour >= 10 && hour <= 13) return 1.18;
         if (hour >= 14 && hour <= 17) return 1.3;
         if (hour >= 18 && hour <= 20) return 1.04;
-        return 0.96;
+        return 0.9;
       },
     };
   }
@@ -247,7 +263,7 @@ export function createForecast(
         label: "Naver DataLab 검색량 보정",
         impact: Math.round((trendMultiplier - 1) * 100),
         description:
-          "기간별 상대 검색량 평균과 최근 상승률을 제한 계수로 반영해 사전 관심도 급등 또는 냉각을 보정합니다.",
+          "기간별 검색량 평균과 최근 상승률을 제한된 계수로 반영해 사전 관심도 급등 또는 둔화를 보정합니다.",
       },
       {
         label: "TourAPI 주변 관광 매력도",
@@ -262,10 +278,10 @@ export function createForecast(
         impact: Math.round(similarDemand),
         description:
           demandBackdataBaseline > 0
-            ? "문화체육관광부 지역축제 정보의 방문객 수, 예산, 유형 유사도를 수요 기준선으로 반영했습니다."
+            ? "문화체육관광부 지역축제 정보의 방문객, 예산, 유형 유사도를 수요 기준선으로 반영했습니다."
             : tourism.provenance.sourceStatus === "live"
-            ? "TourAPI 행사 메타데이터로 산정한 실제 방문객 집계가 아닌 추정 프록시입니다."
-            : "샘플 축제 메타데이터로 산정한 실제 방문객 집계가 아닌 추정 프록시입니다.",
+            ? "TourAPI 행사 메타데이터로 산정한 추정 프록시이며 실제 방문객 집계값은 아닙니다."
+            : "샘플 축제 메타데이터로 산정한 추정 프록시이며 실제 방문객 집계값은 아닙니다.",
       },
       {
         label:
@@ -275,7 +291,7 @@ export function createForecast(
         impact: Math.round(socialInterest),
         description:
           trends.provenance.sourceType === "trend-sample"
-            ? "사전 정의된 비개인 샘플 관심도이며 실시간 소셜 트렌드가 아닙니다."
+            ? "사전 정의한 비개인 샘플 관심도이며 실시간 소셜 트렌드는 아닙니다."
             : "비개인 키워드 관심도 프록시를 수요 보정에 반영했습니다.",
       },
       {
@@ -288,7 +304,7 @@ export function createForecast(
         impact: Math.round((Math.max(...hourWeights) / average(hourWeights) - 1) * 100),
         description:
           `${timePattern.sourceLabel} 기준의 ${timePattern.label} 시간대 분포를 적용했습니다. ` +
-          "실측 시간대 방문객 집계가 아니라 사전 시뮬레이션 분포입니다.",
+          "실측 시간대 방문객 집계가 아닌 사전 시뮬레이션 분포입니다.",
       },
     ],
   };

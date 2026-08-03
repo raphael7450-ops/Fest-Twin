@@ -161,6 +161,47 @@ describe("createForecast", () => {
     expect(visitorsAt.get(23)).toBeGreaterThan(visitorsAt.get(18)!);
   });
 
+  it("uses daytime demand peaks for flower and family experience festivals", () => {
+    const daytimePlan = {
+      ...sampleFestivalPlan,
+      name: "태안 세계튤립꽃박람회",
+      keywords: ["꽃", "튤립", "가족", "체험"],
+      operatingHours: [10, 12, 14, 16, 18, 20],
+      programs: [
+        { id: "garden", name: "튤립 정원 관람", startHour: 10, endHour: 16, expectedDraw: 92 },
+        { id: "family", name: "가족 체험 프로그램", startHour: 12, endHour: 17, expectedDraw: 86 },
+      ],
+    };
+    const flowerBackdata = {
+      ...sampleDemandBackdataContext,
+      similarFestivalBaselines: [
+        {
+          id: "taean-tulip",
+          name: "태안 세계튤립꽃박람회",
+          region: "충남 태안군",
+          type: "꽃/가족/체험",
+          periodLabel: "봄 주간형",
+          budgetMillionKrw: 700,
+          visitors: 360000,
+          similarityScore: 96,
+          sourceName: "문화체육관광부_지역축제 정보",
+        },
+      ],
+    };
+
+    const forecast = createForecast(
+      daytimePlan,
+      sampleTourismContext,
+      sampleTrendContext,
+      flowerBackdata,
+    );
+    const visitorsAt = new Map(forecast.visitorsByHour.map((item) => [item.hour, item.visitors]));
+
+    expect([12, 14, 16]).toContain(forecast.peakHour);
+    expect(visitorsAt.get(14)).toBeGreaterThan(visitorsAt.get(20)!);
+    expect(visitorsAt.get(16)).toBeGreaterThan(visitorsAt.get(20)!);
+  });
+
   it("applies bounded search trend correction to demand forecasting", () => {
     const scalablePlan = {
       ...sampleFestivalPlan,

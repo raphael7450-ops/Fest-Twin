@@ -2,9 +2,12 @@ import type {
   DemandBackdataContext,
   DemandBackdataSimilarFestival,
   FestivalPlan,
+  ProgramItem,
   SelectedFestivalBasis,
 } from "../domain/types";
 import type { FestivalCandidate } from "./tourApiAdapter";
+
+type FestivalScheduleProfile = "countdown" | "food" | "daytime" | "night" | "default";
 
 export function createSelectedFestivalBasis(
   candidate: FestivalCandidate,
@@ -48,7 +51,7 @@ export function applyFestivalCandidateToPlan(
   } = {},
 ): FestivalPlan {
   const recommendation = createBackdataPlanningRecommendation(candidate, options.demandBackdata);
-  const planningPatch = createFestivalTypePlanningPatch(currentPlan, candidate);
+  const planningPatch = createFestivalTypePlanningPatch(candidate, options.demandBackdata);
 
   return {
     ...currentPlan,
@@ -70,46 +73,86 @@ export function applyFestivalCandidateToPlan(
 }
 
 function createFestivalTypePlanningPatch(
-  currentPlan: FestivalPlan,
   candidate: FestivalCandidate,
+  demandBackdata?: DemandBackdataContext,
 ): Partial<FestivalPlan> {
-  if (!isCountdownFestival(candidate)) return {};
+  const profile = classifyFestivalScheduleProfile(candidate, demandBackdata);
 
-  const countdownProgram = {
-    id: "countdown-midnight",
-    name: "새해 카운트다운",
-    startHour: 23,
-    endHour: 24,
-    expectedDraw: 96,
-  };
-  const programs = currentPlan.programs.some((program) => program.id === countdownProgram.id)
-    ? currentPlan.programs
-    : [
-        ...currentPlan.programs.filter((program) => program.endHour >= 18),
-        countdownProgram,
-      ];
+  if (profile === "countdown") {
+    return {
+      operatingHours: [18, 20, 22, 23, 24],
+      programs: [
+        { id: "night-music", name: "야간 공연", startHour: 20, endHour: 23, expectedDraw: 82 },
+        { id: "countdown-midnight", name: "새해 카운트다운", startHour: 23, endHour: 24, expectedDraw: 96 },
+      ],
+    };
+  }
 
-  return {
-    operatingHours: [18, 20, 22, 23, 24],
-    programs,
-  };
+  if (profile === "food") {
+    return {
+      operatingHours: [10, 12, 14, 16, 18, 20],
+      programs: [
+        { id: "food-lunch", name: "점심 방문 집중", startHour: 11, endHour: 13, expectedDraw: 78 },
+        { id: "food-market", name: "먹거리 부스 운영", startHour: 12, endHour: 19, expectedDraw: 84 },
+        { id: "food-dinner", name: "저녁 방문 집중", startHour: 18, endHour: 20, expectedDraw: 82 },
+      ],
+    };
+  }
+
+  if (profile === "daytime") {
+    return {
+      operatingHours: [10, 12, 14, 16, 18],
+      programs: [
+        { id: "daytime-main", name: "주간 대표 관람", startHour: 10, endHour: 16, expectedDraw: 88 },
+        { id: "daytime-family", name: "가족 체험 프로그램", startHour: 12, endHour: 17, expectedDraw: 82 },
+        { id: "daytime-photo", name: "전시·포토존 관람", startHour: 10, endHour: 18, expectedDraw: 76 },
+      ],
+    };
+  }
+
+  if (profile === "night") {
+    return {
+      operatingHours: [16, 18, 20, 22],
+      programs: [
+        { id: "night-preview", name: "야간 입장 분산", startHour: 16, endHour: 18, expectedDraw: 62 },
+        { id: "night-main", name: "야간 대표 콘텐츠", startHour: 18, endHour: 22, expectedDraw: 92 },
+        { id: "night-peak", name: "피크 공연·전시", startHour: 20, endHour: 22, expectedDraw: 88 },
+      ],
+    };
+  }
+
+  return {};
 }
 
-function isCountdownFestival(candidate: FestivalCandidate) {
+function classifyFestivalScheduleProfile(
+  candidate: FestivalCandidate,
+  demandBackdata?: DemandBackdataContext,
+): FestivalScheduleProfile {
+  const bestBackdata = demandBackdata?.similarFestivalBaselines[0];
   const text = normalizeText(
-    `${candidate.title} ${candidate.address} ${candidate.startDate} ${candidate.endDate}`,
+    `${candidate.title} ${candidate.address} ${candidate.startDate} ${candidate.endDate} ${bestBackdata?.name ?? ""} ${bestBackdata?.type ?? ""} ${bestBackdata?.periodLabel ?? ""}`,
   );
 
-  return (
-    text.includes("카운트다운") ||
-    text.includes("countdown") ||
-    text.includes("새해") ||
-    text.includes("연말") ||
-    text.includes("불꽃") ||
-    text.includes("midnight") ||
-    text.includes("newyear") ||
+  if (
+    hasAny(text, ["카운트다운", "countdown", "새해", "연말", "타종", "제야", "해맞이", "midnight", "newyear"]) ||
     text.includes("12-31")
-  );
+  ) {
+    return "countdown";
+  }
+
+  if (hasAny(text, ["먹거리", "음식", "푸드", "미식", "커피", "맥주", "와인", "수산물", "축산물", "농산물", "한우", "김치"])) {
+    return "food";
+  }
+
+  if (hasAny(text, ["꽃", "튤립", "벚꽃", "장미", "국화", "유채", "정원", "가족", "어린이", "체험", "낮", "주간"])) {
+    return "daytime";
+  }
+
+  if (hasAny(text, ["야간", "밤", "빛", "라이트", "미디어", "조명", "드론", "불꽃"])) {
+    return "night";
+  }
+
+  return "default";
 }
 
 function createBackdataPlanningRecommendation(
@@ -134,9 +177,10 @@ function createBackdataPlanningRecommendation(
     };
   }
 
-  const usableFestivals = demandBackdata?.similarFestivalBaselines.filter(
-    (festival) => festival.budgetMillionKrw || festival.visitors,
-  ) ?? [];
+  const usableFestivals =
+    demandBackdata?.similarFestivalBaselines.filter(
+      (festival) => festival.budgetMillionKrw || festival.visitors,
+    ) ?? [];
   const candidateName = normalizeText(candidate.title);
   const bestMatch =
     usableFestivals.find((festival) => {
@@ -154,6 +198,10 @@ function createBackdataPlanningRecommendation(
 
 function normalizeText(value: string) {
   return value.replace(/\s+/g, "").toLowerCase();
+}
+
+function hasAny(text: string, keywords: string[]) {
+  return keywords.some((keyword) => text.includes(normalizeText(keyword)));
 }
 
 function estimatePeakCapacity(festival: DemandBackdataSimilarFestival) {

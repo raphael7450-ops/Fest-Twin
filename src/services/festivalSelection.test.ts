@@ -111,6 +111,35 @@ describe("festivalSelection", () => {
     );
   });
 
+  it("changes operating hours and programs for daytime flower or family festivals", () => {
+    const flowerCandidate: FestivalCandidate = {
+      id: "taean-tulip-2026",
+      title: "태안 세계튤립꽃박람회",
+      address: "충청남도 태안군",
+      startDate: "2026-04-10",
+      endDate: "2026-05-10",
+      searchScope: "regional-supplement",
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, flowerCandidate);
+
+    expect(nextPlan.operatingHours).toEqual([10, 12, 14, 16, 18]);
+    expect(nextPlan.programs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "daytime-main",
+          startHour: 10,
+          endHour: 16,
+        }),
+        expect.objectContaining({
+          id: "daytime-family",
+          startHour: 12,
+          endHour: 17,
+        }),
+      ]),
+    );
+  });
+
   it("preserves user-edited planning values when applying backdata recommendations", () => {
     const seoulLightCandidate: FestivalCandidate = {
       id: "4000001",
