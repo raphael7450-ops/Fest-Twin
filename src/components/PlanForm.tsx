@@ -1,26 +1,17 @@
-/**
- * 파일 : src/components/PlanForm.tsx
- * 내용 : 지자체 축제 기획안(지역, 기간, 예산, 수용 인원, 행사장 주소) 입력 및 실시간 조건 변경 폼 컴포넌트
- * 수정 : 2026-07-24. TourAPI 지역 선택 이벤트 연동 및 수용 규모 실시간 반영 폼 구현
- */
-
-// 축제 기획안 도메인 모델 및 TourAPI 지역코드 타입 불러오기
 import type { FestivalPlan } from "../domain/types";
 import type { TourApiAreaCode } from "../services/tourApiAdapter";
 
-// PlanForm 입력 프로퍼티(Props) 타입 명세
 interface PlanFormProps {
-  plan: FestivalPlan; // 현재 입력된 축제 기획안 상태
-  onPlanChange: (plan: FestivalPlan) => void; // 기획안 수정 이벤트를 부모 컴포넌트에 전파하는 핸들러
-  areaCodes: TourApiAreaCode[]; // TourAPI 행정구역 지역코드 목록
-  isAreaLoading: boolean; // 지역 목록 로딩 여부
-  isCandidateLoading: boolean; // 후보 축제 로딩 여부
-  candidateCount: number; // 조회된 후보 축제 개수
-  selectedCandidateTitle?: string; // 현재 선택된 TourAPI 축제명
-  onOpenCandidates: () => void; // 후보 축제 선택 드로어 오픈 함수
+  plan: FestivalPlan;
+  onPlanChange: (plan: FestivalPlan) => void;
+  areaCodes: TourApiAreaCode[];
+  isAreaLoading: boolean;
+  isCandidateLoading: boolean;
+  candidateCount: number;
+  selectedCandidateTitle?: string;
+  onOpenCandidates: () => void;
 }
 
-// 축제 기획안 조건 입력 및 수정 메인 UI 컴포넌트
 export function PlanForm({
   plan,
   onPlanChange,

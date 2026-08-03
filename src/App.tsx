@@ -1,7 +1,7 @@
 /**
  * 파일 : src/App.tsx
- * 내용 : Fest-Twin 사전 진단 대시보드 메인 컴포넌트 (상태 관리, 계산 연동, 레이아웃 조립)
- * 수정 : 2026-07-24. OpenAPI 데이터 연동, 지표 근거 드로어 및 시뮬레이션 통합
+ * 내용 : Fest-Twin 사전 진단 대시보드 메인 컴포넌트
+ * 수정 : 2026-08-03. TourAPI 후보 조회와 지역 fallback 표시 안정화
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -147,7 +147,7 @@ export function App() {
     () =>
       createFallbackTourismContext(
         plan,
-        "TourAPI 관련 기획 정보가 변경되어 최신 관광 데이터를 조회하는 동안 지역별 샘플 데이터를 사용합니다.",
+        "TourAPI 관련 기획 정보가 변경되어 최신 관광 데이터를 조회하는 동안 지역계획 샘플 데이터를 사용합니다.",
       ),
     [tourApiPlanKey],
   );
@@ -622,7 +622,7 @@ export function App() {
                   color: "#1e40af",
                 }}
               >
-                ✕
+                닫기
               </button>
             </div>
           )}

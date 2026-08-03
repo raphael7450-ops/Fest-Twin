@@ -18,7 +18,7 @@ export const sampleFestivalPlan: FestivalPlan = {
   programs: [
     { id: "p1", name: "코엑스 미디어월 쇼", startHour: 18, endHour: 22, expectedDraw: 94 },
     { id: "p2", name: "겨울 포토존 투어", startHour: 14, endHour: 22, expectedDraw: 76 },
-    { id: "p3", name: "도심 버스킹 공연", startHour: 16, endHour: 20, expectedDraw: 62 },
+    { id: "p3", name: "실내 버스킹 공연", startHour: 16, endHour: 20, expectedDraw: 62 },
     { id: "p4", name: "카운트다운 라이트 세리머니", startHour: 20, endHour: 22, expectedDraw: 88 },
   ],
   facilities: [

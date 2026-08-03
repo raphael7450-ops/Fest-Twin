@@ -1,24 +1,15 @@
-/**
- * 파일 : src/components/FestivalCandidatePanel.tsx
- * 내용 : TourAPI 지역 기반 축제 검색 결과 및 후보 선택 슬라이딩 패널 컴포넌트
- * 수정 : 2026-07-24. 후보 선택 시 위치 좌표 및 기간 자동 적용 인터랙션 구현
- */
-
-// TourAPI 축제 후보 모델 타입 불러오기
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 
-// FestivalCandidatePanel 입력 프로퍼티(Props) 명세
 interface FestivalCandidatePanelProps {
-  isOpen: boolean; // 드로어 열림 상태 여부
-  candidates: FestivalCandidate[]; // 조치된 TourAPI 축제 후보 배열
-  isLoading: boolean; // 로딩 진행 중 여부
-  errorMessage?: string; // 에러 메시지 (선택적)
-  selectedCandidateId?: string; // 현재 선택된 후보 ID
-  onClose: () => void; // 드로어 닫기 콜백
-  onSelectCandidate: (candidate: FestivalCandidate) => void; // 후보 선택 이벤트 핸들러
+  isOpen: boolean;
+  candidates: FestivalCandidate[];
+  isLoading: boolean;
+  errorMessage?: string;
+  selectedCandidateId?: string;
+  onClose: () => void;
+  onSelectCandidate: (candidate: FestivalCandidate) => void;
 }
 
-// 축제 후보의 개최 기간 텍스트(시작일 ~ 종료일)를 포맷팅하는 헬퍼 함수
 function periodLabel(candidate: FestivalCandidate) {
   if (candidate.startDate && candidate.endDate) {
     return `${candidate.startDate} ~ ${candidate.endDate}`;
@@ -27,7 +18,12 @@ function periodLabel(candidate: FestivalCandidate) {
   return "기간 정보 없음";
 }
 
-// TourAPI 축제 후보 탐색 및 선택 슬라이딩 패널 컴포넌트
+function scopeLabel(candidate: FestivalCandidate) {
+  if (candidate.searchScope === "annual-region") return "연간 지역 후보";
+  if (candidate.searchScope === "regional-supplement") return "지역축제 보강 후보";
+  return "기간 일치 후보";
+}
+
 export function FestivalCandidatePanel({
   isOpen,
   candidates,
@@ -66,7 +62,7 @@ export function FestivalCandidatePanel({
         {isLoading ? (
           <div className="candidate-drawer-state">
             <strong>후보를 조회하고 있습니다.</strong>
-            <span>지역과 기간 기준으로 실제 TourAPI 축제 데이터를 불러옵니다.</span>
+            <span>지역과 기간 기준으로 TourAPI와 지역축제 보강 데이터를 확인합니다.</span>
           </div>
         ) : null}
 
@@ -80,7 +76,7 @@ export function FestivalCandidatePanel({
         {!isLoading && !errorMessage && candidates.length === 0 ? (
           <div className="candidate-drawer-state">
             <strong>해당 조건의 후보가 없습니다.</strong>
-            <span>현재 지역과 기간을 유지한 채 신규 기획안으로 계속 작성할 수 있습니다.</span>
+            <span>현재 지역과 기간을 기준으로 신규 기획안을 계속 작성할 수 있습니다.</span>
           </div>
         ) : null}
 
@@ -95,13 +91,7 @@ export function FestivalCandidatePanel({
                   key={candidate.id}
                 >
                   <div>
-                    <span>
-                      {candidate.searchScope === "annual-region"
-                        ? "연간 지역 후보"
-                        : candidate.searchScope === "regional-supplement"
-                          ? "지역축제 보강 후보"
-                        : "기간 일치 후보"}
-                    </span>
+                    <span>{scopeLabel(candidate)}</span>
                     <h3>{candidate.title}</h3>
                     <p>{candidate.address}</p>
                     <small>{periodLabel(candidate)}</small>
