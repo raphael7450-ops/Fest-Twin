@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { BarChart3, BriefcaseBusiness, Clock3, FileText, Home, UsersRound } from "lucide-react";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
 import { ForecastChart } from "./components/ForecastChart";
@@ -52,6 +53,8 @@ import {
   type FestivalCandidate,
   type TourApiAreaCode,
 } from "./services/tourApiAdapter";
+
+type DashboardSection = "overview" | "planning" | "forecast" | "operations" | "evidence" | "report";
 
 export function App() {
   const [plan, setPlan] = useState(sampleFestivalPlan);
@@ -471,9 +474,44 @@ export function App() {
   };
 
   const [layoutMode, setLayoutMode] = useState<"mainFlow" | "balanced3">("mainFlow");
+  const [activeDashboardSection, setActiveDashboardSection] =
+    useState<DashboardSection>("overview");
+  const railItems = [
+    { label: "요약", section: "overview", icon: Home },
+    { label: "기획", section: "planning", icon: BriefcaseBusiness },
+    { label: "예측", section: "forecast", icon: Clock3 },
+    { label: "현장", section: "operations", icon: BarChart3 },
+    { label: "근거", section: "evidence", icon: UsersRound },
+    { label: "리포트", section: "report", icon: FileText },
+  ];
 
   return (
     <main className="app-shell">
+      <div className="dashboard-canvas">
+        <aside className="dashboard-rail" aria-label="대시보드 섹션">
+          <div className="dashboard-rail__curve" aria-hidden="true" />
+          <nav className="dashboard-rail__nav">
+            {railItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  aria-label={`대시보드 섹션: ${item.label}`}
+                  aria-pressed={activeDashboardSection === item.section}
+                  className={`dashboard-rail__button${
+                    activeDashboardSection === item.section ? " dashboard-rail__button--active" : ""
+                  }`}
+                  key={item.label}
+                  onClick={() => setActiveDashboardSection(item.section as DashboardSection)}
+                  type="button"
+                >
+                  <Icon size={17} strokeWidth={2.2} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+        <div className="dashboard-content">
       <GovernmentHeader />
       {restoredNotice && (
         <div
@@ -513,6 +551,22 @@ export function App() {
         tourism={tourism}
         onOpenEvidence={setSelectedEvidenceId}
       />
+      <div className="dashboard-section-tabs" aria-label="대시보드 섹션">
+        {railItems.map((item) => (
+          <button
+            className={`dashboard-section-tab${
+              activeDashboardSection === item.section ? " dashboard-section-tab--active" : ""
+            }`}
+            key={item.label}
+            onClick={() => setActiveDashboardSection(item.section as DashboardSection)}
+            type="button"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div className="dashboard-section-stack">
+        <section className="dashboard-section-panel active">
       <div className="layout-control-bar">
         <span className="layout-control-label">대시보드 정렬 방식:</span>
         <div className="layout-toggle-group">
@@ -534,7 +588,7 @@ export function App() {
       </div>
 
       {layoutMode === "mainFlow" ? (
-        <div className="workspace-grid workspace-grid--2col">
+        <div className="workspace-grid workspace-grid--dashboard workspace-grid--2col">
           <aside className="left-column">
             <PlanForm
               plan={plan}
@@ -657,6 +711,10 @@ export function App() {
         evidenceSet={metricEvidence}
         onOpenEvidence={setSelectedEvidenceId}
       />
+        </section>
+      </div>
+        </div>
+      </div>
     </main>
   );
 }

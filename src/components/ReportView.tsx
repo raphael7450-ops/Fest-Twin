@@ -54,13 +54,17 @@ export function ReportView({
   const limitations = uniqueLimitations(evidenceSet);
   const peakHour = forecast.visitorsByHour.find((item) => item.hour === forecast.peakHour);
   const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+  const safetyFindings =
+    report.findings.length > 0
+      ? report.findings
+      : ["피크 시간대 혼잡과 병목 후보를 중심으로 현장 안전계획을 검토합니다."];
 
   return (
     <section className="panel report-panel" aria-label="공공검토 보고서">
       <div className="panel-heading report-heading">
         <div>
           <h2>공공검토 보고서</h2>
-          <p>지자체 축제 사전 검토용 예측·안전·예산 근거 요약</p>
+          <p>지자체 축제 사전 검토용 예측, 안전, 예산 근거 요약</p>
         </div>
         <div className="panel-actions">
           <span>B2G 검토본</span>
@@ -70,15 +74,15 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-forecast-heading">
         <div className="report-section-heading">
-          <h3 id="report-forecast-heading">예측 결과</h3>
           <span>수요 예측</span>
+          <h3 id="report-forecast-heading">예측 결과</h3>
         </div>
         <p className="report-summary">{report.summary}</p>
-        <div className="report-fact-grid">
+        <p className="muted">{report.governmentReviewNote}</p>
+        <div className="report-kpi-strip">
           <article>
             <span>예상 방문객</span>
             <strong>{forecast.expectedVisitors.toLocaleString("ko-KR")}명</strong>
-            <small>TourAPI·트렌드·기획 입력 기반 추정</small>
           </article>
           <article>
             <span>피크 시간</span>
@@ -95,8 +99,8 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-safety-heading">
         <div className="report-section-heading">
-          <h3 id="report-safety-heading">혼잡·안전 진단</h3>
           <span>현장 운영</span>
+          <h3 id="report-safety-heading">혼잡·안전 진단</h3>
         </div>
         <div className="score-table">
           {report.scores.length > 0 ? (
@@ -115,19 +119,17 @@ export function ReportView({
             </article>
           )}
         </div>
-        {report.findings.length > 0 ? (
-          <ul className="report-list">
-            {report.findings.map((finding) => (
-              <li key={finding}>{finding}</li>
-            ))}
-          </ul>
-        ) : null}
+        <ul className="report-finding-list">
+          {safetyFindings.map((finding) => (
+            <li key={finding}>{finding}</li>
+          ))}
+        </ul>
       </section>
 
       <section className="report-section" aria-labelledby="report-budget-heading">
         <div className="report-section-heading">
-          <h3 id="report-budget-heading">예산·경제 효과</h3>
           <span>ROI 검토</span>
+          <h3 id="report-budget-heading">예산·경제 효과</h3>
         </div>
         <div className="report-budget-note">
           <span>총 투입 예산</span>
@@ -149,8 +151,8 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-data-heading">
         <div className="report-section-heading">
-          <h3 id="report-data-heading">사용 데이터와 한계</h3>
           <span>감사 대응 근거</span>
+          <h3 id="report-data-heading">사용 데이터와 한계</h3>
         </div>
         <ReportEvidenceSummary evidenceSet={evidenceSet} />
         <div className="report-evidence-actions">
@@ -182,7 +184,7 @@ export function ReportView({
             <dd>B2G SaaS Web</dd>
           </div>
           <div>
-            <dt>사용 목적</dt>
+            <dt>활용 목적</dt>
             <dd>축제 후보 조회, 행사장 위치 보강, 주변 관광지 기반 수요 예측 근거 산출</dd>
           </div>
           <div>
@@ -195,7 +197,7 @@ export function ReportView({
           </div>
           <div>
             <dt>출처 및 라이선스</dt>
-            <dd>한국관광공사 TourAPI 4.0 출처 표기와 라이선스 표시 동의를 전제로 사용합니다.</dd>
+            <dd>한국관광공사 TourAPI 4.0 출처 표기와 라이선스 표시 동의를 전제로 활용합니다.</dd>
           </div>
         </dl>
         {selectedFestivalBasis ? (
@@ -227,10 +229,9 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-recommendation-heading">
         <div className="report-section-heading">
+          <span>기획 보완</span>
           <h3 id="report-recommendation-heading">개선 권고</h3>
-          <span>부서 협의안</span>
         </div>
-        <p className="muted">{report.governmentReviewNote}</p>
         <div className="recommendation-grid">
           {report.recommendations.map((item) => (
             <article className="recommendation" key={item.id}>

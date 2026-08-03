@@ -1,9 +1,3 @@
-/**
- * 파일 : src/components/VenueMapPanel.tsx
- * 내용 : Naver Map API v3 기반 행사장 위치 및 주변 랜드마크(응급실, 파출소, 주차장) 시각화 패널
- * 수정 : 2026-07-24. NAVER_MAP_CLIENT_ID 연동, 마커 렌더링 및 키 미설치 시 Fallback 렌더링
- */
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FestivalPlan } from "../domain/types";
 import type { FestivalCandidate } from "../services/tourApiAdapter";
@@ -95,7 +89,6 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
 
         setStatus("ready");
 
-        // 모바일 브라우저 뷰포트 크기 계산 지연 보정 (Android/iOS Safari)
         window.setTimeout(() => {
           if (!cancelled && mapContainerRef.current) {
             window.dispatchEvent(new Event("resize"));
@@ -126,7 +119,8 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
         <h2>실제 행사장 지도</h2>
         <span>TourAPI 좌표 + 네이버 지도 API</span>
       </div>
-      <div className="venue-map-canvas" ref={mapContainerRef}>
+      <div className="venue-map-canvas">
+        <div className="venue-map-stage" ref={mapContainerRef} />
         {status !== "ready" ? (
           <div className="venue-map-fallback">
             <strong>{statusText}</strong>
@@ -145,8 +139,8 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
       <ul className="venue-map-points">
         <li>행사장 중심 구역: {venue.name}</li>
         <li>주요 진출입 병목: 삼성역 5·6번 출입구 및 영동대로 진입로</li>
-        <li>피크 밀집 예상: COEX 동문 광장 & K-POP 미디어월 관람 구역</li>
-        <li>상권 연계 분산: 먹거리 부스 & 주변 상업 시설 연계 동선</li>
+        <li>피크 밀집 예상: COEX 동문 광장 및 주요 관람 구역</li>
+        <li>상권 연계 분산: 먹거리 부스와 주변 상업 시설 연계 동선</li>
       </ul>
     </section>
   );
