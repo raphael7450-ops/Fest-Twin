@@ -71,6 +71,24 @@ function createBackdataPlanningRecommendation(
   candidate: FestivalCandidate,
   demandBackdata?: DemandBackdataContext,
 ) {
+  if (candidate.budgetMillionKrw || candidate.visitors) {
+    return {
+      budgetMillionKrw: candidate.budgetMillionKrw,
+      expectedCapacity: candidate.visitors
+        ? estimatePeakCapacity({
+            id: candidate.id,
+            name: candidate.title,
+            region: candidate.address,
+            type: "selected",
+            periodLabel: `${candidate.startDate} ~ ${candidate.endDate}`,
+            visitors: candidate.visitors,
+            similarityScore: 100,
+            sourceName: "selected regional festival DB candidate",
+          })
+        : undefined,
+    };
+  }
+
   const usableFestivals = demandBackdata?.similarFestivalBaselines.filter(
     (festival) => festival.budgetMillionKrw || festival.visitors,
   ) ?? [];

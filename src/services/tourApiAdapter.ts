@@ -35,6 +35,8 @@ export interface FestivalCandidate {
   mapX?: string;
   mapY?: string;
   imageUrl?: string;
+  budgetMillionKrw?: number;
+  visitors?: number;
   searchScope: FestivalSearchScope;
   sourceDetails?: MetricEvidenceSourceDetail[];
 }
@@ -53,6 +55,8 @@ interface TourApiItem {
   overview?: string;
   mapx?: string | number;
   mapy?: string | number;
+  budgetMillionKrw?: number;
+  visitors?: number;
 }
 
 interface RegionalFestivalApiRecord {
@@ -64,6 +68,8 @@ interface RegionalFestivalApiRecord {
   startDate?: string;
   endDate?: string;
   periodLabel?: string;
+  budgetMillionKrw?: number;
+  visitors?: number;
   sourceName?: string;
   sourceFile?: string;
 }
@@ -455,6 +461,8 @@ function regionalFestivalRecordToTourApiItem(record: RegionalFestivalApiRecord):
     addr1: [record.region, record.localGovernment, record.venue].filter(Boolean).join(" "),
     eventstartdate: record.startDate?.replace(/-/g, ""),
     eventenddate: record.endDate?.replace(/-/g, ""),
+    budgetMillionKrw: record.budgetMillionKrw,
+    visitors: record.visitors,
     overview: `${record.sourceName ?? "문화체육관광부_지역축제 정보"}${
       record.sourceFile ? ` (${record.sourceFile})` : ""
     }`,
@@ -842,6 +850,10 @@ function mapFestivalCandidate(
     mapX: hasFiniteNumber(item.mapx) ? String(item.mapx) : undefined,
     mapY: hasFiniteNumber(item.mapy) ? String(item.mapy) : undefined,
     imageUrl: item.firstimage ?? undefined,
+    budgetMillionKrw: hasFiniteNumber(item.budgetMillionKrw)
+      ? Number(item.budgetMillionKrw)
+      : undefined,
+    visitors: hasFiniteNumber(item.visitors) ? Number(item.visitors) : undefined,
     searchScope,
     sourceDetails,
   };

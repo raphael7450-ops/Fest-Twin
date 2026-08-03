@@ -80,6 +80,16 @@ describe("TourAPI candidate regional DB supplement", () => {
     expect(fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost").pathname)).toContain(
       "/api/regional-festivals",
     );
+    const boryeongCandidate = candidates.find(
+      (candidate) => candidate.id === "mcst-boryeong-mud-2026",
+    );
+    expect(boryeongCandidate).toEqual(
+      expect.objectContaining({
+        budgetMillionKrw: 3500,
+        visitors: 1690359,
+        searchScope: "regional-supplement",
+      }),
+    );
     expect(candidates).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

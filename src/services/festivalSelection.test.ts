@@ -68,6 +68,24 @@ describe("festivalSelection", () => {
     expect(nextPlan.expectedCapacity).toBe(12200);
   });
 
+  it("prefills budget and expected capacity directly from a regional DB candidate", () => {
+    const regionalDbCandidate: FestivalCandidate = {
+      id: "mcst-boryeong-mud-2026",
+      title: "제29회 보령머드축제",
+      address: "충청남도 보령시 대천해수욕장",
+      startDate: "2026-07-24",
+      endDate: "2026-08-09",
+      budgetMillionKrw: 3500,
+      visitors: 1690359,
+      searchScope: "regional-supplement",
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, regionalDbCandidate);
+
+    expect(nextPlan.totalBudgetMillionKrw).toBe(3500);
+    expect(nextPlan.expectedCapacity).toBe(338072);
+  });
+
   it("preserves user-edited planning values when applying backdata recommendations", () => {
     const seoulLightCandidate: FestivalCandidate = {
       id: "4000001",
