@@ -28,6 +28,8 @@ const importantEvidenceIds: MetricEvidenceId[] = [
   "parking-occupancy",
 ];
 
+const repeatedScoreLabels = new Set(["흥행 가능성"]);
+
 function formatKrw(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
@@ -54,6 +56,7 @@ export function ReportView({
   const limitations = uniqueLimitations(evidenceSet);
   const peakHour = forecast.visitorsByHour.find((item) => item.hour === forecast.peakHour);
   const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+  const riskScores = report.scores.filter((score) => !repeatedScoreLabels.has(score.label));
 
   return (
     <section className="panel report-panel" aria-label="공공검토 보고서">
@@ -99,8 +102,8 @@ export function ReportView({
           <span>현장 운영</span>
         </div>
         <div className="score-table">
-          {report.scores.length > 0 ? (
-            report.scores.map((score) => (
+          {riskScores.length > 0 ? (
+            riskScores.map((score) => (
               <article key={score.label}>
                 <span>{score.label}</span>
                 <strong>{score.score}점</strong>

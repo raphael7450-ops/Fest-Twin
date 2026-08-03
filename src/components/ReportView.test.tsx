@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import { sampleSpendingContext } from "../data/sampleSpending";
@@ -96,6 +96,59 @@ describe("ReportView", () => {
     expect(screen.getByText("30,000명")).toBeInTheDocument();
     expect(screen.getByText("20:00")).toBeInTheDocument();
     expect(screen.getByText("피크 프로그램 분산")).toBeInTheDocument();
+  });
+
+  it("does not repeat the success score in the risk summary cards", () => {
+    const duplicatedReport: PlanningReport = {
+      ...report,
+      scores: [
+        {
+          label: "흥행 가능성",
+          score: 74,
+          level: "medium",
+          reason: "예측 결과에서 이미 보여주는 성공 점수입니다.",
+        },
+        {
+          label: "밀집 위험",
+          score: 100,
+          level: "critical",
+          reason: "피크 시간대 밀집도와 병목 지점 수를 반영했습니다.",
+        },
+        {
+          label: "예산 낭비 위험",
+          score: 49,
+          level: "medium",
+          reason: "예상 방문객 대비 예산 규모를 비교했습니다.",
+        },
+      ],
+    };
+    const simulation = createSimulation(sampleFestivalPlan, forecast, forecast.peakHour);
+    const evidenceSet = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      forecast,
+      simulation,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+
+    render(
+      <ReportView
+        report={duplicatedReport}
+        plan={sampleFestivalPlan}
+        forecast={forecast}
+        spending={sampleSpendingContext}
+        evidenceSet={evidenceSet}
+        onOpenEvidence={vi.fn()}
+      />,
+    );
+
+    const safetySection = screen
+      .getByRole("heading", { name: "혼잡·안전 진단" })
+      .closest("section")!;
+
+    expect(within(safetySection).queryByText("흥행 가능성")).not.toBeInTheDocument();
+    expect(within(safetySection).getByText("밀집 위험")).toBeInTheDocument();
+    expect(within(safetySection).getByText("예산 낭비 위험")).toBeInTheDocument();
   });
 
   it("opens metric evidence from the report data section", () => {
