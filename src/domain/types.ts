@@ -361,3 +361,34 @@ export interface MetricEvidence {
   limitations: string[];
   contributors: MetricEvidenceContributor[];
 }
+
+export interface InfrastructureCapacityForecast {
+  parkingFillTime: string;
+  parkingPeakOccupancyRate: number;
+  estimatedVehicles: number;
+  providedParkingCapacity: number;
+  requiredRestroomCount: number;
+  providedRestroomCount: number;
+  restroomDeficitCount: number;
+  estimatedRestroomWaitMinutes: number;
+  totalWasteTons: number;
+  generalWasteTons: number;
+  recyclableWasteTons: number;
+}
+
+export interface SafetyZoneGuardAllocation {
+  zoneName: string;
+  recommendedGuards: number;
+  priority: "high" | "medium" | "low";
+  reason: string;
+}
+
+export interface SafetyGuardAllocationForecast {
+  totalRecommendedGuards: number;
+  zoneAllocations: SafetyZoneGuardAllocation[];
+  expectedMedicalIncidentsPerHour: number;
+  recommendedMedicalStaff: number;
+  recommendedAmbulances: number;
+  evacuationGoldenTimeSeconds: number;
+  evacuationStatus: "양호" | "주의" | "경고";
+}

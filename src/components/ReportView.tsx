@@ -7,11 +7,14 @@ import type {
   SelectedFestivalBasis,
   SpendingContext,
 } from "../domain/types";
+import { createSimulation } from "../services/simulation";
 import { CsvExportButton } from "./CsvExportButton";
 import { EvidenceButton } from "./EvidenceButton";
+import { InfrastructureCapacityPanel } from "./InfrastructureCapacityPanel";
 import { PrintReportButton } from "./PrintReportButton";
 import { ReportEvidenceSummary } from "./ReportEvidenceSummary";
 import { RoiEconomicImpact } from "./RoiEconomicImpact";
+import { SafetyGuardAllocationPanel } from "./SafetyGuardAllocationPanel";
 
 interface ReportViewProps {
   report: PlanningReport;
@@ -176,6 +179,15 @@ export function ReportView({
             <li key={limitation}>{limitation}</li>
           ))}
         </ul>
+      </section>
+
+      <section className="report-section" aria-label="추가 심사 예측 모델">
+        <div className="report-section-title">
+          <span>사전 진단 추가 모델</span>
+          <h3>[모델 1 & 2] 수용성 및 안전배치 시뮬레이션</h3>
+        </div>
+        <InfrastructureCapacityPanel plan={plan} forecast={forecast} />
+        <SafetyGuardAllocationPanel plan={plan} forecast={forecast} simulation={createSimulation(plan, forecast, forecast.peakHour)} />
       </section>
 
       <section className="report-section openapi-operations-report" aria-label="OpenAPI 운영계정 신청 증빙">

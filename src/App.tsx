@@ -11,10 +11,12 @@ import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
 import { Heatmap } from "./components/Heatmap";
+import { InfrastructureCapacityPanel } from "./components/InfrastructureCapacityPanel";
 import { MetricEvidenceDrawer } from "./components/MetricEvidenceDrawer";
 import { PlanForm } from "./components/PlanForm";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
+import { SafetyGuardAllocationPanel } from "./components/SafetyGuardAllocationPanel";
 import { SafetyLogisticsPanel } from "./components/SafetyLogisticsPanel";
 import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
@@ -725,6 +727,7 @@ export function App() {
                     />
                     <ForecastChart forecast={forecast} />
                     <Heatmap plan={plan} simulation={simulation} />
+                    <InfrastructureCapacityPanel plan={plan} forecast={forecast} />
                   </div>
                 </div>
               </section>
@@ -740,6 +743,11 @@ export function App() {
                       simulation={simulation}
                       traffic={traffic}
                       onOpenEvidence={setSelectedEvidenceId}
+                    />
+                    <SafetyGuardAllocationPanel
+                      plan={plan}
+                      forecast={forecast}
+                      simulation={simulation}
                     />
                   </div>
                   <aside className="right-column">
