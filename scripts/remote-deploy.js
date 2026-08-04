@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 
 const REMOTE_USER = "cwuser";
-const REMOTE_HOST = "100.84.160.64";
+const REMOTE_HOST = "100.104.94.112";
 const TAR_FILE = "fest-twin-demo.tar";
 
 function run(cmd, opts = {}) {
@@ -23,7 +23,7 @@ function run(cmd, opts = {}) {
 
 async function main() {
   console.log("======================================================");
-  console.log("[INFO] 원격지(100.84.160.64) Docker 자동 재배포 시작");
+  console.log("[INFO] 원격지(100.104.94.112) Docker 자동 재배포 시작");
   console.log("======================================================");
 
   const tarPath = path.join(PROJECT_ROOT, TAR_FILE);
@@ -67,7 +67,7 @@ async function main() {
     run("npm run deploy:check");
 
     console.log("\n======================================================");
-    console.log("[SUCCESS] 원격지(100.84.160.64:18080) Docker 반영 및 헬스체크 성공!");
+    console.log("[SUCCESS] 원격지(100.104.94.112:18080) Docker 반영 및 헬스체크 성공!");
     console.log("======================================================\n");
   } catch (error) {
     console.error("\n[ERROR] 배포 과정에서 오류가 발생했습니다:", error.message);
