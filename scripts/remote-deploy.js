@@ -15,7 +15,10 @@ const PROJECT_ROOT = path.resolve(__dirname, "..");
 
 const REMOTE_USER = "cwuser";
 const REMOTE_HOST = "100.104.94.112";
+const REMOTE_PASS = process.env.REMOTE_PASS || "ckddnjsl";
 const TAR_FILE = "fest-twin-demo.tar";
+const PLINK = "C:\\Program Files (x86)\\PuTTY\\plink.exe";
+const PSCP = "C:\\Program Files (x86)\\PuTTY\\pscp.exe";
 
 function run(cmd, opts = {}) {
   return execSync(cmd, { stdio: "inherit", cwd: PROJECT_ROOT, ...opts });
@@ -33,9 +36,9 @@ async function main() {
     console.log("\n[1/4] Git HEAD 타르 아카이브 생성...");
     run(`git archive -o "${TAR_FILE}" HEAD`);
 
-    // 2. scp로 원격 서버 업로드
+    // 2. pscp로 원격 서버 업로드
     console.log(`\n[2/4] 원격 서버(${REMOTE_USER}@${REMOTE_HOST})에 아카이브 업로드...`);
-    run(`scp "${TAR_FILE}" ${REMOTE_USER}@${REMOTE_HOST}:~/`);
+    run(`"${PSCP}" -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${REMOTE_HOST}:/home/${REMOTE_USER}/`);
 
     // 3. 원격 서버에서 Docker 이미지 빌드 및 컨테이너 재배포 실행
     console.log("\n[3/4] 원격 서버에서 Docker 이미지 빌드 및 재배포 수행...");
@@ -60,7 +63,7 @@ async function main() {
       "echo '==> 원격 Docker 재배포 완료!'",
     ].join(" && ");
 
-    run(`ssh ${REMOTE_USER}@${REMOTE_HOST} "${remoteCommands}"`);
+    run(`"${PLINK}" -batch -pw ${REMOTE_PASS} ${REMOTE_USER}@${REMOTE_HOST} "${remoteCommands}"`);
 
     // 4. 배포 헬스체크 수행
     console.log("\n[4/4] 원격 서버 헬스체크 수행...");
