@@ -226,7 +226,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
     formatCsvRow([
       "Step 3 (상권/경제 보정)",
       "관광객 1인당 평균 소비 객단가",
-      `${avgSpend.toLocaleString("ko-KR")}원/인 (${spending?.spendingBasisLabel || "한국관광 데이터랩 공공 산출 기준"})`,
+      `${avgSpend.toLocaleString("ko-KR")}원/인 (${spending?.basisLabel || "한국관광 데이터랩 공공 산출 기준"})`,
     ]),
   );
   rows.push(
