@@ -163,14 +163,7 @@ export function ReportView({
           <span>감사 대응 근거</span>
           <h3 id="report-data-heading">사용 데이터와 한계</h3>
         </div>
-        <ReportEvidenceSummary evidenceSet={evidenceSet} />
-        <div className="report-evidence-actions">
-          {importantEvidenceIds.map((metricId) => (
-            <button key={metricId} type="button" className="evidence-button" onClick={() => onOpenEvidence(metricId)}>
-              {evidenceSet[metricId].title} 근거 보기
-            </button>
-          ))}
-        </div>
+        <ReportEvidenceSummary evidenceSet={evidenceSet} onOpenEvidence={onOpenEvidence} />
         <ul className="report-list">
           {limitations.map((limitation) => (
             <li key={limitation}>{limitation}</li>

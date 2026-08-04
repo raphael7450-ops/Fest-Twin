@@ -904,6 +904,7 @@ export function createReportEvidenceSummaries(
     evidenceSet["safety-staff"],
     evidenceSet["economic-roi"],
   ].map((item) => ({
+    metricId: item.metricId,
     title: item.title,
     summary: item.summary,
     confidenceLabel: item.confidenceLabel,
