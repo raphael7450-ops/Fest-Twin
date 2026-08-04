@@ -36,11 +36,19 @@ export function corsMiddleware(request, response, next) {
     return next();
   }
 
-  const isAllowed =
-    origin.includes("localhost") ||
-    origin.includes("127.0.0.1") ||
-    origin.includes("192.168.55.223") ||
-    /\.ts\.net$/.test(new URL(origin).hostname);
+  let isAllowed = false;
+  try {
+    const parsed = new URL(origin);
+    const host = parsed.hostname;
+    isAllowed =
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "192.168.55.223" ||
+      host === "100.104.94.112" ||
+      host.endsWith(".ts.net");
+  } catch {
+    isAllowed = false;
+  }
 
   if (isAllowed) {
     response.setHeader("Access-Control-Allow-Origin", origin);
@@ -61,6 +69,8 @@ export function securityHeadersMiddleware(_request, response, next) {
   response.setHeader("X-Frame-Options", "DENY");
   response.setHeader("X-XSS-Protection", "1; mode=block");
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  response.setHeader("Permissions-Policy", "geolocation=(), camera=(), microphone=()");
   response.setHeader(
     "Content-Security-Policy",
     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://map.vworld.kr https://*.vworld.kr; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://map.vworld.kr https://*.vworld.kr; img-src 'self' data: blob: https: https://map.vworld.kr https://*.vworld.kr; font-src 'self' https://fonts.gstatic.com https://map.vworld.kr https://*.vworld.kr; connect-src 'self' https://apis.data.go.kr https://viewt.ktdb.go.kr https://map.vworld.kr https://*.vworld.kr;",

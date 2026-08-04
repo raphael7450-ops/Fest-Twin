@@ -11,7 +11,9 @@ import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const LOGS_DIR = path.resolve(__dirname, "../logs");
+const LOGS_DIR = process.env.LOG_DIR
+  ? path.resolve(process.env.LOG_DIR)
+  : path.resolve(__dirname, "../logs");
 
 // ─── 커스텀 로그 레벨 (severity 순서) ────────────────────────────────────
 const customLevels = {
@@ -78,7 +80,7 @@ export function createAppLogger(options = {}) {
         datePattern: "YYYY-MM-DD",
         level: "http",
         maxSize: "20m",
-        maxFiles: "14d",
+        maxFiles: "180d",
         format: jsonFormat,
       }),
     );
@@ -91,7 +93,7 @@ export function createAppLogger(options = {}) {
         datePattern: "YYYY-MM-DD",
         level: "error",
         maxSize: "20m",
-        maxFiles: "14d",
+        maxFiles: "180d",
         format: jsonFormat,
       }),
     );
@@ -126,7 +128,7 @@ export function createAuditLogger(options = {}) {
         datePattern: "YYYY-MM-DD",
         level: "info",
         maxSize: "20m",
-        maxFiles: "30d",
+        maxFiles: "365d",
         format: jsonFormat,
       }),
     );

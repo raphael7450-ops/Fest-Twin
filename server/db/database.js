@@ -1,6 +1,6 @@
 /**
  * 파일 : server/db/database.js
- * 내용 : SQLite 영속 저장소 및 JSON 파일 백업 데이터베이스 데이터 레이어
+ * 내용 : JSON 파일 기반 영속 저장소 및 데이터 레이어
  * 수정 : 2026-07-24. B2G 축제 시나리오 CRUD, share_token 생성 및 영속화 스토리지 구축
  */
 
