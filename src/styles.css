@@ -1643,10 +1643,18 @@ a:focus-visible {
 .report-section-heading {
   align-items: center;
   display: flex;
+  justify-content: space-between;
   gap: 10px;
 }
 
-.report-section-heading span {
+.report-section-title {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.report-section-heading span,
+.report-section-title span {
   align-items: center;
   background: #eef6ff;
   border: 1px solid #cfe3ff;
@@ -1661,7 +1669,8 @@ a:focus-visible {
   width: 34px;
 }
 
-.report-section-heading h3 {
+.report-section-heading h3,
+.report-section-title h3 {
   color: var(--color-primary-strong);
   font-size: 17px;
   margin: 0;
@@ -2235,6 +2244,13 @@ a:focus-visible {
   margin: 0.35rem 0 0;
   color: #475569;
   line-height: 1.55;
+}
+
+.report-evidence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .scenario-item-content {

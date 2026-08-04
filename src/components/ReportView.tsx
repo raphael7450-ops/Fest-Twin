@@ -8,6 +8,7 @@ import type {
   SpendingContext,
 } from "../domain/types";
 import { CsvExportButton } from "./CsvExportButton";
+import { EvidenceButton } from "./EvidenceButton";
 import { PrintReportButton } from "./PrintReportButton";
 import { ReportEvidenceSummary } from "./ReportEvidenceSummary";
 import { RoiEconomicImpact } from "./RoiEconomicImpact";
@@ -76,8 +77,11 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-forecast-heading">
         <div className="report-section-heading">
-          <span>수요 예측</span>
-          <h3 id="report-forecast-heading">예측 결과</h3>
+          <div className="report-section-title">
+            <span>수요 예측</span>
+            <h3 id="report-forecast-heading">예측 결과</h3>
+          </div>
+          <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
         </div>
         <p className="report-summary">{report.summary}</p>
         <p className="muted">{report.governmentReviewNote}</p>
@@ -101,8 +105,11 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-safety-heading">
         <div className="report-section-heading">
-          <span>현장 운영</span>
-          <h3 id="report-safety-heading">혼잡·안전 진단</h3>
+          <div className="report-section-title">
+            <span>현장 운영</span>
+            <h3 id="report-safety-heading">혼잡·안전 진단</h3>
+          </div>
+          <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
         </div>
         <div className="score-table">
           {report.scores.length > 0 ? (
@@ -159,7 +166,7 @@ export function ReportView({
         <ReportEvidenceSummary evidenceSet={evidenceSet} />
         <div className="report-evidence-actions">
           {importantEvidenceIds.map((metricId) => (
-            <button key={metricId} type="button" onClick={() => onOpenEvidence(metricId)}>
+            <button key={metricId} type="button" className="evidence-button" onClick={() => onOpenEvidence(metricId)}>
               {evidenceSet[metricId].title} 근거 보기
             </button>
           ))}
