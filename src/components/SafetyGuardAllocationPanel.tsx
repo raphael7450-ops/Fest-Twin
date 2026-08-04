@@ -35,7 +35,7 @@ export function SafetyGuardAllocationPanel({
         <div className="panel-actions-inline">
           <span className="badge badge-warning">모델 2 안전배치</span>
           {onOpenEvidence && (
-            <EvidenceButton onClick={() => onOpenEvidence("safety-staff")} />
+            <EvidenceButton onClick={() => onOpenEvidence("safety-guards-allocation")} />
           )}
         </div>
       </div>
@@ -45,7 +45,7 @@ export function SafetyGuardAllocationPanel({
           <div className="safety-card-header">
             <span>총 추천 안전관리요원</span>
             {onOpenEvidence && (
-              <EvidenceButton onClick={() => onOpenEvidence("safety-staff")} />
+              <EvidenceButton onClick={() => onOpenEvidence("safety-guards-allocation")} />
             )}
           </div>
           <strong>{safety.totalRecommendedGuards}명</strong>
@@ -67,7 +67,7 @@ export function SafetyGuardAllocationPanel({
           <div className="safety-card-header">
             <span>비상 탈출 골든타임</span>
             {onOpenEvidence && (
-              <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
+              <EvidenceButton onClick={() => onOpenEvidence("evacuation-golden-time")} />
             )}
           </div>
           <strong>{goldenMinutes}분 {goldenSeconds}초 ({safety.evacuationStatus})</strong>
@@ -79,7 +79,7 @@ export function SafetyGuardAllocationPanel({
         <div className="table-heading-with-action">
           <h3>구역별 안전요원 추천 배치 명세</h3>
           {onOpenEvidence && (
-            <EvidenceButton onClick={() => onOpenEvidence("safety-staff")} />
+            <EvidenceButton onClick={() => onOpenEvidence("safety-guards-allocation")} />
           )}
         </div>
         <table className="zone-allocation-table">

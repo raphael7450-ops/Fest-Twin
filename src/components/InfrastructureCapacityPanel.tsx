@@ -25,7 +25,7 @@ export function InfrastructureCapacityPanel({
         <div className="panel-actions-inline">
           <span className="badge badge-info">모델 1 수용성</span>
           {onOpenEvidence && (
-            <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
+            <EvidenceButton onClick={() => onOpenEvidence("infrastructure-capacity")} />
           )}
         </div>
       </div>
@@ -57,7 +57,7 @@ export function InfrastructureCapacityPanel({
                 {capacity.restroomDeficitCount > 0 ? `부족 ${capacity.restroomDeficitCount}칸` : "적정"}
               </em>
               {onOpenEvidence && (
-                <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
+                <EvidenceButton onClick={() => onOpenEvidence("restroom-capacity")} />
               )}
             </div>
           </div>
@@ -75,7 +75,7 @@ export function InfrastructureCapacityPanel({
                 총 {capacity.totalWasteTons}톤
               </em>
               {onOpenEvidence && (
-                <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
+                <EvidenceButton onClick={() => onOpenEvidence("waste-generation")} />
               )}
             </div>
           </div>

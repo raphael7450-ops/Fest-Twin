@@ -377,6 +377,11 @@ describe("metricEvidence", () => {
       "traffic-risk",
       "parking-occupancy",
       "economic-roi",
+      "infrastructure-capacity",
+      "restroom-capacity",
+      "waste-generation",
+      "safety-guards-allocation",
+      "evacuation-golden-time",
     ]);
     expect(evidence["demand-index"].title).toBe("흥행 예측 지수");
     expect(evidence["demand-index"].dataSources).toContain(

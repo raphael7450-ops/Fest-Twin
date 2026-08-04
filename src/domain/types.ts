@@ -277,7 +277,12 @@ export type MetricEvidenceId =
   | "medical-staff"
   | "traffic-risk"
   | "parking-occupancy"
-  | "economic-roi";
+  | "economic-roi"
+  | "infrastructure-capacity"
+  | "restroom-capacity"
+  | "waste-generation"
+  | "safety-guards-allocation"
+  | "evacuation-golden-time";
 
 export type MetricEvidenceConfidence = "high" | "medium" | "low";
 

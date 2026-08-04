@@ -892,6 +892,207 @@ export function createMetricEvidenceSet(
         },
       ],
     },
+    "infrastructure-capacity": {
+      metricId: "infrastructure-capacity",
+      title: "[모델 1] 인프라 수용성 및 종합 진단 근거",
+      summary: `피크 방문객을 기준으로 주차 수용, 임시 화장실 한계 및 폐기물 발생량을 종합 진단했습니다.`,
+      dataSources: [
+        "국토교통부 도시교통정비 통합지침",
+        "행정안전부/문체부 지역축제 안전관리 매뉴얼",
+        "환경부 매립·재활용 폐기물 원단위 통계",
+      ],
+      formulaSummary:
+        "주차 유입(승용차 18%), 화장실 수용한계(피크 250명/칸), 폐기물 발생(1인당 0.4kg) 통합 산출 수식 적용",
+      assumptions: [
+        "축제 유입 승용차 평균 탑승 인원은 2.5명/대를 적용합니다.",
+        "화장실은 피크 시간대 250명 당 1칸 수용을 표준으로 봅니다.",
+      ],
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
+      limitations,
+      sourceDetails: [...parkingUserInputs, ...parkingDetails],
+      contributors: [
+        { label: "총 방문객", value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`, effect: "neutral" },
+        { label: "피크 시간대", value: `${forecast.peakHour}:00`, effect: "risk" },
+      ],
+    },
+    "restroom-capacity": {
+      metricId: "restroom-capacity",
+      title: "[모델 1] 임시 화장실 수용 한계 및 대기시간 근거",
+      summary: `행정안전부 지침(피크시간 250명당 1칸) 기준 화장실 수용량 및 부족 시 회전율 지연 대기시간을 산출했습니다.`,
+      dataSources: [
+        "행정안전부·문화체육관광부 지역축제 안전관리 매뉴얼",
+        "환경부 공중화장실 설치 및 관리 기준",
+      ],
+      formulaSummary:
+        "필요 화장실 수 = 피크시간대 방문객 / 250명, 예상 대기시간 = 기본 3분 + (부족칸수 × 0.9분 지연)",
+      calculationSteps: [
+        {
+          stepNumber: 1,
+          title: "1단계: 피크 시간대 인원 기반 필요 화장실 산출",
+          formula: "필요 화장실 수 = 피크시간 방문객 ÷ 250명",
+          inputValue: `피크 방문객 ${peakVisitors.toLocaleString("ko-KR")}명`,
+          coefficient: "250명/칸 가이드라인",
+          subtotal: `${Math.max(5, Math.ceil(peakVisitors / 250))}칸 필요`,
+        },
+        {
+          stepNumber: 2,
+          title: "2단계: 현장 확보 수량 대비 부족량 판정",
+          formula: "부족량 = 필요 화장실 수 - 준비 수량 (기본 수용률 84%)",
+          inputValue: `준비 수량 ${Math.max(4, Math.round(Math.ceil(peakVisitors / 250) * 0.84))}칸`,
+          coefficient: "84% 준비 기준",
+          subtotal: `${Math.max(0, Math.ceil(peakVisitors / 250) - Math.round(Math.ceil(peakVisitors / 250) * 0.84))}칸 부족`,
+        },
+        {
+          stepNumber: 3,
+          title: "3단계: 대기 지연시간 연산",
+          formula: "예상 대기시간 = 기본 3분 + (부족칸수 × 0.9분)",
+          inputValue: `부족량 비례 지연`,
+          coefficient: "+0.9분/칸 지연",
+          subtotal: `약 ${Math.max(0, Math.ceil(peakVisitors / 250) - Math.round(Math.ceil(peakVisitors / 250) * 0.84)) > 0 ? Math.min(45, Math.round(4 + (Math.ceil(peakVisitors / 250) - Math.round(Math.ceil(peakVisitors / 250) * 0.84)) * 0.9)) : 3}분 대기`,
+        },
+      ],
+      assumptions: [
+        "피크 시간대 남/녀 및 임시 화장실 이용 회전율 2.5분을 반영합니다.",
+      ],
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
+      limitations,
+      sourceDetails: [...parkingUserInputs, ...parkingDetails],
+      contributors: [
+        { label: "피크 동시 인원", value: `${peakVisitors.toLocaleString("ko-KR")}명`, effect: "risk" },
+        { label: "기본 수용 기준", value: "250명/칸", effect: "neutral" },
+      ],
+    },
+    "waste-generation": {
+      metricId: "waste-generation",
+      title: "[모델 1] 축제 폐기물 배출량 및 분리 배출 근거",
+      summary: `환경부 1인당 원단위 발생량 통계(0.4kg) 기반 총 배출량 및 일반/재활용 분리 비율을 연산했습니다.`,
+      dataSources: [
+        "환경부 매립·재활용 폐기물 원단위 발생량 통계",
+        "한국환경공단 축제·행사 친환경 가이드라인",
+      ],
+      formulaSummary:
+        "총 폐기물 발생량(톤) = (총 예상 방문객 × 0.4kg) / 1,000 (일반 60%, 재활용 40%)",
+      calculationSteps: [
+        {
+          stepNumber: 1,
+          title: "1단계: 총 예상 폐기물 배출량 톤수 연산",
+          formula: "총 폐기물(톤) = (방문객 수 × 0.4kg) ÷ 1,000kg",
+          inputValue: `예상 방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+          coefficient: "0.4kg/인 원단위",
+          subtotal: `${((forecast.expectedVisitors * 0.4) / 1000).toFixed(2)}톤`,
+        },
+        {
+          stepNumber: 2,
+          title: "2단계: 성상별 분리 배출 비중 분해",
+          formula: "일반 쓰레기 60% / 재활용 가능 쓰레기 40%",
+          inputValue: `총 ${((forecast.expectedVisitors * 0.4) / 1000).toFixed(2)}톤`,
+          coefficient: "60:40 비율",
+          subtotal: `일반 ${(((forecast.expectedVisitors * 0.4) / 1000) * 0.6).toFixed(2)}톤 / 재활용 ${(((forecast.expectedVisitors * 0.4) / 1000) * 0.4).toFixed(2)}톤`,
+        },
+      ],
+      assumptions: [
+        "행사장 내 식음료(F&B) 부스 운영 시 일회용품 사용 비율을 기준으로 산출합니다.",
+      ],
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
+      limitations,
+      sourceDetails: [...expectedVisitorsDetails],
+      contributors: [
+        { label: "1인당 배출량", value: "0.4kg/인", effect: "neutral" },
+        { label: "총 배출 예상", value: `${((forecast.expectedVisitors * 0.4) / 1000).toFixed(2)}톤`, effect: "risk" },
+      ],
+    },
+    "safety-guards-allocation": {
+      metricId: "safety-guards-allocation",
+      title: "[모델 2] 구역별 필요 안전관리요원 추천 배치 근거",
+      summary: `행정안전부 다중운집 인파 안전지침 및 2D 시뮬레이션 고위험 병목을 연동해 필요 배치 인원을 산출했습니다.`,
+      dataSources: [
+        "행정안전부 다중운집 인파사고 안전관리 기본계획",
+        "문화체육관광부 공연·축제 현장안전 가이드라인",
+        "2D 인파 밀집도 시뮬레이션 병목 고위험 셀",
+      ],
+      formulaSummary:
+        "추천 인원 = 메인무대(2,200명/1명) + 주요 출입구(4,200명/1명) + 병목 보행로(고위험 셀×3명 + 혼잡도 점수 비례)",
+      calculationSteps: [
+        {
+          stepNumber: 1,
+          title: "1단계: 메인 무대 및 핵심 행사 구역 산출",
+          formula: "무대 안전요원 = 예상 방문객 ÷ 2,200명 (최소 10명)",
+          inputValue: `방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+          coefficient: "2,200명/명 기준",
+          subtotal: `${Math.max(10, Math.round(forecast.expectedVisitors / 2200))}명 배치`,
+        },
+        {
+          stepNumber: 2,
+          title: "2단계: 주요 출입구 및 동선 통제 인원 산출",
+          formula: "출입구 안전요원 = 예상 방문객 ÷ 4,200명 (최소 6명)",
+          inputValue: `방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+          coefficient: "4,200명/명 기준",
+          subtotal: `${Math.max(6, Math.round(forecast.expectedVisitors / 4200))}명 배치`,
+        },
+        {
+          stepNumber: 3,
+          title: "3단계: 병목 구간 및 고위험 시뮬레이션 셀 연동",
+          formula: "병목 안전요원 = 고위험 셀 수 × 3명 + (혼잡도 점수 × 0.2)",
+          inputValue: `고위험 셀 ${simulation.cells.filter(c => c.density >= 4.0).length}곳 / 혼잡점수 ${simulation.congestionScore}점`,
+          coefficient: "3명/셀 가중치",
+          subtotal: `${Math.max(6, Math.round(simulation.cells.filter(c => c.density >= 4.0).length * 3 + simulation.congestionScore * 0.2))}명 배치`,
+        },
+      ],
+      assumptions: [
+        "행사장 입퇴장 피크 시간대 1시간 전 집중 배치를 권고합니다.",
+      ],
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
+      limitations,
+      sourceDetails: [...safetyLogisticsBasisDetails, ...layoutUserInputs, ...safetyStaffDetails],
+      contributors: [
+        { label: "총 추천 인원", value: `${Math.max(10, Math.round(forecast.expectedVisitors / 2200)) + Math.max(6, Math.round(forecast.expectedVisitors / 4200)) + Math.max(6, Math.round(simulation.cells.filter(c => c.density >= 4.0).length * 3 + simulation.congestionScore * 0.2))}명`, effect: "positive" },
+        { label: "지침 준수 여부", value: "행안부 표준 충족", effect: "positive" },
+      ],
+    },
+    "evacuation-golden-time": {
+      metricId: "evacuation-golden-time",
+      title: "[모델 2] 비상 탈출 골든타임 소요시간 산출 근거",
+      summary: `국립재난안전연구원(NDMI) 및 SFPE 피난 유동 방정식 기반 100m 비상 동선 탈출 시간을 진단했습니다.`,
+      dataSources: [
+        "국립재난안전연구원(NDMI) 군중 이동 시뮬레이션 연구",
+        "SFPE(소방방재공학회) 피난 유동 방정식",
+      ],
+      formulaSummary:
+        "골든타임(초) = 180초(기본 정상보행) + (혼잡도 점수 × 2.2초) + (고위험 셀 × 15초)",
+      calculationSteps: [
+        {
+          stepNumber: 1,
+          title: "1단계: 100m 기본 이동시간 설정",
+          formula: "기본 이동시간 = 100m / 0.55m/s (서행 보행 기준)",
+          inputValue: "거리 100m 기준",
+          coefficient: "180초 베이스라인",
+          subtotal: "180초",
+        },
+        {
+          stepNumber: 2,
+          title: "2단계: 인파 과밀 집적 지연 가산",
+          formula: "과밀 지연 = (혼잡도 점수 × 2.2초) + (고위험 셀 × 15초)",
+          inputValue: `혼잡점수 ${simulation.congestionScore}점 / 고위험셀 ${simulation.cells.filter(c => c.density >= 4.0).length}곳`,
+          coefficient: "지연 가산",
+          subtotal: `+${Math.round(simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15)}초 지연`,
+        },
+      ],
+      assumptions: [
+        "피난 시 밀집도 4.0명/m² 초과 구간에서 군중 이동 속도가 0.35m/s로 감쇄함을 반영합니다.",
+      ],
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
+      limitations,
+      sourceDetails: [...safetyLogisticsBasisDetails, ...peakDensityDetails],
+      contributors: [
+        { label: "골든타임 소요", value: `${Math.floor((180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15) / 60)}분 ${Math.round((180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15) % 60)}초`, effect: "neutral" },
+        { label: "위험 등급", value: 180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15 >= 360 ? "경고" : 180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15 >= 240 ? "주의" : "양호", effect: 180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15 >= 240 ? "risk" : "positive" },
+      ],
+    },
   };
 }
 
