@@ -70,7 +70,14 @@ export function ReportView({
         </div>
         <div className="panel-actions">
           <span>B2G 검토본</span>
-          <CsvExportButton plan={plan} forecast={forecast} report={report} spending={spending} />
+          <CsvExportButton
+            plan={plan}
+            forecast={forecast}
+            report={report}
+            spending={spending}
+            selectedFestivalBasis={selectedFestivalBasis}
+            evidenceSet={evidenceSet}
+          />
           <PrintReportButton />
         </div>
       </div>
