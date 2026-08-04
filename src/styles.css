@@ -2530,4 +2530,19 @@ a:focus-visible {
   font-weight: 800;
 }
 
+.panel-actions-inline,
+.card-header-actions,
+.safety-card-header,
+.table-heading-with-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.safety-card-header,
+.table-heading-with-action {
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
 

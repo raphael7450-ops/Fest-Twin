@@ -1,20 +1,24 @@
 import type {
   FestivalPlan,
   ForecastResult,
+  MetricEvidenceId,
   SimulationResult,
 } from "../domain/types";
 import { calculateSafetyGuardAllocationForecast } from "../services/capacityAndSafetyForecast";
+import { EvidenceButton } from "./EvidenceButton";
 
 interface SafetyGuardAllocationPanelProps {
   plan: FestivalPlan;
   forecast: ForecastResult;
   simulation: SimulationResult;
+  onOpenEvidence?: (metricId: MetricEvidenceId) => void;
 }
 
 export function SafetyGuardAllocationPanel({
   plan,
   forecast,
   simulation,
+  onOpenEvidence,
 }: SafetyGuardAllocationPanelProps) {
   const safety = calculateSafetyGuardAllocationForecast(plan, forecast, simulation);
 
@@ -28,31 +32,56 @@ export function SafetyGuardAllocationPanel({
           <h2>인파 사고 리스크 & 구역별 안전요원 배치 모델</h2>
           <p>구역별 추천 배치 인원, 의료 지원 및 비상 탈출 골든타임 진단</p>
         </div>
-        <span className="badge badge-warning">모델 2 안전배치</span>
+        <div className="panel-actions-inline">
+          <span className="badge badge-warning">모델 2 안전배치</span>
+          {onOpenEvidence && (
+            <EvidenceButton onClick={() => onOpenEvidence("safety-staff")} />
+          )}
+        </div>
       </div>
 
       <div className="safety-metrics-grid">
         <article className="safety-summary-card">
-          <span>총 추천 안전관리요원</span>
+          <div className="safety-card-header">
+            <span>총 추천 안전관리요원</span>
+            {onOpenEvidence && (
+              <EvidenceButton onClick={() => onOpenEvidence("safety-staff")} />
+            )}
+          </div>
           <strong>{safety.totalRecommendedGuards}명</strong>
           <small>행안부 인파 안전관리 지침 반영 수치</small>
         </article>
 
         <article className="safety-summary-card">
-          <span>예상 응급환자 / 의료 지원</span>
+          <div className="safety-card-header">
+            <span>예상 응급환자 / 의료 지원</span>
+            {onOpenEvidence && (
+              <EvidenceButton onClick={() => onOpenEvidence("medical-staff")} />
+            )}
+          </div>
           <strong>시간당 {safety.expectedMedicalIncidentsPerHour}건</strong>
           <small>추천 의료진 {safety.recommendedMedicalStaff}명 / 구급차 {safety.recommendedAmbulances}대</small>
         </article>
 
         <article className="safety-summary-card">
-          <span>비상 탈출 골든타임</span>
+          <div className="safety-card-header">
+            <span>비상 탈출 골든타임</span>
+            {onOpenEvidence && (
+              <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
+            )}
+          </div>
           <strong>{goldenMinutes}분 {goldenSeconds}초 ({safety.evacuationStatus})</strong>
           <small>100m 비상 동선 탈출 예상 시간</small>
         </article>
       </div>
 
       <div className="zone-allocation-table-wrapper">
-        <h3>구역별 안전요원 추천 배치 명세</h3>
+        <div className="table-heading-with-action">
+          <h3>구역별 안전요원 추천 배치 명세</h3>
+          {onOpenEvidence && (
+            <EvidenceButton onClick={() => onOpenEvidence("safety-staff")} />
+          )}
+        </div>
         <table className="zone-allocation-table">
           <thead>
             <tr>

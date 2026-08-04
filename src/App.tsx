@@ -727,7 +727,7 @@ export function App() {
                     />
                     <ForecastChart forecast={forecast} />
                     <Heatmap plan={plan} simulation={simulation} />
-                    <InfrastructureCapacityPanel plan={plan} forecast={forecast} />
+                    <InfrastructureCapacityPanel plan={plan} forecast={forecast} onOpenEvidence={setSelectedEvidenceId} />
                   </div>
                 </div>
               </section>
@@ -748,6 +748,7 @@ export function App() {
                       plan={plan}
                       forecast={forecast}
                       simulation={simulation}
+                      onOpenEvidence={setSelectedEvidenceId}
                     />
                   </div>
                   <aside className="right-column">

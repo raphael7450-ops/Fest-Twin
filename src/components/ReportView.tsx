@@ -186,8 +186,8 @@ export function ReportView({
           <span>사전 진단 추가 모델</span>
           <h3>[모델 1 & 2] 수용성 및 안전배치 시뮬레이션</h3>
         </div>
-        <InfrastructureCapacityPanel plan={plan} forecast={forecast} />
-        <SafetyGuardAllocationPanel plan={plan} forecast={forecast} simulation={createSimulation(plan, forecast, forecast.peakHour)} />
+        <InfrastructureCapacityPanel plan={plan} forecast={forecast} onOpenEvidence={onOpenEvidence} />
+        <SafetyGuardAllocationPanel plan={plan} forecast={forecast} simulation={createSimulation(plan, forecast, forecast.peakHour)} onOpenEvidence={onOpenEvidence} />
       </section>
 
       <section className="report-section openapi-operations-report" aria-label="OpenAPI 운영계정 신청 증빙">
