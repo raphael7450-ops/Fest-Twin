@@ -858,9 +858,9 @@ export function createMetricEvidenceSet(
         {
           stepNumber: 3,
           title: "3단계: 예상 지역 상권 총 소비 창출액 계산",
-          formula: "소비 창출액 = 총 예상 방문객 × 1인당 평균 소비 단가 × 상권 연계율",
+          formula: "소비 창출액 = 총 예상 방문객 × 1인당 평균 소비 단가",
           inputValue: `방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명 × 객단가 ${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원`,
-          coefficient: "상권 연계율 85%",
+          coefficient: "방문객 소비액 100% 기준",
           subtotal: `${economy.expectedLocalSpendingKrw.toLocaleString("ko-KR")}원`,
         },
         {

@@ -66,13 +66,19 @@ const PEAK_DENSITY_STANDARD_PEOPLE_PER_SQUARE_METER = 6.2;
 const PEAK_DENSITY_DISPLAY_MAX_PEOPLE_PER_SQUARE_METER = 9.9;
 
 function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) ? max : safeMin;
+  const orderedMin = Math.min(safeMin, safeMax);
+  const orderedMax = Math.max(safeMin, safeMax);
+  const safeValue = Number.isFinite(value) ? value : orderedMin;
+  return Math.min(Math.max(safeValue, orderedMin), orderedMax);
 }
 
 function average(values: number[]) {
-  return values.length === 0
+  const finiteValues = values.filter((value) => Number.isFinite(value));
+  return finiteValues.length === 0
     ? 0
-    : values.reduce((sum, value) => sum + value, 0) / values.length;
+    : finiteValues.reduce((sum, value) => sum + value, 0) / finiteValues.length;
 }
 
 function demandBackdataBenchmark(demandBackdata?: DemandBackdataContext) {
@@ -153,8 +159,14 @@ export function calculateBudgetPerVisitor(
   forecast: ForecastResult,
   demandBackdata?: DemandBackdataContext,
 ) {
-  const totalBudgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
-  const plannedCostPerVisitor = totalBudgetKrw / Math.max(forecast.expectedVisitors, 1);
+  const totalBudgetKrw =
+    Math.max(Number.isFinite(plan.totalBudgetMillionKrw) ? plan.totalBudgetMillionKrw : 0, 0) *
+    1_000_000;
+  const expectedVisitors = Math.max(
+    Number.isFinite(forecast.expectedVisitors) ? forecast.expectedVisitors : 0,
+    1,
+  );
+  const plannedCostPerVisitor = totalBudgetKrw / expectedVisitors;
   const benchmark = demandBackdataBenchmark(demandBackdata);
 
   if (benchmark.costPerVisitorKrw > 0) {
@@ -181,13 +193,21 @@ export function createSummaryKpiMetrics(
   demandBackdata?: DemandBackdataContext,
 ): SummaryKpiMetrics {
   const benchmark = demandBackdataBenchmark(demandBackdata);
+  const expectedCapacity = Math.max(
+    Number.isFinite(plan.expectedCapacity) ? plan.expectedCapacity : 0,
+    1,
+  );
+  const expectedVisitors = Math.max(
+    Number.isFinite(forecast.expectedVisitors) ? forecast.expectedVisitors : 0,
+    0,
+  );
   const forecastDemandIndex = Math.max(
-    (forecast.expectedVisitors / Math.max(plan.expectedCapacity, 1)) * 100,
+    (expectedVisitors / expectedCapacity) * 100,
     0,
   );
   const benchmarkDemandIndex =
     benchmark.visitors > 0
-      ? Math.max((benchmark.visitors / Math.max(plan.expectedCapacity, 1)) * 100, 0)
+      ? Math.max((benchmark.visitors / expectedCapacity) * 100, 0)
       : 0;
   const demandIndex = Math.round(
     benchmarkDemandIndex > 0
@@ -198,7 +218,7 @@ export function createSummaryKpiMetrics(
     demandIndex >= 90 ? "상" : demandIndex >= 70 ? "중" : "하";
   const backdataDensityAdjustment =
     benchmark.visitors > 0
-      ? clamp((benchmark.visitors / Math.max(plan.expectedCapacity, 1) - 1) * 0.42, 0, 2.4)
+      ? clamp((benchmark.visitors / expectedCapacity - 1) * 0.42, 0, 2.4)
       : 0;
   const peakDensity = getDensityRisk(
     Math.round((calculatePeakDensityPerSquareMeter(simulation) + backdataDensityAdjustment) * 10) /
@@ -245,7 +265,9 @@ export function createSafetyLogisticsMetrics(
   traffic?: TrafficContext,
 ): SafetyLogisticsMetrics {
   const peakVisitors = Math.max(
-    ...forecast.visitorsByHour.map((item) => item.visitors),
+    ...forecast.visitorsByHour.map((item) =>
+      Number.isFinite(item.visitors) ? item.visitors : 0,
+    ),
     0,
   );
   const peakDensity = calculatePeakDensityPerSquareMeter(simulation);
@@ -267,7 +289,8 @@ export function createSafetyLogisticsMetrics(
   const estimatedCars = peakVisitors * 0.18;
   const assumedParkingCapacity = Math.max(
     180,
-    plan.expectedCapacity * 0.08 + highRiskCells * 8,
+    Math.max(Number.isFinite(plan.expectedCapacity) ? plan.expectedCapacity : 0, 0) * 0.08 +
+      highRiskCells * 8,
   );
   const parkingBaseOccupancyRate = Math.round(
     clamp((estimatedCars / assumedParkingCapacity) * 100, 0, 100),
@@ -299,18 +322,29 @@ export function createEconomicImpactMetrics(
   forecast: ForecastResult,
   spending?: SpendingContext,
 ): EconomicImpactMetrics {
-  const totalBudgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+  const safeBudgetKrw =
+    Math.max(Number.isFinite(plan.totalBudgetMillionKrw) ? plan.totalBudgetMillionKrw : 0, 0) *
+    1_000_000;
   const averageSpendPerVisitorKrw =
-    spending?.averageSpendPerVisitorKrw ?? FALLBACK_SPEND_PER_VISITOR_KRW;
+    Math.max(
+      Number.isFinite(spending?.averageSpendPerVisitorKrw)
+        ? spending?.averageSpendPerVisitorKrw ?? FALLBACK_SPEND_PER_VISITOR_KRW
+        : FALLBACK_SPEND_PER_VISITOR_KRW,
+      0,
+    );
+  const expectedVisitors = Math.max(
+    Number.isFinite(forecast.expectedVisitors) ? forecast.expectedVisitors : 0,
+    0,
+  );
   const expectedLocalSpendingKrw =
-    forecast.expectedVisitors * averageSpendPerVisitorKrw;
+    expectedVisitors * averageSpendPerVisitorKrw;
 
   return {
-    totalBudgetKrw,
+    totalBudgetKrw: safeBudgetKrw,
     expectedLocalSpendingKrw,
     averageSpendPerVisitorKrw,
     roiMultiplier:
-      Math.round((expectedLocalSpendingKrw / Math.max(totalBudgetKrw, 1)) * 10) /
+      Math.round((expectedLocalSpendingKrw / Math.max(safeBudgetKrw, 1)) * 10) /
       10,
     spendingBasisLabel: spending?.basisLabel ?? "공공데이터 구조 기반 샘플",
     spendingSourceName: spending?.sourceName ?? "한국관광공사 관광 소비 백데이터 샘플",

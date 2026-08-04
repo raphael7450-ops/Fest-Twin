@@ -41,14 +41,23 @@ export function createSimulation(
   hour: number,
 ): SimulationResult {
   const selectedHour = forecast.visitorsByHour.find((item) => item.hour === hour);
-  const visitors = selectedHour?.visitors ?? forecast.visitorsByHour[0]?.visitors ?? 0;
+  const visitors = Math.max(selectedHour?.visitors ?? forecast.visitorsByHour[0]?.visitors ?? 0, 0);
+  const expectedCapacity = Math.max(
+    Number.isFinite(plan.expectedCapacity) ? plan.expectedCapacity : 0,
+    1,
+  );
+  const gridWidth = Math.max(Number.isFinite(plan.gridWidth) ? Math.round(plan.gridWidth) : 0, 1);
+  const gridHeight = Math.max(Number.isFinite(plan.gridHeight) ? Math.round(plan.gridHeight) : 0, 1);
   const activeProgramDraw = plan.programs
     .filter((program) => hour >= program.startHour && hour <= program.endHour)
-    .reduce((sum, program) => sum + program.expectedDraw, 0);
+    .reduce(
+      (sum, program) => sum + (Number.isFinite(program.expectedDraw) ? program.expectedDraw : 0),
+      0,
+    );
   const cells: HeatmapCell[] = [];
 
-  for (let y = 0; y < plan.gridHeight; y += 1) {
-    for (let x = 0; x < plan.gridWidth; x += 1) {
+  for (let y = 0; y < gridHeight; y += 1) {
+    for (let x = 0; x < gridWidth; x += 1) {
       const attraction = plan.facilities.reduce((sum, facility) => {
         const distance = Math.max(distanceToFacility(x, y, facility), 0.8);
         const stageBoost = facility.type === "stage" ? 1 + activeProgramDraw / 220 : 1;
@@ -56,7 +65,7 @@ export function createSimulation(
         return sum + (facility.weight * stageBoost) / (distance * distance);
       }, 0);
       const density = clamp(
-        (visitors / plan.expectedCapacity) * 42 + attraction * 19,
+        (visitors / expectedCapacity) * 42 + attraction * 19,
         0,
         MAX_CELL_DENSITY_SCORE,
       );

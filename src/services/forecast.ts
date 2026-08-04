@@ -8,13 +8,35 @@ import type {
 } from "../domain/types";
 
 export function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) ? max : safeMin;
+  const orderedMin = Math.min(safeMin, safeMax);
+  const orderedMax = Math.max(safeMin, safeMax);
+  const safeValue = Number.isFinite(value) ? value : orderedMin;
+  return Math.min(Math.max(safeValue, orderedMin), orderedMax);
 }
 
 function average(values: number[]) {
-  return values.length === 0
+  const finiteValues = values.filter((value) => Number.isFinite(value));
+  return finiteValues.length === 0
     ? 0
-    : values.reduce((sum, value) => sum + value, 0) / values.length;
+    : finiteValues.reduce((sum, value) => sum + value, 0) / finiteValues.length;
+}
+
+function positiveNumber(value: number, fallback: number) {
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function normalizedOperatingHours(hours: number[]) {
+  const normalized = Array.from(
+    new Set(
+      hours
+        .filter((hour) => Number.isFinite(hour))
+        .map((hour) => Math.round(clamp(hour, 0, 24))),
+    ),
+  ).sort((a, b) => a - b);
+
+  return normalized.length > 0 ? normalized : [18];
 }
 
 function confidenceFromEvidence(
@@ -196,6 +218,9 @@ export function createForecast(
   trends: TrendContext,
   demandBackdata?: DemandBackdataContext,
 ): ForecastResult {
+  const safeExpectedCapacity = positiveNumber(plan.expectedCapacity, 5000);
+  const safeBudgetMillionKrw = Math.max(Number.isFinite(plan.totalBudgetMillionKrw) ? plan.totalBudgetMillionKrw : 0, 0);
+  const operatingHours = normalizedOperatingHours(plan.operatingHours);
   const regionalAttractiveness = average(
     tourism.nearbySpots.map((spot) => spot.appealScore),
   );
@@ -209,32 +234,35 @@ export function createForecast(
   const programScore = average(
     plan.programs.map((program) => program.expectedDraw),
   );
-  const budgetScale = clamp(plan.totalBudgetMillionKrw / 700, 0.75, 1.35);
+  const budgetScale = clamp(safeBudgetMillionKrw / 700, 0.75, 1.35);
   const entranceFactor = plan.facilities.filter((item) => item.type === "entrance")
     .length >= 2
     ? 1.08
     : 0.92;
   const timePattern = createFestivalTimePattern(plan, demandBackdata);
   const baseDemand =
-    (similarDemand * 0.52 + plan.expectedCapacity * 0.28 + regionalAttractiveness * 180) *
+    (similarDemand * 0.52 + safeExpectedCapacity * 0.28 + regionalAttractiveness * 180) *
     (0.75 + socialInterest / 300) *
     trendMultiplier *
     (0.8 + programScore / 400) *
     budgetScale *
     entranceFactor;
   const expectedVisitors = Math.round(
-    clamp(baseDemand, 5000, plan.expectedCapacity * 1.45),
+    clamp(baseDemand, 5000, Math.max(5000, safeExpectedCapacity * 1.45)),
   );
-  const hourWeights = plan.operatingHours.map((hour) => {
+  const hourWeights = operatingHours.map((hour) => {
     const programDraw = plan.programs
       .filter((program) => hour >= program.startHour && hour <= program.endHour)
-      .reduce((sum, program) => sum + program.expectedDraw, 0);
+      .reduce(
+        (sum, program) => sum + (Number.isFinite(program.expectedDraw) ? program.expectedDraw : 0),
+        0,
+      );
     const typePatternBoost = timePattern.weightForHour(hour);
 
     return Math.max(0.7, 0.8 + programDraw / 180) * typePatternBoost;
   });
-  const totalWeight = hourWeights.reduce((sum, weight) => sum + weight, 0);
-  const visitorsByHour = plan.operatingHours.map((hour, index) => ({
+  const totalWeight = Math.max(hourWeights.reduce((sum, weight) => sum + weight, 0), 1);
+  const visitorsByHour = operatingHours.map((hour, index) => ({
     hour,
     visitors: Math.round((expectedVisitors * hourWeights[index]) / totalWeight),
   }));
