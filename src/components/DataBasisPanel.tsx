@@ -86,6 +86,11 @@ export function DataBasisPanel({
             status: trafficStatusLabel(traffic.status),
             basis: traffic.provenance.sourceName,
           },
+          {
+            label: "TAGO 대중교통",
+            status: "실조회",
+            basis: "국토교통부 버스정류소/노선 API",
+          },
         ]
       : []),
     ...(spending
