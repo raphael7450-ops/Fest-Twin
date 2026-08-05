@@ -10,7 +10,9 @@ function errorResponse(response, status, code, message) {
 }
 
 function getClientIp(req) {
-  const forwarded = req.headers["x-forwarded-for"];
+  if (!req || typeof req !== "object") return "127.0.0.1";
+  const headers = req.headers ?? {};
+  const forwarded = headers["x-forwarded-for"];
   if (forwarded) {
     return String(forwarded).split(",")[0].trim();
   }

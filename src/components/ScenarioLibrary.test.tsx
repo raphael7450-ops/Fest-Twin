@@ -58,10 +58,12 @@ describe("ScenarioLibrary", () => {
       <ScenarioLibrary plan={planA} selectedHour={18} onLoadScenario={onLoadScenario} />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "시나리오 저장" }));
+    const saveBtns = screen.getAllByRole("button", { name: "시나리오 저장" });
+    fireEvent.click(saveBtns[0]);
 
     rerender(<ScenarioLibrary plan={planB} selectedHour={20} onLoadScenario={onLoadScenario} />);
-    fireEvent.click(screen.getByRole("button", { name: "시나리오 저장" }));
+    const saveBtns2 = screen.getAllByRole("button", { name: "시나리오 저장" });
+    fireEvent.click(saveBtns2[saveBtns2.length - 1]);
 
     const checkboxes = screen.getAllByRole("checkbox");
     expect(checkboxes.length).toBeGreaterThanOrEqual(2);
@@ -69,7 +71,7 @@ describe("ScenarioLibrary", () => {
     fireEvent.click(checkboxes[0]);
     fireEvent.click(checkboxes[1]);
 
-    const compareBtn = screen.getByRole("button", { name: /시나리오 A\/B 비교/ });
+    const compareBtn = screen.getAllByRole("button", { name: /시나리오 A\/B 비교/ })[0];
     expect(compareBtn).not.toBeDisabled();
 
     fireEvent.click(compareBtn);
