@@ -62,8 +62,15 @@ export function getCachedData(key) {
 export function setCachedData(key, data, ttlMs = DEFAULT_TTL_MS) {
   if (cacheStore.has(key)) {
     cacheStore.delete(key);
-  } else if (cacheStore.size >= currentMaxCapacity) {
-    evictExcessEntries();
+  } else {
+    while (cacheStore.size >= currentMaxCapacity) {
+      const oldestKey = cacheStore.keys().next().value;
+      if (oldestKey !== undefined) {
+        cacheStore.delete(oldestKey);
+      } else {
+        break;
+      }
+    }
   }
 
   cacheStore.set(key, {

@@ -44,15 +44,17 @@ export function createScenarioRouter(options = {}) {
       }
 
       // B2G Audit: 시나리오 공유 조회 기록
-      logAuditEvent({
-        action_type: "SHARE",
-        scenario_id: scenario.id,
-        client_ip: getClientIp(request),
-        payload_summary: {
-          share_token: token,
-          title: scenario.title,
-        },
-      });
+      try {
+        logAuditEvent({
+          action_type: "SHARE",
+          scenario_id: scenario.id,
+          client_ip: getClientIp(request),
+          payload_summary: {
+            share_token: token,
+            title: scenario.title,
+          },
+        });
+      } catch {}
 
       return response.status(200).json(scenario);
     } catch (error) {
@@ -91,16 +93,18 @@ export function createScenarioRouter(options = {}) {
       });
 
       // B2G Audit: 시나리오 생성 비동기 기록
-      logAuditEvent({
-        action_type: "CREATE",
-        scenario_id: created.id,
-        client_ip: getClientIp(request),
-        payload_summary: {
-          title: created.title,
-          share_token: created.share_token,
-          region: parameters.region,
-        },
-      });
+      try {
+        logAuditEvent({
+          action_type: "CREATE",
+          scenario_id: created.id,
+          client_ip: getClientIp(request),
+          payload_summary: {
+            title: created.title,
+            share_token: created.share_token,
+            region: parameters.region,
+          },
+        });
+      } catch {}
 
       auditLog.info("scenario_created", {
         event: "SCENARIO_CREATE",
@@ -133,14 +137,16 @@ export function createScenarioRouter(options = {}) {
       }
 
       // B2G Audit: 시나리오 수정 비동기 기록
-      logAuditEvent({
-        action_type: "UPDATE",
-        scenario_id: updated.id,
-        client_ip: getClientIp(request),
-        payload_summary: {
-          title: updated.title,
-        },
-      });
+      try {
+        logAuditEvent({
+          action_type: "UPDATE",
+          scenario_id: updated.id,
+          client_ip: getClientIp(request),
+          payload_summary: {
+            title: updated.title,
+          },
+        });
+      } catch {}
 
       auditLog.info("scenario_updated", {
         event: "SCENARIO_UPDATE",
@@ -164,12 +170,14 @@ export function createScenarioRouter(options = {}) {
       }
 
       // B2G Audit: 시나리오 삭제 비동기 기록
-      logAuditEvent({
-        action_type: "DELETE",
-        scenario_id: id,
-        client_ip: getClientIp(request),
-        payload_summary: { id },
-      });
+      try {
+        logAuditEvent({
+          action_type: "DELETE",
+          scenario_id: id,
+          client_ip: getClientIp(request),
+          payload_summary: { id },
+        });
+      } catch {}
 
       auditLog.info("scenario_deleted", {
         event: "SCENARIO_DELETE",
