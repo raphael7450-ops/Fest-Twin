@@ -8,20 +8,30 @@
 
 ```
 docs/
-├── README.md                              # [본 문서] 기술 문서 종합 인덱스 가이드
-├── LOAD_TEST_REPORT.md                    # 부하 테스트(k6-style) 성과 및 안정성 보고서
-│
-├── specs/                                 # 시스템 명세 및 아키텍처 스펙
-│   ├── architecture-and-api.md            # 시스템 블록 아키텍처, 계층 설계 및 REST API 명세서
-│   └── data-and-simulation-methodology.md # 3대 공공데이터 연동 수식, 디지털 트윈 시뮬레이션 및 보안 정책
-│
-├── guides/                                # 개발, 배포 및 시연 운영 가이드
-│   ├── deployment-and-cicd.md             # 로컬 구동, 원격 Docker 배포 스크립트 및 GitHub Actions CI/CD
-│   └── demo-and-operations.md             # 3분 핵심 시연 시나리오 스크립트 및 운영 런북
-│
-└── contest/                               # 공모전 제출 서류 및 최종 검증
-    ├── submission-package.md              # 공모전 제출 요약, 카피라이팅 및 공고 대응 매트릭스
-    └── submission-checklist.md            # 빌드, 테스트, 배포 헬스체크 및 시연 통합 체크리스트
+|-- README.md                              # [본 문서] 기술 문서 종합 인덱스 가이드
+|-- CHANGELOG.md                           # v2.1.0 변경 내역 및 해결 갭 정리
+|-- HANDOVER_SUMMARY.md                   # 역애인계 및 형재 작업 컨테스트 요약
+|-- LOAD_TEST_REPORT.md                    # 부하 테스튼(k6-style) 성과 및 안정성 보고서
+|-- PROJECT_COMPREHENSIVE_AUDIT.md        # 시스템 전수 진단 및 고도화 보고서 (v2.1.0 반영)
+|-- PROJECT_GAP_ANALYSIS_REPORT.md        # B2G 갭 분석 보고서 (3차 갱신)
+|-- UI_UX_EVALUATION_REPORT.md            # UI/UX 및 디자인 시스템 종합 감리 보고서
+|
+|-- specs/                                 # 시스템 명세 및 아키텍처 스펙
+|   |-- architecture-and-api.md            # 시스템 블록 아키텍처, 계층 설계 및 REST API 명세서
+|   |-- data-and-simulation-methodology.md # 3대 공공데이터 연동 수식, 디지털 트윈 시뮬레이션 및 보안 정책
+|   |-- kpi-evidence-matrix.md             # KPI 지표 근거 매트릭스
+|   |-- selected-festival-data-flow.md     # 선택 축제 데이터 흐름 및 TourAPI 연동 명세
+|   |-- hourly-demand-profile.md           # 시간대별 수요 프로파일 산출 명세
+|   |-- demand-backdata-relevance.md       # 지역 수요 백데이터 관련성 진단
+|   `-- viewt-od-traffic-evidence.md       # View-T OD 교통량 근거 명세
+|
+|-- guides/                                # 개발, 배포 및 시연 운영 가이드
+|   |-- deployment-and-cicd.md             # 로컈 구동, 원격 Docker 배포 스크립트 및 GitHub Actions CI/CD
+|   `-- demo-and-operations.md             # 3분 핵심 시연 시나리오 스크립트 및 운영 런북
+|
+`-- contest/                               # 공모전 제출 서류 및 최종 검증
+    |-- submission-package.md              # 공모전 제출 요약, 카피라이팅 및 공고 대응 매트릭스
+    `-- submission-checklist.md            # 빌드, 테스트, 배포 헬스체크 및 시연 통합 체크리스트
 ```
 
 ---
@@ -43,8 +53,8 @@ docs/
 ### 2.2 배포 및 운영 가이드 (`docs/guides/`)
 
 - [deployment-and-cicd.md](guides/deployment-and-cicd.md)
-  - 로컬 개발 환경 실행 및 네이버 지도 API Client ID 설정법
-  - 원격 Docker 서버(`192.168.55.223:18080`) 원클릭 무중단 배포 스크립트 (`npm run deploy:remote`) 사용법
+  - 로컈 개발 환경 실행 및 네이버 지도 API Client ID 설정법
+  - 원격 Docker 서버(`100.104.94.112:18080`) 원클릭 무중단 배포 스크립트 (`npm run deploy:remote`) 사용법
   - GitHub Actions 파이프라인 (`.github/workflows/deploy.yml`) 구성 및 헬스체크 타임아웃 재시도 처리
 
 - [demo-and-operations.md](guides/demo-and-operations.md)
@@ -58,7 +68,7 @@ docs/
   - 공모전 평가 항목별 Fest-Twin 구현 내용 1:1 대응 매트릭스
 
 - [submission-checklist.md](contest/submission-checklist.md)
-  - Vitest 84개 단위 테스트 및 빌드 검증 목록
+  - Vitest 190개 단위 테스트 및 빌드 검증 목록
   - 4대 REST API 엔드포인트 헬스체크 및 시연 준비 종합 체크리스트
 
 ### 2.4 성능 검증 보고서 (`docs/LOAD_TEST_REPORT.md`)
@@ -68,6 +78,21 @@ docs/
   - 일반 API TPS 1,283.28 req/s 수용 및 429 Rate Limit 초과 차단 100% 방어
   - 인메모리 캐시 적용 시 Cache Hit 평균 응답 시간 0.58ms 달성 증빙
 
+### 2.5 진단 및 변경 내역 (`docs/CHANGELOG.md` 등)
+
+- [CHANGELOG.md](CHANGELOG.md)
+  - v2.1.0 신규 기능 12종, 개선 5종, 해결 갭 9건 정리
+  - 신규 테스트 7개 파일 추가, 남은 과제 4항목 문서화
+
+- [PROJECT_COMPREHENSIVE_AUDIT.md](PROJECT_COMPREHENSIVE_AUDIT.md)
+  - 시스템 전수 진단 및 우선순위별 고도화 과제 로드맵 (v2.1.0 반영)
+
+- [PROJECT_GAP_ANALYSIS_REPORT.md](PROJECT_GAP_ANALYSIS_REPORT.md)
+  - B2G 한 3차 갱신, 해결 갭 정리 및 잔여 과제 현황 (190개 테스트 100% PASS 반영)
+
+- [UI_UX_EVALUATION_REPORT.md](UI_UX_EVALUATION_REPORT.md)
+  - UI/UX 디자인 시스템 종합 감리 보고서 (v2.1.0 3대 개선 적용 확인)
+
 ---
 
 ## 3. 빠른 시작 안내 (Quick Links)
@@ -76,3 +101,4 @@ docs/
 - 배포 헬스체크 실행: `npm run deploy:check`
 - 단위 및 통합 테스트: `npm test`
 - 부하 테스트 실행: `npm run test:load`
+- OpenAPI 신뢰도 진단: `node --experimental-vm-modules scripts/api-reliability-check.js`

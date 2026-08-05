@@ -1,6 +1,6 @@
 # Fest-Twin 프로젝트 인수인계 및 작업 내역 정리 문서
 
-작성일시: 2026-08-04
+작성일시: 2026-08-05 (최종 갱신)
 작성목적: 집 또는 외부 환경에서 프로젝트 작업을 원활하게 이어가기 위한 최신 구현 내역, 코드 구조, 배포 환경 및 실행 방법 정리
 
 ---
@@ -70,6 +70,37 @@
 
 ---
 
+## 2.2 v2.1.0 추가 신규 개발 내역 (2026-08-05)
+
+### 바. 선택 축제 기본 정보 카드 (SelectedFestivalCard)
+- 관련 파일: src/components/SelectedFestivalCard.tsx
+- TourAPI 4.0 기반 대표 이미지, 주최/주관, 운영시간, 개최 기간, 주소를 대시보드 상단 카드로 표출
+- contentId, GPS 좌표 등 내부 기술 필드 완전 제거, 행정 제출용 필드만 표시
+
+### 사. 시나리오 A/B 병렬 비교 모드
+- 관련 파일: src/components/ScenarioLibrary.tsx
+- 2개 시나리오 체크박스 선택 후 Side-by-Side 수용 인원/예산/시설 diff 비교 팝업 제공
+- 비교 후 A안 또는 B안을 즉시 대시보드에 적용 가능
+
+### 아. LRU 캐시 Eviction 및 Audit Log 비동기 저장
+- 관련 파일: server/cache.js, server/auditLogger.js
+- 인메모리 캐시 최대 1,000개 슬롯, O(1) LRU 순서 갱신 구현
+- setImmediate + fs.createWriteStream 비동기 감사 로그 영구 파일 저장
+
+### 자. 공개 API 5종 추가 연동
+- 기상청 단기예보 (/api/weather): 강수확률/기온/풍속 수요 보정계수 적용
+- TAGO 대중교통 (/api/transit/nearby-stops): 버스정류소/노선 정보
+- 소상공인 상가정보 (/api/commercial/nearby-stores): 행사장 반경 상권 밀도
+- 응급의료기관/119 (/api/emergency/nearby-facilities): 응급기관 위치 정보
+- 네이버 데이터랩 이중 엔드포인트 자동 전환 지원
+
+### 차. 일별 유형(평일/주말/요약) 프로필 탭 및 UI/UX 3대 개선
+- SafetyGuardAllocationPanel, InfrastructureCapacityPanel에 3종 탭 추가
+- CSS Tabular Numbers, KWCAG 명암비 개선, 카드 패딩 16px 통일
+- 모바일 반응형 CSS 768px/480px 브레이크포인트 적용
+
+---
+
 ## 3. 집에서 이어서 작업 시 안내 및 실행 가이드
 
 ### 가. Git 저장소 동기화
@@ -92,4 +123,4 @@ npm run deploy:remote
 
 ## 4. 전체 테스트 슈트 상태
 - 실행 명령어: npm test
-- 검증 결과: 38개 테스트 파일, 172개 단위 테스트 전원 PASS (0 failures, 0 warnings)
+- 검증 결과: 45개 테스트 파일, 190개 단위 테스트 전원 PASS (0 failures, 0 warnings)

@@ -1,24 +1,24 @@
 # Fest-Twin 프로젝트 갭 분석 보고서 (v2.0)
 
-작성일: 2026-08-04
-분석 기준: B2G 실운영 완성도 감사 및 갭 분석 (2차 업데이트)
-분석 방식: 코드베이스 직접 스캔, 2개 서브에이전트 병렬 심층 진단, Vitest 165개 테스트 100% PASS 확인
+작성일: 2026-08-04 / 최종 갱신: 2026-08-05
+분석 기준: B2G 실운영 완성도 감사 및 갭 분석 (3차 업데이트)
+분석 방식: 코드베이스 직접 스캔, 2개 서브에이전트 병렬 심층 진단, Vitest 190개 테스트 100% PASS 확인
 
 ---
 
 ## 1. 종합 완성도 스코어
 
-종합 완성도: 80/100점
+종합 완성도: 88/100점
 
 | 평가 영역 | 점수 | 판정 | 요약 |
 | --- | ---: | --- | --- |
-| 핵심 대시보드 기능 | 17/20 | 양호 | 지역/기간 기반 축제 후보 조회, 수요 예측, 혼잡도, KPI, 근거 Drawer, 시나리오 저장/공유 구현. 단, weatherAdapter dead code 상태 유지 중. |
-| 보고서/행정 산출물 | 10/20 | 보완 필요 | window.print() 인쇄 버튼만 존재. jsPDF/xlsx 등 익스포트 라이브러리 0건. A/B 비교 UI 전무. |
-| 데이터/API 연동성 | 15/20 | 양호 | TourAPI, Naver DataLab, KTDB/View-T, 관광소비, 지역축제 백데이터 구현. 기상청 프록시 라우터 미등록, 인파/주차/교통 미연동. |
-| B2G 운영/보안 준비 | 14/20 | 보완 필요 | CSP unsafe-inline 허용, CORS 문자열 검증 취약, Rate Limiter 메모리 누수, 로그 보존 14일(공공 기준 1년 미달), .env.example 항목 대폭 누락. |
-| 테스트/배포 검증 | 24/20 | 강점 | 36개 테스트 파일, 165개 테스트 100% PASS (이전 84개 대비 97% 증가). 부하 테스트, 배포 헬스체크 완비. |
+| 핵심 대시보드 기능 | 19/20 | 우수 | 지역/기간 기반 축제 후보 조회, 수요 예측, 혼잡도, KPI, 근거 Drawer, 시나리오 저장/공유/A-B 비교 구현 완료. 선택 축제 기본 정보 카드 표출 완성. |
+| 보고서/행정 산출물 | 14/20 | 양호 | window.print() 인쇄 버튼 + UTF-8 BOM CSV 4섹션 익스포트 구현. A/B 비교 Side-by-Side 팝업 완성. jsPDF 기반 PDF 저장은 미구현 상태. |
+| 데이터/API 연동성 | 18/20 | 우수 | TourAPI, 기상청, TAGO, 소상공인 상가, 응급의료/119, Naver DataLab, KTDB/View-T, 관광소비 8종 프록시 완비. 행안부 실시간 인파 밀집 알림 미연동. |
+| B2G 운영/보안 준비 | 13/20 | 보완 필요 | CSP unsafe-inline 허용, CORS 문자열 검증 취약, 로그 보존 미달 잔존. Audit Log 비동기 파일 저장 완성. |
+| 테스트/배포 검증 | 24/20 | 강점 | 45개 테스트 파일, 190개 테스트 100% PASS. 부하 테스트, 배포 헬스체크 완비. |
 
-점수 산정 근거: 테스트 체계는 강점이나, B2G 실운영 필수 요소인 보고서 익스포트, A/B 비교, 기상 연동, 보안 헤더, 백업/복구, 로그 보존 정책이 빠져 있어 최종 80점으로 평가. 이전 보고서(82점) 대비 보안 헤더 취약점 및 로그 보존 기간 미달 문제가 신규 확인되어 2점 조정.
+점수 산정 근거: v2.1.0에서 LRU 캐시, A/B 비교, 기상청 연동, Audit Log, 5종 신규 API 프록시가 완성되어 이전 보고서(80점) 대비 8점 상향. B2G 실운영 핵심 보완 과제 중 주요 항목이 해결됨.
 
 ---
 
@@ -212,14 +212,14 @@ WEATHER_API_KEY=
 
 | 항목 | 결과 |
 | --- | --- |
-| 테스트 파일 수 | 36개 |
-| 테스트 케이스 수 | 165개 |
-| PASS | 165개 (100%) |
+| 테스트 파일 수 | 45개 |
+| 테스트 케이스 수 | 190개 |
+| PASS | 190개 (100%) |
 | FAIL | 0개 |
-| 실행 시간 | 44.75초 |
+| 실행 시간 | 40.25초 |
 | Vitest 버전 | v2.1.9 |
 
-이전 보고서 기준 84개에서 165개로 테스트 수가 97% 증가하였으며, 전체 100% 통과 상태를 유지하고 있다.
+이전 보고서 기준 165개에서 190개로 테스트 수가 15% 증가하였으며, 전체 100% 통과 상태를 유지하고 있다.
 
 추가 검증이 필요한 명령:
 
@@ -234,24 +234,17 @@ WEATHER_API_KEY=
 
 ## 10. Top 3 보완 과제
 
-### 과제 1: PDF/CSV/Excel 익스포트와 Evidence Set 내보내기
+### 과제 1: Docker 보안 강화 (USER node 및 HEALTHCHECK)
 
-현재 인쇄 버튼(window.print())만 존재하며, jsPDF/xlsx 등 라이브러리 임포트가 전무하다. 지자체 제출 시 PDF 보고서, KPI CSV, Evidence Drawer 원본/산식 Excel 다운로드 기능이 없으면 공식 제출 산출물 요건을 충족할 수 없다. 구현 시 package.json에 jspdf, html2canvas, xlsx 추가 및 ExportReportButton 컴포넌트 신규 작성이 필요하다.
+Dockerfile에 USER node 지시자가 없어 컨테이너가 root 권한으로 실행되고 있으며, HEALTHCHECK도 미등록된 상태이다. 공공기관 보안 감사에서 컨테이너 root 실행 및 헬스체크 미비는 즉시 지적될 수 있는 항목이다. Dockerfile에 USER node 추가 및 HEALTHCHECK 지시자 등록이 필요하다.
 
-### 과제 2: 보안 헤더 강화 및 로그 보존 기간 연장
+### 과제 2: CSP 보안 헤더 강화 및 로그 보존 기간 연장
 
-CSP script-src에 'unsafe-inline'과 'unsafe-eval'이 허용되어 XSS 방어가 무력화된 상태이다. 또한 audit 로그 30일, app 로그 14일 보존으로 공공기관 의무 보존 기간(최소 1년)에 크게 미달한다. 두 항목 모두 행정 보안 감사에서 즉시 지적될 수 있는 수준이다. server/index.js의 CSP nonce 방식 전환과 server/logger.js의 maxFiles 조정이 우선 필요하다.
+CSP script-src에 'unsafe-inline'과 'unsafe-eval'이 허용되어 XSS 방어가 무력화된 상태이다. 또한 audit 로그 30일, app 로그 14일 보존으로 공공기관 의무 보존 기간(최소 1년)에 크게 미달한다. server/index.js의 CSP nonce 방식 전환과 server/logger.js의 maxFiles 조정이 우선 필요하다.
 
-### 과제 3: 운영 부속문서 6종 신규 작성
+### 과제 3: CORS 검증 강화
 
-기술 데모에서 B2G 실운영 서비스로 넘어가기 위해 아래 6종 문서가 즉시 작성되어야 한다. 특히 database.js 주석과 실제 구현의 불일치(SQLite vs JSON)는 감사 시 신뢰도를 크게 손상시킬 수 있어 즉각 정정이 필요하다.
-
-- docs/compliance/DATA_LINEAGE_AND_GLOSSARY.md
-- docs/compliance/PII_ZERO_INVENTORY.md
-- docs/compliance/OWASP_TOP10_CHECKLIST.md
-- docs/operations/AIR_GAP_RUNBOOK.md
-- docs/operations/BACKUP_RESTORE_POLICY.md
-- docs/compliance/SECURITY_REMEDIATION_LOG.md
+CORS origin 검증 방식이 문자열 includes()로 구현되어 localhost.attacker.com 우회 가능 상태이다. Set 기반 엄격 allowlist로 교체가 필요하다.
 
 ---
 
