@@ -38,6 +38,7 @@ import {
   createSelectedFestivalBasis,
 } from "./services/festivalSelection";
 import { createForecast } from "./services/forecast";
+import { getFallbackWeatherContext } from "./services/weatherAdapter";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
 import { createPlanningReport } from "./services/report";
 import { createSimulation } from "./services/simulation";
@@ -518,9 +519,10 @@ export function App() {
     };
   }, [trendPlanKey]);
 
+  const weather = useMemo(() => getFallbackWeatherContext(), []);
   const forecast = useMemo(
-    () => createForecast(plan, tourism, trends, demandBackdata),
-    [plan, tourism, trends, demandBackdata],
+    () => createForecast(plan, tourism, trends, demandBackdata, weather),
+    [plan, tourism, trends, demandBackdata, weather],
   );
   const simulation = useMemo(
     () => createSimulation(plan, forecast, selectedHour),
@@ -537,6 +539,7 @@ export function App() {
       spending,
       demandBackdata,
       selectedFestivalBasis,
+      weather,
     ),
     [
       forecast,
@@ -548,6 +551,7 @@ export function App() {
       spending,
       demandBackdata,
       selectedFestivalBasis,
+      weather,
     ],
   );
   const report = useMemo(
@@ -766,6 +770,7 @@ export function App() {
                   traffic={traffic}
                   spending={spending}
                   demandBackdata={demandBackdata}
+                  weather={weather}
                   selectedFestivalBasis={selectedFestivalBasis}
                 />
               </section>

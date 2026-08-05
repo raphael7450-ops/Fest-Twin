@@ -329,7 +329,7 @@ export interface MetricEvidenceStep {
   note?: string;
 }
 
-export type EvidenceSourceType = "tourapi" | "ktdb" | "user-input" | "derived" | "sample";
+export type EvidenceSourceType = "tourapi" | "ktdb" | "user-input" | "derived" | "sample" | "public-data";
 
 export interface EvidenceField {
   label: string;
