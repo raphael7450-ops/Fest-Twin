@@ -7,6 +7,7 @@ import type {
   TourismContext,
   TrendContext,
 } from "../domain/types";
+import type { WeatherContext } from "../services/weatherAdapter";
 
 interface DataBasisPanelProps {
   tourism: TourismContext;
@@ -14,6 +15,7 @@ interface DataBasisPanelProps {
   traffic?: TrafficContext;
   spending?: SpendingContext;
   demandBackdata?: DemandBackdataContext;
+  weather?: WeatherContext;
   selectedFestivalBasis?: SelectedFestivalBasis | null;
 }
 
@@ -51,6 +53,7 @@ export function DataBasisPanel({
   traffic,
   spending,
   demandBackdata,
+  weather,
   selectedFestivalBasis,
 }: DataBasisPanelProps) {
   const statusRows = [
@@ -64,6 +67,18 @@ export function DataBasisPanel({
       status: compactStatusLabel(trends.provenance.sourceStatus),
       basis: trends.provenance.sourceName,
     },
+    ...(weather
+      ? [
+          {
+            label: "기상청 단기예보",
+            status: compactStatusLabel(weather.provenance.sourceStatus),
+            basis:
+              weather.provenance.sourceType === "kma-forecast"
+                ? "기상청 실시간 단기예보 API"
+                : "동계/하계 평년 기후 샘플",
+          },
+        ]
+      : []),
     ...(traffic
       ? [
           {

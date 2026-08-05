@@ -1,7 +1,7 @@
 /**
  * 파일 : server/index.js
  * 내용 : Express 백엔드 서버 엔트리포인트 (Rate Limiter, Helmet/CSP, CORS Allowlist & SPA 정적 서빙)
- * 수정 : 2026-07-29. 공개 데모 후보 조회 흐름을 고려한 환경변수 기반 Rate Limit 조정
+ * 수정 : 2026-08-05. 기상청 단기예보 프록시 라우터 (/api/weather) 마운트
  */
 
 import express from "express";
@@ -13,6 +13,7 @@ import { createTourProxyRouter } from "./tourProxy.js";
 import { createTrendProxyRouter } from "./trendProxy.js";
 import { createScenarioRouter } from "./scenarioRouter.js";
 import { createRegionalFestivalRouter } from "./regionalFestivalRouter.js";
+import { createWeatherProxyRouter } from "./weatherProxy.js";
 import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
 import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
@@ -89,7 +90,7 @@ function apiNoStoreMiddleware(request, response, next) {
 
 // 3. IP 기반 슬라이딩 윈도우 Rate Limiter 생성 함수
 export function createRateLimiter(options = {}) {
-  const windowMs = options.windowMs ?? 60 * 1000; // 1분 슬라이딩 윈도우
+  const windowMs = options.windowMs ?? 60 * 1000;
   const maxRequests = options.maxRequests ?? 100;
   const auditLog = options.auditLogger ?? noopLogger;
   const requestCounts = new Map();
@@ -111,7 +112,6 @@ export function createRateLimiter(options = {}) {
     response.setHeader("X-RateLimit-Remaining", Math.max(0, maxRequests - record.count));
 
     if (record.count > maxRequests) {
-      // B2G Audit: Rate Limit 초과 차단 기록
       auditLog.warn("rate_limit_exceeded", {
         event: "RATE_LIMIT_429",
         ip,
@@ -174,11 +174,12 @@ export function createApp(options = {}) {
   // 1. 일반 API 라우트 (/api/scenarios 등)
   app.use("/api", generalRateLimiter);
 
-  // 2. 외부 OpenAPI 중계 라우트 (/api/tour, /api/spending, /api/traffic)
+  // 2. 외부 OpenAPI 중계 라우트 (/api/tour, /api/spending, /api/traffic, /api/trends, /api/weather)
   app.use("/api/tour", openApiRateLimiter);
   app.use("/api/spending", openApiRateLimiter);
   app.use("/api/traffic", openApiRateLimiter);
   app.use("/api/trends", openApiRateLimiter);
+  app.use("/api/weather", openApiRateLimiter);
 
   app.use(
     "/api/tour",
@@ -210,6 +211,14 @@ export function createApp(options = {}) {
       fetchImpl: options.fetchImpl,
       clientId: options.naverDataLabClientId,
       clientSecret: options.naverDataLabClientSecret,
+      logger: log,
+    }),
+  );
+  app.use(
+    "/api/weather",
+    createWeatherProxyRouter({
+      fetchImpl: options.fetchImpl,
+      apiKey: options.weatherApiKey,
       logger: log,
     }),
   );

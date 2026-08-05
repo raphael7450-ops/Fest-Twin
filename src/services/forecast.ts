@@ -292,11 +292,14 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
   };
 }
 
+import type { WeatherContext } from "./weatherAdapter";
+
 export function createForecast(
   plan: FestivalPlan,
   tourism: TourismContext,
   trends: TrendContext,
   demandBackdata?: DemandBackdataContext,
+  weather?: WeatherContext,
 ): ForecastResult {
   const safeExpectedCapacity = positiveNumber(plan.expectedCapacity, 5000);
   const safeBudgetMillionKrw = Math.max(Number.isFinite(plan.totalBudgetMillionKrw) ? plan.totalBudgetMillionKrw : 0, 0);
@@ -320,10 +323,12 @@ export function createForecast(
     ? 1.08
     : 0.92;
   const timePattern = createFestivalTimePattern(plan, demandBackdata);
+  const weatherMultiplier = weather?.attractivenessMultiplier ?? 1.0;
   const baseDemand =
     (similarDemand * 0.52 + safeExpectedCapacity * 0.28 + regionalAttractiveness * 180) *
     (0.75 + socialInterest / 300) *
     trendMultiplier *
+    weatherMultiplier *
     (0.8 + programScore / 400) *
     budgetScale *
     entranceFactor;
@@ -484,6 +489,15 @@ export function createForecast(
           `${timePattern.sourceLabel} 기준의 ${timePattern.label} 시간대 분포를 적용했습니다. ` +
           "실측 시간대 방문객 집계가 아닌 사전 시뮬레이션 분포입니다.",
       },
+      ...(weather
+        ? [
+            {
+              label: "기상청 기후·예보 보정",
+              impact: Math.round((weatherMultiplier - 1) * 100),
+              description: `${weather.provenance.sourceType === "kma-forecast" ? "기상청 실시간 예보" : "동계/하계 평년 기후 샘플"} (${weather.weather.conditionText}, 기온 ${weather.weather.temperatureCelsius}°C, 강수확률 ${weather.weather.precipitationProbabilityPercent}%)를 수요 보정에 반영했습니다.`,
+            },
+          ]
+        : []),
     ],
   };
 }
