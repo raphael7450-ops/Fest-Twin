@@ -77,66 +77,68 @@ export function MetricEvidenceDrawer({
         {evidence.sourceDetails.length > 0 ? (
           <div className="evidence-section">
             <h3>사용 데이터 상세</h3>
-            <div className="source-detail-list">
-              {evidence.sourceDetails.map((source) => (
-                <article className="source-detail-card" key={source.sourceId}>
-                  <div className="source-detail-heading">
-                    <div>
-                      <strong>{safeEvidenceText(source.sourceName)}</strong>
-                      {source.endpoint ? <span>{safeEvidenceText(source.endpoint)}</span> : null}
+            <div className="evidence-table-wrapper">
+              <div className="source-detail-list">
+                {evidence.sourceDetails.map((source) => (
+                  <article className="source-detail-card" key={source.sourceId}>
+                    <div className="source-detail-heading">
+                      <div>
+                        <strong>{safeEvidenceText(source.sourceName)}</strong>
+                        {source.endpoint ? <span>{safeEvidenceText(source.endpoint)}</span> : null}
+                      </div>
+                      <em className={`source-type source-type-${source.sourceType}`}>
+                        {safeEvidenceText(source.statusLabel)}
+                      </em>
                     </div>
-                    <em className={`source-type source-type-${source.sourceType}`}>
-                      {safeEvidenceText(source.statusLabel)}
-                    </em>
-                  </div>
 
-                  {source.retrievedAt ? (
-                    <p className="source-detail-meta">
-                      조회 기준: {safeEvidenceText(source.retrievedAt)}
-                    </p>
-                  ) : null}
+                    {source.retrievedAt ? (
+                      <p className="source-detail-meta">
+                        조회 기준: {safeEvidenceText(source.retrievedAt)}
+                      </p>
+                    ) : null}
 
-                  {source.query && source.query.length > 0 ? (
-                    <dl className="source-detail-grid">
-                      {source.query.map((field) => (
-                        <div key={`${source.sourceId}-query-${field.label}`}>
-                          <dt>{safeEvidenceText(field.label)}</dt>
-                          <dd>{safeEvidenceText(field.value, field.label)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  ) : null}
-
-                  {source.records?.map((record) => (
-                    <div className="source-record" key={`${source.sourceId}-${record.label}`}>
-                      <b>{safeEvidenceText(record.label)}</b>
+                    {source.query && source.query.length > 0 ? (
                       <dl className="source-detail-grid">
-                        {record.fields.map((field) => (
-                          <div key={`${source.sourceId}-${record.label}-${field.label}`}>
+                        {source.query.map((field) => (
+                          <div key={`${source.sourceId}-query-${field.label}`}>
                             <dt>{safeEvidenceText(field.label)}</dt>
                             <dd>{safeEvidenceText(field.value, field.label)}</dd>
                           </div>
                         ))}
                       </dl>
-                    </div>
-                  ))}
+                    ) : null}
 
-                  {source.calculationInputs && source.calculationInputs.length > 0 ? (
-                    <dl className="source-detail-grid">
-                      {source.calculationInputs.map((field) => (
-                        <div key={`${source.sourceId}-input-${field.label}`}>
-                          <dt>{safeEvidenceText(field.label)}</dt>
-                          <dd>{safeEvidenceText(field.value, field.label)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  ) : null}
+                    {source.records?.map((record) => (
+                      <div className="source-record" key={`${source.sourceId}-${record.label}`}>
+                        <b>{safeEvidenceText(record.label)}</b>
+                        <dl className="source-detail-grid">
+                          {record.fields.map((field) => (
+                            <div key={`${source.sourceId}-${record.label}-${field.label}`}>
+                              <dt>{safeEvidenceText(field.label)}</dt>
+                              <dd>{safeEvidenceText(field.value, field.label)}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    ))}
 
-                  {source.note ? (
-                    <p className="source-detail-note">{safeEvidenceText(source.note)}</p>
-                  ) : null}
-                </article>
-              ))}
+                    {source.calculationInputs && source.calculationInputs.length > 0 ? (
+                      <dl className="source-detail-grid">
+                        {source.calculationInputs.map((field) => (
+                          <div key={`${source.sourceId}-input-${field.label}`}>
+                            <dt>{safeEvidenceText(field.label)}</dt>
+                            <dd>{safeEvidenceText(field.value, field.label)}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : null}
+
+                    {source.note ? (
+                      <p className="source-detail-note">{safeEvidenceText(source.note)}</p>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}

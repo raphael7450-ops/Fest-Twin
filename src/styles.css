@@ -53,6 +53,7 @@ body {
     #eeeefe;
   margin: 0;
   min-width: 320px;
+  overflow-x: hidden;
 }
 
 button,
@@ -2633,3 +2634,320 @@ a:focus-visible {
 }
 
 
+/* ===================================================================
+   Mobile Responsive: 768px and below
+   =================================================================== */
+
+@media (max-width: 768px) {
+  /* --- Global overflow guard --- */
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+  }
+
+  /* --- App shell padding --- */
+  .app-shell {
+    padding: 12px 12px 24px;
+  }
+
+  /* --- Dashboard canvas: collapse side rail to top bar --- */
+  .dashboard-canvas {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+
+  .dashboard-content {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .dashboard-rail {
+    display: none;
+  }
+
+  .dashboard-section-tabs {
+    background: #f1efff;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    display: grid;
+    gap: 4px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 4px;
+    margin-bottom: 4px;
+  }
+
+  .dashboard-section-tab {
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    color: rgba(49, 39, 135, 0.72);
+    font-size: 12px;
+    font-weight: 850;
+    min-height: 44px;
+    padding: 6px 8px;
+  }
+
+  .dashboard-section-tab--active {
+    background: white;
+    box-shadow: var(--shadow-panel);
+    color: var(--color-primary-strong);
+  }
+
+  /* --- Government header: single column --- */
+  .government-header {
+    grid-template-columns: 1fr;
+    padding: 0 0 14px;
+    gap: 12px;
+  }
+
+  .government-header__meta {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  /* --- Workspace grids: single column vertical stack --- */
+  .workspace-grid,
+  .workspace-grid--dashboard,
+  .workspace-grid--2col,
+  .workspace-grid--3col {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .left-column,
+  .main-column,
+  .right-column {
+    grid-column: auto;
+    position: static;
+    gap: 12px;
+  }
+
+  /* --- Metric/KPI grids: 2 columns on mobile --- */
+  .summary-grid,
+  .score-table,
+  .recommendation-grid,
+  .submission-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .guideline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* --- Safety grid --- */
+  .safety-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- Panel headings: stack vertically --- */
+  .panel-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .panel-actions-inline,
+  .card-header-actions,
+  .safety-card-header,
+  .table-heading-with-action {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* --- Panel inner padding --- */
+  .panel {
+    padding: 14px;
+  }
+
+  /* --- Scenario actions: vertical stack --- */
+  .scenario-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* --- Evidence Drawer: scrollable table container --- */
+  .evidence-table-wrapper,
+  .metric-evidence-detail-table,
+  .ab-comparison-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .metric-evidence-table,
+  .ab-comparison-table {
+    min-width: 540px;
+  }
+
+  /* --- Candidate drawer: full width --- */
+  .candidate-drawer {
+    max-width: none;
+    width: 100%;
+  }
+
+  .candidate-drawer-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* --- ROI bar row: single column --- */
+  .roi-bar-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .roi-bar-row strong {
+    text-align: left;
+  }
+
+  .roi-impact-heading,
+  .capacity-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* --- Bar chart row --- */
+  .bar-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .bar-row strong {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  /* --- Map / heatmap --- */
+  .venue-map-canvas,
+  .heatmap {
+    min-height: 240px;
+  }
+
+  /* --- Status link centering --- */
+  .status-link {
+    text-align: center;
+  }
+
+  /* --- Typography scaling --- */
+  .government-header__title {
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+  }
+
+  .score-table strong {
+    font-size: clamp(1rem, 4vw, 1.375rem);
+  }
+
+  .metric-card strong,
+  .metric-value,
+  .stat-number {
+    font-size: clamp(1.1rem, 4.5vw, 1.5rem);
+  }
+
+  /* --- Minimum touch target: 44px for all interactive elements --- */
+  button,
+  input[type="button"],
+  input[type="submit"],
+  select,
+  .primary-button,
+  .secondary-button,
+  .evidence-button,
+  .export-button,
+  .day-type-tab,
+  .dashboard-section-tab {
+    min-height: 44px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  select {
+    min-height: 44px;
+    font-size: 16px; /* prevent iOS auto-zoom */
+    padding: 8px 10px;
+  }
+
+  /* --- Form layout: single column --- */
+  .plan-form,
+  .input-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* --- Day-type metric summary: 2 columns --- */
+  .day-type-metric-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  /* --- Selected festival basis grid: responsive --- */
+  .selected-festival-basis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* --- AB comparison grid: stack --- */
+  .ab-metric-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+/* ===================================================================
+   Mobile Responsive: 480px and below (small phones)
+   =================================================================== */
+
+@media (max-width: 480px) {
+  .app-shell {
+    padding: 8px 8px 16px;
+  }
+
+  .dashboard-content {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* --- Metric grids: single column on small phones --- */
+  .summary-grid,
+  .score-table,
+  .recommendation-grid,
+  .submission-status-grid,
+  .report-kpi-strip,
+  .summary-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* --- Selected festival basis: single column --- */
+  .selected-festival-basis-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .government-header__mark {
+    height: 38px;
+    width: 38px;
+    font-size: 13px;
+  }
+
+  .dashboard-section-tab {
+    font-size: 11px;
+    min-height: 40px;
+    padding: 4px 6px;
+  }
+}
