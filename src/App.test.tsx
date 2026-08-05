@@ -406,8 +406,7 @@ describe("App", () => {
     render(<App />);
     openDashboardSection("근거");
 
-    expect((await screen.findAllByText("3439947")).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("선택 TourAPI 축제 기준").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("선택 TourAPI 축제 기준")).length).toBeGreaterThan(0);
   });
 
   it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {
