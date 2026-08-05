@@ -1,10 +1,5 @@
-/**
- * 파일 : server/scenarioRouter.js
- * 내용 : 지자체 시나리오 영속 REST API (CRUD 및 부서 공유 share_token 엔트리포인트)
- * 수정 : 2026-07-24. RESTful CRUD 라우트 구현 및 공유 토큰 기반 조회 추가
- */
-
 import express from "express";
+import { logAuditEvent } from "./auditLogger.js";
 import { scenarioDb } from "./db/database.js";
 import { noopLogger } from "./logger.js";
 
@@ -12,6 +7,14 @@ function errorResponse(response, status, code, message) {
   return response.status(status).json({
     error: { code, message },
   });
+}
+
+function getClientIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (forwarded) {
+    return String(forwarded).split(",")[0].trim();
+  }
+  return req.ip || req.socket?.remoteAddress || "127.0.0.1";
 }
 
 export function createScenarioRouter(options = {}) {
@@ -37,6 +40,18 @@ export function createScenarioRouter(options = {}) {
       if (!scenario) {
         return errorResponse(response, 404, "SHARE_TOKEN_NOT_FOUND", "Shared scenario link is invalid or expired.");
       }
+
+      // B2G Audit: 시나리오 공유 조회 기록
+      logAuditEvent({
+        action_type: "SHARE",
+        scenario_id: scenario.id,
+        client_ip: getClientIp(request),
+        payload_summary: {
+          share_token: token,
+          title: scenario.title,
+        },
+      });
+
       return response.status(200).json(scenario);
     } catch (error) {
       return errorResponse(response, 500, "SHARE_READ_ERROR", "Failed to retrieve shared scenario.");
@@ -73,7 +88,18 @@ export function createScenarioRouter(options = {}) {
         results_summary,
       });
 
-      // B2G Audit: 시나리오 생성 기록
+      // B2G Audit: 시나리오 생성 비동기 기록
+      logAuditEvent({
+        action_type: "CREATE",
+        scenario_id: created.id,
+        client_ip: getClientIp(request),
+        payload_summary: {
+          title: created.title,
+          share_token: created.share_token,
+          region: parameters.region,
+        },
+      });
+
       auditLog.info("scenario_created", {
         event: "SCENARIO_CREATE",
         id: created.id,
@@ -104,7 +130,16 @@ export function createScenarioRouter(options = {}) {
         return errorResponse(response, 404, "SCENARIO_NOT_FOUND", "Scenario to update does not exist.");
       }
 
-      // B2G Audit: 시나리오 수정 기록
+      // B2G Audit: 시나리오 수정 비동기 기록
+      logAuditEvent({
+        action_type: "UPDATE",
+        scenario_id: updated.id,
+        client_ip: getClientIp(request),
+        payload_summary: {
+          title: updated.title,
+        },
+      });
+
       auditLog.info("scenario_updated", {
         event: "SCENARIO_UPDATE",
         id: updated.id,
@@ -126,7 +161,14 @@ export function createScenarioRouter(options = {}) {
         return errorResponse(response, 404, "SCENARIO_NOT_FOUND", "Scenario to delete does not exist.");
       }
 
-      // B2G Audit: 시나리오 삭제 기록
+      // B2G Audit: 시나리오 삭제 비동기 기록
+      logAuditEvent({
+        action_type: "DELETE",
+        scenario_id: id,
+        client_ip: getClientIp(request),
+        payload_summary: { id },
+      });
+
       auditLog.info("scenario_deleted", {
         event: "SCENARIO_DELETE",
         id,
