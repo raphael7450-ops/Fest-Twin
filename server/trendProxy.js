@@ -139,11 +139,26 @@ export function createTrendProxyRouter(options = {}) {
       return errorResponse(response, 400, "INVALID_TREND_QUERY", validation.message);
     }
 
-    const clientId = options.clientId ?? process.env.NAVER_DATALAB_CLIENT_ID ?? "";
-    const clientSecret = options.clientSecret ?? process.env.NAVER_DATALAB_CLIENT_SECRET ?? "";
+    const developersClientId =
+      options.clientId ??
+      process.env.NAVER_DATALAB_CLIENT_ID ??
+      process.env.NAVER_CLIENT_ID ??
+      "";
+    const developersClientSecret =
+      options.clientSecret ??
+      process.env.NAVER_DATALAB_CLIENT_SECRET ??
+      process.env.NAVER_CLIENT_SECRET ??
+      "";
+
+    const ncpClientId = process.env.VITE_NAVER_MAP_NCP_KEY_ID ?? "";
+    const ncpClientSecret = process.env.NAVER_MAP_NCP_CLIENT_SECRET ?? "";
+
     const requestBody = buildNaverRequestBody(request.body);
 
-    if (!clientId || !clientSecret) {
+    const hasDevelopersKeys = Boolean(developersClientId && developersClientSecret);
+    const hasNcpKeys = Boolean(ncpClientId && ncpClientSecret);
+
+    if (!hasDevelopersKeys && !hasNcpKeys) {
       return response
         .status(200)
         .json(fallbackResponse("Naver DataLab credentials are not configured.", requestBody.keywordGroups));
@@ -156,15 +171,30 @@ export function createTrendProxyRouter(options = {}) {
     }
 
     try {
-      const upstreamResponse = await fetchImpl(NAVER_DATALAB_SEARCH_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Naver-Client-Id": clientId,
-          "X-Naver-Client-Secret": clientSecret,
-        },
-        body: JSON.stringify(requestBody),
-      });
+      let upstreamResponse;
+
+      if (hasDevelopersKeys) {
+        upstreamResponse = await fetchImpl(NAVER_DATALAB_SEARCH_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Naver-Client-Id": developersClientId,
+            "X-Naver-Client-Secret": developersClientSecret,
+          },
+          body: JSON.stringify(requestBody),
+        });
+      } else {
+        const ncpUrl = "https://naveropenapi.apigw.ntruss.com/datalab/v1/search";
+        upstreamResponse = await fetchImpl(ncpUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-NCP-APIGW-API-KEY-ID": ncpClientId,
+            "X-NCP-APIGW-API-KEY": ncpClientSecret,
+          },
+          body: JSON.stringify(requestBody),
+        });
+      }
 
       if (!upstreamResponse.ok) {
         log.warn("Naver DataLab upstream error", {
@@ -177,6 +207,16 @@ export function createTrendProxyRouter(options = {}) {
       }
 
       const payload = await upstreamResponse.json();
+      if (payload.error) {
+        log.warn("Naver DataLab API response contained error object", {
+          event: "NAVER_DATALAB_API_ERROR_BODY",
+          error: payload.error,
+        });
+        return response
+          .status(200)
+          .json(fallbackResponse(`Naver DataLab API error: ${payload.error.message || "Permission Denied"}`, requestBody.keywordGroups));
+      }
+
       const normalized = normalizeNaverPayload(payload);
       setCachedData(cacheKey, normalized);
       return response.status(200).json(normalized);
