@@ -577,8 +577,8 @@ describe("public data adapters", () => {
     );
 
     expect(candidates.map((candidate) => candidate.id).slice(0, 2)).toEqual([
-      "period-2",
       "period-1",
+      "filler-0",
     ]);
     expect(candidates).toHaveLength(16);
 

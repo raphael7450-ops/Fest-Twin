@@ -1165,7 +1165,8 @@ export async function getFestivalCandidates(
         sourceDetails,
       ),
     )
-    .filter((item): item is FestivalCandidate => Boolean(item));
+    .filter((item): item is FestivalCandidate => Boolean(item))
+    .sort((a, b) => (a.startDate || "").localeCompare(b.startDate || ""));
 }
 
 export async function getTourismContext(
