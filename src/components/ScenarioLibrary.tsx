@@ -197,7 +197,7 @@ export function ScenarioLibrary({
               className="text-button"
               type="button"
               onClick={() => setIsCompareOpen(false)}
-              style={{ color: "#94a3b8" }}
+              style={{ color: "#cbd5e1" }}
             >
               비교 닫기
             </button>
@@ -234,7 +234,7 @@ export function ScenarioLibrary({
             </div>
 
             <div style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center", gap: "6px" }}>
-              <div style={{ fontWeight: "700", color: "#94a3b8" }}>차이값 (Diff)</div>
+              <div style={{ fontWeight: "700", color: "#cbd5e1" }}>차이값 (Diff)</div>
               <div>
                 수용인원:{" "}
                 {(scenarioA.plan.expectedCapacity - scenarioB.plan.expectedCapacity > 0 ? "+" : "") +
