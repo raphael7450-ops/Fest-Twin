@@ -104,11 +104,12 @@ function createFestivalTypePlanningPatch(
 
   if (profile === "daytime") {
     return {
-      operatingHours: [10, 12, 14, 16, 18],
+      operatingHours: [9, 11, 13, 15, 17, 18],
       programs: [
-        { id: "daytime-main", name: "주간 대표 관람", startHour: 10, endHour: 16, expectedDraw: 88 },
-        { id: "daytime-family", name: "가족 체험 프로그램", startHour: 12, endHour: 17, expectedDraw: 82 },
-        { id: "daytime-photo", name: "전시·포토존 관람", startHour: 10, endHour: 18, expectedDraw: 76 },
+        { id: "daytime-open", name: "09시 공식 개장 및 관람 안내", startHour: 9, endHour: 12, expectedDraw: 75 },
+        { id: "daytime-main", name: "주간 대표 문화 관람 및 전시", startHour: 9, endHour: 17, expectedDraw: 88 },
+        { id: "daytime-family", name: "가족 체험 및 대표 공연 무대", startHour: 11, endHour: 16, expectedDraw: 82 },
+        { id: "daytime-photo", name: "주간 포토존 및 특산품 부스", startHour: 9, endHour: 18, expectedDraw: 76 },
       ],
     };
   }
@@ -124,12 +125,13 @@ function createFestivalTypePlanningPatch(
     };
   }
 
-  // General Regional Festival Default in Korea (Over 80% are daytime 10:00~18:00)
+  // General Regional Festival Default in Korea (09:00~18:00 Standard)
   return {
-    operatingHours: [10, 12, 14, 16, 18],
+    operatingHours: [9, 11, 13, 15, 17, 18],
     programs: [
-      { id: "default-main", name: "대표 문화 관람 및 지역 전시", startHour: 10, endHour: 17, expectedDraw: 85 },
-      { id: "default-booth", name: "주민 참여 체험 및 특산품 부스", startHour: 10, endHour: 18, expectedDraw: 78 },
+      { id: "default-open", name: "09시 공식 개장 및 관람", startHour: 9, endHour: 12, expectedDraw: 75 },
+      { id: "default-main", name: "대표 문화 관람 및 지역 전시", startHour: 9, endHour: 17, expectedDraw: 85 },
+      { id: "default-booth", name: "주민 참여 체험 및 특산품 부스", startHour: 9, endHour: 18, expectedDraw: 78 },
       { id: "default-peak", name: "오후 피크 대표 무대 행사", startHour: 13, endHour: 16, expectedDraw: 90 },
     ],
   };

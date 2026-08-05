@@ -130,18 +130,18 @@ describe("festivalSelection", () => {
 
     const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, flowerCandidate);
 
-    expect(nextPlan.operatingHours).toEqual([10, 12, 14, 16, 18]);
+    expect(nextPlan.operatingHours).toEqual([9, 11, 13, 15, 17, 18]);
     expect(nextPlan.programs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: "daytime-main",
-          startHour: 10,
-          endHour: 16,
+          startHour: 9,
+          endHour: 17,
         }),
         expect.objectContaining({
           id: "daytime-family",
-          startHour: 12,
-          endHour: 17,
+          startHour: 11,
+          endHour: 16,
         }),
       ]),
     );
