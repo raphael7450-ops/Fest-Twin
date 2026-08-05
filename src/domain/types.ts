@@ -211,6 +211,24 @@ export interface DemandBackdataContext {
   sourceDetails: MetricEvidenceSourceDetail[];
 }
 
+export type DayType = "summary" | "weekday" | "weekend";
+
+export interface DayTypeProfile {
+  dayType: DayType;
+  label: string;
+  expectedDailyVisitors: number;
+  peakHour: number;
+  peakVisitors: number;
+  visitorsByHour: Array<{ hour: number; visitors: number }>;
+  dayRatio: number;
+}
+
+export interface DayTypeCounts {
+  totalDays: number;
+  weekdayDays: number;
+  weekendDays: number;
+}
+
 export interface ForecastReason {
   label: string;
   impact: number;
@@ -224,6 +242,12 @@ export interface ForecastResult {
   successScore: number;
   confidence: RiskLevel;
   reasons: ForecastReason[];
+  dayTypeProfiles?: {
+    summary: DayTypeProfile;
+    weekday: DayTypeProfile;
+    weekend: DayTypeProfile;
+  };
+  dayTypeCounts?: DayTypeCounts;
 }
 
 export interface HeatmapCell {

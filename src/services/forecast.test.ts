@@ -259,4 +259,30 @@ describe("createForecast", () => {
       "Naver DataLab 검색량 보정",
     );
   });
+
+  it("generates dayTypeProfiles for summary, weekday, and weekend with day counts", () => {
+    const multiDayPlan = {
+      ...sampleFestivalPlan,
+      startDate: "2026-10-09",
+      endDate: "2026-10-13",
+    };
+
+    const forecast = createForecast(
+      multiDayPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+
+    expect(forecast.dayTypeProfiles).toBeDefined();
+    expect(forecast.dayTypeProfiles?.summary).toBeDefined();
+    expect(forecast.dayTypeProfiles?.weekday).toBeDefined();
+    expect(forecast.dayTypeProfiles?.weekend).toBeDefined();
+
+    const weekday = forecast.dayTypeProfiles!.weekday;
+    const weekend = forecast.dayTypeProfiles!.weekend;
+
+    expect(weekend.expectedDailyVisitors).toBeGreaterThan(weekday.expectedDailyVisitors);
+    expect(forecast.dayTypeCounts?.weekdayDays).toBeGreaterThan(0);
+    expect(forecast.dayTypeCounts?.weekendDays).toBeGreaterThan(0);
+  });
 });

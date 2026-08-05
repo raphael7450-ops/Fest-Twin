@@ -148,8 +148,24 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   );
   rows.push(formatCsvRow(["지표 항목", "산출 수치 및 진단 결과"]));
   rows.push(
-    formatCsvRow(["예상 총 방문객 수", `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`]),
+    formatCsvRow(["예상 총 방문객 수 (일평균)", `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`]),
   );
+  if (forecast.dayTypeProfiles) {
+    const weekday = forecast.dayTypeProfiles.weekday;
+    const weekend = forecast.dayTypeProfiles.weekend;
+    rows.push(
+      formatCsvRow([
+        "평일 일평균 예상 방문객",
+        `${weekday.expectedDailyVisitors.toLocaleString("ko-KR")}명 (피크 ${weekday.peakHour}:00)`,
+      ]),
+    );
+    rows.push(
+      formatCsvRow([
+        "주말 피크 예상 방문객",
+        `${weekend.expectedDailyVisitors.toLocaleString("ko-KR")}명 (피크 ${weekend.peakHour}:00)`,
+      ]),
+    );
+  }
   rows.push(formatCsvRow(["피크 시간대", `${forecast.peakHour}:00`]));
   rows.push(
     formatCsvRow([

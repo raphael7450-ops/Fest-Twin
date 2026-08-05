@@ -1,4 +1,5 @@
 import type {
+  DayTypeCounts,
   DemandBackdataContext,
   FestivalPlan,
   ForecastResult,
@@ -6,6 +7,61 @@ import type {
   TourismContext,
   TrendContext,
 } from "../domain/types";
+
+export function calculateDayTypeCounts(
+  startDateStr?: string,
+  endDateStr?: string,
+): DayTypeCounts {
+  if (!startDateStr || !endDateStr) {
+    return { totalDays: 3, weekdayDays: 2, weekendDays: 1 };
+  }
+
+  try {
+    const cleanStart = startDateStr.replace(/-/g, "").trim();
+    const cleanEnd = endDateStr.replace(/-/g, "").trim();
+
+    if (cleanStart.length < 8 || cleanEnd.length < 8) {
+      return { totalDays: 3, weekdayDays: 2, weekendDays: 1 };
+    }
+
+    const startYear = parseInt(cleanStart.substring(0, 4), 10);
+    const startMonth = parseInt(cleanStart.substring(4, 6), 10) - 1;
+    const startDay = parseInt(cleanStart.substring(6, 8), 10);
+
+    const endYear = parseInt(cleanEnd.substring(0, 4), 10);
+    const endMonth = parseInt(cleanEnd.substring(4, 6), 10) - 1;
+    const endDay = parseInt(cleanEnd.substring(6, 8), 10);
+
+    const curr = new Date(startYear, startMonth, startDay);
+    const end = new Date(endYear, endMonth, endDay);
+
+    if (isNaN(curr.getTime()) || isNaN(end.getTime()) || curr > end) {
+      return { totalDays: 3, weekdayDays: 2, weekendDays: 1 };
+    }
+
+    let weekdayDays = 0;
+    let weekendDays = 0;
+    let iterations = 0;
+
+    while (curr <= end && iterations < 90) {
+      const dayOfWeek = curr.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        weekendDays += 1;
+      } else {
+        weekdayDays += 1;
+      }
+      curr.setDate(curr.getDate() + 1);
+      iterations += 1;
+    }
+
+    const totalDays = weekdayDays + weekendDays;
+    return totalDays > 0
+      ? { totalDays, weekdayDays, weekendDays }
+      : { totalDays: 3, weekdayDays: 2, weekendDays: 1 };
+  } catch {
+    return { totalDays: 3, weekdayDays: 2, weekendDays: 1 };
+  }
+}
 
 export function clamp(value: number, min: number, max: number) {
   const safeMin = Number.isFinite(min) ? min : 0;
@@ -304,12 +360,82 @@ export function createForecast(
     ),
   );
 
+  const dayTypeCounts = calculateDayTypeCounts(plan.startDate, plan.endDate);
+  const { totalDays, weekdayDays, weekendDays } = dayTypeCounts;
+
+  let weekdayRatio = 0.8;
+  let weekendRatio = 1.4;
+
+  if (totalDays > 0) {
+    if (weekendDays === 0) {
+      weekdayRatio = 1.0;
+      weekendRatio = 1.35;
+    } else if (weekdayDays === 0) {
+      weekdayRatio = 0.8;
+      weekendRatio = 1.0;
+    } else {
+      weekdayRatio = 0.8;
+      weekendRatio = (totalDays - weekdayDays * weekdayRatio) / weekendDays;
+      weekendRatio = clamp(weekendRatio, 1.15, 1.65);
+    }
+  }
+
+  const weekdayExpectedVisitors = Math.round(expectedVisitors * weekdayRatio);
+  const weekdayVisitorsByHour = visitorsByHour.map((item) => ({
+    hour: item.hour,
+    visitors: Math.round(item.visitors * weekdayRatio),
+  }));
+  const weekdayPeak = weekdayVisitorsByHour.reduce((max, item) =>
+    item.visitors > max.visitors ? item : max,
+  );
+
+  const weekendExpectedVisitors = Math.round(expectedVisitors * weekendRatio);
+  const weekendVisitorsByHour = visitorsByHour.map((item) => ({
+    hour: item.hour,
+    visitors: Math.round(item.visitors * weekendRatio),
+  }));
+  const weekendPeak = weekendVisitorsByHour.reduce((max, item) =>
+    item.visitors > max.visitors ? item : max,
+  );
+
+  const dayTypeProfiles = {
+    summary: {
+      dayType: "summary" as const,
+      label: "전체 평균",
+      expectedDailyVisitors: expectedVisitors,
+      peakHour: peak.hour,
+      peakVisitors: peak.visitors,
+      visitorsByHour,
+      dayRatio: 1.0,
+    },
+    weekday: {
+      dayType: "weekday" as const,
+      label: "평일 평균",
+      expectedDailyVisitors: weekdayExpectedVisitors,
+      peakHour: weekdayPeak.hour,
+      peakVisitors: weekdayPeak.visitors,
+      visitorsByHour: weekdayVisitorsByHour,
+      dayRatio: Number(weekdayRatio.toFixed(2)),
+    },
+    weekend: {
+      dayType: "weekend" as const,
+      label: "주말 피크",
+      expectedDailyVisitors: weekendExpectedVisitors,
+      peakHour: weekendPeak.hour,
+      peakVisitors: weekendPeak.visitors,
+      visitorsByHour: weekendVisitorsByHour,
+      dayRatio: Number(weekendRatio.toFixed(2)),
+    },
+  };
+
   return {
     expectedVisitors,
     visitorsByHour,
     peakHour: peak.hour,
     successScore,
     confidence: confidenceFromEvidence(tourism, trends),
+    dayTypeProfiles,
+    dayTypeCounts,
     reasons: [
       {
         label: "Naver DataLab 검색량 보정",
