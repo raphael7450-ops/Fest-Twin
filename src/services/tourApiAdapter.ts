@@ -313,15 +313,37 @@ function parseOperatingHoursFromText(value?: string) {
   if (!value) return undefined;
 
   const normalized = value.replace(/[：]/g, ":").replace(/\s+/g, " ").trim();
-  const matches = [...normalized.matchAll(/(\d{1,2})(?::(\d{2}))?\s*(?:시)?/g)]
-    .map((match) => Number(match[1]))
-    .filter((hour) => Number.isFinite(hour) && hour >= 0 && hour <= 24);
+  const tokens: number[] = [];
+  const regex = /(?:(오전|오후|AM|PM|am|pm)\s*)?(\d{1,2})(?::(\d{2})|시)?/g;
+  let match: RegExpExecArray | null;
 
-  if (matches.length < 2) return undefined;
+  while ((match = regex.exec(normalized)) !== null) {
+    const ampm = match[1];
+    let hour = Number(match[2]);
 
-  const openingHour = Math.floor(matches[0]);
-  const closingHour = Math.floor(matches[1]);
-  if (closingHour <= openingHour) return undefined;
+    if (!Number.isFinite(hour) || hour < 0 || hour > 24) continue;
+
+    if (ampm) {
+      const isPm = /오후|PM|pm/i.test(ampm);
+      const isAm = /오전|AM|am/i.test(ampm);
+      if (isPm && hour < 12) hour += 12;
+      if (isAm && hour === 12) hour = 0;
+    }
+    tokens.push(hour);
+  }
+
+  if (tokens.length < 2) return undefined;
+
+  let openingHour = Math.floor(tokens[0]);
+  let closingHour = Math.floor(tokens[1]);
+
+  if (closingHour <= openingHour && closingHour >= 1 && closingHour <= 8 && openingHour >= 8) {
+    closingHour += 12;
+  }
+
+  if (closingHour <= openingHour || openingHour < 6 || closingHour > 24) {
+    return undefined;
+  }
 
   return { openingHour, closingHour };
 }
@@ -873,9 +895,13 @@ function mapFestivalCandidate(
   sourceDetails: MetricEvidenceSourceDetail[],
 ): FestivalCandidate | undefined {
   if (!isValidContentItem(item)) return undefined;
-  const operatingHours = parseOperatingHoursFromText(
-    typeof item.playtime === "string" ? item.playtime : undefined,
-  );
+  const operatingTimeText =
+    (typeof item.playtime === "string" && item.playtime.trim().length > 0 ? item.playtime.trim() : undefined) ??
+    (typeof item.usetimefestival === "string" && item.usetimefestival.trim().length > 0 ? item.usetimefestival.trim() : undefined);
+
+  const operatingHours =
+    parseOperatingHoursFromText(operatingTimeText) ??
+    parseOperatingHoursFromText(typeof item.overview === "string" ? item.overview : undefined);
 
   const address =
     (typeof item.addr1 === "string" && item.addr1.trim().length > 0)
@@ -897,7 +923,7 @@ function mapFestivalCandidate(
       ? Number(item.budgetMillionKrw)
       : undefined,
     visitors: hasFiniteNumber(item.visitors) ? Number(item.visitors) : undefined,
-    operatingTimeText: typeof item.playtime === "string" ? item.playtime : undefined,
+    operatingTimeText,
     ...operatingHours,
     searchScope,
     sourceDetails,

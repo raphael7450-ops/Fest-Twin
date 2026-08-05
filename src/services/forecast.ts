@@ -142,6 +142,22 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
       "농산물",
       "한우",
       "김치",
+      "막걸리",
+      "초콜릿",
+      "빵",
+      "디저트",
+      "해산물",
+      "굴",
+      "전어",
+      "사과",
+      "배",
+      "감",
+      "곶감",
+      "딸기",
+      "유자",
+      "마늘",
+      "인삼",
+      "산나물",
     ])
   ) {
     return {
@@ -150,65 +166,73 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
         ? `${bestBackdata.sourceName} ${bestBackdata.type}`
         : "축제명 키워드",
       weightForHour: (hour: number) => {
-        if (hour >= 11 && hour <= 13) return 1.32;
-        if (hour >= 18 && hour <= 20) return 1.28;
-        if (hour >= 14 && hour <= 16) return 0.92;
-        return 0.98;
-      },
-    };
-  }
-
-  if (hasAny(evidenceText, ["야간", "밤", "빛", "라이트", "미디어", "조명", "드론", "불꽃"])) {
-    return {
-      label: bestBackdata?.type ?? "야간 미디어형",
-      sourceLabel: bestBackdata
-        ? `${bestBackdata.sourceName} ${bestBackdata.type}`
-        : "축제명 키워드",
-      weightForHour: (hour: number) => {
-        if (hour === 20) return 1.4;
-        if (hour >= 18 && hour <= 22) return 1.22;
-        if (hour >= 14 && hour <= 16) return 0.88;
-        return 1;
+        if (hour >= 12 && hour <= 13) return 1.35;
+        if (hour >= 18 && hour <= 19) return 1.35;
+        if (hour >= 14 && hour <= 16) return 0.95;
+        return 1.0;
       },
     };
   }
 
   if (
     hasAny(evidenceText, [
-      "꽃",
-      "튤립",
-      "벚꽃",
-      "장미",
-      "국화",
-      "유채",
-      "정원",
-      "가족",
-      "어린이",
-      "체험",
-      "낮",
-      "주간",
+      "야간",
+      "밤",
+      "빛",
+      "라이트",
+      "미디어",
+      "조명",
+      "드론",
+      "불꽃",
+      "야시",
+      "달빛",
+      "별빛",
+      "야행",
+      "야경",
+      "나이트",
+      "일루미네이션",
     ])
   ) {
     return {
-      label: bestBackdata?.type ?? "주간 가족·체험형",
+      label: bestBackdata?.type ?? "야간 미디어·경관형",
       sourceLabel: bestBackdata
         ? `${bestBackdata.sourceName} ${bestBackdata.type}`
         : "축제명 키워드",
       weightForHour: (hour: number) => {
-        if (hour >= 10 && hour <= 13) return 1.18;
-        if (hour >= 14 && hour <= 17) return 1.3;
-        if (hour >= 18 && hour <= 20) return 1.04;
+        if (hour === 20) return 1.45;
+        if (hour >= 19 && hour <= 21) return 1.3;
+        if (hour >= 17 && hour <= 18) return 1.1;
+        if (hour <= 16) return 0.7;
+        return 0.9;
+      },
+    };
+  }
+
+  const firstHour = plan.operatingHours[0] ?? 10;
+  const isNightPlan = firstHour >= 16;
+
+  if (isNightPlan) {
+    return {
+      label: bestBackdata?.type ?? "야간 대표 축제형",
+      sourceLabel: bestBackdata ? `${bestBackdata.sourceName} ${bestBackdata.type}` : "운영시간표",
+      weightForHour: (hour: number) => {
+        if (hour === 20) return 1.4;
+        if (hour >= 19 && hour <= 21) return 1.25;
         return 0.9;
       },
     };
   }
 
   return {
-    label: bestBackdata?.type ?? "기본 프로그램형",
-    sourceLabel: bestBackdata
-      ? `${bestBackdata.sourceName} ${bestBackdata.type}`
-      : "프로그램 시간표",
-    weightForHour: (hour: number) => (hour >= 18 && hour <= 20 ? 1.18 : 1),
+    label: bestBackdata?.type ?? "주간 대표 축제형",
+    sourceLabel: bestBackdata ? `${bestBackdata.sourceName} ${bestBackdata.type}` : "운영시간표",
+    weightForHour: (hour: number) => {
+      if (hour >= 14 && hour <= 15) return 1.42;
+      if (hour >= 13 && hour <= 16) return 1.25;
+      if (hour >= 11 && hour <= 12) return 1.05;
+      if (hour >= 17 && hour <= 18) return 0.8;
+      return 0.65;
+    },
   };
 }
 

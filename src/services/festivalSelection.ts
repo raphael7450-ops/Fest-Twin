@@ -117,14 +117,22 @@ function createFestivalTypePlanningPatch(
     return {
       operatingHours: [16, 18, 20, 22],
       programs: [
-        { id: "night-preview", name: "야간 입장 분산", startHour: 16, endHour: 18, expectedDraw: 62 },
-        { id: "night-main", name: "야간 대표 콘텐츠", startHour: 18, endHour: 22, expectedDraw: 92 },
-        { id: "night-peak", name: "피크 공연·전시", startHour: 20, endHour: 22, expectedDraw: 88 },
+        { id: "night-preview", name: "야간 경관 점등 및 준비", startHour: 16, endHour: 18, expectedDraw: 62 },
+        { id: "night-main", name: "야간 대표 미디어아트·공연", startHour: 18, endHour: 22, expectedDraw: 92 },
+        { id: "night-peak", name: "드론쇼·불꽃 드로우", startHour: 20, endHour: 22, expectedDraw: 88 },
       ],
     };
   }
 
-  return {};
+  // General Regional Festival Default in Korea (Over 80% are daytime 10:00~18:00)
+  return {
+    operatingHours: [10, 12, 14, 16, 18],
+    programs: [
+      { id: "default-main", name: "대표 문화 관람 및 지역 전시", startHour: 10, endHour: 17, expectedDraw: 85 },
+      { id: "default-booth", name: "주민 참여 체험 및 특산품 부스", startHour: 10, endHour: 18, expectedDraw: 78 },
+      { id: "default-peak", name: "오후 피크 대표 무대 행사", startHour: 13, endHour: 16, expectedDraw: 90 },
+    ],
+  };
 }
 
 function createVerifiedOperatingTimePatch(candidate: FestivalCandidate): Partial<FestivalPlan> | undefined {
@@ -137,19 +145,47 @@ function createVerifiedOperatingTimePatch(candidate: FestivalCandidate): Partial
   }
 
   const hours = createOperatingHours(candidate.openingHour, candidate.closingHour);
+  const isNight = candidate.openingHour >= 15 || candidate.closingHour >= 20;
+
   return {
     operatingHours: hours,
-    programs: [
-      {
-        id: "verified-operating-time",
-        name: candidate.operatingTimeText
-          ? `공식 운영시간 ${candidate.operatingTimeText}`
-          : "공식 운영시간 기준",
-        startHour: candidate.openingHour,
-        endHour: candidate.closingHour,
-        expectedDraw: 80,
-      },
-    ],
+    programs: isNight
+      ? [
+          {
+            id: "verified-night-open",
+            name: candidate.operatingTimeText
+              ? `야간 개장 (${candidate.operatingTimeText})`
+              : "야간 개장 및 입장",
+            startHour: candidate.openingHour,
+            endHour: Math.min(candidate.closingHour, candidate.openingHour + 2),
+            expectedDraw: 72,
+          },
+          {
+            id: "verified-night-peak",
+            name: "야간 메인 공연 & 피크 이벤트",
+            startHour: Math.max(candidate.openingHour, 19),
+            endHour: Math.min(candidate.closingHour, 21),
+            expectedDraw: 94,
+          },
+        ]
+      : [
+          {
+            id: "verified-daytime-booth",
+            name: candidate.operatingTimeText
+              ? `공식 운영 관람 (${candidate.operatingTimeText})`
+              : "주간 전시 및 부스 관람",
+            startHour: candidate.openingHour,
+            endHour: candidate.closingHour,
+            expectedDraw: 78,
+          },
+          {
+            id: "verified-daytime-show",
+            name: "오후 피크 메인 무대 공연 & 행사진행",
+            startHour: Math.max(candidate.openingHour, 13),
+            endHour: Math.min(candidate.closingHour, 16),
+            expectedDraw: 92,
+          },
+        ],
   };
 }
 
@@ -178,16 +214,30 @@ function classifyFestivalScheduleProfile(
     return "countdown";
   }
 
-  if (hasAny(text, ["먹거리", "음식", "푸드", "미식", "커피", "맥주", "와인", "수산물", "축산물", "농산물", "한우", "김치"])) {
+  if (
+    hasAny(text, [
+      "먹거리", "음식", "푸드", "미식", "커피", "맥주", "와인", "수산물", "축산물", "농산물", "한우", "김치",
+      "막걸리", "초콜릿", "빵", "디저트", "해산물", "굴", "전어", "사과", "배", "감", "곶감", "딸기", "유자", "마늘", "인삼", "산나물", "food", "gourmet", "market"
+    ])
+  ) {
     return "food";
   }
 
-  if (hasAny(text, ["꽃", "튤립", "벚꽃", "장미", "국화", "유채", "정원", "가족", "어린이", "체험", "낮", "주간"])) {
-    return "daytime";
+  if (
+    hasAny(text, [
+      "야간", "밤", "빛", "라이트", "미디어", "조명", "드론", "불꽃", "야시", "달빛", "별빛", "야행", "야경", "나이트", "일루미네이션", "night", "media", "light", "illumination", "drone", "firework"
+    ])
+  ) {
+    return "night";
   }
 
-  if (hasAny(text, ["야간", "밤", "빛", "라이트", "미디어", "조명", "드론", "불꽃"])) {
-    return "night";
+  if (
+    hasAny(text, [
+      "꽃", "튤립", "벚꽃", "장미", "국화", "유채", "정원", "가족", "어린이", "체험", "낮", "주간",
+      "문화", "예술", "역사", "비엔날레", "박람회", "페어", "전시", "산", "계곡", "생태", "자연", "학술", "전통", "향토", "유적", "유산", "공예", "도자기", "백자", "청자", "미술", "가요제", "경연", "체육", "수목원", "식물원", "한지", "아리랑", "탈춤", "민속", "서예", "문학", "음악회"
+    ])
+  ) {
+    return "daytime";
   }
 
   return "default";

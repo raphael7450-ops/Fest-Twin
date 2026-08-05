@@ -44,8 +44,15 @@ describe("festivalSelection", () => {
     expect(nextPlan.keywords[0]).toBe("Gangnam Media Winter Festa");
     expect(nextPlan.totalBudgetMillionKrw).toBe(sampleFestivalPlan.totalBudgetMillionKrw);
     expect(nextPlan.expectedCapacity).toBe(sampleFestivalPlan.expectedCapacity);
-    expect(nextPlan.facilities).toBe(sampleFestivalPlan.facilities);
-    expect(nextPlan.programs).toBe(sampleFestivalPlan.programs);
+    expect(nextPlan.programs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "night-main",
+          startHour: 18,
+          endHour: 22,
+        }),
+      ]),
+    );
   });
 
   it("prefills budget and expected capacity from the best matching festival backdata", () => {
@@ -159,9 +166,9 @@ describe("festivalSelection", () => {
     expect(nextPlan.programs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: "verified-operating-time",
-          startHour: 9,
-          endHour: 22,
+          id: "verified-night-peak",
+          startHour: 19,
+          endHour: 21,
         }),
       ]),
     );
