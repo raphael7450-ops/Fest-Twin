@@ -18,6 +18,18 @@
   background: #f6f8fb;
   font-family:
     Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.metric-card strong,
+.summary-kpi-card strong,
+.selected-festival-card dd,
+.submission-status-card strong,
+.roi-impact strong {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
 }
 
 * {
