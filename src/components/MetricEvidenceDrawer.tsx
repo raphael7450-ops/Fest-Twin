@@ -69,13 +69,7 @@ export function MetricEvidenceDrawer({
           </ul>
           <div className="roadmap-badge-container">
             <span className="source-badge confirmed-source-badge">
-              [데이터 출처: 한국관광공사 TourAPI 4.0, KTDB 2026]
-            </span>
-            <span
-              className="source-badge roadmap-source-badge"
-              title="v2.0 연동 예정: 네이버 데이터랩 트렌드 및 소셜 검색 버즈 지수 확장 가능"
-            >
-              [v2.0 연동 예정: Naver DataLab Trend & Social Buzz]
+              [데이터 출처: 한국관광공사 TourAPI 4.0, KTDB, 네이버 데이터랩, 기상청]
             </span>
           </div>
         </div>

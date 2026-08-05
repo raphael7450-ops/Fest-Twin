@@ -669,7 +669,7 @@ export function createMetricEvidenceSet(
         "TourAPI 주변 관광지 매력도",
         "TourAPI 유사 축제 후보",
         ...(demandBackdata ? ["문화체육관광부_지역축제 정보"] : []),
-        "소셜 트렌드 관심도",
+        "네이버 데이터랩 트렌드 관심도",
         "사용자 입력 수용 인원",
       ],
       formulaSummary:
@@ -703,7 +703,7 @@ export function createMetricEvidenceSet(
         },
         {
           stepNumber: 4,
-          title: "4단계: 주변 관광 매력도 & 소셜 트렌드 연동",
+          title: "4단계: 주변 관광 매력도 & 네이버 데이터랩 트렌드 연동",
           formula: "최종 예상 방문객 = 중간 보정치 × 관광매력도 가중치",
           inputValue: `주변 관광지 ${tourism.nearbySpots.length}곳 매력도`,
           coefficient: "가중치 1.33x",
