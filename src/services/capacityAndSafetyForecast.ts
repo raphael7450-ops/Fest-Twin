@@ -5,6 +5,7 @@
  */
 
 import type {
+  DayTypeProfile,
   FestivalPlan,
   ForecastResult,
   InfrastructureCapacityForecast,
@@ -18,9 +19,14 @@ import type {
 export function calculateInfrastructureCapacityForecast(
   plan: FestivalPlan,
   forecast: ForecastResult,
+  dayTypeProfile?: DayTypeProfile,
 ): InfrastructureCapacityForecast {
-  const visitors = Math.max(100, forecast.expectedVisitors);
-  const peakHour = forecast.peakHour || 20;
+  const targetVisitors = dayTypeProfile ? dayTypeProfile.expectedDailyVisitors : forecast.expectedVisitors;
+  const targetPeakHour = dayTypeProfile ? dayTypeProfile.peakHour : forecast.peakHour;
+  const targetVisitorsByHour = dayTypeProfile ? dayTypeProfile.visitorsByHour : forecast.visitorsByHour;
+
+  const visitors = Math.max(100, targetVisitors);
+  const peakHour = targetPeakHour || 20;
 
   // 1. 주차 유입 및 만차 시점 산출 (차량 분산율 18%, 대당 2.5명 탑승 가정)
   const estimatedVehicles = Math.max(10, Math.round((visitors * 0.18) / 2.5));
@@ -43,7 +49,7 @@ export function calculateInfrastructureCapacityForecast(
   }
 
   // 2. 임시 화장실 수용 한계 및 대기시간 (피크 인원 250명당 1칸 가이드라인)
-  const peakHourlyObj = forecast.visitorsByHour.find((v) => v.hour === peakHour);
+  const peakHourlyObj = targetVisitorsByHour.find((v) => v.hour === peakHour);
   const peakVisitors = peakHourlyObj ? peakHourlyObj.visitors : Math.round(visitors * 0.4);
   const requiredRestroomCount = Math.max(5, Math.ceil(peakVisitors / 250));
   // 주최측 기본 준비 수량 (기본 수용률 약 84% 적용)
@@ -80,13 +86,17 @@ export function calculateSafetyGuardAllocationForecast(
   plan: FestivalPlan,
   forecast: ForecastResult,
   simulation: SimulationResult,
+  dayTypeProfile?: DayTypeProfile,
 ): SafetyGuardAllocationForecast {
-  const visitors = Math.max(100, forecast.expectedVisitors);
+  const targetVisitors = dayTypeProfile ? dayTypeProfile.expectedDailyVisitors : forecast.expectedVisitors;
+  const visitors = Math.max(100, targetVisitors);
+  const dayRatioMultiplier = dayTypeProfile ? dayTypeProfile.dayRatio : 1.0;
+
   const dangerousCellsCount = simulation.cells
     ? simulation.cells.filter((c) => c.density >= 4.0).length
     : (simulation.bottlenecks?.length || 0);
-  const dangerousCells = Math.max(0, dangerousCellsCount);
-  const congestionScore = Math.max(1, simulation.congestionScore || 30);
+  const dangerousCells = Math.max(0, Math.round(dangerousCellsCount * dayRatioMultiplier));
+  const congestionScore = Math.max(1, Math.round((simulation.congestionScore || 30) * dayRatioMultiplier));
 
   // 1. 구역별 추천 안전요원 배치 인원 산출
   const coreStageGuards = Math.max(10, Math.round(visitors / 2200));

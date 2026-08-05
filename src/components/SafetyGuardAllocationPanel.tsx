@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type {
+  DayType,
   FestivalPlan,
   ForecastResult,
   MetricEvidenceId,
@@ -20,7 +22,18 @@ export function SafetyGuardAllocationPanel({
   simulation,
   onOpenEvidence,
 }: SafetyGuardAllocationPanelProps) {
-  const safety = calculateSafetyGuardAllocationForecast(plan, forecast, simulation);
+  const [selectedDayType, setSelectedDayType] = useState<DayType>("summary");
+
+  const profiles = forecast.dayTypeProfiles;
+  const currentProfile = profiles?.[selectedDayType];
+
+  const safety = calculateSafetyGuardAllocationForecast(plan, forecast, simulation, currentProfile);
+
+  const dayTypeCounts = forecast.dayTypeCounts ?? {
+    totalDays: 3,
+    weekdayDays: 2,
+    weekendDays: 1,
+  };
 
   const goldenMinutes = Math.floor(safety.evacuationGoldenTimeSeconds / 60);
   const goldenSeconds = safety.evacuationGoldenTimeSeconds % 60;
@@ -38,6 +51,36 @@ export function SafetyGuardAllocationPanel({
             <EvidenceButton onClick={() => onOpenEvidence("safety-guards-allocation")} />
           )}
         </div>
+      </div>
+
+      <div className="day-type-tab-group" role="tablist" aria-label="안전요원 배치 구분">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectedDayType === "summary"}
+          className={`day-type-tab ${selectedDayType === "summary" ? "active" : ""}`}
+          onClick={() => setSelectedDayType("summary")}
+        >
+          전체 요약 ({dayTypeCounts.totalDays}일간)
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectedDayType === "weekday"}
+          className={`day-type-tab ${selectedDayType === "weekday" ? "active" : ""}`}
+          onClick={() => setSelectedDayType("weekday")}
+        >
+          평일 평균 ({dayTypeCounts.weekdayDays}일)
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectedDayType === "weekend"}
+          className={`day-type-tab ${selectedDayType === "weekend" ? "active" : ""}`}
+          onClick={() => setSelectedDayType("weekend")}
+        >
+          주말 피크 ({dayTypeCounts.weekendDays}일)
+        </button>
       </div>
 
       <div className="safety-metrics-grid">

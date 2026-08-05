@@ -1,4 +1,5 @@
-import type { FestivalPlan, ForecastResult, MetricEvidenceId } from "../domain/types";
+import { useState } from "react";
+import type { DayType, FestivalPlan, ForecastResult, MetricEvidenceId } from "../domain/types";
 import { calculateInfrastructureCapacityForecast } from "../services/capacityAndSafetyForecast";
 import { EvidenceButton } from "./EvidenceButton";
 
@@ -13,7 +14,18 @@ export function InfrastructureCapacityPanel({
   forecast,
   onOpenEvidence,
 }: InfrastructureCapacityPanelProps) {
-  const capacity = calculateInfrastructureCapacityForecast(plan, forecast);
+  const [selectedDayType, setSelectedDayType] = useState<DayType>("summary");
+
+  const profiles = forecast.dayTypeProfiles;
+  const currentProfile = profiles?.[selectedDayType];
+
+  const capacity = calculateInfrastructureCapacityForecast(plan, forecast, currentProfile);
+
+  const dayTypeCounts = forecast.dayTypeCounts ?? {
+    totalDays: 3,
+    weekdayDays: 2,
+    weekendDays: 1,
+  };
 
   return (
     <section className="panel capacity-panel" aria-label="[모델 1] 인프라 수용성 & 대기시간 예측">
@@ -28,6 +40,36 @@ export function InfrastructureCapacityPanel({
             <EvidenceButton onClick={() => onOpenEvidence("infrastructure-capacity")} />
           )}
         </div>
+      </div>
+
+      <div className="day-type-tab-group" role="tablist" aria-label="인프라 수용성 구분">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectedDayType === "summary"}
+          className={`day-type-tab ${selectedDayType === "summary" ? "active" : ""}`}
+          onClick={() => setSelectedDayType("summary")}
+        >
+          전체 요약 ({dayTypeCounts.totalDays}일간)
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectedDayType === "weekday"}
+          className={`day-type-tab ${selectedDayType === "weekday" ? "active" : ""}`}
+          onClick={() => setSelectedDayType("weekday")}
+        >
+          평일 평균 ({dayTypeCounts.weekdayDays}일)
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectedDayType === "weekend"}
+          className={`day-type-tab ${selectedDayType === "weekend" ? "active" : ""}`}
+          onClick={() => setSelectedDayType("weekend")}
+        >
+          주말 피크 ({dayTypeCounts.weekendDays}일)
+        </button>
       </div>
 
       <div className="capacity-grid">

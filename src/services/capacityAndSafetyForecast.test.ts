@@ -56,4 +56,57 @@ describe("capacityAndSafetyForecast - Model 1 & Model 2 Engine", () => {
     expect(safety.evacuationGoldenTimeSeconds).toBeGreaterThan(180);
     expect(["양호", "주의", "경고"]).toContain(safety.evacuationStatus);
   });
+
+  it("calculates lower weekday and higher weekend figures when DayTypeProfiles are provided", () => {
+    const weekdayProfile = {
+      dayType: "weekday" as const,
+      label: "평일 평균",
+      expectedDailyVisitors: 30000,
+      peakHour: 20,
+      peakVisitors: 12000,
+      visitorsByHour: [{ hour: 20, visitors: 12000 }],
+      dayRatio: 0.8,
+    };
+
+    const weekendProfile = {
+      dayType: "weekend" as const,
+      label: "주말 피크",
+      expectedDailyVisitors: 60000,
+      peakHour: 20,
+      peakVisitors: 25000,
+      visitorsByHour: [{ hour: 20, visitors: 25000 }],
+      dayRatio: 1.4,
+    };
+
+    const weekdayCapacity = calculateInfrastructureCapacityForecast(
+      sampleFestivalPlan,
+      dummyForecast,
+      weekdayProfile,
+    );
+    const weekendCapacity = calculateInfrastructureCapacityForecast(
+      sampleFestivalPlan,
+      dummyForecast,
+      weekendProfile,
+    );
+
+    expect(weekendCapacity.estimatedVehicles).toBeGreaterThan(weekdayCapacity.estimatedVehicles);
+    expect(weekendCapacity.totalWasteTons).toBeGreaterThan(weekdayCapacity.totalWasteTons);
+
+    const weekdaySafety = calculateSafetyGuardAllocationForecast(
+      sampleFestivalPlan,
+      dummyForecast,
+      dummySimulation,
+      weekdayProfile,
+    );
+    const weekendSafety = calculateSafetyGuardAllocationForecast(
+      sampleFestivalPlan,
+      dummyForecast,
+      dummySimulation,
+      weekendProfile,
+    );
+
+    expect(weekendSafety.totalRecommendedGuards).toBeGreaterThan(
+      weekdaySafety.totalRecommendedGuards,
+    );
+  });
 });
