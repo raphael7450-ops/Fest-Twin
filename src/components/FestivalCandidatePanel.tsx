@@ -1,4 +1,5 @@
 import type { FestivalCandidate } from "../services/tourApiAdapter";
+import { sortFestivalCandidatesByDateAsc } from "../services/tourApiAdapter";
 
 interface FestivalCandidatePanelProps {
   isOpen: boolean;
@@ -82,7 +83,7 @@ export function FestivalCandidatePanel({
 
         {!isLoading && candidates.length > 0 ? (
           <div className="candidate-list">
-            {candidates.map((candidate) => {
+            {sortFestivalCandidatesByDateAsc(candidates).map((candidate) => {
               const isSelected = selectedCandidateId === candidate.id;
 
               return (

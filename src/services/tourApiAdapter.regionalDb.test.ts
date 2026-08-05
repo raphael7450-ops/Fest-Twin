@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
-import { getFestivalCandidates } from "./tourApiAdapter";
+import { getFestivalCandidates, sortFestivalCandidatesByDateAsc } from "./tourApiAdapter";
 
 function tourApiPayload(items: unknown, totalCount?: number) {
   const normalizedCount = totalCount ?? (Array.isArray(items) ? items.length : 1);
@@ -100,5 +100,47 @@ describe("TourAPI candidate regional DB supplement", () => {
         }),
       ]),
     );
+  });
+
+  it("sorts festival candidates by startDate in ascending order (asc)", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "1", name: "서울" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "200",
+              title: "Late Festival",
+              eventstartdate: "20261225",
+              eventenddate: "20261231",
+              addr1: "Seoul Gangnam",
+            },
+            {
+              contentid: "100",
+              title: "Early Festival",
+              eventstartdate: "20260501",
+              eventenddate: "20260505",
+              addr1: "Seoul Gangnam",
+            },
+          ]),
+        );
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(sampleFestivalPlan, {
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+    const sorted = sortFestivalCandidatesByDateAsc(candidates);
+
+    expect(sorted.length).toBe(2);
+    expect(sorted[0].startDate).toBe("2026-05-01");
+    expect(sorted[1].startDate).toBe("2026-12-25");
   });
 });

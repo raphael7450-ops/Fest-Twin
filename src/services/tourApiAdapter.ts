@@ -45,6 +45,14 @@ export interface FestivalCandidate {
   sourceDetails?: MetricEvidenceSourceDetail[];
 }
 
+export function sortFestivalCandidatesByDateAsc(
+  candidates: FestivalCandidate[],
+): FestivalCandidate[] {
+  return [...candidates].sort((a, b) =>
+    (a.startDate || "").localeCompare(b.startDate || ""),
+  );
+}
+
 interface TourApiItem {
   code?: string | number;
   name?: string;
