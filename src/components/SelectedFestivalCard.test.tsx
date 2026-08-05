@@ -29,7 +29,6 @@ describe("SelectedFestivalCard", () => {
     expect(screen.getByText("서울 강남구 영동대로 511")).toBeInTheDocument();
     expect(screen.getByText("2025-12-19 ~ 2026-01-03")).toBeInTheDocument();
     expect(screen.getByText("10:00 ~ 22:00")).toBeInTheDocument();
-    expect(screen.getByText("123456")).toBeInTheDocument();
 
     const img = screen.getByRole("img", { name: "강남 미디어 윈터페스타" });
     expect(img).toHaveAttribute("src", "https://example.com/festival_image.jpg");

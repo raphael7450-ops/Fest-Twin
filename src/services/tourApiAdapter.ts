@@ -35,6 +35,7 @@ export interface FestivalCandidate {
   mapX?: string;
   mapY?: string;
   imageUrl?: string;
+  organizer?: string;
   budgetMillionKrw?: number;
   visitors?: number;
   operatingTimeText?: string;
@@ -59,6 +60,8 @@ interface TourApiItem {
   playtime?: string;
   eventplace?: string;
   usetimefestival?: string;
+  sponsor1?: string;
+  sponsor2?: string;
   mapx?: string | number;
   mapy?: string | number;
   budgetMillionKrw?: number;
@@ -910,6 +913,10 @@ function mapFestivalCandidate(
         ? item.overview.trim()
         : "주소 정보 미기재";
 
+  const organizer =
+    [item.sponsor1, item.sponsor2].filter((s) => typeof s === "string" && s.trim().length > 0).join(" / ") ||
+    undefined;
+
   return {
     id: String(item.contentid ?? item.code ?? Math.random()),
     title: item.title ?? "축제 명칭 미상",
@@ -919,6 +926,7 @@ function mapFestivalCandidate(
     mapX: hasFiniteNumber(item.mapx) ? String(item.mapx) : undefined,
     mapY: hasFiniteNumber(item.mapy) ? String(item.mapy) : undefined,
     imageUrl: item.firstimage ?? undefined,
+    organizer,
     budgetMillionKrw: hasFiniteNumber(item.budgetMillionKrw)
       ? Number(item.budgetMillionKrw)
       : undefined,

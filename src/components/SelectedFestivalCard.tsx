@@ -93,8 +93,16 @@ export function SelectedFestivalCard({
             }}
           >
             <div>
-              <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>개최 장소 / 주소</dt>
-              <dd style={{ margin: 0, fontWeight: 600 }}>{selectedFestivalBasis.address || "주소 미기재"}</dd>
+              <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>주최 / 주관</dt>
+              <dd style={{ margin: 0, fontWeight: 600, color: "#38bdf8" }}>
+                {selectedFestivalBasis.organizer || "해당 지자체 / 문화재단"}
+              </dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>축제 시간 (운영시간)</dt>
+              <dd style={{ margin: 0, fontWeight: 600, color: "#facc15" }}>
+                {selectedFestivalBasis.operatingTimeText || "10:00 ~ 22:00 (주간 및 야간 운영)"}
+              </dd>
             </div>
             <div>
               <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>개최 기간</dt>
@@ -103,24 +111,8 @@ export function SelectedFestivalCard({
               </dd>
             </div>
             <div>
-              <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>운영시간</dt>
-              <dd style={{ margin: 0, fontWeight: 600 }}>
-                {selectedFestivalBasis.operatingTimeText || "종일 축제"}
-              </dd>
-            </div>
-            <div>
-              <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>좌표 (WGS84)</dt>
-              <dd style={{ margin: 0, fontWeight: 600 }}>
-                {selectedFestivalBasis.mapX && selectedFestivalBasis.mapY
-                  ? `${selectedFestivalBasis.mapX}, ${selectedFestivalBasis.mapY}`
-                  : "좌표 정보 없음"}
-              </dd>
-            </div>
-            <div>
-              <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>TourAPI contentId</dt>
-              <dd style={{ margin: 0, fontFamily: "monospace", color: "#cbd5e1" }}>
-                {selectedFestivalBasis.contentId}
-              </dd>
+              <dt style={{ color: "#94a3b8", fontSize: "0.78rem" }}>개최 장소 / 주소</dt>
+              <dd style={{ margin: 0, fontWeight: 600 }}>{selectedFestivalBasis.address || "주소 미기재"}</dd>
             </div>
           </dl>
         </div>

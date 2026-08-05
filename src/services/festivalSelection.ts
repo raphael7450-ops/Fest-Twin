@@ -22,6 +22,7 @@ export function createSelectedFestivalBasis(
     mapX: candidate.mapX,
     mapY: candidate.mapY,
     imageUrl: candidate.imageUrl,
+    organizer: candidate.organizer,
     sourceName: "TourAPI selected festival candidate",
     operatingTimeText: candidate.operatingTimeText ?? (hasOfficial ? `${candidate.openingHour}:00 ~ ${candidate.closingHour}:00` : undefined),
     operatingTimeSource: hasOfficial ? "official" : "classified_by_type",
@@ -42,6 +43,7 @@ export function selectedFestivalBasisToCandidate(
     mapX: basis.mapX,
     mapY: basis.mapY,
     imageUrl: basis.imageUrl,
+    organizer: basis.organizer,
     searchScope: "exact-period",
   };
 }
