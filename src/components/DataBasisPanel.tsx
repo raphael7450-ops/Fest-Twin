@@ -185,8 +185,8 @@ export function DataBasisPanel({
               <dd>{selectedFestivalBasis.title}</dd>
             </div>
             <div>
-              <dt>contentId</dt>
-              <dd>{selectedFestivalBasis.contentId}</dd>
+              <dt>주최 / 주관</dt>
+              <dd>{selectedFestivalBasis.organizer || "해당 지자체 / 문화재단"}</dd>
             </div>
             <div>
               <dt>기간</dt>
@@ -195,12 +195,8 @@ export function DataBasisPanel({
               </dd>
             </div>
             <div>
-              <dt>좌표</dt>
-              <dd>
-                {selectedFestivalBasis.mapX && selectedFestivalBasis.mapY
-                  ? `${selectedFestivalBasis.mapX}, ${selectedFestivalBasis.mapY}`
-                  : "-"}
-              </dd>
+              <dt>주소</dt>
+              <dd>{selectedFestivalBasis.address || "주소 미기재"}</dd>
             </div>
           </dl>
         </div>

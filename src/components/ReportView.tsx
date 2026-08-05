@@ -230,8 +230,8 @@ export function ReportView({
                 <dd>{selectedFestivalBasis.title}</dd>
               </div>
               <div>
-                <dt>contentId</dt>
-                <dd>{selectedFestivalBasis.contentId}</dd>
+                <dt>주최 / 주관</dt>
+                <dd>{selectedFestivalBasis.organizer || "해당 지자체 / 문화재단"}</dd>
               </div>
               <div>
                 <dt>기간</dt>

@@ -116,7 +116,7 @@ describe("App selected festival basis", () => {
     vi.useRealTimers();
   });
 
-  it("shows selected TourAPI contentId after a festival candidate is selected", async () => {
+  it("shows selected TourAPI title after a festival candidate is selected", async () => {
     vi.useFakeTimers();
     const view = render(<App />);
     openDashboardSection("기획");
@@ -137,7 +137,6 @@ describe("App selected festival basis", () => {
     });
 
     openDashboardSection("근거");
-    expect(screen.getAllByText("3439947").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Gangnam Media Winter Festa").length).toBeGreaterThan(0);
     expect(getTourismContextMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ name: "Gangnam Media Winter Festa" }),

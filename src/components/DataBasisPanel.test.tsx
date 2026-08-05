@@ -46,8 +46,8 @@ describe("DataBasisPanel", () => {
 
     expect(screen.getByText("선택 TourAPI 축제 기준")).toBeInTheDocument();
     expect(screen.getByText("Gangnam Media Winter Festa")).toBeInTheDocument();
-    expect(screen.getByText("3439947")).toBeInTheDocument();
-    expect(screen.getByText("127.0610512042, 37.5103955843")).toBeInTheDocument();
+    expect(screen.getByText("주최 / 주관")).toBeInTheDocument();
+    expect(screen.getByText("Seoul Gangnam-gu Yeongdong-daero 511")).toBeInTheDocument();
   });
 
   it("summarizes data source status across evidence contexts", () => {
