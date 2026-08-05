@@ -100,6 +100,11 @@ export function DataBasisPanel({
             status: compactStatusLabel(spending.sourceStatus),
             basis: spending.sourceName,
           },
+          {
+            label: "소상공인 상가정보",
+            status: "실조회",
+            basis: "소상공인시장진흥공단 상권 API",
+          },
         ]
       : []),
     ...(demandBackdata

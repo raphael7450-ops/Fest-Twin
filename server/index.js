@@ -15,6 +15,7 @@ import { createScenarioRouter } from "./scenarioRouter.js";
 import { createRegionalFestivalRouter } from "./regionalFestivalRouter.js";
 import { createWeatherProxyRouter } from "./weatherProxy.js";
 import { createTransitProxyRouter } from "./transitProxy.js";
+import { createCommercialProxyRouter } from "./commercialProxy.js";
 import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
 import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
@@ -182,6 +183,7 @@ export function createApp(options = {}) {
   app.use("/api/trends", openApiRateLimiter);
   app.use("/api/weather", openApiRateLimiter);
   app.use("/api/transit", openApiRateLimiter);
+  app.use("/api/commercial", openApiRateLimiter);
 
   app.use(
     "/api/tour",
@@ -204,6 +206,14 @@ export function createApp(options = {}) {
     createTransitProxyRouter({
       fetchImpl: options.fetchImpl,
       apiKey: options.publicTransitApiKey,
+      logger: log,
+    }),
+  );
+  app.use(
+    "/api/commercial",
+    createCommercialProxyRouter({
+      fetchImpl: options.fetchImpl,
+      apiKey: options.commercialApiKey,
       logger: log,
     }),
   );
