@@ -16,6 +16,7 @@ import { createRegionalFestivalRouter } from "./regionalFestivalRouter.js";
 import { createWeatherProxyRouter } from "./weatherProxy.js";
 import { createTransitProxyRouter } from "./transitProxy.js";
 import { createCommercialProxyRouter } from "./commercialProxy.js";
+import { createEmergencyProxyRouter } from "./emergencyProxy.js";
 import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
 import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
@@ -184,6 +185,7 @@ export function createApp(options = {}) {
   app.use("/api/weather", openApiRateLimiter);
   app.use("/api/transit", openApiRateLimiter);
   app.use("/api/commercial", openApiRateLimiter);
+  app.use("/api/emergency", openApiRateLimiter);
 
   app.use(
     "/api/tour",
@@ -214,6 +216,14 @@ export function createApp(options = {}) {
     createCommercialProxyRouter({
       fetchImpl: options.fetchImpl,
       apiKey: options.commercialApiKey,
+      logger: log,
+    }),
+  );
+  app.use(
+    "/api/emergency",
+    createEmergencyProxyRouter({
+      fetchImpl: options.fetchImpl,
+      apiKey: options.emergencyApiKey,
       logger: log,
     }),
   );

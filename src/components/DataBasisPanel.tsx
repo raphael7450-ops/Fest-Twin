@@ -91,6 +91,11 @@ export function DataBasisPanel({
             status: "실조회",
             basis: "국토교통부 버스정류소/노선 API",
           },
+          {
+            label: "응급의료/119 안전센터",
+            status: "실조회",
+            basis: "보건복지부/소방청 응급기관 API",
+          },
         ]
       : []),
     ...(spending
