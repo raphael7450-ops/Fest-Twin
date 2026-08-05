@@ -170,6 +170,15 @@ export function DataBasisPanel({
       {selectedFestivalBasis ? (
         <div className="selected-festival-basis">
           <h3>선택 TourAPI 축제 기준</h3>
+          {selectedFestivalBasis.imageUrl && (
+            <div style={{ marginBottom: "12px", width: "100%", maxHeight: "140px", overflow: "hidden", borderRadius: "6px" }}>
+              <img
+                src={selectedFestivalBasis.imageUrl}
+                alt={selectedFestivalBasis.title}
+                style={{ width: "100%", height: "140px", objectFit: "cover" }}
+              />
+            </div>
+          )}
           <dl className="selected-festival-basis-grid">
             <div>
               <dt>축제명</dt>

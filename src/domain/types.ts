@@ -83,6 +83,7 @@ export interface SelectedFestivalBasis {
   endDate: string;
   mapX?: string;
   mapY?: string;
+  imageUrl?: string;
   sourceName: string;
   operatingTimeText?: string;
   operatingTimeSource?: "official" | "classified_by_type";

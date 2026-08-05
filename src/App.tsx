@@ -20,6 +20,7 @@ import { SafetyGuardAllocationPanel } from "./components/SafetyGuardAllocationPa
 import { SafetyLogisticsPanel } from "./components/SafetyLogisticsPanel";
 import { ScenarioLibrary } from "./components/ScenarioLibrary";
 import { ScenarioControls } from "./components/ScenarioControls";
+import { SelectedFestivalCard } from "./components/SelectedFestivalCard";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
 import { loadScenarios, normalizeFestivalPlan } from "./services/scenarioStorage";
@@ -634,6 +635,10 @@ export function App() {
               </button>
             </div>
           )}
+          <SelectedFestivalCard
+            selectedFestivalBasis={selectedFestivalBasis}
+            onClearSelection={() => setSelectedCandidate(null)}
+          />
           <SummaryKpiCards
             plan={plan}
             forecast={forecast}
