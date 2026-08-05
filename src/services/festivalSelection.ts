@@ -12,6 +12,7 @@ type FestivalScheduleProfile = "countdown" | "food" | "daytime" | "night" | "def
 export function createSelectedFestivalBasis(
   candidate: FestivalCandidate,
 ): SelectedFestivalBasis {
+  const hasOfficial = candidate.openingHour !== undefined && candidate.closingHour !== undefined;
   return {
     contentId: candidate.id,
     title: candidate.title,
@@ -21,6 +22,8 @@ export function createSelectedFestivalBasis(
     mapX: candidate.mapX,
     mapY: candidate.mapY,
     sourceName: "TourAPI selected festival candidate",
+    operatingTimeText: candidate.operatingTimeText ?? (hasOfficial ? `${candidate.openingHour}:00 ~ ${candidate.closingHour}:00` : undefined),
+    operatingTimeSource: hasOfficial ? "official" : "classified_by_type",
   };
 }
 

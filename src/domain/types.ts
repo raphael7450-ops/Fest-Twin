@@ -84,6 +84,9 @@ export interface SelectedFestivalBasis {
   mapX?: string;
   mapY?: string;
   sourceName: string;
+  operatingTimeText?: string;
+  operatingTimeSource?: "official" | "classified_by_type";
+  scheduleProfileLabel?: string;
 }
 
 export interface DataProvenance {

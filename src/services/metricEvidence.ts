@@ -231,11 +231,17 @@ function selectedFestivalBasisDetails(
                   ? `${selectedFestivalBasis.mapX}, ${selectedFestivalBasis.mapY}`
                   : "-",
             },
+            {
+              label: "운영시간 정보",
+              value: selectedFestivalBasis.operatingTimeSource === "official"
+                ? `[공식 등록] ${selectedFestivalBasis.operatingTimeText ?? "공식 운영시간 반영"}`
+                : `[유형 자동 추정] ${selectedFestivalBasis.operatingTimeText ?? "TourAPI 공식시간 미기재 (축제 성격별 스케줄 자동 할당)"}`,
+            },
           ],
         },
       ],
       note:
-        "축제 후보를 선택하면 해당 TourAPI contentId를 현재 수요 예측과 근거 검토의 기준 축제로 표시합니다.",
+        "축제 후보를 선택하면 해당 TourAPI contentId 및 공식/추정 운영시간을 수요 예측 및 근거 검토 기준 축제로 표시합니다.",
     },
   ];
 }

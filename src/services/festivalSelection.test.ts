@@ -31,6 +31,8 @@ describe("festivalSelection", () => {
       mapX: "127.0610512042",
       mapY: "37.5103955843",
       sourceName: "TourAPI selected festival candidate",
+      operatingTimeText: undefined,
+      operatingTimeSource: "classified_by_type",
     });
   });
 
