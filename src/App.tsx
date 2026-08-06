@@ -15,6 +15,7 @@ import { Heatmap } from "./components/Heatmap";
 import { InfrastructureCapacityPanel } from "./components/InfrastructureCapacityPanel";
 import { MetricEvidenceDrawer } from "./components/MetricEvidenceDrawer";
 import { PlanForm } from "./components/PlanForm";
+import { PresentationControlView } from "./components/PresentationControlView";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
 import { SafetyGuardAllocationPanel } from "./components/SafetyGuardAllocationPanel";
@@ -24,6 +25,7 @@ import { ScenarioControls } from "./components/ScenarioControls";
 import { SelectedFestivalCard } from "./components/SelectedFestivalCard";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
+import { FESTIVAL_PRESETS, type FestivalPreset } from "./data/festivalPresets";
 import { loadScenarios, normalizeFestivalPlan } from "./services/scenarioStorage";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import { sampleSpendingContext } from "./data/sampleSpending";
@@ -112,10 +114,11 @@ export function App() {
   const [areaCodes, setAreaCodes] = useState<TourApiAreaCode[]>(DEFAULT_AREA_CODES);
   const [isAreaLoading, setIsAreaLoading] = useState(true);
   const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
+  const [presetBasis, setPresetBasis] = useState<SelectedFestivalBasis | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
   const selectedFestivalBasis = useMemo(
-    () => (selectedCandidate ? createSelectedFestivalBasis(selectedCandidate) : null),
-    [selectedCandidate],
+    () => (selectedCandidate ? createSelectedFestivalBasis(selectedCandidate) : presetBasis),
+    [selectedCandidate, presetBasis],
   );
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<MetricEvidenceId | null>(null);
   const candidatePlanKey = JSON.stringify({
@@ -562,11 +565,55 @@ export function App() {
   );
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
+    setPresetBasis(null);
     setPlan((currentPlan) =>
       applyFestivalCandidateToPlan(currentPlan, candidate, { demandBackdata }),
     );
     setIsCandidatePanelOpen(false);
   };
+
+  const [isPresentationMode, setIsPresentationMode] = useState<boolean>(false);
+
+  const handleSelectPreset = (preset: FestivalPreset) => {
+    setPlan(preset.plan);
+    setSelectedCandidate(null);
+    setPresetBasis(preset.basis);
+  };
+
+  const handleTogglePresentationMode = () => {
+    setIsPresentationMode((prev) => {
+      const next = !prev;
+      if (next) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsPresentationMode(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isPresentationMode) {
+        setIsPresentationMode(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPresentationMode]);
 
   const [activeDashboardSection, setActiveDashboardSection] =
     useState<DashboardSection>("overview");
@@ -581,8 +628,19 @@ export function App() {
 
   return (
     <>
-      <main className="app-shell">
-      <div className="dashboard-canvas">
+      <main className={`app-shell${isPresentationMode ? " app-shell--presentation" : ""}`}>
+        {isPresentationMode ? (
+          <PresentationControlView
+            plan={plan}
+            forecast={forecast}
+            report={report}
+            selectedFestivalBasis={selectedFestivalBasis}
+            spending={spending}
+            metricEvidence={metricEvidence}
+            onExit={handleTogglePresentationMode}
+          />
+        ) : (
+          <div className="dashboard-canvas">
         <aside className="dashboard-rail" aria-label="대시보드 섹션">
           <div className="dashboard-rail__curve" aria-hidden="true" />
           <nav className="dashboard-rail__nav">
@@ -605,7 +663,11 @@ export function App() {
           </nav>
         </aside>
         <div className="dashboard-content">
-          <GovernmentHeader />
+          <GovernmentHeader
+            onSelectPreset={handleSelectPreset}
+            onTogglePresentationMode={handleTogglePresentationMode}
+            isPresentationMode={isPresentationMode}
+          />
           {restoredNotice && (
             <div
               style={{
@@ -797,9 +859,10 @@ export function App() {
               </section>
             )}
 
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <FestivalCandidatePanel
         isOpen={isCandidatePanelOpen}
         candidates={candidates}

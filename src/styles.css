@@ -3331,3 +3331,297 @@ a:focus-visible {
   }
 }
 
+/* ===================================================================
+   Municipal Festival Presets & Presentation Mode Styles
+   =================================================================== */
+
+.preset-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preset-select-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #312787;
+  white-space: nowrap;
+}
+
+.preset-select-dropdown {
+  background: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e1b4b;
+  box-shadow: 0 2px 6px rgba(90, 72, 249, 0.08);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.preset-select-dropdown:hover,
+.preset-select-dropdown:focus {
+  border-color: #5a48f9;
+  box-shadow: 0 0 0 3px rgba(90, 72, 249, 0.15);
+}
+
+.presentation-toggle-button {
+  background: linear-gradient(135deg, #1e1b4b, #312787);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(30, 27, 75, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.presentation-toggle-button:hover {
+  background: linear-gradient(135deg, #312787, #5a48f9);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(90, 72, 249, 0.35);
+}
+
+.presentation-toggle-button--active {
+  background: #e11d48;
+}
+
+/* Presentation Control Center Shell & Container */
+.app-shell--presentation {
+  max-width: 100% !important;
+  width: 100vw;
+  min-height: 100vh;
+  padding: 0 !important;
+  background: #0f172a;
+}
+
+.presentation-view-container {
+  min-height: 100vh;
+  background: #090d16;
+  color: #f8fafc;
+  padding: 24px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.presentation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #1e293b;
+  padding-bottom: 16px;
+}
+
+.presentation-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.presentation-logo {
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 16px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.4);
+}
+
+.presentation-header__titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.presentation-tag {
+  font-size: 12px;
+  font-weight: 700;
+  color: #818cf8;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.presentation-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 2px 0 0 0;
+}
+
+.presentation-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 2px 0 0 0;
+}
+
+.presentation-exit-btn {
+  background: #334155;
+  color: #f1f5f9;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.presentation-exit-btn:hover {
+  background: #e11d48;
+  border-color: #f43f5e;
+  color: #ffffff;
+}
+
+/* Presentation KPI Cards Row */
+.presentation-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.presentation-kpi-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.presentation-kpi-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.presentation-kpi-val {
+  font-size: 26px;
+  font-weight: 900;
+  color: #f8fafc;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+
+.presentation-kpi-sub {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.presentation-risk-badge {
+  display: inline-block;
+  font-size: 18px;
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.presentation-risk-badge--low {
+  background: #166534;
+  color: #4ade80;
+}
+
+.presentation-risk-badge--medium {
+  background: #854d0e;
+  color: #fde047;
+}
+
+.presentation-risk-badge--high {
+  background: #991b1b;
+  color: #fca5a5;
+}
+
+.presentation-risk-badge--critical {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+/* Presentation Main Grid */
+.presentation-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  flex: 1;
+}
+
+.presentation-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.presentation-panel {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.presentation-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.presentation-panel__header h2 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.panel-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #334155;
+  color: #cbd5e1;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.presentation-heatmap-body {
+  min-height: 420px;
+}
+
+.presentation-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.presentation-breakdown-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.presentation-breakdown-box h3 {
+  font-size: 13px;
+  font-weight: 800;
+  color: #818cf8;
+  margin: 0 0 4px 0;
+}
+
+.presentation-breakdown-box p {
+  font-size: 12px;
+  color: #cbd5e1;
+  margin: 0;
+  line-height: 1.4;
+}
+
+
