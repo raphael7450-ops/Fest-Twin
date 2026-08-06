@@ -15,7 +15,14 @@ export function GovernmentHeader() {
       <div className="government-header__meta" aria-label="데모 검토 상태">
         <span className="status-pill">공공 검토 대시보드</span>
         <span>실데이터 우선</span>
-        <span>인증키 비공개</span>
+        <button
+          className="print-button b2g-pdf-button"
+          type="button"
+          onClick={() => window.print()}
+          aria-label="PDF 보고서 출력 및 다운로드"
+        >
+          PDF 보고서 출력
+        </button>
       </div>
     </header>
   );

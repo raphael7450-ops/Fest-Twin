@@ -2951,3 +2951,349 @@ a:focus-visible {
     padding: 4px 6px;
   }
 }
+
+/* ===================================================================
+   B2G Executive & Audit Print Report Styles (@media screen & @media print)
+   =================================================================== */
+
+/* Hide print report wrapper on screen */
+.b2g-print-report-wrapper {
+  display: none;
+}
+
+/* Print specific styles for A4 layout */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+  }
+
+  /* Hide screen dashboard elements */
+  .app-shell,
+  .dashboard-rail,
+  .dashboard-section-tabs,
+  .government-header,
+  .dashboard-section-stack,
+  .festival-candidate-panel,
+  .metric-evidence-drawer,
+  button,
+  .print-button,
+  .panel-actions {
+    display: none !important;
+  }
+
+  /* Display print report container */
+  .b2g-print-report-wrapper {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: #111827;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .b2g-print-page {
+    position: relative;
+    width: 100%;
+    min-height: 270mm;
+    box-sizing: border-box;
+    padding: 8mm 4mm;
+    background: #ffffff;
+  }
+
+  .b2g-print-page-2 {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* Print Header */
+  .b2g-print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #312787;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+
+  .b2g-print-header__logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .b2g-print-logo-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: #312787;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+
+  .b2g-org-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #312787;
+  }
+
+  .b2g-org-sub {
+    display: block;
+    font-size: 10px;
+    color: #6b7280;
+  }
+
+  .b2g-print-header__meta {
+    font-size: 10px;
+    color: #374151;
+    text-align: right;
+    line-height: 1.4;
+  }
+
+  .meta-label {
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  /* Title */
+  .b2g-print-doc-title {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .b2g-print-doc-title h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 6px 0;
+  }
+
+  .b2g-print-doc-sub {
+    font-size: 11px;
+    color: #4b5563;
+    margin: 0;
+  }
+
+  /* Section Styles */
+  .b2g-print-section {
+    margin-bottom: 20px;
+  }
+
+  .b2g-section-heading {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e1b4b;
+    border-left: 4px solid #5a48f9;
+    padding-left: 8px;
+    margin: 0 0 10px 0;
+  }
+
+  /* Table */
+  .b2g-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+  }
+
+  .b2g-table th,
+  .b2g-table td {
+    border: 1px solid #d1d5db;
+    padding: 6px 10px;
+    text-align: left;
+  }
+
+  .b2g-table th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  /* KPI Grid */
+  .b2g-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .b2g-kpi-card {
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .b2g-kpi-title {
+    font-size: 11px;
+    color: #4b5563;
+    margin-bottom: 4px;
+  }
+
+  .b2g-kpi-val {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+
+  .b2g-kpi-sub {
+    font-size: 9.5px;
+    color: #6b7280;
+  }
+
+  /* Safety Diagnosis Box */
+  .b2g-safety-diagnosis-box {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 14px;
+    background: #f9fafb;
+  }
+
+  .b2g-risk-grade-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+
+  .b2g-risk-level {
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .b2g-risk-level--low {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .b2g-risk-level--medium {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .b2g-risk-level--high {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .b2g-risk-level--critical {
+    background: #991b1b;
+    color: #ffffff;
+  }
+
+  .b2g-findings-area h4 {
+    font-size: 11.5px;
+    margin: 0 0 6px 0;
+    color: #1f2937;
+  }
+
+  .b2g-findings-area ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 10.5px;
+    color: #374151;
+    line-height: 1.5;
+  }
+
+  /* 4-Step Breakdown */
+  .b2g-breakdown-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .b2g-breakdown-step {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 14px;
+    background: #ffffff;
+  }
+
+  .b2g-breakdown-step h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #312787;
+    margin: 0 0 4px 0;
+  }
+
+  .b2g-breakdown-step p {
+    font-size: 10px;
+    color: #4b5563;
+    margin: 0 0 6px 0;
+  }
+
+  .b2g-breakdown-step ul {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 10px;
+    color: #1f2937;
+  }
+
+  .b2g-integrity-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #e0e7ff;
+    color: #3730a3;
+    border-radius: 4px;
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+
+  /* Signature Box */
+  .b2g-sign-box {
+    margin-top: 24px;
+    border-top: 1px solid #d1d5db;
+    padding-top: 16px;
+  }
+
+  .b2g-sign-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 12px;
+  }
+
+  .b2g-sign-notice {
+    font-size: 9px;
+    color: #6b7280;
+    text-align: center;
+    margin: 0;
+  }
+
+  /* Footer */
+  .b2g-print-footer {
+    position: absolute;
+    bottom: 8mm;
+    left: 4mm;
+    right: 4mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #9ca3af;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 6px;
+  }
+}
+

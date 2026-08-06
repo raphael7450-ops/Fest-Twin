@@ -8,6 +8,7 @@ import type {
   SpendingContext,
 } from "../domain/types";
 import { createSimulation } from "../services/simulation";
+import { B2gPrintReport } from "./B2gPrintReport";
 import { CsvExportButton } from "./CsvExportButton";
 import { EvidenceButton } from "./EvidenceButton";
 import { InfrastructureCapacityPanel } from "./InfrastructureCapacityPanel";
@@ -263,6 +264,15 @@ export function ReportView({
           ))}
         </div>
       </section>
+
+      <B2gPrintReport
+        report={report}
+        plan={plan}
+        forecast={forecast}
+        selectedFestivalBasis={selectedFestivalBasis}
+        spending={spending}
+        evidenceSet={evidenceSet}
+      />
     </section>
   );
 }
