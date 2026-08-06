@@ -9,6 +9,7 @@ import { BarChart3, BriefcaseBusiness, Clock3, FileText, Home, UsersRound } from
 import { B2gPrintReport } from "./components/B2gPrintReport";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
+import { FestivalSearchModal } from "./components/FestivalSearchModal";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
 import { Heatmap } from "./components/Heatmap";
@@ -114,6 +115,7 @@ export function App() {
   const [areaCodes, setAreaCodes] = useState<TourApiAreaCode[]>(DEFAULT_AREA_CODES);
   const [isAreaLoading, setIsAreaLoading] = useState(true);
   const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [presetBasis, setPresetBasis] = useState<SelectedFestivalBasis | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
   const selectedFestivalBasis = useMemo(
@@ -770,6 +772,7 @@ export function App() {
                       candidateCount={candidates.length}
                       selectedCandidateTitle={selectedCandidate?.title}
                       onOpenCandidates={() => setIsCandidatePanelOpen(true)}
+                      onOpenSearchModal={() => setIsSearchModalOpen(true)}
                     />
                   </aside>
                   <section className="main-column">
@@ -871,6 +874,11 @@ export function App() {
         selectedCandidateId={selectedCandidate?.id}
         onClose={() => setIsCandidatePanelOpen(false)}
         onSelectCandidate={handleSelectCandidate}
+      />
+      <FestivalSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelectPreset={handleSelectPreset}
       />
       <MetricEvidenceDrawer
         evidence={selectedEvidenceId ? metricEvidence[selectedEvidenceId] : undefined}

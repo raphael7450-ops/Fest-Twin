@@ -10,6 +10,7 @@ interface PlanFormProps {
   candidateCount: number;
   selectedCandidateTitle?: string;
   onOpenCandidates: () => void;
+  onOpenSearchModal?: () => void;
 }
 
 export function PlanForm({
@@ -21,6 +22,7 @@ export function PlanForm({
   candidateCount,
   selectedCandidateTitle,
   onOpenCandidates,
+  onOpenSearchModal,
 }: PlanFormProps) {
   const candidateStatus = isCandidateLoading
     ? "TourAPI 후보 조회 중"
@@ -35,11 +37,24 @@ export function PlanForm({
         <span>지역 우선 조회</span>
       </div>
 
-      <div className="tourapi-example-note">
-        <strong>TourAPI 지역 기반 후보 조회</strong>
-        <span>
-          지역과 기간을 먼저 선택한 뒤 실제 TourAPI 축제 후보를 확인합니다.
-        </span>
+      <div className="tourapi-example-note" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+        <div>
+          <strong>TourAPI 지역 기반 후보 조회</strong>
+          <span>
+            지역과 기간을 먼저 선택하거나, 전국 인기 대표 축제(보령 머드, 부산 불꽃, 대전 0시, 진주 유등 등)를 실시간 검색하여 기획안에 불러옵니다.
+          </span>
+        </div>
+        {onOpenSearchModal && (
+          <button
+            type="button"
+            className="primary-button"
+            style={{ fontSize: "0.82rem", whiteSpace: "nowrap", flexShrink: 0, padding: "8px 14px" }}
+            onClick={onOpenSearchModal}
+            aria-label="전국 대표 축제 검색"
+          >
+            전국 대표 축제 검색
+          </button>
+        )}
       </div>
 
       <div className="form-grid">

@@ -12,7 +12,8 @@ import { PresentationControlView } from "./PresentationControlView";
 
 describe("PresentationControlView", () => {
   it("renders presentation header, large KPI cards, and breakdown overview", () => {
-    const preset = FESTIVAL_PRESETS[0]; // Daejeon 0 O'clock
+    const preset =
+      FESTIVAL_PRESETS.find((p) => p.id === "preset_daejeon_0시축제") ?? FESTIVAL_PRESETS[0]; // Daejeon 0 O'clock
     const forecast = createForecast(preset.plan, sampleTourismContext, sampleTrendContext);
     const simulation = createSimulation(preset.plan, forecast, 20);
     const report = createPlanningReport(preset.plan, forecast, simulation);

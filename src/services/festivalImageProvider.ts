@@ -11,36 +11,49 @@ export interface FestivalImageMapping {
 }
 
 // 지역 및 축제 테마별 고품질 대표 축제 이미지 매핑 테이블
+// 로컬 생성 이미지를 우선 사용하고, 없으면 Unsplash CDN으로 fallback
 const REGIONAL_FESTIVAL_IMAGES: FestivalImageMapping[] = [
+  {
+    keywords: ["머드", "보령", "대천해수욕장"],
+    regionKeywords: ["충남", "보령"],
+    imageUrl: "/festival-images/boryeong_mud.png",
+    sourceNote: "보령 머드축제 대표 이미지 (AI 생성)",
+  },
+  {
+    keywords: ["불꽃", "광안대교", "광안리", "부산"],
+    regionKeywords: ["부산"],
+    imageUrl: "/festival-images/busan_fireworks.png",
+    sourceNote: "부산 불꽃축제 대표 이미지 (AI 생성)",
+  },
+  {
+    keywords: ["유등", "남강", "진주"],
+    regionKeywords: ["경남", "진주"],
+    imageUrl: "/festival-images/jinju_yudeung.png",
+    sourceNote: "진주 남강유등축제 대표 이미지 (AI 생성)",
+  },
   {
     keywords: ["0시", "원도심", "시간여행", "대전"],
     regionKeywords: ["대전"],
-    imageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
-    sourceNote: "대전 0시 축제 도심 야간 라이트 퍼레이드 대표 이미지",
+    imageUrl: "/festival-images/daejeon_zero.png",
+    sourceNote: "대전 0시 축제 대표 이미지 (AI 생성)",
+  },
+  {
+    keywords: ["등빛", "청계천", "광화문", "서울", "미디어아트", "빛초롱"],
+    regionKeywords: ["서울"],
+    imageUrl: "/festival-images/seoul_lantern.png",
+    sourceNote: "서울 등빛 미디어아트 축제 대표 이미지 (AI 생성)",
   },
   {
     keywords: ["세종", "호수공원", "수변", "한글", "드론"],
     regionKeywords: ["세종"],
-    imageUrl: "https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=800&q=80",
-    sourceNote: "세종 호수공원 수변 불꽃 & 친환경 축제 대표 이미지",
+    imageUrl: "/festival-images/sejong_lake.png",
+    sourceNote: "세종 축제 호수공원 대표 이미지 (AI 생성)",
   },
   {
-    keywords: ["야행", "문화재", "한옥", "경기전", "달빛", "등불"],
+    keywords: ["야행", "문화재", "한옥", "경기전", "달빛", "등불", "전주"],
     regionKeywords: ["전북", "전주", "경북", "경주", "공주", "부여"],
-    imageUrl: "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=800&q=80",
-    sourceNote: "지역 문화재 야행 및 전통 등불 야경 투어 대표 이미지",
-  },
-  {
-    keywords: ["강남", "미디어", "윈터", "겨울", "빛축제", "LED"],
-    regionKeywords: ["서울", "강남"],
-    imageUrl: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80",
-    sourceNote: "도심 미디어아트 및 겨울 빛축제 대표 이미지",
-  },
-  {
-    keywords: ["불꽃", "해운대", "광안리", "바다", "항구"],
-    regionKeywords: ["부산"],
-    imageUrl: "https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?auto=format&fit=crop&w=800&q=80",
-    sourceNote: "해양 및 불꽃 축제 대표 이미지",
+    imageUrl: "/festival-images/jeonju_yahaeng.png",
+    sourceNote: "지역 문화재 야행 한옥마을 대표 이미지 (AI 생성)",
   },
   {
     keywords: ["먹거리", "치맥", "시장", "푸드", "야시장"],
