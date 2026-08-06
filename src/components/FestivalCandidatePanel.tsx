@@ -1,5 +1,6 @@
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 import { sortFestivalCandidatesByDateAsc } from "../services/tourApiAdapter";
+import { getRepresentativeFestivalImage } from "../services/festivalImageProvider";
 
 interface FestivalCandidatePanelProps {
   isOpen: boolean;
@@ -86,12 +87,22 @@ export function FestivalCandidatePanel({
             {sortFestivalCandidatesByDateAsc(candidates).map((candidate) => {
               const isSelected = selectedCandidateId === candidate.id;
 
+              const imgUrl = getRepresentativeFestivalImage({
+                title: candidate.title,
+                address: candidate.address,
+                existingImageUrl: candidate.imageUrl,
+              });
+
               return (
                 <article
                   className={`candidate-card${isSelected ? " candidate-card-selected" : ""}`}
                   key={candidate.id}
+                  style={{ display: "flex", gap: "12px", alignItems: "center" }}
                 >
-                  <div>
+                  <div style={{ width: "72px", height: "54px", borderRadius: "6px", overflow: "hidden", flexShrink: 0, border: "1px solid #e2e8f0" }}>
+                    <img src={imgUrl} alt={candidate.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <span>{scopeLabel(candidate)}</span>
                     <h3>{candidate.title}</h3>
                     <p>{candidate.address}</p>

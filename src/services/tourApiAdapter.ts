@@ -6,6 +6,7 @@
 
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { regionalFestivalCandidateRecords } from "../data/regionalFestivalCandidates";
+import { getRepresentativeFestivalImage } from "./festivalImageProvider";
 import type {
   FestivalPlan,
   MetricEvidenceSourceDetail,
@@ -933,7 +934,11 @@ function mapFestivalCandidate(
     endDate: formatTourApiDateForInput(item.eventenddate),
     mapX: hasFiniteNumber(item.mapx) ? String(item.mapx) : undefined,
     mapY: hasFiniteNumber(item.mapy) ? String(item.mapy) : undefined,
-    imageUrl: item.firstimage ?? undefined,
+    imageUrl: getRepresentativeFestivalImage({
+      title: item.title,
+      address,
+      existingImageUrl: item.firstimage ?? undefined,
+    }),
     organizer,
     budgetMillionKrw: hasFiniteNumber(item.budgetMillionKrw)
       ? Number(item.budgetMillionKrw)

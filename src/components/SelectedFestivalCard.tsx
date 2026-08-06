@@ -5,6 +5,7 @@
  */
 
 import type { SelectedFestivalBasis } from "../domain/types";
+import { getRepresentativeFestivalImage } from "../services/festivalImageProvider";
 
 interface SelectedFestivalCardProps {
   selectedFestivalBasis?: SelectedFestivalBasis | null;
@@ -52,35 +53,23 @@ export function SelectedFestivalCard({
       </div>
 
       <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-start" }}>
-        {selectedFestivalBasis.imageUrl ? (
-          <div style={{ flexShrink: 0, width: "160px", height: "110px", borderRadius: "6px", overflow: "hidden", border: "1px solid #475569" }}>
-            <img
-              src={selectedFestivalBasis.imageUrl}
-              alt={selectedFestivalBasis.title}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
-        ) : (
-          <div
-            style={{
-              flexShrink: 0,
-              width: "160px",
-              height: "110px",
-              borderRadius: "6px",
-              background: "#334155",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#cbd5e1",
-              fontSize: "0.82rem",
-              border: "1px solid #475569",
-              textAlign: "center",
-              padding: "8px",
-            }}
-          >
-            이미지 준비중
-          </div>
-        )}
+        {(() => {
+          const displayImgUrl = getRepresentativeFestivalImage({
+            title: selectedFestivalBasis.title,
+            address: selectedFestivalBasis.address,
+            existingImageUrl: selectedFestivalBasis.imageUrl,
+          });
+
+          return (
+            <div style={{ flexShrink: 0, width: "160px", height: "110px", borderRadius: "6px", overflow: "hidden", border: "1px solid #475569" }}>
+              <img
+                src={displayImgUrl}
+                alt={selectedFestivalBasis.title}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          );
+        })()}
 
         <div style={{ flex: 1, minWidth: "260px" }}>
           <dl
