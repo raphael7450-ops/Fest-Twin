@@ -90,14 +90,7 @@ export function FestivalSearchModal({
               key={kw}
               type="button"
               className="text-button"
-              style={{
-                fontSize: "0.76rem",
-                padding: "2px 8px",
-                borderRadius: "12px",
-                background: "#e2e8f0",
-                color: "#334155",
-                cursor: "pointer",
-              }}
+              style={{ fontSize: "0.76rem", padding: "3px 10px", borderRadius: "20px", minHeight: "28px" }}
               onClick={() => setQuery(kw)}
             >
               #{kw}
@@ -159,10 +152,10 @@ export function FestivalSearchModal({
                   </div>
 
                   <button
-                    className="primary-button"
+                    className="secondary-button"
                     type="button"
                     data-testid="apply-preset-btn"
-                    style={{ alignSelf: "center", fontSize: "0.82rem", padding: "8px 12px", flexShrink: 0 }}
+                    style={{ alignSelf: "center", flexShrink: 0, whiteSpace: "nowrap" }}
                     onClick={(e) => {
                       e.preventDefault();
                       onSelectPreset(preset);

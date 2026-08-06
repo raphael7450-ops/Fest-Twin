@@ -47,8 +47,8 @@ export function PlanForm({
         {onOpenSearchModal && (
           <button
             type="button"
-            className="primary-button"
-            style={{ fontSize: "0.82rem", whiteSpace: "nowrap", flexShrink: 0, padding: "8px 14px" }}
+            className="secondary-button"
+            style={{ whiteSpace: "nowrap", flexShrink: 0 }}
             onClick={onOpenSearchModal}
             aria-label="전국 대표 축제 검색"
           >
