@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, BriefcaseBusiness, Clock3, FileText, Home, UsersRound } from "lucide-react";
+import { B2gPrintReport } from "./components/B2gPrintReport";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
 import { ForecastChart } from "./components/ForecastChart";
@@ -579,7 +580,8 @@ export function App() {
   ];
 
   return (
-    <main className="app-shell">
+    <>
+      <main className="app-shell">
       <div className="dashboard-canvas">
         <aside className="dashboard-rail" aria-label="대시보드 섹션">
           <div className="dashboard-rail__curve" aria-hidden="true" />
@@ -813,5 +815,14 @@ export function App() {
         onClose={() => setSelectedEvidenceId(null)}
       />
     </main>
+    <B2gPrintReport
+      report={report}
+      plan={plan}
+      forecast={forecast}
+      selectedFestivalBasis={selectedFestivalBasis}
+      spending={spending}
+      evidenceSet={metricEvidence}
+    />
+  </>
   );
 }

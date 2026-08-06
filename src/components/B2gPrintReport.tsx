@@ -229,7 +229,7 @@ export function B2gPrintReport({
 
                 return (
                   <tr key={key}>
-                    <td>{item?.title ?? key}</td>
+                    <td>[지표] {item?.title ?? key}</td>
                     <td>{sourceName}</td>
                     <td>{sourceTypeLabel}</td>
                     <td>
