@@ -28,7 +28,6 @@ const report: PlanningReport = {
   ],
   findings: ["20:00 이후 방문객 집중 가능성이 높습니다."],
   recommendations: [],
-  riskLevel: "medium",
 };
 
 const forecast: ForecastResult = {

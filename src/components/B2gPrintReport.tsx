@@ -50,6 +50,8 @@ export function B2gPrintReport({
 
   const peakVisitorCount = forecast?.visitorsByHour?.find((v) => v.hour === forecast?.peakHour)?.visitors ?? 0;
 
+  const overallRiskLevel = report?.scores?.find((s) => s.level === "critical" || s.level === "high")?.level ?? report?.scores?.[0]?.level ?? "medium";
+
   return (
     <div className="b2g-print-report-wrapper" aria-label="B2G 행정 결재 및 감사 제출용 보고서">
       {/* 1페이지: 핵심 요약 및 안전 위험 진단 */}
@@ -122,8 +124,8 @@ export function B2gPrintReport({
           <div className="b2g-safety-diagnosis-box">
             <div className="b2g-risk-grade-badge">
               <span>종합 안전 위험 등급</span>
-              <strong className={`b2g-risk-level b2g-risk-level--${report?.riskLevel ?? "low"}`}>
-                {report?.riskLevel === "low" ? "낮음 (양호)" : report?.riskLevel === "medium" ? "보통 (주의)" : report?.riskLevel === "high" ? "높음 (경고)" : "심각 (위험)"}
+              <strong className={`b2g-risk-level b2g-risk-level--${overallRiskLevel}`}>
+                {overallRiskLevel === "low" ? "낮음 (양호)" : overallRiskLevel === "medium" ? "보통 (주의)" : overallRiskLevel === "high" ? "높음 (경고)" : "심각 (위험)"}
               </strong>
             </div>
             <div className="b2g-findings-area">
