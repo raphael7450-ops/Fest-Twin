@@ -105,10 +105,10 @@ describe("B2gPrintReport", () => {
     );
 
     expect(screen.getByText("4. 4단계 수치 산출 근거 상세 (Step 1 ~ 4 Breakdown)")).toBeInTheDocument();
-    expect(screen.getByText("Step 1. 수요 추정 산출 근거")).toBeInTheDocument();
-    expect(screen.getByText("Step 2. 피크 밀집도 및 안전 관리 인력 배치 산출 근거")).toBeInTheDocument();
-    expect(screen.getByText("Step 3. 상권 경제 파급효과 산출 근거")).toBeInTheDocument();
-    expect(screen.getByText("Step 4. 수용성 및 종합 리스크 평가")).toBeInTheDocument();
+    expect(screen.getByText("Step 1. 수요 추정")).toBeInTheDocument();
+    expect(screen.getByText("Step 2. 밀집도 & 안전인력")).toBeInTheDocument();
+    expect(screen.getByText("Step 3. 상권 경제 효과")).toBeInTheDocument();
+    expect(screen.getByText("Step 4. 수용성 & 리스크")).toBeInTheDocument();
     expect(screen.getByText("5. 적용 데이터 출처 및 무결성 라벨 (Data Provenance & Integrity)")).toBeInTheDocument();
   });
 });

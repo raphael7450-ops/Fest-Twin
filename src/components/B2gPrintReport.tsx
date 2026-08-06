@@ -49,12 +49,14 @@ export function B2gPrintReport({
     : `SCN-${regionName}-${planName}`;
 
   const peakVisitorCount = forecast?.visitorsByHour?.find((v) => v.hour === forecast?.peakHour)?.visitors ?? 0;
-
   const overallRiskLevel = report?.scores?.find((s) => s.level === "critical" || s.level === "high")?.level ?? report?.scores?.[0]?.level ?? "medium";
+
+  // Filter evidence list to key items for clean print presentation
+  const evidenceEntries = Object.entries(evidenceSet || {}).slice(0, 8);
 
   return (
     <div className="b2g-print-report-wrapper" aria-label="B2G 행정 결재 및 감사 제출용 보고서">
-      {/* 1페이지: 핵심 요약 및 안전 위험 진단 */}
+      {/* 1페이지: 행정 결재 개요, 핵심 지표 요약 및 4단계 산출 근거 */}
       <section className="b2g-print-page b2g-print-page-1">
         <header className="b2g-print-header">
           <div className="b2g-print-header__logo">
@@ -120,7 +122,7 @@ export function B2gPrintReport({
         </div>
 
         <div className="b2g-print-section">
-          <h2 className="b2g-section-heading">3. 안전 위험 등급 및 종합 진단</h2>
+          <h2 className="b2g-section-heading">3. 안전 위험 등급 및 종합 진단 소견</h2>
           <div className="b2g-safety-diagnosis-box">
             <div className="b2g-risk-grade-badge">
               <span>종합 안전 위험 등급</span>
@@ -129,11 +131,48 @@ export function B2gPrintReport({
               </strong>
             </div>
             <div className="b2g-findings-area">
-              <h4>주요 사전 진단 소견</h4>
               <ul>
                 {(report?.findings ?? []).map((finding, idx) => (
                   <li key={idx}>{finding}</li>
                 ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="b2g-print-section">
+          <h2 className="b2g-section-heading">4. 4단계 수치 산출 근거 상세 (Step 1 ~ 4 Breakdown)</h2>
+          <div className="b2g-breakdown-grid">
+            <div className="b2g-breakdown-step">
+              <h3>Step 1. 수요 추정</h3>
+              <p>TourAPI 4.0 및 KTDB 이동 데이터 합성 추산</p>
+              <ul>
+                <li>예상 방문객: {expectedVisitors.toLocaleString("ko-KR")}명</li>
+                <li>예측 신뢰도: {forecast?.confidence ?? "보통"} ({forecast?.successScore ?? 80}점)</li>
+              </ul>
+            </div>
+            <div className="b2g-breakdown-step">
+              <h3>Step 2. 밀집도 & 안전인력</h3>
+              <p>행정안전부 안전 관리 매뉴얼 수용 한계 검토</p>
+              <ul>
+                <li>최고 밀집도: {maxDensityPerSqm} 명/㎡</li>
+                <li>최소 안전 인력: {Math.ceil(expectedVisitors / 400)}명</li>
+              </ul>
+            </div>
+            <div className="b2g-breakdown-step">
+              <h3>Step 3. 상권 경제 효과</h3>
+              <p>소상공인진흥공단 1인당 소비단가 모델 적용</p>
+              <ul>
+                <li>1인당 소비액: {avgSpend.toLocaleString("ko-KR")}원</li>
+                <li>ROI 효과: {roi}배 ({formatKrw(totalEconomicEffect)})</li>
+              </ul>
+            </div>
+            <div className="b2g-breakdown-step">
+              <h3>Step 4. 수용성 & 리스크</h3>
+              <p>행사장 면적 및 주차/편의시설 지수 산출</p>
+              <ul>
+                <li>수용성 점수: {report?.scores?.find(s => s.label.includes("수용"))?.score ?? 85}점</li>
+                <li>교통/주차 점수: {report?.scores?.find(s => s.label.includes("주차") || s.label.includes("교통"))?.score ?? 80}점</li>
               </ul>
             </div>
           </div>
@@ -145,70 +184,17 @@ export function B2gPrintReport({
         </footer>
       </section>
 
-      {/* 2페이지: 4단계 수치 산출 근거 상세 및 데이터 무결성 라벨 */}
+      {/* 2페이지: 적용 데이터 출처 무결성 라벨, OpenAPI 증빙 및 행정 결재 서명 */}
       <section className="b2g-print-page b2g-print-page-2">
         <header className="b2g-print-header">
           <div className="b2g-print-header__logo">
             <span className="b2g-print-logo-box">FT</span>
-            <span className="b2g-org-sub">Fest-Twin Audit Breakdown Sheet</span>
+            <span className="b2g-org-sub">Fest-Twin Audit & Compliance Sheet</span>
           </div>
           <div className="b2g-print-header__meta">
             <div><span className="meta-label">문서 번호:</span> {scenarioId}</div>
           </div>
         </header>
-
-        <div className="b2g-print-section">
-          <h2 className="b2g-section-heading">4. 4단계 수치 산출 근거 상세 (Step 1 ~ 4 Breakdown)</h2>
-          <div className="b2g-breakdown-container">
-            <div className="b2g-breakdown-step">
-              <h3>Step 1. 수요 추정 산출 근거</h3>
-              <p>
-                한국관광공사 TourAPI 4.0 축제 목록, 과거 동기 대비 검색 트렌드, 지역 인구/교통(KTDB) 이동 데이터를 합성하여 추정한 수치입니다.
-              </p>
-              <ul>
-                <li>기본 예상 인원: {expectedVisitors.toLocaleString("ko-KR")}명</li>
-                <li>예측 신뢰도: {forecast?.confidence ?? "보통"} (점수: {forecast?.successScore ?? 80}점)</li>
-                <li>적용 수식: 기초 수요지수(Demand Index) x 기간 보정 계수 x 연계 관광지 가중치</li>
-              </ul>
-            </div>
-
-            <div className="b2g-breakdown-step">
-              <h3>Step 2. 피크 밀집도 및 안전 관리 인력 배치 산출 근거</h3>
-              <p>
-                행정안전부 지역축제 안전관리 매뉴얼 기준(㎡당 3~4명 초과 시 위험)에 따라 피크 타임 시뮬레이션을 수행하였습니다.
-              </p>
-              <ul>
-                <li>피크 타임(18~21시) 최고 밀집도: {maxDensityPerSqm} 명/㎡</li>
-                <li>최소 권장 안전 관리 인력: {Math.ceil(expectedVisitors / 400)}명 (안전요원/경호/유도요원)</li>
-                <li>혼잡 위험 구간: 메인 무대 주변 및 주 진출입로 병목 구간</li>
-              </ul>
-            </div>
-
-            <div className="b2g-breakdown-step">
-              <h3>Step 3. 상권 경제 파급효과 산출 근거</h3>
-              <p>
-                소상공인진흥공단 및 카드사 소비 통계를 바탕으로 축제 방문객 1인당 평균 직접 소비액을 추산하였습니다.
-              </p>
-              <ul>
-                <li>방문객 1인당 평균 소비액: {avgSpend.toLocaleString("ko-KR")}원</li>
-                <li>총 예상 파급효과: {formatKrw(totalEconomicEffect)}</li>
-                <li>예산 대비 ROI: {roi}배 (투입예산 {formatKrw(budgetKrw)})</li>
-              </ul>
-            </div>
-
-            <div className="b2g-breakdown-step">
-              <h3>Step 4. 수용성 및 종합 리스크 평가</h3>
-              <p>
-                행사장 면적, 주차장 수용면수, 편의시설(화장실, 의료 부스)과의 비율을 점수화하여 진단하였습니다.
-              </p>
-              <ul>
-                <li>수용 능력 점수: {report?.scores?.find(s => s.label.includes("수용"))?.score ?? 85}점</li>
-                <li>교통/주차 점수: {report?.scores?.find(s => s.label.includes("주차") || s.label.includes("교통"))?.score ?? 80}점</li>
-                <li>개선 권고 항목: {report?.recommendations?.length ?? 0}건 수립 완료</li>
-              </ul>
-            </div>
-          </div>
-        </div>
 
         <div className="b2g-print-section">
           <h2 className="b2g-section-heading">5. 적용 데이터 출처 및 무결성 라벨 (Data Provenance & Integrity)</h2>
@@ -222,7 +208,7 @@ export function B2gPrintReport({
               </tr>
             </thead>
             <tbody>
-              {Object.entries(evidenceSet || {}).map(([key, item]) => {
+              {evidenceEntries.map(([key, item]) => {
                 const sourceName = item?.sourceDetails?.[0]?.sourceName || item?.dataSources?.join(", ") || "공공데이터";
                 const sourceTypeLabel = item?.sourceDetails?.[0]?.sourceType === "tourapi" ? "한국관광공사" : "공공데이터 포털";
                 const statusText = item?.confidenceLabel === "높음" ? "실시간 검증 완료" : "데이터 오염 검증 필터 적용";
@@ -242,13 +228,48 @@ export function B2gPrintReport({
           </table>
         </div>
 
+        <div className="b2g-print-section">
+          <h2 className="b2g-section-heading">6. OpenAPI 운영계정 및 시스템 활용 증빙</h2>
+          <div className="b2g-openapi-proof-box">
+            <table className="b2g-table">
+              <tbody>
+                <tr>
+                  <th>활용 어플 URL</th>
+                  <td>https://cwserver.tail97dbc3.ts.net/</td>
+                  <th>서비스 유형</th>
+                  <td>B2G SaaS Control Center</td>
+                </tr>
+                <tr>
+                  <th>활용 목적</th>
+                  <td colSpan={3}>축제 후보 조회, 행사장 위치 보강, 주변 관광지 기반 수요 예측 근거 산출 및 감사 제출 증빙</td>
+                </tr>
+                <tr>
+                  <th>데이터 출처 및 동의</th>
+                  <td colSpan={3}>한국관광공사 TourAPI 4.0 및 국토교통부 KTDB 공공데이터 출처 표기 동의 적용</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div className="b2g-sign-box">
-          <div className="b2g-sign-row">
-            <span>작성자 (담당자): ________________________ (서명)</span>
-            <span>검토자 (부서장): ________________________ (서명)</span>
+          <h3 className="b2g-sign-title">행정 결재 및 감사 검토 서명란</h3>
+          <div className="b2g-sign-grid">
+            <div className="b2g-sign-cell">
+              <span className="sign-role">작성자 (담당자)</span>
+              <span className="sign-line">소속 / 성명: ____________________ (인)</span>
+            </div>
+            <div className="b2g-sign-cell">
+              <span className="sign-role">검토자 (팀장)</span>
+              <span className="sign-line">소속 / 성명: ____________________ (인)</span>
+            </div>
+            <div className="b2g-sign-cell">
+              <span className="sign-role">승인자 (부서장)</span>
+              <span className="sign-line">소속 / 성명: ____________________ (인)</span>
+            </div>
           </div>
           <p className="b2g-sign-notice">
-            본 보고서는 Fest-Twin 사전 진단 플랫폼에서 자동 생성된 B2G 행정 결재 및 감사 제출용 증빙 서식입니다.
+            본 보고서는 Fest-Twin 사전 진단 플랫폼에서 자동 산출된 B2G 행정 결재 및 감사 제출용 전용 서식입니다.
           </p>
         </div>
 
