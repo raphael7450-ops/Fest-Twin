@@ -45,7 +45,7 @@ export function FestivalSearchModal({
         onClick={onClose}
       />
       <div
-        aria-label="전국 대표 및 인기 축제 실시간 검색"
+        aria-label="전체 축제 실시간 검색"
         aria-modal="true"
         className="candidate-drawer"
         role="dialog"
@@ -53,8 +53,8 @@ export function FestivalSearchModal({
       >
         <div className="candidate-drawer-heading">
           <div>
-            <p className="eyebrow">NATIONAL FESTIVAL DATABASE</p>
-            <h2 style={{ fontSize: "1.25rem", margin: 0 }}>전국 대표 축제 실시간 검색</h2>
+            <p className="eyebrow">ALL FESTIVAL DATABASE</p>
+            <h2 style={{ fontSize: "1.25rem", margin: 0 }}>전체 축제 실시간 검색</h2>
           </div>
           <button className="text-button" type="button" onClick={onClose}>
             닫기
@@ -67,7 +67,7 @@ export function FestivalSearchModal({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="축제명, 지역(보령, 부산, 대전, 서울, 세종...), 키워드(불꽃, 머드, 유등...) 검색"
+              placeholder="전국 모든 축제명, 지역(보령, 부산, 대전, 서울, 세종...), 키워드(불꽃, 머드, 유등...) 검색"
               aria-label="축제 검색어 입력"
               style={{
                 width: "100%",

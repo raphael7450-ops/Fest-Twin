@@ -41,7 +41,7 @@ export function PlanForm({
         <div>
           <strong>TourAPI 지역 기반 후보 조회</strong>
           <span>
-            지역과 기간을 먼저 선택하거나, 전국 인기 대표 축제(보령 머드, 부산 불꽃, 대전 0시, 진주 유등 등)를 실시간 검색하여 기획안에 불러옵니다.
+            지역과 기간을 먼저 선택하거나, 전체 축제를 실시간 검색하여 기획안에 불러옵니다.
           </span>
         </div>
         {onOpenSearchModal && (
@@ -50,9 +50,9 @@ export function PlanForm({
             className="secondary-button"
             style={{ whiteSpace: "nowrap", flexShrink: 0 }}
             onClick={onOpenSearchModal}
-            aria-label="전국 대표 축제 검색"
+            aria-label="전체 축제 검색"
           >
-            전국 대표 축제 검색
+            전체 축제 검색
           </button>
         )}
       </div>

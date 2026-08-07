@@ -18,7 +18,7 @@ describe("FestivalSearchModal", () => {
       />
     );
 
-    expect(screen.getByText("전국 대표 축제 실시간 검색")).toBeInTheDocument();
+    expect(screen.getByText("전체 축제 실시간 검색")).toBeInTheDocument();
     expect(screen.getByText("보령 머드축제")).toBeInTheDocument();
     expect(screen.getByText("부산 불꽃축제")).toBeInTheDocument();
 

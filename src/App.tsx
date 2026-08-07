@@ -16,7 +16,6 @@ import { Heatmap } from "./components/Heatmap";
 import { InfrastructureCapacityPanel } from "./components/InfrastructureCapacityPanel";
 import { MetricEvidenceDrawer } from "./components/MetricEvidenceDrawer";
 import { PlanForm } from "./components/PlanForm";
-import { PresentationControlView } from "./components/PresentationControlView";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
 import { SafetyGuardAllocationPanel } from "./components/SafetyGuardAllocationPanel";
@@ -565,6 +564,7 @@ export function App() {
     () => createPlanningReport(plan, forecast, simulation),
     [forecast, plan, simulation],
   );
+
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
     setPresetBasis(null);
@@ -574,48 +574,11 @@ export function App() {
     setIsCandidatePanelOpen(false);
   };
 
-  const [isPresentationMode, setIsPresentationMode] = useState<boolean>(false);
-
   const handleSelectPreset = (preset: FestivalPreset) => {
     setPlan(preset.plan);
     setSelectedCandidate(null);
     setPresetBasis(preset.basis);
   };
-
-  const handleTogglePresentationMode = () => {
-    setIsPresentationMode((prev) => {
-      const next = !prev;
-      if (next) {
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        }
-      } else {
-        if (document.fullscreenElement && document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        }
-      }
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
-        setIsPresentationMode(false);
-      }
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isPresentationMode) {
-        setIsPresentationMode(false);
-      }
-    };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isPresentationMode]);
 
   const [activeDashboardSection, setActiveDashboardSection] =
     useState<DashboardSection>("overview");
@@ -630,46 +593,31 @@ export function App() {
 
   return (
     <>
-      <main className={`app-shell${isPresentationMode ? " app-shell--presentation" : ""}`}>
-        {isPresentationMode ? (
-          <PresentationControlView
-            plan={plan}
-            forecast={forecast}
-            report={report}
-            selectedFestivalBasis={selectedFestivalBasis}
-            spending={spending}
-            metricEvidence={metricEvidence}
-            onExit={handleTogglePresentationMode}
-          />
-        ) : (
-          <div className="dashboard-canvas">
-        <aside className="dashboard-rail" aria-label="대시보드 섹션">
-          <div className="dashboard-rail__curve" aria-hidden="true" />
-          <nav className="dashboard-rail__nav">
-            {railItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  aria-label={`대시보드 섹션: ${item.label}`}
-                  aria-pressed={activeDashboardSection === item.section}
-                  className={`dashboard-rail__button${activeDashboardSection === item.section ? " dashboard-rail__button--active" : ""}`}
-                  key={item.label}
-                  onClick={() => setActiveDashboardSection(item.section as DashboardSection)}
-                  type="button"
-                >
-                  <Icon size={17} strokeWidth={2.2} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
-        <div className="dashboard-content">
-          <GovernmentHeader
-            onSelectPreset={handleSelectPreset}
-            onTogglePresentationMode={handleTogglePresentationMode}
-            isPresentationMode={isPresentationMode}
-          />
+      <main className="app-shell">
+        <div className="dashboard-canvas">
+          <aside className="dashboard-rail" aria-label="대시보드 섹션">
+            <div className="dashboard-rail__curve" aria-hidden="true" />
+            <nav className="dashboard-rail__nav">
+              {railItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    aria-label={`대시보드 섹션: ${item.label}`}
+                    aria-pressed={activeDashboardSection === item.section}
+                    className={`dashboard-rail__button${activeDashboardSection === item.section ? " dashboard-rail__button--active" : ""}`}
+                    key={item.label}
+                    onClick={() => setActiveDashboardSection(item.section as DashboardSection)}
+                    type="button"
+                  >
+                    <Icon size={17} strokeWidth={2.2} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </aside>
+          <div className="dashboard-content">
+            <GovernmentHeader />
           {restoredNotice && (
             <div
               style={{
@@ -862,10 +810,9 @@ export function App() {
               </section>
             )}
 
-            </div>
           </div>
         </div>
-      )}
+      </div>
       <FestivalCandidatePanel
         isOpen={isCandidatePanelOpen}
         candidates={candidates}
