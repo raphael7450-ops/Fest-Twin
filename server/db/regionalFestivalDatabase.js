@@ -55,6 +55,44 @@ function matchesRequestedYear(record, startDate, endDate) {
   );
 }
 
+function getBaseFestivalKey(name) {
+  return String(name || "")
+    .replace(/\b20\d{2}년?\s*/gi, "")
+    .replace(/제\s*\d+\s*회\s*/gi, "")
+    .replace(/\d+\s*회\s*/gi, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function deduplicateLatestFestivals(records) {
+  const map = new Map();
+
+  for (const record of records) {
+    const baseKey = getBaseFestivalKey(record.name);
+    const key = `${record.region || ""}_${baseKey}`;
+
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, record);
+    } else {
+      const existingYear = Number(existing.year || 0);
+      const currentYear = Number(record.year || 0);
+      const existingStart = existing.startDate || "";
+      const currentStart = record.startDate || "";
+
+      if (currentYear > existingYear) {
+        map.set(key, record);
+      } else if (currentYear === existingYear) {
+        if (currentStart > existingStart || (record.visitors || 0) > (existing.visitors || 0)) {
+          map.set(key, record);
+        }
+      }
+    }
+  }
+
+  return Array.from(map.values());
+}
+
 export class RegionalFestivalDatabase {
   constructor(filePath = DB_FILE_PATH) {
     this.filePath = filePath;
@@ -97,7 +135,7 @@ export class RegionalFestivalDatabase {
     const requestedYear = Number(year);
     const hasSearchTerms = searchTerms.length > 0;
 
-    return this.records
+    const filtered = this.records
       .filter((record) => {
         if (!normalizedRegion) return true;
         if (record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion)) return true;
@@ -127,7 +165,12 @@ export class RegionalFestivalDatabase {
         if (hasSearchTerms) return record.keywordMatchScore > 0;
         if (overlapsDateRange(record, startDate, endDate)) return true;
         return matchesRequestedYear(record, startDate, endDate);
-      })
+      });
+
+    // 중복 축제 제거 (동일 축제일 경우 가장 최근 연도 데이터만 유지)
+    const deduped = deduplicateLatestFestivals(filtered);
+
+    return deduped
       .map((record) => ({
         ...record,
         matchScore:

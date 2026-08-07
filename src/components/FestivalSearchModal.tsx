@@ -122,6 +122,15 @@ export function FestivalSearchModal({
     };
   }, [query, isOpen]);
 
+function getNormalizedBaseName(name: string): string {
+  return name
+    .replace(/\b20\d{2}년?\s*/gi, "")
+    .replace(/제\s*\d+\s*회\s*/gi, "")
+    .replace(/\d+\s*회\s*/gi, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
   const combinedPresets = useMemo(() => {
     const q = query.trim().toLowerCase();
     const presetMatches = q
@@ -134,8 +143,8 @@ export function FestivalSearchModal({
         })
       : FESTIVAL_PRESETS;
 
-    const presetNames = new Set(presetMatches.map((p) => p.name.toLowerCase()));
-    const nonDuplicateApi = apiPresets.filter((p) => !presetNames.has(p.name.toLowerCase()));
+    const presetBaseKeys = new Set(presetMatches.map((p) => getNormalizedBaseName(p.name)));
+    const nonDuplicateApi = apiPresets.filter((p) => !presetBaseKeys.has(getNormalizedBaseName(p.name)));
 
     return [...presetMatches, ...nonDuplicateApi];
   }, [query, apiPresets]);
