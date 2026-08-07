@@ -1,9 +1,4 @@
-/**
- * 파일 : src/components/FestivalSearchModal.tsx
- * 내용 : 전국 대표/인기 축제 통합 실시간 검색 모달 컴포넌트
- */
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FESTIVAL_PRESETS, type FestivalPreset } from "../data/festivalPresets";
 import { getRepresentativeFestivalImage } from "../services/festivalImageProvider";
 
@@ -13,26 +8,137 @@ interface FestivalSearchModalProps {
   onSelectPreset: (preset: FestivalPreset) => void;
 }
 
+interface ApiRecord {
+  id: string;
+  name: string;
+  region: string;
+  localGovernment?: string;
+  type?: string;
+  venue?: string;
+  startDate?: string;
+  endDate?: string;
+  periodLabel?: string;
+  budgetMillionKrw?: number;
+  visitors?: number;
+  sourceName?: string;
+}
+
+function dbRecordToPreset(record: ApiRecord): FestivalPreset {
+  const visitors = record.visitors || 80000;
+  const budget = record.budgetMillionKrw || 500;
+  const venueAddr = record.venue
+    ? `${record.region} ${record.localGovernment || ""} ${record.venue}`.trim()
+    : `${record.region} ${record.localGovernment || ""}`.trim();
+  const startDate = record.startDate || "2026-05-01";
+  const endDate = record.endDate || "2026-05-05";
+
+  return {
+    id: `db_${record.id}`,
+    badgeLabel: `${record.region} ${record.type || "지역축제"}`,
+    name: record.name,
+    tagline: `${record.localGovernment || record.region} ${record.venue || "행사장"} 축제`,
+    description: `${record.region} ${record.localGovernment || ""} ${record.venue || ""}에서 개최되는 축제 (예산 ${budget.toLocaleString()}백만원, 예상 방문객 ${visitors.toLocaleString()}명)`,
+    areaSqm: Math.max(20000, Math.min(100000, Math.round(visitors * 0.5))),
+    totalBudgetMillionKrw: budget,
+    targetVisitors: visitors,
+    region: record.region,
+    plan: {
+      name: `${record.name} (사전진단 시뮬레이션)`,
+      region: record.region,
+      venueAddress: venueAddr,
+      startDate,
+      endDate,
+      operatingHours: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+      totalBudgetMillionKrw: budget,
+      promotionBudgetMillionKrw: Math.round(budget * 0.15),
+      safetyBudgetMillionKrw: Math.round(budget * 0.12),
+      targetGroups: ["youth", "families", "locals"],
+      keywords: [record.name, record.region, record.localGovernment || "", record.type || "지역축제"].filter(Boolean),
+      expectedCapacity: Math.max(1000, Math.round(visitors / 8)),
+      gridWidth: 30,
+      gridHeight: 20,
+      programs: [
+        { id: `prog_${record.id}_01`, name: `${record.name} 개막식 & 메인 행사`, startHour: 18, endHour: 21, expectedDraw: Math.round(visitors * 0.4) },
+        { id: `prog_${record.id}_02`, name: `지역 특산물 & 문화 체험 존`, startHour: 10, endHour: 18, expectedDraw: Math.round(visitors * 0.3) },
+      ],
+      facilities: [
+        { id: `fac_${record.id}_01`, type: "entrance", name: "메인 진입 게이트", x: 3, y: 10, weight: 1.5 },
+        { id: `fac_${record.id}_02`, type: "stage", name: "특설 메인 무대", x: 15, y: 10, weight: 2.0 },
+        { id: `fac_${record.id}_03`, type: "medical", name: "현장 응급 구급 센터", x: 25, y: 15, weight: 1.0 },
+      ],
+    },
+    basis: {
+      contentId: String(record.id),
+      title: record.name,
+      address: venueAddr,
+      startDate,
+      endDate,
+      sourceName: record.sourceName || "문화체육관광부 전국 지역축제 DB",
+      operatingTimeText: "10:00 ~ 21:00",
+      operatingTimeSource: "official",
+      scheduleProfileLabel: "주야간 문화형",
+    },
+  };
+}
+
 export function FestivalSearchModal({
   isOpen,
   onClose,
   onSelectPreset,
 }: FestivalSearchModalProps) {
   const [query, setQuery] = useState("");
+  const [apiPresets, setApiPresets] = useState<FestivalPreset[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredPresets = useMemo(() => {
-    if (!query.trim()) {
-      return FESTIVAL_PRESETS;
-    }
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const controller = new AbortController();
+    setIsLoading(true);
+
+    const url = query.trim()
+      ? `/api/regional-festivals?q=${encodeURIComponent(query.trim())}&limit=30`
+      : `/api/regional-festivals?limit=20`;
+
+    fetch(url, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          if (Array.isArray(data?.records)) {
+            const presets = data.records.map(dbRecordToPreset);
+            setApiPresets(presets);
+          }
+          setIsLoading(false);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [query, isOpen]);
+
+  const combinedPresets = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return FESTIVAL_PRESETS.filter((preset) => {
-      const titleMatch = preset.name.toLowerCase().includes(q) || preset.basis.title.toLowerCase().includes(q);
-      const regionMatch = preset.region.toLowerCase().includes(q) || preset.plan.venueAddress.toLowerCase().includes(q);
-      const keywordMatch = preset.plan.keywords.some((kw) => kw.toLowerCase().includes(q));
-      const descriptionMatch = preset.description.toLowerCase().includes(q);
-      return titleMatch || regionMatch || keywordMatch || descriptionMatch;
-    });
-  }, [query]);
+    const presetMatches = q
+      ? FESTIVAL_PRESETS.filter((preset) => {
+          const titleMatch = preset.name.toLowerCase().includes(q) || preset.basis.title.toLowerCase().includes(q);
+          const regionMatch = preset.region.toLowerCase().includes(q) || preset.plan.venueAddress.toLowerCase().includes(q);
+          const keywordMatch = preset.plan.keywords.some((kw) => kw.toLowerCase().includes(q));
+          const descriptionMatch = preset.description.toLowerCase().includes(q);
+          return titleMatch || regionMatch || keywordMatch || descriptionMatch;
+        })
+      : FESTIVAL_PRESETS;
+
+    const presetNames = new Set(presetMatches.map((p) => p.name.toLowerCase()));
+    const nonDuplicateApi = apiPresets.filter((p) => !presetNames.has(p.name.toLowerCase()));
+
+    return [...presetMatches, ...nonDuplicateApi];
+  }, [query, apiPresets]);
 
   if (!isOpen) return null;
 
@@ -53,7 +159,7 @@ export function FestivalSearchModal({
       >
         <div className="candidate-drawer-heading">
           <div>
-            <p className="eyebrow">ALL FESTIVAL DATABASE</p>
+            <p className="eyebrow">ALL FESTIVAL DATABASE (5,700+)</p>
             <h2 style={{ fontSize: "1.25rem", margin: 0 }}>전체 축제 실시간 검색</h2>
           </div>
           <button className="text-button" type="button" onClick={onClose}>
@@ -67,7 +173,7 @@ export function FestivalSearchModal({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="전국 모든 축제명, 지역(보령, 부산, 대전, 서울, 세종...), 키워드(불꽃, 머드, 유등...) 검색"
+              placeholder="전국 5,700여 개 모든 축제명, 지역(논산, 화천, 제주, 안동...), 키워드 검색"
               aria-label="축제 검색어 입력"
               style={{
                 width: "100%",
@@ -84,8 +190,8 @@ export function FestivalSearchModal({
         </div>
 
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
-          <span style={{ fontSize: "0.78rem", color: "#64748b", alignSelf: "center" }}>인기 순위:</span>
-          {["보령 머드", "부산 불꽃", "진주 유등", "대전 0시", "서울 등빛", "세종", "전주 야행"].map((kw) => (
+          <span style={{ fontSize: "0.78rem", color: "#64748b", alignSelf: "center" }}>추천 검색어:</span>
+          {["논산 딸기", "보령 머드", "부산 불꽃", "진주 유등", "대전 0시", "화천 산천어", "수원 화성", "제주 들불", "안동 탈춤", "전주 야행", "송도 맥주"].map((kw) => (
             <button
               key={kw}
               type="button"
@@ -99,13 +205,18 @@ export function FestivalSearchModal({
         </div>
 
         <div className="candidate-list" style={{ maxHeight: "calc(100vh - 230px)", overflowY: "auto" }}>
-          {filteredPresets.length === 0 ? (
+          {isLoading && combinedPresets.length === 0 ? (
+            <div className="candidate-drawer-state">
+              <strong>전국 축제 DB를 검색하고 있습니다...</strong>
+              <span>문체부 지역축제 공공 DB 5,700여 건에서 매칭되는 축제를 조회 중입니다.</span>
+            </div>
+          ) : combinedPresets.length === 0 ? (
             <div className="candidate-drawer-state">
               <strong>검색 결과가 없습니다.</strong>
-              <span>'{query}' 검색어와 일치하는 프리셋 축제가 없습니다. 상단 주소 및 지역 입력으로 기획을 계속할 수 있습니다.</span>
+              <span>'{query}' 검색어와 일치하는 축제가 없습니다. 상단 주소 및 지역 입력으로 기획을 계속할 수 있습니다.</span>
             </div>
           ) : (
-            filteredPresets.map((preset) => {
+            combinedPresets.map((preset) => {
               const imgUrl = getRepresentativeFestivalImage({
                 title: preset.name,
                 region: preset.region,
@@ -173,3 +284,4 @@ export function FestivalSearchModal({
     </div>
   );
 }
+

@@ -41,7 +41,9 @@ export function createRegionalFestivalRouter(options = {}) {
   const db = options.db ?? regionalFestivalDb;
 
   router.get("/", (request, response) => {
+    const query = request.query.q || request.query.query;
     const records = db.searchFestivals({
+      query,
       region: request.query.region,
       year: request.query.year,
       startDate: request.query.startDate,

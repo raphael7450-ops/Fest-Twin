@@ -82,20 +82,51 @@ export class RegionalFestivalDatabase {
     };
   }
 
-  searchFestivals({ region, year, startDate, endDate, keywords = [], limit = 20 } = {}) {
+  searchFestivals({ query, region, year, startDate, endDate, keywords = [], limit = 30 } = {}) {
     const normalizedRegion = normalizeRegion(region);
-    const normalizedKeywords = Array.isArray(keywords) ? keywords : [];
+    const rawKeywords = Array.isArray(keywords)
+      ? keywords
+      : String(keywords || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+    if (query && typeof query === "string" && query.trim()) {
+      rawKeywords.push(query.trim());
+    }
+    const searchTerms = rawKeywords.map((k) => k.toLowerCase()).filter(Boolean);
     const requestedYear = Number(year);
+    const hasSearchTerms = searchTerms.length > 0;
+
     return this.records
-      .filter((record) => !normalizedRegion || record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion))
-      .filter((record) => !Number.isFinite(requestedYear) || record.year === requestedYear)
-      .map((record) => ({
-        ...record,
-        keywordMatchScore: keywordScore(record, normalizedKeywords),
-      }))
       .filter((record) => {
+        if (!normalizedRegion) return true;
+        if (record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion)) return true;
+        if (hasSearchTerms) return true;
+        return false;
+      })
+      .filter((record) => !Number.isFinite(requestedYear) || record.year === requestedYear)
+      .map((record) => {
+        const fullText = `${record.name} ${record.region || ""} ${record.localGovernment || ""} ${record.type || ""} ${record.venue || ""}`.toLowerCase();
+        let termMatchScore = 0;
+
+        if (hasSearchTerms) {
+          for (const term of searchTerms) {
+            if (!term) continue;
+            if (fullText.includes(term)) termMatchScore += 25;
+            if (record.name.toLowerCase().includes(term)) termMatchScore += 50;
+            if (record.region?.toLowerCase().includes(term) || record.localGovernment?.toLowerCase().includes(term)) termMatchScore += 20;
+          }
+        }
+
+        return {
+          ...record,
+          keywordMatchScore: termMatchScore,
+        };
+      })
+      .filter((record) => {
+        if (hasSearchTerms) return record.keywordMatchScore > 0;
         if (overlapsDateRange(record, startDate, endDate)) return true;
-        return record.keywordMatchScore > 0 && matchesRequestedYear(record, startDate, endDate);
+        return matchesRequestedYear(record, startDate, endDate);
       })
       .map((record) => ({
         ...record,
@@ -105,7 +136,7 @@ export class RegionalFestivalDatabase {
           record.keywordMatchScore,
       }))
       .sort((a, b) => b.matchScore - a.matchScore || b.year - a.year)
-      .slice(0, Math.min(Math.max(Number(limit) || 20, 1), 100));
+      .slice(0, Math.min(Math.max(Number(limit) || 30, 1), 100));
   }
 }
 
