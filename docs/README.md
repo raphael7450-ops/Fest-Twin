@@ -9,29 +9,45 @@
 ```
 docs/
 |-- README.md                              # [본 문서] 기술 문서 종합 인덱스 가이드
-|-- CHANGELOG.md                           # v2.1.0 변경 내역 및 해결 갭 정리
-|-- HANDOVER_SUMMARY.md                   # 역애인계 및 형재 작업 컨테스트 요약
-|-- LOAD_TEST_REPORT.md                    # 부하 테스튼(k6-style) 성과 및 안정성 보고서
-|-- PROJECT_COMPREHENSIVE_AUDIT.md        # 시스템 전수 진단 및 고도화 보고서 (v2.1.0 반영)
-|-- PROJECT_GAP_ANALYSIS_REPORT.md        # B2G 갭 분석 보고서 (3차 갱신)
-|-- UI_UX_EVALUATION_REPORT.md            # UI/UX 및 디자인 시스템 종합 감리 보고서
+|-- CHANGELOG.md                           # v2.2.0 변경 내역 및 해결 갭 정리
+|-- HANDOVER_SUMMARY.md                    # 인수인계 및 최신 작업 내역 정리
+|-- LOAD_TEST_REPORT.md                    # 부하 테스트(k6-style) 성과 및 안정성 보고서
+|-- PROJECT_COMPREHENSIVE_AUDIT.md         # 시스템 전수 진단 및 고도화 보고서 (v2.2.0 반영)
+|-- PROJECT_GAP_ANALYSIS_REPORT.md         # B2G 갭 분석 및 이행 현황 보고서
+|-- UI_UX_EVALUATION_REPORT.md             # UI/UX 및 디자인 시스템 종합 감리 보고서
+|-- DATA_RELIABILITY_REPORT.md             # 공공데이터 연동 신뢰성 및 Fallback 진단서
+|-- PHASE2_ROADMAP_PLAN.md                 # 2단계 기능 고도화 로드맵
 |
 |-- specs/                                 # 시스템 명세 및 아키텍처 스펙
 |   |-- architecture-and-api.md            # 시스템 블록 아키텍처, 계층 설계 및 REST API 명세서
 |   |-- data-and-simulation-methodology.md # 3대 공공데이터 연동 수식, 디지털 트윈 시뮬레이션 및 보안 정책
 |   |-- kpi-evidence-matrix.md             # KPI 지표 근거 매트릭스
-|   |-- selected-festival-data-flow.md     # 선택 축제 데이터 흐름 및 TourAPI 연동 명세
+|   |-- selected-festival-data-flow.md     # 선택 축제 데이터 흐름, 중복 제거 및 TourAPI 연동 명세
 |   |-- hourly-demand-profile.md           # 시간대별 수요 프로파일 산출 명세
 |   |-- demand-backdata-relevance.md       # 지역 수요 백데이터 관련성 진단
 |   `-- viewt-od-traffic-evidence.md       # View-T OD 교통량 근거 명세
 |
 |-- guides/                                # 개발, 배포 및 시연 운영 가이드
-|   |-- deployment-and-cicd.md             # 로컈 구동, 원격 Docker 배포 스크립트 및 GitHub Actions CI/CD
+|   |-- deployment-and-cicd.md             # 로컬 구동, 원격 Docker 배포 스크립트 및 GitHub Actions CI/CD
 |   `-- demo-and-operations.md             # 3분 핵심 시연 시나리오 스크립트 및 운영 런북
+|
+|-- compliance/                            # B2G 규정 준수 및 보안 인증 서류
+|   |-- DATA_LINEAGE_AND_GLOSSARY.md       # 데이터 라인지 및 행정 표준용어집
+|   |-- OWASP_TOP10_CHECKLIST.md           # OWASP Top 10 보안 점검표
+|   |-- PII_ZERO_INVENTORY.md              # 개인정보 미수집(PII Zero) 증빙표
+|   `-- SECURITY_REMEDIATION_LOG.md        # 보안 취약점 조치 결과서
+|
+|-- operations/                            # 운영 및 관리 런북
+|   |-- AIR_GAP_RUNBOOK.md                 # 완전 폐쇄망(Air-Gap) 구동 런북
+|   `-- BACKUP_RESTORE_POLICY.md           # DB 및 감사로그 백업/복구 정책
 |
 `-- contest/                               # 공모전 제출 서류 및 최종 검증
     |-- submission-package.md              # 공모전 제출 요약, 카피라이팅 및 공고 대응 매트릭스
-    `-- submission-checklist.md            # 빌드, 테스트, 배포 헬스체크 및 시연 통합 체크리스트
+    |-- submission-checklist.md            # 빌드, 테스트, 배포 헬스체크 및 시연 통합 체크리스트
+    |-- feature-description.md             # 핵심 기능 상세 설명서
+    |-- openapi-usage-evidence.md          # 공공 OpenAPI 활용 증빙서
+    |-- selected-festival-evidence.md      # 선택 축제 공공데이터 증빙서
+    `-- september-service-roadmap.md       # 서비스 확장 로드맵
 ```
 
 ---
@@ -43,18 +59,22 @@ docs/
 - [architecture-and-api.md](specs/architecture-and-api.md)
   - React 18 / Vite 6 SPA 프론트엔드 및 Express 백엔드 전체 시스템 블록 다이어그램 기술
   - OWASP CSP 보안 헤더 및 2단계 계층형 Rate Limiter(분당 300회/120회) 설계
-  - SQLite 시나리오 보관 및 공유 토큰(`share_token`) RESTful API 상세 규격 명세
+  - 5,700여 건 전국 축제 DB 프록시(`/api/regional-festivals`) 및 SQLite 시나리오 RESTful API 상세 규격 명세
 
 - [data-and-simulation-methodology.md](specs/data-and-simulation-methodology.md)
   - 한국관광공사 TourAPI 4.0, 관광데이터랩 지출 객단가, 국가교통DB(KTDB View-T) 연동 방법론
-  - 예상 방문객 수, 예상 경제 효과($E_{impact}$), 피크 시간대 혼잡 밀도($명/m^2$) 수식 및 시뮬레이션 알고리즘
+  - 예상 방문객 수, 예상 경제 효과, 피크 시간대 혼잡 밀도(명/m²) 수식 및 시뮬레이션 알고리즘
   - 비식별화 개인정보 보호 정책 및 시스템 4단계 감사 로드맵
+
+- [selected-festival-data-flow.md](specs/selected-festival-data-flow.md)
+  - 전국 대표 축제 베이스 키 정규화 및 연도별 중복 데이터 제거 파이프라인
+  - 지역별 맞춤 주변 관광지 보강 데이터 생성기 연동 명세
 
 ### 2.2 배포 및 운영 가이드 (`docs/guides/`)
 
 - [deployment-and-cicd.md](guides/deployment-and-cicd.md)
-  - 로컈 개발 환경 실행 및 네이버 지도 API Client ID 설정법
-  - 원격 Docker 서버(`100.104.94.112:18080`) 원클릭 무중단 배포 스크립트 (`npm run deploy:remote`) 사용법
+  - 로컬 개발 환경 실행 및 네이버 지도 API Client ID 설정법
+  - 원격 Docker 서버(100.104.94.112:18080) 원클릭 무중단 배포 스크립트 (`npm run deploy:remote`) 사용법
   - GitHub Actions 파이프라인 (`.github/workflows/deploy.yml`) 구성 및 헬스체크 타임아웃 재시도 처리
 
 - [demo-and-operations.md](guides/demo-and-operations.md)
@@ -68,30 +88,23 @@ docs/
   - 공모전 평가 항목별 Fest-Twin 구현 내용 1:1 대응 매트릭스
 
 - [submission-checklist.md](contest/submission-checklist.md)
-  - Vitest 190개 단위 테스트 및 빌드 검증 목록
-  - 4대 REST API 엔드포인트 헬스체크 및 시연 준비 종합 체크리스트
+  - Vitest 50개 테스트 파일, 206개 단위/통합 테스트 검증 목록 (100% PASS)
+  - 5대 REST API 엔드포인트 헬스체크 및 시연 준비 종합 체크리스트
 
-### 2.4 성능 검증 보고서 (`docs/LOAD_TEST_REPORT.md`)
-
-- [LOAD_TEST_REPORT.md](LOAD_TEST_REPORT.md)
-  - Node.js 기반 k6-style 부하 테스트 수행 결과
-  - 일반 API TPS 1,283.28 req/s 수용 및 429 Rate Limit 초과 차단 100% 방어
-  - 인메모리 캐시 적용 시 Cache Hit 평균 응답 시간 0.58ms 달성 증빙
-
-### 2.5 진단 및 변경 내역 (`docs/CHANGELOG.md` 등)
+### 2.4 진단 및 변경 내역 (`docs/CHANGELOG.md` 등)
 
 - [CHANGELOG.md](CHANGELOG.md)
-  - v2.1.0 신규 기능 12종, 개선 5종, 해결 갭 9건 정리
-  - 신규 테스트 7개 파일 추가, 남은 과제 4항목 문서화
+  - v2.2.0 신규 기능 및 개선 사항 (전국 5,700여 건 축제 DB 연동, 중복 데이터 제거, 지역별 맞춤 관광지 Fallback, 상태 반응성 자동화 테스트)
+  - 전체 50개 테스트 파일 206개 테스트 100% PASS 달성 기록
 
 - [PROJECT_COMPREHENSIVE_AUDIT.md](PROJECT_COMPREHENSIVE_AUDIT.md)
-  - 시스템 전수 진단 및 우선순위별 고도화 과제 로드맵 (v2.1.0 반영)
+  - 시스템 전수 진단 및 우선순위별 고도화 과제 통합 보고서 (v2.2.0 반영)
 
 - [PROJECT_GAP_ANALYSIS_REPORT.md](PROJECT_GAP_ANALYSIS_REPORT.md)
-  - B2G 한 3차 갱신, 해결 갭 정리 및 잔여 과제 현황 (190개 테스트 100% PASS 반영)
+  - B2G 갭 분석 보고서 및 이행 현황 정리
 
 - [UI_UX_EVALUATION_REPORT.md](UI_UX_EVALUATION_REPORT.md)
-  - UI/UX 디자인 시스템 종합 감리 보고서 (v2.1.0 3대 개선 적용 확인)
+  - UI/UX 디자인 시스템 종합 감리 보고서
 
 ---
 
@@ -100,5 +113,6 @@ docs/
 - 원격 배포 실행: `npm run deploy:remote`
 - 배포 헬스체크 실행: `npm run deploy:check`
 - 단위 및 통합 테스트: `npm test`
+- 축제 전환 반응성 테스트: `npx vitest run tests/festivalSwitch.test.ts`
 - 부하 테스트 실행: `npm run test:load`
 - OpenAPI 신뢰도 진단: `node --experimental-vm-modules scripts/api-reliability-check.js`

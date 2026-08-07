@@ -1,7 +1,7 @@
 # Fest-Twin 프로젝트 인수인계 및 작업 내역 정리 문서
 
-작성일시: 2026-08-05 (최종 갱신)
-작성목적: 집 또는 외부 환경에서 프로젝트 작업을 원활하게 이어가기 위한 최신 구현 내역, 코드 구조, 배포 환경 및 실행 방법 정리
+작성일시: 2026-08-07 (최종 갱신)
+작성목적: 외부 환경 또는 팀원 인수인계 시 프로젝트 작업을 원활하게 이어가기 위한 최신 구현 내역, 코드 구조, 배포 환경 및 실행 방법 정리
 
 ---
 
@@ -19,99 +19,49 @@
 
 ## 2. 주요 신규 개발 및 개편 내역
 
-### 가. B2G 행정 제출용 고품질 CSV 리포트 유틸리티 개편
+### 가. 전국 5,700여 건 축제 DB 연동 및 중복 데이터 제거
 - 관련 파일:
-  - src/utils/csvExport.ts
-  - src/components/CsvExportButton.tsx
-  - tests/csvExport.test.ts
+  - server/db/regionalFestivalDatabase.js
+  - server/regionalFestivalRouter.js
+  - src/components/FestivalSearchModal.tsx
 - 주요 기능:
-  - Windows Excel 한글 깨짐 방지를 위한 UTF-8 BOM (\uFEFF) 헤더 필수 적용
-  - 4대 체계적 구획 구조화 (구획 1 행정 메타데이터, 구획 2 핵심 시뮬레이션 요약, 구획 3 4단계 수치 산출 근거 상세, 구획 4 데이터 출처 및 감사 라벨)
-  - 감사 무결성 검증 토큰 (AUDIT-HASH-SHA256-...) 및 ISO 서버 수신 시각 자동 바인딩
-  - 파일명 표준화 규격 적용 (Fest-Twin_시나리오명_YYYYMMDD_HHmm.csv)
+  - 전국 5,700여 건의 지역 축제 DB를 통합 검색 API(/api/regional-festivals)로 제공
+  - 연도(2022~2026년) 및 회차(제XX회) 수치 표현 정규화를 통한 동일 축제 중복 표출 방지
+  - 정규화된 베이스 키당 가장 최신의 연도 데이터만 단일 표출하는 최신 연도 중복 제거 알고리즘 적용
 
-### 나. [모델 1] 인프라 수용성 & 대기시간 예측 모델 구현
+### 나. 지역 맞춤형 주변 관광지 보강 데이터 생성 엔진
 - 관련 파일:
-  - src/services/capacityAndSafetyForecast.ts
-  - src/components/InfrastructureCapacityPanel.tsx
-- 주요 산출 지표:
-  - 주차 수용 및 만차 예상 시점: 국토교통부 지침 승용차 분담률 18%, 탑승인원 2.5명/대 기반 만차 시각 연산
-  - 임시 화장실 수용 한계 및 대기시간: 행안부/문체부 지침 피크 250명당 1칸 기준 부족량 및 회전율 대기 지연 연산
-  - 폐기물 배출량 예측: 환경부 1인당 0.4kg 통계 기준 총 배출 톤수 및 일반(60%)/재활용(40%) 분리 연산
+  - src/services/tourApiAdapter.ts
+- 주요 기능:
+  - TourAPI 주변 관광지 실시간 조회 미반환 시 서울 고정 샘플 대신 축제의 위치 및 지역 정보(논산, 보령, 부산, 진주, 대전, 세종, 전주, 화천, 안동, 제주, 수원, 인천, 광주, 대구, 울산 등 16개 지역)와 일치하는 지역 대표 관광지 자동 생성
+  - 해당 지역명이 포함된 카테고리 라벨 및 세부 근거 바인딩
 
-### 다. [모델 2] 인파 사고 리스크 & 구역별 필수 안전요원 배치 모델 구현
+### 다. 개최 지역 필터링 엄격화
 - 관련 파일:
-  - src/services/capacityAndSafetyForecast.ts
-  - src/components/SafetyGuardAllocationPanel.tsx
-- 주요 산출 지표:
-  - 구역별 추천 안전요원 배치 명세: 행안부 인파 지침(무대 2,200명/명, 게이트 4,200명/명) 및 2D 시뮬레이션 고위험 셀 비례 배치
-  - 예상 응급환자 발생률 및 의료 지원: 소방청 응급의료 지침 기반 시간당 발생 건수, 필요 의료진(명) 및 구급차(대) 수량 계산
-  - 비상 탈출 골든타임 소요시간: 국립재난안전연구원 NDMI 및 SFPE 피난 유동 방정식 기반 100m 비상 탈출 소요시간 및 등급(양호/주의/경고) 진단
+  - server/db/regionalFestivalDatabase.js
+  - src/services/tourApiAdapter.ts
+- 주요 기능:
+  - 기획안 입력부에서 개최 지역(예: 대전) 선택 시 키워드 검색이나 후보 추천 과정에서 타 지역(충남, 경남 등) 축제가 들어오지 않도록 지역 매칭 필터 강제 적용
 
-### 라. 전용 근거보기(EvidenceButton) 1:1 바인딩 및 슬라이딩 드로어 강화
+### 라. 축제 전환 상태 반응성 자동화 QA 테스트 구축
 - 관련 파일:
-  - src/components/EvidenceButton.tsx
-  - src/components/MetricEvidenceDrawer.tsx
-  - src/services/metricEvidence.ts
-  - src/styles.css
-- 주요 변경 사항:
-  - 각 모델 카드 및 패널 헤더 우측 상단에 알약 형태의 근거보기 버튼 적용
-  - dedicated evidence ID 추가 (infrastructure-capacity, restroom-capacity, waste-generation, safety-guards-allocation, evacuation-golden-time)
-  - 근거 보기 클릭 시 해당 지표의 출처, 법령 기준, 연산 수식, 단계별 연산 흐름도 1:1 맞춤 표시
-
-### 마. B2G 컴플라이언스 및 보안 규정 문서화 완료
-- 관련 파일:
-  - docs/compliance/DATA_LINEAGE_AND_GLOSSARY.md
-  - docs/compliance/PII_ZERO_INVENTORY.md
-  - docs/compliance/OWASP_TOP10_CHECKLIST.md
-  - docs/compliance/SECURITY_REMEDIATION_LOG.md
-  - docs/operations/AIR_GAP_RUNBOOK.md
-  - docs/operations/BACKUP_RESTORE_POLICY.md
+  - tests/festivalSwitch.test.ts
+- 주요 기능:
+  - 축제 변경 시 입력 파라미터, 4단계 예측 엔진, Metric Evidence Drawer, CSV 내보내기 데이터 100% 즉시 갱신 검증
+  - 연속 빠른 축제 전환(A -> B -> C -> A) 시 비동기 레이스 컨디션 방지 검증
 
 ---
 
-## 2.2 v2.1.0 추가 신규 개발 내역 (2026-08-05)
-
-### 바. 선택 축제 기본 정보 카드 (SelectedFestivalCard)
-- 관련 파일: src/components/SelectedFestivalCard.tsx
-- TourAPI 4.0 기반 대표 이미지, 주최/주관, 운영시간, 개최 기간, 주소를 대시보드 상단 카드로 표출
-- contentId, GPS 좌표 등 내부 기술 필드 완전 제거, 행정 제출용 필드만 표시
-
-### 사. 시나리오 A/B 병렬 비교 모드
-- 관련 파일: src/components/ScenarioLibrary.tsx
-- 2개 시나리오 체크박스 선택 후 Side-by-Side 수용 인원/예산/시설 diff 비교 팝업 제공
-- 비교 후 A안 또는 B안을 즉시 대시보드에 적용 가능
-
-### 아. LRU 캐시 Eviction 및 Audit Log 비동기 저장
-- 관련 파일: server/cache.js, server/auditLogger.js
-- 인메모리 캐시 최대 1,000개 슬롯, O(1) LRU 순서 갱신 구현
-- setImmediate + fs.createWriteStream 비동기 감사 로그 영구 파일 저장
-
-### 자. 공개 API 5종 추가 연동
-- 기상청 단기예보 (/api/weather): 강수확률/기온/풍속 수요 보정계수 적용
-- TAGO 대중교통 (/api/transit/nearby-stops): 버스정류소/노선 정보
-- 소상공인 상가정보 (/api/commercial/nearby-stores): 행사장 반경 상권 밀도
-- 응급의료기관/119 (/api/emergency/nearby-facilities): 응급기관 위치 정보
-- 네이버 데이터랩 이중 엔드포인트 자동 전환 지원
-
-### 차. 일별 유형(평일/주말/요약) 프로필 탭 및 UI/UX 3대 개선
-- SafetyGuardAllocationPanel, InfrastructureCapacityPanel에 3종 탭 추가
-- CSS Tabular Numbers, KWCAG 명암비 개선, 카드 패딩 16px 통일
-- 모바일 반응형 CSS 768px/480px 브레이크포인트 적용
-
----
-
-## 3. 집에서 이어서 작업 시 안내 및 실행 가이드
+## 3. 실행 및 관리 가이드
 
 ### 가. Git 저장소 동기화
-새로운 환경에서 아래 명령어로 최신 변경 사항을 받아옵니다:
 git fetch origin
 git checkout codex/phase2-operational-v1
 git pull origin codex/phase2-operational-v1
 
 ### 나. 개발 환경 실행 및 빌드/테스트
 1. 패키지 설치: npm ci
-2. 테스트 수행: npm test (전체 38개 파일, 172개 테스트 100% PASS 확인)
+2. 테스트 수행: npm test (전체 50개 파일, 206개 테스트 100% PASS 확인)
 3. 정적 빌드 검증: npm run build
 4. 로컬 개발 서버 실행: npm run dev
 
@@ -123,4 +73,4 @@ npm run deploy:remote
 
 ## 4. 전체 테스트 슈트 상태
 - 실행 명령어: npm test
-- 검증 결과: 45개 테스트 파일, 190개 단위 테스트 전원 PASS (0 failures, 0 warnings)
+- 검증 결과: 50개 테스트 파일, 206개 단위/통합 테스트 전원 PASS (0 failures, 0 warnings)

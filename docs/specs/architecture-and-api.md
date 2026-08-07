@@ -18,21 +18,25 @@ graph TD
     subgraph Security & Cache Middleware
         Proxy --> SecHeader[OWASP CSP & Security Headers]
         Proxy --> RateLimiter[Dual-Tier Rate Limiter - 300/min & 120/min]
-        Proxy --> CacheStore[TTL In-Memory Cache Store]
+        Proxy --> CacheStore[TTL In-Memory Cache Store - Max 1,000 Slots LRU]
     end
 
     subgraph Data & REST API Layer
         Proxy --> ScenarioRouter[SQLite Scenario CRUD Router]
+        Proxy --> RegionalDbRouter[Regional Festival DB Router - 5,700+ Records]
         Proxy --> TourProxy[TourAPI 4.0 Proxy]
         Proxy --> SpendingProxy[Tour Spending Data Proxy]
         Proxy --> TrafficProxy[KTDB / View-T Traffic Proxy]
+        Proxy --> WeatherProxy[KMA Weather Forecast Proxy]
         ScenarioRouter --> SQLiteDB[(SQLite DB / JSON Storage)]
     end
 
-    subgraph External OpenAPIs
+    subgraph External OpenAPIs & Data DB
+        RegionalDbRouter --> RegionalDB[(Regional Festivals DB JSON)]
         TourProxy -->|HTTPS| TourAPI[한국관광공사 TourAPI 4.0]
         SpendingProxy -->|HTTPS| DataGo[공공데이터포털 관광데이터랩]
         TrafficProxy -->|HTTPS| KTDB[국가교통DB View-T API]
+        WeatherProxy -->|HTTPS| KMA[기상청 단기예보 OpenAPI]
     end
 ```
 
@@ -52,18 +56,19 @@ graph TD
   2. 기획안 규모 및 프로그램 매력도 가중치 부여
   3. 주변 관광 매력도 및 소셜 트렌드 연동
   4. 최종 예상 수치 및 ROI 산출
-- 계산식, 계수 배지 및 데이터 원천(TourAPI, 관광데이터랩, KTDB)을 명시하며 비식별 정화 처리를 적용합니다.
+- 계산식, 계수 배지 및 데이터 원천(TourAPI, 전국 5,700여 건 축제 DB, 관광데이터랩, KTDB, 기상청 단기예보)을 명시하며 비식별 정화 처리를 적용합니다.
 
 ### 2.3 백엔드 및 보안 계층 (Express Backend & OWASP Security)
 - 2단계 계층형 Rate Limiter가 적용되어 시스템 및 공공데이터 쿼터를 보호합니다:
   - 일반 API (`/api/*`): IP당 1분당 최대 300회 요청 허용
-  - 공공데이터 프록시 (`/api/tour`, `/api/spending`, `/api/traffic`, `/api/trends`): IP당 1분당 최대 120회 요청 제한
+  - 공공데이터 프록시 (`/api/tour`, `/api/regional-festivals`, `/api/spending`, `/api/traffic`, `/api/trends`, `/api/weather`): IP당 1분당 최대 120회 요청 제한
 - 보안 강화를 위해 X-Content-Type-Options(nosniff), X-Frame-Options(DENY), X-XSS-Protection, Referrer-Policy 및 인가된 도메인만 통과시키는 Content-Security-Policy(CSP) 헤더를 설정했습니다.
-- CORS 허용 출처: 개발 로컬 환경, Tailscale 도메인(`*.ts.net`), 원격 Docker 서버 IP (`192.168.55.223`).
+- CORS 허용 출처: 개발 로컬 환경, Tailscale 도메인(`*.ts.net`), 원격 Docker 서버 IP (`100.104.94.112`).
 
-### 2.4 영속 데이터베이스 계층 (SQLite Scenario Database)
+### 2.4 영속 데이터베이스 및 감사 로그 계층 (Scenario DB & Audit Logger)
 - `server/db/database.js` 및 SQLite 영속 저장소를 통해 축제 기획안 파라미터와 결과 요약을 영속 저장합니다.
 - 부서 간 편리한 공유를 위하여 8자리 난수 토큰(`share_token`)을 생성하며, 해당 URL 접속 시 기획 조건이 자동 복원됩니다.
+- `server/auditLogger.js` 비동기 로그 저장 모듈을 통해 시나리오 저장/수정/삭제 이벤트 및 주요 감사 로그를 영구 보관합니다.
 
 ---
 
@@ -92,34 +97,18 @@ graph TD
 | PUT | `/api/scenarios/:id` | 기존 시나리오 정보 수정 | |
 | DELETE | `/api/scenarios/:id` | 시나리오 삭제 | |
 
-#### 시나리오 저장 요청 예시 (POST `/api/scenarios`)
-```json
-{
-  "title": "2026 강남 미디어 윈터페스타",
-  "description": "서울특별시 강남구 영동대로 511 (삼성동)",
-  "parameters": {
-    "selectedHour": 20,
-    "plan": {
-      "name": "2026 강남 미디어 윈터페스타",
-      "region": "서울",
-      "totalBudgetMillionKrw": 920,
-      "expectedCapacity": 36000
-    }
-  },
-  "results_summary": {
-    "targetVisitors": 36000,
-    "budgetKrw": 920000000
-  }
-}
-```
+### 3.3 전국 축제 DB 및 공공데이터 프록시 API
 
-### 3.3 공공데이터 프록시 API
-
-외부 OpenAPI 쿼터 보호 및 빠른 응답을 위하여 10분 LRU 인메모리 캐시 및 분당 120회 제한 프록시를 구동합니다.
+외부 OpenAPI 쿼터 보호 및 빠른 응답을 위하여 최대 1,000개 슬롯 10분 LRU 인메모리 캐시 및 분당 120회 제한 프록시를 구동합니다.
 
 | 메소드 | 엔드포인트 | 데이터 연동 출처 | 설명 |
 | :--- | :--- | :--- | :--- |
+| GET | `/api/regional-festivals` | 공공데이터포털 / 지자체 지역축제 DB | 전국 5,700여 건 축제 DB 통합 검색 및 중복 제거 |
 | GET | `/api/tour/area-code` | 한국관광공사 TourAPI 4.0 | 전국 광역시도 및 시군구 코드 조회 |
 | GET | `/api/tour/search-festival` | 한국관광공사 TourAPI 4.0 | 지역별 유사 축제 행사 정보 조회 |
+| GET | `/api/weather` | 기상청 단기예보 OpenAPI | 기온, 강수확률, 풍속 수요 보정계수 |
 | GET | `/api/spending/consumer-strength` | 관광데이터랩 지출 데이터 | 지역별/업종별 방문객 객단가 및 소비지출 데이터 |
 | GET | `/api/traffic/selected-link` | 국가교통DB (View-T) | 주요 혼잡 도로 구간 통행량 및 소요시간 데이터 |
+| GET | `/api/transit/nearby-stops` | 국토교통부 TAGO 버스정류소 | 반경 500m 대중교통 정류소 및 노선 정보 |
+| GET | `/api/commercial/nearby-stores` | 소상공인시장진흥공단 상가정보 | 반경 1km 업종 밀도 및 상권 파급효과 |
+| GET | `/api/emergency/nearby-facilities` | 보건복지부 / 소방청 | 응급의료기관 및 119 안전센터 정보 |
