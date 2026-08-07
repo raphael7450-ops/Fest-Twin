@@ -273,24 +273,205 @@ function isValidNearbyItem(item: TourApiItem): item is ValidNearbyItem {
   );
 }
 
+export function getRegionalFallbackNearbySpots(plan: FestivalPlan): TourismSpot[] {
+  const text = `${plan.venueAddress || ""} ${plan.region || ""} ${plan.name || ""}`;
+  const regionName = plan.region || "지역";
+
+  const rawSpots = (() => {
+    if (text.includes("논산")) {
+      return [
+        { id: "fallback-ns-1", name: "논산 탑정호 출렁다리", category: "관광지", distanceKm: 2.1, appealScore: 92 },
+        { id: "fallback-ns-2", name: "관촉사 (은진미륵)", category: "문화재", distanceKm: 3.5, appealScore: 86 },
+        { id: "fallback-ns-3", name: "논산시민가족공원", category: "공원", distanceKm: 0.5, appealScore: 80 },
+        { id: "fallback-ns-4", name: "계백장군유적지", category: "문화재", distanceKm: 4.2, appealScore: 76 },
+      ];
+    }
+
+    if (text.includes("보령")) {
+      return [
+        { id: "fallback-br-1", name: "대천해수욕장 머드광장", category: "관광지", distanceKm: 0.2, appealScore: 94 },
+        { id: "fallback-br-2", name: "죽도 보물섬 식물원", category: "관광지", distanceKm: 3.1, appealScore: 85 },
+        { id: "fallback-br-3", name: "성주산자연휴양림", category: "휴양", distanceKm: 5.4, appealScore: 78 },
+        { id: "fallback-br-4", name: "보령호 수변공원", category: "공원", distanceKm: 4.0, appealScore: 74 },
+      ];
+    }
+
+    if (text.includes("부산")) {
+      return [
+        { id: "fallback-bs-1", name: "광안리해수욕장", category: "관광지", distanceKm: 0.1, appealScore: 95 },
+        { id: "fallback-bs-2", name: "광안대교 민락수변공원", category: "관광지", distanceKm: 0.8, appealScore: 88 },
+        { id: "fallback-bs-3", name: "센텀시티", category: "쇼핑", distanceKm: 2.5, appealScore: 82 },
+        { id: "fallback-bs-4", name: "동백섬 산책로", category: "공원", distanceKm: 3.2, appealScore: 78 },
+      ];
+    }
+
+    if (text.includes("진주")) {
+      return [
+        { id: "fallback-jj-1", name: "진주성 촉석루", category: "문화재", distanceKm: 0.3, appealScore: 93 },
+        { id: "fallback-jj-2", name: "남강 수변공원", category: "관광지", distanceKm: 0.5, appealScore: 86 },
+        { id: "fallback-jj-3", name: "국립진주박물관", category: "문화", distanceKm: 0.4, appealScore: 80 },
+        { id: "fallback-jj-4", name: "경상남도 수목원", category: "휴양", distanceKm: 6.1, appealScore: 75 },
+      ];
+    }
+
+    if (text.includes("대전")) {
+      return [
+        { id: "fallback-dj-1", name: "으능정이 문화의거리", category: "문화", distanceKm: 0.4, appealScore: 90 },
+        { id: "fallback-dj-2", name: "대전 중앙로 광장", category: "관광지", distanceKm: 0.2, appealScore: 85 },
+        { id: "fallback-dj-3", name: "한밭수목원", category: "공원", distanceKm: 3.8, appealScore: 82 },
+        { id: "fallback-dj-4", name: "보문산 사정공원", category: "휴양", distanceKm: 4.5, appealScore: 76 },
+      ];
+    }
+
+    if (text.includes("세종")) {
+      return [
+        { id: "fallback-sj-1", name: "세종호수공원", category: "공원", distanceKm: 0.6, appealScore: 91 },
+        { id: "fallback-sj-2", name: "국립세종수목원", category: "휴양", distanceKm: 1.8, appealScore: 86 },
+        { id: "fallback-sj-3", name: "금강보행교 (이응다리)", category: "관광지", distanceKm: 2.2, appealScore: 80 },
+        { id: "fallback-sj-4", name: "세종중앙공원", category: "공원", distanceKm: 1.1, appealScore: 76 },
+      ];
+    }
+
+    if (text.includes("전주")) {
+      return [
+        { id: "fallback-jj2-1", name: "전주 한옥마을", category: "관광지", distanceKm: 0.3, appealScore: 94 },
+        { id: "fallback-jj2-2", name: "경기전", category: "문화재", distanceKm: 0.5, appealScore: 88 },
+        { id: "fallback-jj2-3", name: "전동성당", category: "문화", distanceKm: 0.6, appealScore: 82 },
+        { id: "fallback-jj2-4", name: "덕진공원 연꽃지", category: "공원", distanceKm: 3.5, appealScore: 78 },
+      ];
+    }
+
+    if (text.includes("화천")) {
+      return [
+        { id: "fallback-hc-1", name: "화천천 수변공원", category: "관광지", distanceKm: 0.1, appealScore: 90 },
+        { id: "fallback-hc-2", name: "화천 감성마을", category: "문화", distanceKm: 4.2, appealScore: 82 },
+        { id: "fallback-hc-3", name: "산소길 수변산책로", category: "휴양", distanceKm: 1.5, appealScore: 78 },
+        { id: "fallback-hc-4", name: "파로호 안보전시관", category: "관광지", distanceKm: 6.0, appealScore: 72 },
+      ];
+    }
+
+    if (text.includes("안동")) {
+      return [
+        { id: "fallback-ad-1", name: "안동 하회마을", category: "관광지", distanceKm: 8.5, appealScore: 95 },
+        { id: "fallback-ad-2", name: "월영교 수변공원", category: "관광지", distanceKm: 1.2, appealScore: 89 },
+        { id: "fallback-ad-3", name: "도산서원", category: "문화재", distanceKm: 12.0, appealScore: 82 },
+        { id: "fallback-ad-4", name: "안동민속촌", category: "문화", distanceKm: 1.5, appealScore: 76 },
+      ];
+    }
+
+    if (text.includes("제주")) {
+      return [
+        { id: "fallback-jj3-1", name: "성산일출봉", category: "관광지", distanceKm: 5.2, appealScore: 95 },
+        { id: "fallback-jj3-2", name: "함덕해수욕장", category: "관광지", distanceKm: 3.8, appealScore: 89 },
+        { id: "fallback-jj3-3", name: "중문관광단지", category: "관광지", distanceKm: 10.5, appealScore: 84 },
+        { id: "fallback-jj3-4", name: "신창풍차해안도로", category: "관광지", distanceKm: 12.0, appealScore: 80 },
+      ];
+    }
+
+    if (text.includes("수원")) {
+      return [
+        { id: "fallback-sw-1", name: "수원화성 방화수류정", category: "문화재", distanceKm: 0.4, appealScore: 94 },
+        { id: "fallback-sw-2", name: "행궁동 행리단길", category: "문화", distanceKm: 0.6, appealScore: 88 },
+        { id: "fallback-sw-3", name: "수원화성박물관", category: "문화", distanceKm: 0.8, appealScore: 80 },
+        { id: "fallback-sw-4", name: "광교호수공원", category: "공원", distanceKm: 4.2, appealScore: 78 },
+      ];
+    }
+
+    if (text.includes("인천")) {
+      return [
+        { id: "fallback-ic-1", name: "송도 센트럴파크", category: "공원", distanceKm: 0.5, appealScore: 92 },
+        { id: "fallback-ic-2", name: "인천개항장 문화지구", category: "문화재", distanceKm: 2.1, appealScore: 86 },
+        { id: "fallback-ic-3", name: "차이나타운 & 동화마을", category: "관광지", distanceKm: 2.5, appealScore: 82 },
+        { id: "fallback-ic-4", name: "월미도 해안도로", category: "관광지", distanceKm: 4.0, appealScore: 78 },
+      ];
+    }
+
+    if (text.includes("광주")) {
+      return [
+        { id: "fallback-gj-1", name: "5.18민주광장", category: "문화재", distanceKm: 0.3, appealScore: 90 },
+        { id: "fallback-gj-2", name: "국립아시아문화전당", category: "문화", distanceKm: 0.5, appealScore: 86 },
+        { id: "fallback-gj-3", name: "양림동 역사문화마을", category: "문화", distanceKm: 1.8, appealScore: 80 },
+        { id: "fallback-gj-4", name: "무등산 국립공원", category: "휴양", distanceKm: 7.2, appealScore: 76 },
+      ];
+    }
+
+    if (text.includes("대구")) {
+      return [
+        { id: "fallback-dg-1", name: "동성로 중앙로", category: "문화", distanceKm: 0.4, appealScore: 90 },
+        { id: "fallback-dg-2", name: "김광석 다시그리기길", category: "문화", distanceKm: 1.5, appealScore: 85 },
+        { id: "fallback-dg-3", name: "수성못 유원지", category: "공원", distanceKm: 3.8, appealScore: 82 },
+        { id: "fallback-dg-4", name: "앞산전망대", category: "관광지", distanceKm: 5.1, appealScore: 78 },
+      ];
+    }
+
+    if (text.includes("울산")) {
+      return [
+        { id: "fallback-us-1", name: "태화강 국가정원 십리대숲", category: "공원", distanceKm: 1.2, appealScore: 92 },
+        { id: "fallback-us-2", name: "대왕암공원", category: "관광지", distanceKm: 6.5, appealScore: 86 },
+        { id: "fallback-us-3", name: "장생포 고래문화마을", category: "관광지", distanceKm: 5.0, appealScore: 80 },
+        { id: "fallback-us-4", name: "간절곶", category: "관광지", distanceKm: 15.0, appealScore: 76 },
+      ];
+    }
+
+    if (text.includes("강남") || text.includes("서울")) {
+      return [
+        { id: "fallback-seoul-1", name: "코엑스 & 아티움", category: "관광지", distanceKm: 0.1, appealScore: 92 },
+        { id: "fallback-seoul-2", name: "스타필드 코엑스몰", category: "쇼핑", distanceKm: 0.3, appealScore: 86 },
+        { id: "fallback-seoul-3", name: "봉은사", category: "문화재", distanceKm: 0.8, appealScore: 78 },
+        { id: "fallback-seoul-4", name: "무역센터 일대", category: "관광지", distanceKm: 0.4, appealScore: 74 },
+      ];
+    }
+
+    return [
+      { id: "fallback-gen-1", name: `${regionName} 중심가 & 전통시장`, category: "문화", distanceKm: 0.5, appealScore: 85 },
+      { id: "fallback-gen-2", name: `${regionName} 수변공원`, category: "공원", distanceKm: 1.2, appealScore: 80 },
+      { id: "fallback-gen-3", name: `${regionName} 역사문화관`, category: "문화재", distanceKm: 2.0, appealScore: 75 },
+      { id: "fallback-gen-4", name: `${regionName} 시민휴양공원`, category: "휴양", distanceKm: 3.5, appealScore: 70 },
+    ];
+  })();
+
+  return rawSpots.map((spot) => ({
+    ...spot,
+    category: spot.category.startsWith(regionName) ? spot.category : `${regionName} ${spot.category}`,
+  }));
+}
+
+export function getRegionalFallbackNearbySourceDetail(plan: FestivalPlan): MetricEvidenceSourceDetail {
+  const spots = getRegionalFallbackNearbySpots(plan);
+  return {
+    sourceId: "sample-nearby-spots",
+    sourceName: "주변 주요 관광지 보강 데이터",
+    sourceType: "sample",
+    statusLabel: "지역 기반 주변 데이터",
+    records: spots.map((spot) => ({
+      label: spot.name,
+      fields: [{ label: "매력도 점수", value: `${spot.appealScore}점` }],
+    })),
+    note: `${plan.region} 및 ${plan.venueAddress || plan.name} 주변 주요 관광 정보 기반 보강 데이터입니다.`,
+  };
+}
+
 export function createFallbackTourismContext(
   plan: FestivalPlan,
   reason: string,
 ): TourismContext {
+  const nearbySpots = getRegionalFallbackNearbySpots(plan);
+  const nearbySource = getRegionalFallbackNearbySourceDetail(plan);
+
   return {
     ...sampleTourismContext,
     provenance: {
       ...sampleTourismContext.provenance,
       sourceStatus: "sample-fallback",
-      basisText:
-        "TourAPI 형태의 샘플 공공데이터와 메타데이터 기반 추정 수요 프록시를 사용합니다.",
+      basisText: `${plan.region} 지역 및 축제 메타데이터 기반 추정 수요 프록시와 주요 주변 관광 정보 샘플을 사용합니다.`,
       fallbackReason: reason,
       retrievedAt: new Date().toISOString(),
     },
-    nearbySpots: sampleTourismContext.nearbySpots.map((spot) => ({
-      ...spot,
-      category: `${plan.region} ${spot.category}`,
-    })),
+    nearbySpots,
+    sourceDetails: [
+      nearbySource,
+      ...(sampleTourismContext.sourceDetails ?? []).filter((s) => s.sourceId !== "sample-nearby-spots"),
+    ],
   };
 }
 
@@ -813,15 +994,15 @@ export function mapTourApiItemsToTourismContext(
         fallbackReason,
         retrievedAt,
       },
-      nearbySpots: nearbySpots.length > 0 ? nearbySpots : sampleTourismContext.nearbySpots,
+      nearbySpots: nearbySpots.length > 0 ? nearbySpots : getRegionalFallbackNearbySpots(plan),
       similarFestivals:
         similarFestivals.length > 0
           ? similarFestivals
           : sampleTourismContext.similarFestivals,
       sourceDetails: [
         ...(options.sourceDetails ?? []),
+        ...(nearbySpots.length === 0 ? [getRegionalFallbackNearbySourceDetail(plan)] : []),
         ...sampleSourceDetails([
-          ...(nearbySpots.length === 0 ? ["sample-nearby-spots"] : []),
           ...(similarFestivals.length === 0 ? ["sample-similar-festivals"] : []),
         ]),
       ],
