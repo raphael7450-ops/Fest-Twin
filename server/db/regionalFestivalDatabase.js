@@ -138,9 +138,7 @@ export class RegionalFestivalDatabase {
     const filtered = this.records
       .filter((record) => {
         if (!normalizedRegion) return true;
-        if (record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion)) return true;
-        if (hasSearchTerms) return true;
-        return false;
+        return record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion);
       })
       .filter((record) => !Number.isFinite(requestedYear) || record.year === requestedYear)
       .map((record) => {

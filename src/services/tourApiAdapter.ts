@@ -602,18 +602,29 @@ function normalizeRegionText(value: string | undefined) {
 }
 
 const REGION_ALIASES: Record<string, string[]> = {
-  충남: ["충남", "충청남"],
-  충청남: ["충남", "충청남"],
-  충북: ["충북", "충청북"],
-  충청북: ["충북", "충청북"],
-  경남: ["경남", "경상남"],
-  경상남: ["경남", "경상남"],
-  경북: ["경북", "경상북"],
-  경상북: ["경북", "경상북"],
-  전남: ["전남", "전라남"],
-  전라남: ["전남", "전라남"],
-  전북: ["전북", "전라북"],
-  전라북: ["전북", "전라북"],
+  서울: ["서울", "seoul"],
+  인천: ["인천", "incheon"],
+  대전: ["대전", "daejeon"],
+  대구: ["대구", "daegu"],
+  광주: ["광주", "gwangju"],
+  부산: ["부산", "busan"],
+  울산: ["울산", "ulsan"],
+  세종: ["세종", "sejong"],
+  경기: ["경기", "gyeonggi"],
+  강원: ["강원", "gangwon"],
+  충남: ["충남", "충청남", "chungnam", "chungcheongnam"],
+  충청남: ["충남", "충청남", "chungnam", "chungcheongnam"],
+  충북: ["충북", "충청북", "chungbuk", "chungcheongbuk"],
+  충청북: ["충북", "충청북", "chungbuk", "chungcheongbuk"],
+  경남: ["경남", "경상남", "gyeongnam", "gyeongsangnam"],
+  경상남: ["경남", "경상남", "gyeongnam", "gyeongsangnam"],
+  경북: ["경북", "경상북", "gyeongbuk", "gyeongsangbuk"],
+  경상북: ["경북", "경상북", "gyeongbuk", "gyeongsangbuk"],
+  전남: ["전남", "전라남", "jeonnam", "jeollanam"],
+  전라남: ["전남", "전라남", "jeonnam", "jeollanam"],
+  전북: ["전북", "전라북", "jeonbuk", "jeollabuk"],
+  전라북: ["전북", "전라북", "jeonbuk", "jeollabuk"],
+  제주: ["제주", "jeju"],
 };
 
 function regionAliases(value: string) {
@@ -1285,7 +1296,9 @@ export async function getFestivalCandidates(
       !supplementalIds.has(String(item.title ?? "").replace(/\s+/g, "")),
   );
   const candidateItems = sortFestivalItemsForPlan(
-    [...festivalItems, ...uniqueSupplementalItems],
+    [...festivalItems, ...uniqueSupplementalItems].filter(
+      (item) => !item.addr1 || regionMatches(plan.region, item.addr1),
+    ),
     plan,
   ).slice(0, MAX_FESTIVAL_CANDIDATES);
   const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
