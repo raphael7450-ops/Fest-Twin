@@ -24,6 +24,10 @@ export function PlanForm({
   onOpenCandidates,
   onOpenSearchModal,
 }: PlanFormProps) {
+  const regionOptions = areaCodes.some((area) => area.name === plan.region)
+    ? areaCodes
+    : [{ code: "selected-current-region", name: plan.region }, ...areaCodes];
+
   const candidateStatus = isCandidateLoading
     ? "TourAPI 후보 조회 중"
     : candidateCount > 0
@@ -60,14 +64,14 @@ export function PlanForm({
       <div className="form-grid">
         <label>
           개최 지역
-          {areaCodes.length > 0 ? (
+          {regionOptions.length > 0 ? (
             <select
               value={plan.region}
               onChange={(event) =>
                 onPlanChange({ ...plan, region: event.target.value })
               }
             >
-              {areaCodes.map((area) => (
+              {regionOptions.map((area) => (
                 <option key={area.code} value={area.name}>
                   {area.name}
                 </option>

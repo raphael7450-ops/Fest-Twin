@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { FESTIVAL_PRESETS, type FestivalPreset } from "../data/festivalPresets";
-import { getRepresentativeFestivalImage } from "../services/festivalImageProvider";
 
 interface FestivalSearchModalProps {
   isOpen: boolean;
@@ -226,13 +225,6 @@ function getNormalizedBaseName(name: string): string {
             </div>
           ) : (
             combinedPresets.map((preset) => {
-              const imgUrl = getRepresentativeFestivalImage({
-                title: preset.name,
-                region: preset.region,
-                address: preset.plan.venueAddress,
-                existingImageUrl: preset.basis.imageUrl,
-              });
-
               return (
                 <article
                   key={preset.id}
@@ -248,10 +240,6 @@ function getNormalizedBaseName(name: string): string {
                     marginBottom: "10px",
                   }}
                 >
-                  <div style={{ width: "100px", height: "72px", borderRadius: "6px", overflow: "hidden", flexShrink: 0, border: "1px solid #e2e8f0" }}>
-                    <img src={imgUrl} alt={preset.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </div>
-
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
                       <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
@@ -293,4 +281,3 @@ function getNormalizedBaseName(name: string): string {
     </div>
   );
 }
-

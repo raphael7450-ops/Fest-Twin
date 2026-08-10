@@ -47,4 +47,16 @@ describe("FestivalSearchModal", () => {
     expect(handleSelectPreset).toHaveBeenCalledTimes(1);
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
+
+  it("renders festival choices without image elements so search stays lightweight", () => {
+    render(
+      <FestivalSearchModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onSelectPreset={vi.fn()}
+      />
+    );
+
+    expect(screen.queryAllByRole("img")).toHaveLength(0);
+  });
 });
