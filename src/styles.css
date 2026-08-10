@@ -5,15 +5,17 @@
   --color-panel: #ffffff;
   --color-border: #d9e1ea;
   --color-border-strong: #aab8c8;
-  --color-primary: #1f5f7a;
-  --color-primary-strong: #153449;
-  --color-blue: #2563eb;
-  --color-teal: #0f9f8d;
+  --color-primary: #287c83;
+  --color-primary-strong: #17666d;
+  --color-blue: #2f6fda;
+  --color-teal: #1aa99a;
   --color-green: #12805c;
-  --color-amber: #b7791f;
+  --color-amber: #c98320;
   --color-red: #c2413b;
-  --shadow-panel: 0 8px 22px rgba(21, 52, 73, 0.08);
-  --shadow-hover: 0 14px 32px rgba(21, 52, 73, 0.14);
+  --color-coral: #d8694d;
+  --color-cream: #fff6df;
+  --shadow-panel: 0 8px 22px rgba(34, 104, 111, 0.08);
+  --shadow-hover: 0 14px 32px rgba(34, 104, 111, 0.14);
   color: var(--color-text);
   background: #f6f8fb;
   font-family:
@@ -2683,8 +2685,8 @@ a:focus-visible {
 }
 
 .dashboard-rail {
-  background: #10283a;
-  border-right: 1px solid #0b1d2b;
+  background: linear-gradient(180deg, #e7fbf7 0%, #dff4ff 100%);
+  border-right: 1px solid #b8dedb;
 }
 
 .dashboard-rail__curve {
@@ -2707,32 +2709,34 @@ a:focus-visible {
 }
 
 .dashboard-rail__button {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #b8dedb;
   border-radius: 8px;
-  color: #dbe8ef;
+  color: #287c83;
   height: 36px;
   width: 36px;
 }
 
 .dashboard-rail__button:hover,
 .dashboard-rail__button:focus-visible {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
+  background: #fff6df;
+  border-color: #f0bc72;
+  color: #a95824;
 }
 
 .dashboard-rail__button span {
-  background: #153449;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border: 1px solid #f0bc72;
   border-radius: 6px;
-  box-shadow: 0 12px 28px rgba(5, 17, 26, 0.22);
+  box-shadow: 0 12px 28px rgba(168, 88, 36, 0.14);
+  color: #6f3b16;
   left: 52px;
 }
 
 .dashboard-rail__button--active {
-  background: #0f9f8d;
-  border-color: #5eead4;
-  box-shadow: 0 10px 22px rgba(15, 159, 141, 0.28);
+  background: #d8694d;
+  border-color: #f3a28f;
+  box-shadow: 0 10px 22px rgba(216, 105, 77, 0.22);
   color: #ffffff;
 }
 
@@ -2745,9 +2749,9 @@ a:focus-visible {
 }
 
 .government-header__mark {
-  background: #153449;
+  background: linear-gradient(135deg, #287c83, #d8694d);
   border-radius: 8px;
-  box-shadow: none;
+  box-shadow: 0 10px 22px rgba(216, 105, 77, 0.16);
 }
 
 .government-header__meta span:not(.status-pill) {
@@ -2769,14 +2773,16 @@ a:focus-visible {
 
 .print-button,
 .secondary-button {
-  background: #153449;
+  background: linear-gradient(135deg, #287c83 0%, #d8694d 100%);
+  border: 1px solid #f0bc72;
   border-radius: 7px;
+  box-shadow: 0 8px 18px rgba(216, 105, 77, 0.16);
 }
 
 .print-button:hover,
 .secondary-button:hover {
-  background: #0f2534;
-  box-shadow: 0 8px 18px rgba(21, 52, 73, 0.22);
+  background: linear-gradient(135deg, #17666d 0%, #c65b42 100%);
+  box-shadow: 0 10px 22px rgba(216, 105, 77, 0.22);
 }
 
 .text-button {
@@ -2807,9 +2813,10 @@ a:focus-visible {
 }
 
 .ops-score-card--hero {
-  background: #153449;
-  border-color: #153449;
-  color: #ffffff;
+  background: linear-gradient(135deg, #fff6df 0%, #e8fbf7 100%);
+  border-color: #f0bc72;
+  color: #173a3d;
+  box-shadow: 0 12px 28px rgba(201, 131, 32, 0.14);
 }
 
 .ops-card-label,
@@ -2822,7 +2829,7 @@ a:focus-visible {
 
 .ops-score-card--hero .ops-card-label,
 .ops-score-card--hero small {
-  color: #bdd3df;
+  color: #6d664f;
 }
 
 .ops-score-card strong {
@@ -2834,7 +2841,7 @@ a:focus-visible {
 }
 
 .ops-score-card--hero strong {
-  color: #ffffff;
+  color: #a95824;
   font-size: 34px;
 }
 
@@ -2846,15 +2853,15 @@ a:focus-visible {
 }
 
 .ops-score-value--ready {
-  color: #ffffff;
+  color: #17666d;
 }
 
 .ops-score-value--caution {
-  color: #fde68a;
+  color: #a95824;
 }
 
 .ops-score-value--risk {
-  color: #fecaca;
+  color: #c2413b;
 }
 
 .ops-context-card {
@@ -2932,7 +2939,7 @@ a:focus-visible {
 }
 
 .metric-card strong {
-  color: #153449;
+  color: #17666d;
   font-size: 27px;
 }
 
@@ -3017,7 +3024,7 @@ a:focus-visible {
   }
 
   .dashboard-section-tabs {
-    background: #f1efff;
+    background: #e8fbf7;
     border: 1px solid var(--color-border);
     border-radius: 14px;
     display: grid;
@@ -3031,7 +3038,7 @@ a:focus-visible {
     background: transparent;
     border: 0;
     border-radius: 10px;
-    color: rgba(49, 39, 135, 0.72);
+    color: rgba(40, 124, 131, 0.78);
     font-size: 12px;
     font-weight: 850;
     min-height: 44px;
@@ -3377,7 +3384,7 @@ a:focus-visible {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #312787;
+    border-bottom: 2px solid #287c83;
     padding-bottom: 6px;
     margin-bottom: 12px;
   }
@@ -3394,7 +3401,7 @@ a:focus-visible {
     justify-content: center;
     width: 32px;
     height: 32px;
-    background: #312787;
+    background: #287c83;
     color: #ffffff;
     font-weight: 800;
     font-size: 14px;
@@ -3405,7 +3412,7 @@ a:focus-visible {
     display: block;
     font-size: 12px;
     font-weight: 700;
-    color: #312787;
+    color: #17666d;
   }
 
   .b2g-org-sub {
@@ -3453,8 +3460,8 @@ a:focus-visible {
   .b2g-section-heading {
     font-size: 12.5px;
     font-weight: 700;
-    color: #1e1b4b;
-    border-left: 3px solid #5a48f9;
+    color: #17666d;
+    border-left: 3px solid #d8694d;
     padding-left: 6px;
     margin: 0 0 8px 0;
   }
@@ -3488,8 +3495,8 @@ a:focus-visible {
   }
 
   .b2g-kpi-card {
-    border: 1px solid #e5e7eb;
-    background: #f9fafb;
+    border: 1px solid #cfe5e3;
+    background: #f7fcfb;
     border-radius: 6px;
     padding: 8px 10px;
     display: flex;
@@ -3505,7 +3512,7 @@ a:focus-visible {
   .b2g-kpi-val {
     font-size: 14px;
     font-weight: 800;
-    color: #111827;
+    color: #17666d;
     margin-bottom: 2px;
   }
 
@@ -3516,10 +3523,10 @@ a:focus-visible {
 
   /* Safety Diagnosis Box */
   .b2g-safety-diagnosis-box {
-    border: 1px solid #d1d5db;
+    border: 1px solid #cfe5e3;
     border-radius: 6px;
     padding: 8px 12px;
-    background: #f9fafb;
+    background: #fbfdfc;
   }
 
   .b2g-risk-grade-badge {
@@ -3574,7 +3581,7 @@ a:focus-visible {
   }
 
   .b2g-breakdown-step {
-    border: 1px solid #e5e7eb;
+    border: 1px solid #cfe5e3;
     border-radius: 6px;
     padding: 8px 10px;
     background: #ffffff;
@@ -3583,7 +3590,7 @@ a:focus-visible {
   .b2g-breakdown-step h3 {
     font-size: 11px;
     font-weight: 700;
-    color: #312787;
+    color: #17666d;
     margin: 0 0 2px 0;
   }
 
@@ -3603,8 +3610,8 @@ a:focus-visible {
   .b2g-integrity-tag {
     display: inline-block;
     padding: 1px 5px;
-    background: #e0e7ff;
-    color: #3730a3;
+    background: #fff6df;
+    color: #a95824;
     border-radius: 4px;
     font-size: 9px;
     font-weight: 600;
@@ -3694,19 +3701,19 @@ a:focus-visible {
 .preset-select-label {
   font-size: 13px;
   font-weight: 700;
-  color: #312787;
+  color: #17666d;
   white-space: nowrap;
 }
 
 .preset-select-dropdown {
   background: #ffffff;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #b8dedb;
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #1e1b4b;
-  box-shadow: 0 2px 6px rgba(90, 72, 249, 0.08);
+  color: #17666d;
+  box-shadow: 0 2px 6px rgba(40, 124, 131, 0.08);
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease;
@@ -3714,27 +3721,27 @@ a:focus-visible {
 
 .preset-select-dropdown:hover,
 .preset-select-dropdown:focus {
-  border-color: #5a48f9;
-  box-shadow: 0 0 0 3px rgba(90, 72, 249, 0.15);
+  border-color: #d8694d;
+  box-shadow: 0 0 0 3px rgba(216, 105, 77, 0.14);
 }
 
 .presentation-toggle-button {
-  background: linear-gradient(135deg, #1e1b4b, #312787);
+  background: linear-gradient(135deg, #287c83, #d8694d);
   color: #ffffff;
   border: none;
   border-radius: 8px;
   padding: 7px 14px;
   font-size: 13px;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(30, 27, 75, 0.25);
+  box-shadow: 0 4px 12px rgba(216, 105, 77, 0.2);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .presentation-toggle-button:hover {
-  background: linear-gradient(135deg, #312787, #5a48f9);
+  background: linear-gradient(135deg, #17666d, #c65b42);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(90, 72, 249, 0.35);
+  box-shadow: 0 6px 16px rgba(216, 105, 77, 0.28);
 }
 
 .presentation-toggle-button--active {
