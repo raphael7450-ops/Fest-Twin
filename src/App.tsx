@@ -15,6 +15,7 @@ import { GovernmentHeader } from "./components/GovernmentHeader";
 import { Heatmap } from "./components/Heatmap";
 import { InfrastructureCapacityPanel } from "./components/InfrastructureCapacityPanel";
 import { MetricEvidenceDrawer } from "./components/MetricEvidenceDrawer";
+import { OperationalScoreHeader } from "./components/OperationalScoreHeader";
 import { PlanForm } from "./components/PlanForm";
 import { ReportView } from "./components/ReportView";
 import { RiskPanel } from "./components/RiskPanel";
@@ -618,6 +619,13 @@ export function App() {
           </aside>
           <div className="dashboard-content">
             <GovernmentHeader />
+          <OperationalScoreHeader
+            plan={plan}
+            forecast={forecast}
+            report={report}
+            evidenceSet={metricEvidence}
+            selectedFestivalBasis={selectedFestivalBasis}
+          />
           {restoredNotice && (
             <div
               style={{

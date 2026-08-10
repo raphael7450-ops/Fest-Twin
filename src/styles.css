@@ -1,19 +1,19 @@
 :root {
-  --color-text: #111827;
-  --color-muted: rgba(0, 0, 0, 0.6);
-  --color-soft: #eeeefe;
+  --color-text: #172033;
+  --color-muted: #657084;
+  --color-soft: #eef4f7;
   --color-panel: #ffffff;
-  --color-border: #ece8ff;
-  --color-border-strong: #d8d1ff;
-  --color-primary: #5a48f9;
-  --color-primary-strong: #312787;
-  --color-blue: #5a48f9;
-  --color-teal: #2ebfa5;
-  --color-green: #16a34a;
-  --color-amber: #d97706;
-  --color-red: #ef4444;
-  --shadow-panel: 1.5px 3px 9px rgba(100, 52, 248, 0.15);
-  --shadow-hover: 0 18px 36px rgba(90, 72, 249, 0.18);
+  --color-border: #d9e1ea;
+  --color-border-strong: #aab8c8;
+  --color-primary: #1f5f7a;
+  --color-primary-strong: #153449;
+  --color-blue: #2563eb;
+  --color-teal: #0f9f8d;
+  --color-green: #12805c;
+  --color-amber: #b7791f;
+  --color-red: #c2413b;
+  --shadow-panel: 0 8px 22px rgba(21, 52, 73, 0.08);
+  --shadow-hover: 0 14px 32px rgba(21, 52, 73, 0.14);
   color: var(--color-text);
   background: #f6f8fb;
   font-family:
@@ -47,10 +47,7 @@ html {
 }
 
 body {
-  background:
-    linear-gradient(116deg, transparent 0 58%, rgba(90, 72, 249, 0.98) 58% 66%, transparent 66%),
-    linear-gradient(116deg, transparent 0 74%, rgba(49, 39, 135, 0.98) 74% 83%, transparent 83%),
-    #eeeefe;
+  background: #eef3f7;
   margin: 0;
   min-width: 320px;
   overflow-x: hidden;
@@ -2650,6 +2647,339 @@ a:focus-visible {
 @media (max-width: 768px) {
   .day-type-metric-summary {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===================================================================
+   B2G Operations Console Redesign
+   =================================================================== */
+
+.app-shell {
+  max-width: 1520px;
+  padding: 28px 34px 42px;
+}
+
+.government-header,
+.panel,
+.metric-card,
+.recommendation,
+.guideline-card,
+.submission-status-card,
+.selected-festival-card {
+  border-color: var(--color-border);
+  border-radius: 8px;
+}
+
+.dashboard-canvas {
+  background: #f7fafc;
+  border: 1px solid #d6e0ea;
+  border-radius: 10px;
+  box-shadow: 0 18px 48px rgba(15, 35, 52, 0.1);
+}
+
+.dashboard-content {
+  gap: 16px;
+  padding: 22px 28px 30px;
+}
+
+.dashboard-rail {
+  background: #10283a;
+  border-right: 1px solid #0b1d2b;
+}
+
+.dashboard-rail__curve {
+  background: transparent;
+  border-radius: 0;
+  height: auto;
+  inset: 0;
+  width: 100%;
+}
+
+.dashboard-rail__curve::before,
+.dashboard-rail__curve::after {
+  display: none;
+}
+
+.dashboard-rail__nav {
+  gap: 12px;
+  top: 124px;
+  width: 86px;
+}
+
+.dashboard-rail__button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #dbe8ef;
+  height: 36px;
+  width: 36px;
+}
+
+.dashboard-rail__button:hover,
+.dashboard-rail__button:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.dashboard-rail__button span {
+  background: #153449;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgba(5, 17, 26, 0.22);
+  left: 52px;
+}
+
+.dashboard-rail__button--active {
+  background: #0f9f8d;
+  border-color: #5eead4;
+  box-shadow: 0 10px 22px rgba(15, 159, 141, 0.28);
+  color: #ffffff;
+}
+
+.government-header {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-panel);
+  padding: 18px;
+}
+
+.government-header__mark {
+  background: #153449;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.government-header__meta span:not(.status-pill) {
+  background: #f4f7fa;
+  border-color: #d9e1ea;
+  color: #526071;
+}
+
+.eyebrow {
+  color: #1f5f7a;
+  letter-spacing: 0;
+}
+
+.status-pill {
+  background: #e5f8f4;
+  border-color: #a7e7dd;
+  color: #087568;
+}
+
+.print-button,
+.secondary-button {
+  background: #153449;
+  border-radius: 7px;
+}
+
+.print-button:hover,
+.secondary-button:hover {
+  background: #0f2534;
+  box-shadow: 0 8px 18px rgba(21, 52, 73, 0.22);
+}
+
+.text-button {
+  border-color: #d9e1ea;
+  border-radius: 7px;
+}
+
+.operational-score-header {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 1.1fr) repeat(3, minmax(140px, 0.78fr)) minmax(260px, 1.25fr);
+}
+
+.ops-score-card,
+.ops-context-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-panel);
+  min-width: 0;
+  padding: 15px;
+}
+
+.ops-score-card {
+  display: grid;
+  gap: 8px;
+  min-height: 128px;
+}
+
+.ops-score-card--hero {
+  background: #153449;
+  border-color: #153449;
+  color: #ffffff;
+}
+
+.ops-card-label,
+.ops-context-card span {
+  color: var(--color-muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.ops-score-card--hero .ops-card-label,
+.ops-score-card--hero small {
+  color: #bdd3df;
+}
+
+.ops-score-card strong {
+  color: #172033;
+  display: block;
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.ops-score-card--hero strong {
+  color: #ffffff;
+  font-size: 34px;
+}
+
+.ops-score-card small {
+  color: var(--color-muted);
+  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.ops-score-value--ready {
+  color: #ffffff;
+}
+
+.ops-score-value--caution {
+  color: #fde68a;
+}
+
+.ops-score-value--risk {
+  color: #fecaca;
+}
+
+.ops-context-card {
+  align-content: start;
+  display: grid;
+  gap: 10px;
+}
+
+.ops-context-card strong {
+  color: #172033;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.ops-context-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.ops-context-card div {
+  display: grid;
+  gap: 3px;
+}
+
+.ops-context-card dt {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.ops-context-card dd {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.summary-kpi-grid {
+  gap: 12px;
+}
+
+.metric-card {
+  background: #ffffff;
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  min-height: 126px;
+  padding: 15px;
+}
+
+.metric-card::before {
+  display: none;
+}
+
+.metric-card:hover {
+  border-color: #9fb0c2;
+}
+
+.metric-card--primary {
+  border-top: 4px solid #1f5f7a;
+}
+
+.metric-card--success {
+  border-top: 4px solid #12805c;
+}
+
+.metric-card--danger {
+  border-top: 4px solid #c2413b;
+}
+
+.metric-card--warning {
+  border-top: 4px solid #b7791f;
+}
+
+.metric-card strong {
+  color: #153449;
+  font-size: 27px;
+}
+
+.kpi-badge,
+.risk-badge {
+  border-radius: 6px;
+}
+
+.panel {
+  background: #ffffff;
+  box-shadow: var(--shadow-panel);
+  padding: 16px;
+}
+
+.panel-heading {
+  border-bottom-color: #e6edf3;
+}
+
+.workspace-grid {
+  gap: 16px;
+}
+
+.tourapi-example-note,
+.candidate-lookup-card,
+.tourapi-operations-evidence,
+.openapi-operations-report,
+.data-status-summary {
+  border-radius: 8px;
+}
+
+@media (max-width: 1180px) {
+  .operational-score-header {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-context-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .operational-score-header {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-score-card {
+    min-height: 112px;
   }
 }
 
