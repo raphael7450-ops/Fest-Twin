@@ -14,6 +14,8 @@ export function Heatmap({ plan, simulation }: HeatmapProps) {
       </div>
       <div
         className="heatmap"
+        role="grid"
+        aria-label="혼잡도 시뮬레이션 격자"
         style={{ gridTemplateColumns: `repeat(${plan.gridWidth}, 1fr)` }}
       >
         {simulation.cells.map((cell) => (
@@ -25,7 +27,7 @@ export function Heatmap({ plan, simulation }: HeatmapProps) {
           />
         ))}
       </div>
-      <ul className="evidence-list">
+      <ul className="evidence-list heatmap-bottleneck-list" aria-label="병목 후보 설명">
         {simulation.bottlenecks.map((item) => (
           <li key={item.id}>
             {item.label}: {item.reason}
