@@ -59,11 +59,23 @@ export function applyFestivalCandidateToPlan(
 ): FestivalPlan {
   const recommendation = createBackdataPlanningRecommendation(candidate, options.demandBackdata);
   const planningPatch = createFestivalTypePlanningPatch(candidate, options.demandBackdata);
+  const longitude = Number(candidate.mapX);
+  const latitude = Number(candidate.mapY);
+  const venueCoordinates =
+    Number.isFinite(longitude) &&
+    longitude >= -180 &&
+    longitude <= 180 &&
+    Number.isFinite(latitude) &&
+    latitude >= -90 &&
+    latitude <= 90
+      ? { longitude, latitude, source: "tourapi" as const }
+      : undefined;
 
   return {
     ...currentPlan,
     name: candidate.title,
     venueAddress: candidate.address,
+    venueCoordinates,
     startDate: candidate.startDate || currentPlan.startDate,
     endDate: candidate.endDate || currentPlan.endDate,
     keywords: Array.from(new Set([candidate.title, ...currentPlan.keywords])).slice(0, 6),

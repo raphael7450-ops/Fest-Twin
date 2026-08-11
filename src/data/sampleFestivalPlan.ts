@@ -4,6 +4,7 @@ export const sampleFestivalPlan: FestivalPlan = {
   name: "2026 서울세계불꽃축제",
   region: "서울",
   venueAddress: "서울특별시 영등포구 여의도동 여의도 한강공원 및 이촌 한강공원 일대",
+  venueCoordinates: undefined,
   startDate: "2026-09-04",
   endDate: "2026-09-05",
   operatingHours: [14, 15, 16, 17, 18, 19, 20, 21, 22],

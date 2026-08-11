@@ -1,9 +1,13 @@
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import {
+  buildVenueOperationalNotes,
   buildVenueMarkerStyle,
   buildVWorldScriptUrl,
   isVWorldKeyRejected,
   resetVenueMapContainer,
+  VenueMapPanel,
 } from "./VenueMapPanel";
 
 describe("VenueMapPanel VWorld integration", () => {
@@ -80,5 +84,28 @@ describe("VenueMapPanel VWorld integration", () => {
     resetVenueMapContainer(container);
 
     expect(container.childElementCount).toBe(0);
+  });
+
+  it("shows a coordinate confirmation prompt without loading VWorld when the plan has no coordinates", () => {
+    document.querySelector('script[data-fest-twin-vworld-map]')?.remove();
+
+    render(<VenueMapPanel plan={sampleFestivalPlan} />);
+
+    expect(screen.getByText("행사장 좌표 확인 필요")).toBeInTheDocument();
+    expect(document.querySelector('script[data-fest-twin-vworld-map]')).toBeNull();
+    expect(screen.queryByText(/Gangnam Media Winter Festa/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/C(?:OEX)/)).not.toBeInTheDocument();
+  });
+
+  it("derives operational notes from the plan facilities", () => {
+    const notes = buildVenueOperationalNotes({
+      ...sampleFestivalPlan,
+      facilities: sampleFestivalPlan.facilities.filter((facility) => facility.type !== "booth"),
+    });
+
+    expect(notes[0]).toBe(`행사장 중심 구역: ${sampleFestivalPlan.name}`);
+    expect(notes[1]).toContain(sampleFestivalPlan.facilities.find((facility) => facility.type === "entrance")?.name);
+    expect(notes[2]).toContain(sampleFestivalPlan.facilities.find((facility) => facility.type === "stage")?.name);
+    expect(notes[3]).toBe("분산 운영: 기획자 입력 필요");
   });
 });

@@ -57,6 +57,42 @@ describe("festivalSelection", () => {
     );
   });
 
+  it("copies selected candidate coordinates into the festival plan", () => {
+    const coordinateCandidate: FestivalCandidate = {
+      ...candidate,
+      mapX: "126.9348",
+      mapY: "37.5284",
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, coordinateCandidate);
+
+    expect(nextPlan.venueCoordinates).toEqual({
+      longitude: 126.9348,
+      latitude: 37.5284,
+      source: "tourapi",
+    });
+  });
+
+  it("clears stale coordinates when the next selected candidate has no valid coordinates", () => {
+    const planWithCoordinates = {
+      ...sampleFestivalPlan,
+      venueCoordinates: {
+        longitude: 126.9348,
+        latitude: 37.5284,
+        source: "tourapi" as const,
+      },
+    };
+    const coordinateLessCandidate: FestivalCandidate = {
+      ...candidate,
+      mapX: "not-a-coordinate",
+      mapY: undefined,
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(planWithCoordinates, coordinateLessCandidate);
+
+    expect(nextPlan.venueCoordinates).toBeUndefined();
+  });
+
   it("prefills budget and expected capacity from the best matching festival backdata", () => {
     const seoulLightCandidate: FestivalCandidate = {
       id: "4000001",

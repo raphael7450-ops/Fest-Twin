@@ -56,10 +56,20 @@ export interface VenueFacility {
   weight: number;
 }
 
+export interface VenueCoordinates {
+  latitude: number;
+  longitude: number;
+  source: "tourapi" | "verified" | "user-input";
+}
+
 export interface FestivalPlan {
   name: string;
   region: string;
   venueAddress: string;
+  venueCoordinates?: VenueCoordinates;
+  venueAreaSquareMeters?: number;
+  totalExitWidthMeters?: number;
+  evacuationDistanceMeters?: number;
   startDate: string;
   endDate: string;
   operatingHours: number[];

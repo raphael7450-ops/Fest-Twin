@@ -19,6 +19,31 @@ export interface SavedScenario {
   selectedFestivalBasis?: SelectedFestivalBasis;
 }
 
+function normalizePositiveNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function normalizeVenueCoordinates(value: unknown) {
+  if (!value || typeof value !== "object") return undefined;
+
+  const { latitude, longitude, source } = value as Record<string, unknown>;
+  if (
+    typeof latitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180 ||
+    (source !== "tourapi" && source !== "verified" && source !== "user-input")
+  ) {
+    return undefined;
+  }
+
+  return { latitude, longitude, source };
+}
+
 export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
   if (!rawPlan || typeof rawPlan !== "object") {
     return { ...sampleFestivalPlan };
@@ -27,6 +52,10 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
     name: rawPlan.name ?? rawPlan.title ?? sampleFestivalPlan.name,
     region: rawPlan.region ?? sampleFestivalPlan.region,
     venueAddress: rawPlan.venueAddress ?? sampleFestivalPlan.venueAddress,
+    venueCoordinates: normalizeVenueCoordinates(rawPlan.venueCoordinates),
+    venueAreaSquareMeters: normalizePositiveNumber(rawPlan.venueAreaSquareMeters),
+    totalExitWidthMeters: normalizePositiveNumber(rawPlan.totalExitWidthMeters),
+    evacuationDistanceMeters: normalizePositiveNumber(rawPlan.evacuationDistanceMeters),
     startDate: rawPlan.startDate ?? sampleFestivalPlan.startDate,
     endDate: rawPlan.endDate ?? sampleFestivalPlan.endDate,
     operatingHours:

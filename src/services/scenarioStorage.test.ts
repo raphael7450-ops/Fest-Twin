@@ -4,6 +4,7 @@ import type { SelectedFestivalBasis } from "../domain/types";
 import {
   clearScenarios,
   loadScenarios,
+  normalizeFestivalPlan,
   saveScenario,
 } from "./scenarioStorage";
 
@@ -44,5 +45,41 @@ describe("scenarioStorage", () => {
     clearScenarios();
 
     expect(loadScenarios()).toEqual([]);
+  });
+
+  it("keeps only finite venue coordinates within geographic bounds", () => {
+    const validPlan = normalizeFestivalPlan({
+      ...sampleFestivalPlan,
+      venueCoordinates: { latitude: 37.5284, longitude: 126.9348, source: "tourapi" },
+    });
+    const invalidPlan = normalizeFestivalPlan({
+      ...sampleFestivalPlan,
+      venueCoordinates: { latitude: 91, longitude: 126.9348, source: "tourapi" },
+    });
+    const invalidLongitudePlan = normalizeFestivalPlan({
+      ...sampleFestivalPlan,
+      venueCoordinates: { latitude: 37.5284, longitude: 181, source: "tourapi" },
+    });
+
+    expect(validPlan.venueCoordinates).toEqual({
+      latitude: 37.5284,
+      longitude: 126.9348,
+      source: "tourapi",
+    });
+    expect(invalidPlan.venueCoordinates).toBeUndefined();
+    expect(invalidLongitudePlan.venueCoordinates).toBeUndefined();
+  });
+
+  it("keeps only finite positive venue measurements", () => {
+    const plan = normalizeFestivalPlan({
+      ...sampleFestivalPlan,
+      venueAreaSquareMeters: 1200,
+      totalExitWidthMeters: 0,
+      evacuationDistanceMeters: Number.POSITIVE_INFINITY,
+    });
+
+    expect(plan.venueAreaSquareMeters).toBe(1200);
+    expect(plan.totalExitWidthMeters).toBeUndefined();
+    expect(plan.evacuationDistanceMeters).toBeUndefined();
   });
 });

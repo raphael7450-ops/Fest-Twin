@@ -1,18 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FestivalPlan } from "../domain/types";
-import type { FestivalCandidate } from "../services/tourApiAdapter";
 
 type MapStatus = "missing-key" | "loading" | "ready" | "failed" | "key-rejected";
 
 interface VenueMapPanelProps {
   plan: FestivalPlan;
-  selectedCandidate?: FestivalCandidate | null;
 }
-
-const defaultVenue = {
-  latitude: 37.5103955843,
-  longitude: 127.0610512042,
-};
 
 const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim();
 
@@ -63,6 +56,25 @@ export function buildVenueMarkerStyle(ol: VenueMarkerStyleOl, label: string) {
   });
 }
 
+export function buildVenueOperationalNotes(plan: FestivalPlan): string[] {
+  const entrances = plan.facilities.filter((item) => item.type === "entrance");
+  const stages = plan.facilities.filter((item) => item.type === "stage");
+  const booths = plan.facilities.filter((item) => item.type === "booth");
+
+  return [
+    `행사장 중심 구역: ${plan.name}`,
+    entrances.length > 0
+      ? `주요 진출입 병목: ${entrances.map((item) => item.name).join(", ")}`
+      : "주요 진출입 병목: 기획자 입력 필요",
+    stages.length > 0
+      ? `관람 집중 구역: ${stages.map((item) => item.name).join(", ")}`
+      : "관람 집중 구역: 기획자 입력 필요",
+    booths.length > 0
+      ? `분산 운영: ${booths.map((item) => item.name).join(", ")}`
+      : "분산 운영: 기획자 입력 필요",
+  ];
+}
+
 function loadVWorldMap(apiKey: string) {
   if (window.vw?.ol3 && window.ol) {
     return Promise.resolve();
@@ -108,24 +120,14 @@ function waitForVWorldMap() {
   });
 }
 
-export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
+export function VenueMapPanel({ plan }: VenueMapPanelProps) {
   const mapStageRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<MapStatus>(vworldApiKey ? "loading" : "missing-key");
-  const venue = useMemo(() => {
-    const latitude = Number(selectedCandidate?.mapY);
-    const longitude = Number(selectedCandidate?.mapX);
-
-    return {
-      name: plan.name,
-      address: plan.venueAddress,
-      latitude: Number.isFinite(latitude) ? latitude : defaultVenue.latitude,
-      longitude: Number.isFinite(longitude) ? longitude : defaultVenue.longitude,
-      hasCandidateCoordinates: Number.isFinite(latitude) && Number.isFinite(longitude),
-    };
-  }, [plan.name, plan.venueAddress, selectedCandidate?.mapX, selectedCandidate?.mapY]);
+  const coordinates = plan.venueCoordinates;
+  const notes = buildVenueOperationalNotes(plan);
 
   useEffect(() => {
-    if (!vworldApiKey) return;
+    if (!coordinates || !vworldApiKey) return;
 
     let cancelled = false;
 
@@ -152,7 +154,7 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
 
         const map = new window.vw.ol3.Map(mapId, window.vw.ol3.MapOptions);
         const position = window.ol.proj.transform(
-          [venue.longitude, venue.latitude],
+          [coordinates.longitude, coordinates.latitude],
           "EPSG:4326",
           "EPSG:900913",
         );
@@ -161,9 +163,9 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
 
         const marker = new window.ol.Feature({
           geometry: new window.ol.geom.Point(position),
-          name: venue.name,
+          name: plan.name,
         });
-        marker.setStyle(buildVenueMarkerStyle(window.ol, venue.name));
+        marker.setStyle(buildVenueMarkerStyle(window.ol, plan.name));
         const markerLayer = new window.ol.layer.Vector({
           source: new window.ol.source.Vector({
             features: [marker],
@@ -172,7 +174,6 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
         map.addLayer(markerLayer);
 
         setStatus("ready");
-
         window.setTimeout(() => {
           if (!cancelled && mapStageRef.current) {
             window.dispatchEvent(new Event("resize"));
@@ -188,7 +189,7 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [venue.latitude, venue.longitude, venue.name]);
+  }, [coordinates, plan.name]);
 
   const statusText =
     status === "ready"
@@ -208,27 +209,34 @@ export function VenueMapPanel({ plan, selectedCandidate }: VenueMapPanelProps) {
         <span>TourAPI 좌표 + VWorld 2D 지도 API</span>
       </div>
       <div className="venue-map-canvas">
-        <div className="venue-map-stage" ref={mapStageRef} />
-        {status !== "ready" ? (
+        {coordinates ? (
+          <>
+            <div className="venue-map-stage" ref={mapStageRef} />
+            {status !== "ready" ? (
+              <div className="venue-map-fallback">
+                <strong>{statusText}</strong>
+              </div>
+            ) : null}
+          </>
+        ) : (
           <div className="venue-map-fallback">
-            <strong>{statusText}</strong>
-            <span>지도 키가 없거나 로드에 실패하면 TourAPI 좌표 기준 위치 정보를 표시합니다.</span>
+            <strong>행사장 좌표 확인 필요</strong>
           </div>
-        ) : null}
+        )}
       </div>
       <div className="venue-map-meta">
-        <strong>{venue.name}</strong>
-        <span>{venue.address}</span>
-        <span>
-          좌표는 {venue.hasCandidateCoordinates ? "선택 후보" : "기본 예시"} 기준:{" "}
-          {venue.longitude}, {venue.latitude}
-        </span>
+        <strong>{plan.name}</strong>
+        <span>{plan.venueAddress}</span>
+        {coordinates ? (
+          <span>
+            좌표 기준: {coordinates.longitude}, {coordinates.latitude}
+          </span>
+        ) : null}
       </div>
       <ul className="venue-map-points">
-        <li>행사장 중심 구역: {venue.name}</li>
-        <li>주요 진출입 병목: 삼성역 5·6번 출입구 및 영동대로 진입로</li>
-        <li>피크 밀집 예상: COEX 동문 광장 및 K-POP 미디어월 관람 구역</li>
-        <li>상권 연계 분산: 먹거리 부스 및 주변 상업 시설 연계 동선</li>
+        {notes.map((note) => (
+          <li key={note}>{note}</li>
+        ))}
       </ul>
     </section>
   );
