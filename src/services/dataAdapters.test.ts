@@ -287,8 +287,8 @@ describe("public data adapters", () => {
       contentid: String(3439947 + index),
       title: `축제 후보 ${index + 1}`,
       addr1: "서울특별시 강남구",
-      eventstartdate: "20261201",
-      eventenddate: "20261231",
+      eventstartdate: "20251220",
+      eventenddate: "20251231",
       mapx: "127.0276",
       mapy: "37.4979",
     }));
@@ -503,6 +503,8 @@ describe("public data adapters", () => {
     const candidates = await getFestivalCandidates(
       {
         ...sampleFestivalPlan,
+        startDate: "2026-08-01",
+        endDate: "2026-08-31",
         region: "부산",
       },
       { fetchImpl: fetchMock as unknown as typeof fetch },
@@ -521,11 +523,12 @@ describe("public data adapters", () => {
       "/api/tour/area-code",
       "/api/tour/festivals",
       "/api/tour/festivals",
+      "/api/regional-festivals",
       "/api/tour/detail",
       "/api/tour/detail-intro",
     ]);
-    expect(urls[1].searchParams.get("eventStartDate")).toBe("20251219");
-    expect(urls[2].searchParams.get("eventStartDate")).toBe("20250101");
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20260801");
+    expect(urls[2].searchParams.get("eventStartDate")).toBe("20260101");
   });
 
   it("fetches a broader festival page and returns deterministic period-overlap candidates", async () => {
@@ -576,11 +579,8 @@ describe("public data adapters", () => {
       { fetchImpl: fetchMock as unknown as typeof fetch },
     );
 
-    expect(candidates.map((candidate) => candidate.id).slice(0, 2)).toEqual([
-      "period-1",
-      "filler-0",
-    ]);
-    expect(candidates).toHaveLength(16);
+    expect(candidates.map((candidate) => candidate.id)).toEqual(["period-2"]);
+    expect(candidates).toHaveLength(1);
 
     const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
     expect(urls[1].searchParams.get("numOfRows")).toBe("50");

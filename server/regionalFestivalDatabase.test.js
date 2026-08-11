@@ -28,6 +28,46 @@ function createTestDatabase(records) {
 }
 
 describe("RegionalFestivalDatabase", () => {
+  it("excludes same-year regional festivals that do not overlap the requested date range when no search term is provided", () => {
+    const db = createTestDatabase([
+      {
+        id: "busan-august-2026",
+        year: 2026,
+        name: "Busan August Festival",
+        region: "Busan",
+        localGovernment: "Haeundae-gu",
+        type: "Culture",
+        venue: "Haeundae Beach",
+        startDate: "2026-08-10",
+        endDate: "2026-08-15",
+        visitors: 120000,
+        budgetMillionKrw: 900,
+      },
+      {
+        id: "busan-winter-2026",
+        year: 2026,
+        name: "Busan Winter Light Festival",
+        region: "Busan",
+        localGovernment: "Haeundae-gu",
+        type: "Light",
+        venue: "Haeundae Beach",
+        startDate: "2026-12-01",
+        endDate: "2026-12-31",
+        visitors: 500000,
+        budgetMillionKrw: 2500,
+      },
+    ]);
+
+    const records = db.searchFestivals({
+      region: "Busan",
+      startDate: "2026-08-01",
+      endDate: "2026-08-31",
+      limit: 10,
+    });
+
+    expect(records.map((record) => record.id)).toEqual(["busan-august-2026"]);
+  });
+
   it("keeps same-year keyword matches when normalized MCST dates do not overlap selected festival dates", () => {
     const db = createTestDatabase([
       {

@@ -161,8 +161,8 @@ export class RegionalFestivalDatabase {
       })
       .filter((record) => {
         if (hasSearchTerms) return record.keywordMatchScore > 0;
-        if (overlapsDateRange(record, startDate, endDate)) return true;
-        return matchesRequestedYear(record, startDate, endDate);
+        if (startDate || endDate) return overlapsDateRange(record, startDate, endDate);
+        return true;
       });
 
     // 중복 축제 제거 (동일 축제일 경우 가장 최근 연도 데이터만 유지)

@@ -27,6 +27,61 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("TourAPI candidate regional DB supplement", () => {
+  it("does not show annual fallback candidates outside the selected date range", async () => {
+    let festivalCallCount = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "6", name: "Busan" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        festivalCallCount += 1;
+        if (festivalCallCount === 1) return jsonResponse(tourApiPayload([], 0));
+
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "august",
+              title: "Busan August Festival",
+              eventstartdate: "20260810",
+              eventenddate: "20260815",
+              addr1: "Busan Haeundae",
+            },
+            {
+              contentid: "winter",
+              title: "Haeundae Light Festival",
+              eventstartdate: "20261201",
+              eventenddate: "20261231",
+              addr1: "Busan Haeundae",
+            },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({ count: 0, records: [] });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "Busan August Planning",
+        region: "Busan",
+        startDate: "2026-08-01",
+        endDate: "2026-08-31",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(candidates.map((candidate) => candidate.id)).toEqual(["august"]);
+  });
+
   it("uses server regional festival DB records as selectable candidates", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input), "http://localhost");
@@ -134,9 +189,16 @@ describe("TourAPI candidate regional DB supplement", () => {
       return jsonResponse(tourApiPayload([], 0));
     });
 
-    const candidates = await getFestivalCandidates(sampleFestivalPlan, {
-      fetchImpl: fetchMock as unknown as typeof fetch,
-    });
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        startDate: "2026-01-01",
+        endDate: "2026-12-31",
+      },
+      {
+        fetchImpl: fetchMock as unknown as typeof fetch,
+      },
+    );
     const sorted = sortFestivalCandidatesByDateAsc(candidates);
 
     expect(sorted.length).toBe(2);

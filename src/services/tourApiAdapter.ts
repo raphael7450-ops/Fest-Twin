@@ -1297,7 +1297,9 @@ export async function getFestivalCandidates(
   );
   const candidateItems = sortFestivalItemsForPlan(
     [...festivalItems, ...uniqueSupplementalItems].filter(
-      (item) => !item.addr1 || regionMatches(plan.region, item.addr1),
+      (item) =>
+        (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
+        dateOverlapDays(item.eventstartdate, item.eventenddate, plan.startDate, plan.endDate) > 0,
     ),
     plan,
   ).slice(0, MAX_FESTIVAL_CANDIDATES);
