@@ -26,6 +26,7 @@ import { createMetricEvidenceSet } from "./metricEvidence";
 import { createPlanningReport } from "./report";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 import { createSimulation } from "./simulation";
+import type { FestivalCandidate } from "./tourApiAdapter";
 import type { WeatherContext } from "./weatherAdapter";
 
 export const ANALYSIS_MODEL_VERSION = "phase1-v1" as const;
@@ -76,6 +77,7 @@ export interface FestivalAnalysisSnapshot {
 export interface AnalysisIdentityInput {
   plan: FestivalPlan;
   selectedFestivalBasis?: SelectedFestivalBasis | null;
+  selectedCandidate?: FestivalCandidate | null;
   selectedHour: number;
 }
 
@@ -145,12 +147,36 @@ function hashStructuredValue(value: unknown): string {
   return hash.toString(16).padStart(16, "0");
 }
 
+function normalizedOptionalString(value?: string): string | undefined {
+  const normalized = value?.trim();
+  return normalized || undefined;
+}
+
+export function normalizeAnalysisCandidate(
+  candidate: FestivalCandidate,
+): FestivalCandidate {
+  return {
+    id: candidate.id.trim(),
+    title: candidate.title.trim(),
+    address: candidate.address.trim(),
+    startDate: candidate.startDate.trim(),
+    endDate: candidate.endDate.trim(),
+    mapX: normalizedOptionalString(candidate.mapX),
+    mapY: normalizedOptionalString(candidate.mapY),
+    searchScope: candidate.searchScope,
+  };
+}
+
 export function deriveFestivalId(
   plan: FestivalPlan,
   selectedFestivalBasis?: SelectedFestivalBasis | null,
+  selectedCandidate?: FestivalCandidate | null,
 ): string {
   const contentId = selectedFestivalBasis?.contentId.trim();
   if (contentId) return contentId;
+
+  const candidateId = selectedCandidate?.id.trim();
+  if (candidateId) return candidateId;
 
   return `festival_plan_${hashStructuredValue({
     name: plan.name,
@@ -162,9 +188,17 @@ export function deriveFestivalId(
 }
 
 export function createAnalysisKey(input: AnalysisIdentityInput): string {
+  const selectedCandidate = input.selectedCandidate
+    ? normalizeAnalysisCandidate(input.selectedCandidate)
+    : null;
   return `analysis_key_${hashStructuredValue({
-    festivalId: deriveFestivalId(input.plan, input.selectedFestivalBasis),
+    festivalId: deriveFestivalId(
+      input.plan,
+      input.selectedFestivalBasis,
+      selectedCandidate,
+    ),
     selectedFestivalBasis: input.selectedFestivalBasis ?? null,
+    selectedCandidate,
     plan: input.plan,
     selectedHour: input.selectedHour,
     modelVersion: ANALYSIS_MODEL_VERSION,
@@ -215,6 +249,9 @@ export function createFestivalAnalysisSnapshot(
   const selectedFestivalBasis = input.selectedFestivalBasis
     ? clonePlainData(input.selectedFestivalBasis)
     : undefined;
+  const selectedCandidate = input.selectedCandidate
+    ? normalizeAnalysisCandidate(input.selectedCandidate)
+    : undefined;
   const datasets = clonePlainData(input.datasets);
   const tourism = requiredDataset(datasets.tourism, "tourism");
   const trends = requiredDataset(datasets.trends, "trends");
@@ -257,9 +294,10 @@ export function createFestivalAnalysisSnapshot(
     analysisKey: createAnalysisKey({
       plan,
       selectedFestivalBasis,
+      selectedCandidate,
       selectedHour: input.selectedHour,
     }),
-    festivalId: deriveFestivalId(plan, selectedFestivalBasis),
+    festivalId: deriveFestivalId(plan, selectedFestivalBasis, selectedCandidate),
     createdAt,
     modelVersion: ANALYSIS_MODEL_VERSION,
     plan,

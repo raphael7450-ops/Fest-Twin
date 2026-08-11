@@ -13,6 +13,7 @@ import type {
 import {
   createAnalysisKey,
   createFestivalAnalysisSnapshot,
+  normalizeAnalysisCandidate,
   normalizeAnalysisDataStatus,
   type AnalysisDatasetState,
   type AnalysisDatasets,
@@ -315,7 +316,7 @@ export function useFestivalAnalysis(
       ? clonePlainData(input.selectedFestivalBasis)
       : undefined;
     const requestCandidate = input.selectedCandidate
-      ? clonePlainData(input.selectedCandidate)
+      ? normalizeAnalysisCandidate(input.selectedCandidate)
       : undefined;
     const requestDependencies = latestDependencies.current;
 
@@ -362,6 +363,7 @@ export function useFestivalAnalysis(
         const snapshot = createFestivalAnalysisSnapshot({
           plan: requestPlan,
           selectedFestivalBasis: requestBasis,
+          selectedCandidate: requestCandidate,
           selectedHour: input.selectedHour,
           datasets: resolved.datasets,
           now: requestDependencies.now(),

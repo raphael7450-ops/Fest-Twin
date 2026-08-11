@@ -7,6 +7,8 @@ import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrafficContext } from "../data/sampleTraffic";
 import { sampleTrendContext } from "../data/sampleTrends";
 import type { FestivalPlan, SelectedFestivalBasis, TourismContext } from "../domain/types";
+import { createAnalysisKey } from "../services/analysisSnapshot";
+import type { FestivalCandidate } from "../services/tourApiAdapter";
 import { getFallbackWeatherContext } from "../services/weatherAdapter";
 import {
   useFestivalAnalysis,
@@ -55,6 +57,17 @@ const inputB: FestivalAnalysisInput = {
   plan: planB,
   selectedFestivalBasis: basis("festival-b", planB),
   selectedHour: 21,
+};
+
+const candidateA: FestivalCandidate = {
+  id: "festival-a",
+  title: planA.name,
+  address: planA.venueAddress,
+  startDate: planA.startDate,
+  endDate: planA.endDate,
+  mapX: "126.9780",
+  mapY: "37.5665",
+  searchScope: "exact-period",
 };
 
 function dependencies(
@@ -177,6 +190,82 @@ describe("useFestivalAnalysis", () => {
     expect(result.current.snapshot?.festivalId).toBe("festival-b");
     expect(result.current.snapshot?.analysisId).toBe(committedId);
     expect(result.current.phase).toBe("ready");
+  });
+
+  it("restarts for a candidate search-scope change and rejects the stale response", async () => {
+    const oldTourism = deferred<TourismContext>();
+    const currentTourism = structuredClone(sampleTourismContext);
+    currentTourism.nearbySpots[0].name = "current candidate result";
+    const staleTourism = structuredClone(sampleTourismContext);
+    staleTourism.nearbySpots[0].name = "stale candidate result";
+    const loadTourism = vi
+      .fn()
+      .mockImplementationOnce(() => oldTourism.promise)
+      .mockResolvedValueOnce(currentTourism);
+    const deps = dependencies({ loadTourism });
+    const initialInput: FestivalAnalysisInput = {
+      ...inputA,
+      selectedCandidate: candidateA,
+    };
+    const currentInput: FestivalAnalysisInput = {
+      ...inputA,
+      selectedCandidate: { ...candidateA, searchScope: "annual-region" },
+    };
+    const { result, rerender } = renderHook(
+      ({ input }) => useFestivalAnalysis(input, deps),
+      { initialProps: { input: initialInput } },
+    );
+
+    rerender({ input: currentInput });
+    await waitFor(() => expect(result.current.phase).toBe("ready"));
+    expect(loadTourism).toHaveBeenCalledTimes(2);
+    expect(result.current.snapshot?.analysisKey).toBe(createAnalysisKey(currentInput));
+    expect(result.current.snapshot?.datasets.tourism.value?.nearbySpots[0].name).toBe(
+      "current candidate result",
+    );
+    const committedId = result.current.snapshot?.analysisId;
+
+    act(() => oldTourism.resolve(staleTourism));
+    await act(async () => Promise.resolve());
+
+    expect(result.current.snapshot?.analysisId).toBe(committedId);
+    expect(result.current.snapshot?.datasets.tourism.value?.nearbySpots[0].name).toBe(
+      "current candidate result",
+    );
+  });
+
+  it("does not reload for a semantically equal candidate object", async () => {
+    const deps = dependencies();
+    const initialInput: FestivalAnalysisInput = {
+      ...inputA,
+      selectedCandidate: candidateA,
+    };
+    const { result, rerender } = renderHook(
+      ({ input }) => useFestivalAnalysis(input, deps),
+      { initialProps: { input: initialInput } },
+    );
+    await waitFor(() => expect(result.current.phase).toBe("ready"));
+
+    rerender({
+      input: {
+        ...inputA,
+        selectedCandidate: {
+          searchScope: "exact-period",
+          mapY: " 37.5665 ",
+          mapX: " 126.9780 ",
+          endDate: ` ${planA.endDate} `,
+          startDate: ` ${planA.startDate} `,
+          address: ` ${planA.venueAddress} `,
+          title: ` ${planA.name} `,
+          id: " festival-a ",
+          imageUrl: "https://example.test/non-analysis-image.jpg",
+          organizer: "Non-analysis metadata",
+        },
+      },
+    });
+    await act(async () => Promise.resolve());
+
+    expect(deps.loadTourism).toHaveBeenCalledTimes(1);
   });
 
   it("aborts the old request on key change and the current request on unmount", async () => {

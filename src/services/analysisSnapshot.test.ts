@@ -6,6 +6,7 @@ import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrafficContext } from "../data/sampleTraffic";
 import { sampleTrendContext } from "../data/sampleTrends";
 import type { FestivalPlan, SelectedFestivalBasis } from "../domain/types";
+import type { FestivalCandidate } from "./tourApiAdapter";
 import { getFallbackWeatherContext } from "./weatherAdapter";
 import {
   createAnalysisKey,
@@ -22,6 +23,17 @@ const selectedBasis: SelectedFestivalBasis = {
   startDate: sampleFestivalPlan.startDate,
   endDate: sampleFestivalPlan.endDate,
   sourceName: "TourAPI selected festival candidate",
+};
+
+const selectedCandidate: FestivalCandidate = {
+  id: "candidate-content-84",
+  title: sampleFestivalPlan.name,
+  address: sampleFestivalPlan.venueAddress,
+  startDate: sampleFestivalPlan.startDate,
+  endDate: sampleFestivalPlan.endDate,
+  mapX: "126.9780",
+  mapY: "37.5665",
+  searchScope: "exact-period",
 };
 
 function datasets(): AnalysisDatasets {
@@ -126,6 +138,62 @@ describe("analysis snapshot", () => {
     ).not.toBe(baseline);
   });
 
+  it.each<[string, Partial<FestivalCandidate>]>([
+    ["id", { id: "different-content-id" }],
+    ["title", { title: "Different candidate title" }],
+    ["address", { address: "Different candidate address" }],
+    ["start date", { startDate: "2027-01-01" }],
+    ["end date", { endDate: "2027-01-03" }],
+    ["map X", { mapX: "127.0000" }],
+    ["map Y", { mapY: "36.0000" }],
+    ["search scope", { searchScope: "annual-region" }],
+  ])("changes the key when candidate %s changes", (_field, candidatePatch) => {
+    const baseline = createAnalysisKey({
+      plan: sampleFestivalPlan,
+      selectedFestivalBasis: selectedBasis,
+      selectedCandidate,
+      selectedHour: 20,
+    });
+
+    expect(
+      createAnalysisKey({
+        plan: sampleFestivalPlan,
+        selectedFestivalBasis: selectedBasis,
+        selectedCandidate: { ...selectedCandidate, ...candidatePatch },
+        selectedHour: 20,
+      }),
+    ).not.toBe(baseline);
+  });
+
+  it("creates the same key for semantically equal candidate objects", () => {
+    expect(
+      createAnalysisKey({
+        plan: sampleFestivalPlan,
+        selectedFestivalBasis: selectedBasis,
+        selectedCandidate,
+        selectedHour: 20,
+      }),
+    ).toBe(
+      createAnalysisKey({
+        plan: sampleFestivalPlan,
+        selectedFestivalBasis: selectedBasis,
+        selectedCandidate: {
+          searchScope: "exact-period",
+          mapY: " 37.5665 ",
+          mapX: " 126.9780 ",
+          endDate: ` ${sampleFestivalPlan.endDate} `,
+          startDate: ` ${sampleFestivalPlan.startDate} `,
+          address: ` ${sampleFestivalPlan.venueAddress} `,
+          title: ` ${sampleFestivalPlan.name} `,
+          id: " candidate-content-84 ",
+          imageUrl: "https://example.test/non-analysis-image.jpg",
+          organizer: "Non-analysis metadata",
+        },
+        selectedHour: 20,
+      }),
+    );
+  });
+
   it("uses candidate content ID or a plan identity that distinguishes dates and address", () => {
     expect(deriveFestivalId(sampleFestivalPlan, selectedBasis)).toBe("festival-content-42");
 
@@ -163,6 +231,18 @@ describe("analysis snapshot", () => {
     expect(Object.isFrozen(snapshot)).toBe(true);
     expect(Object.isFrozen(snapshot.plan.programs)).toBe(true);
     expect(Object.isFrozen(snapshot.datasets.tourism.value?.nearbySpots)).toBe(true);
+  });
+
+  it("uses the selected candidate ID as the festival ID without a selected basis", () => {
+    const snapshot = createFestivalAnalysisSnapshot({
+      plan: sampleFestivalPlan,
+      selectedCandidate,
+      selectedHour: 20,
+      datasets: datasets(),
+      now: new Date("2026-08-11T00:00:00.000Z"),
+    });
+
+    expect(snapshot.festivalId).toBe("candidate-content-84");
   });
 
   it("keeps deterministic analysis keys but unique IDs for separate completed commits", () => {
