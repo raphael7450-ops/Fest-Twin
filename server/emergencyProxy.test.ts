@@ -29,13 +29,14 @@ describe("server/emergencyProxy", () => {
     });
 
     await withAppServer(app, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/api/emergency/nearby-facilities?lat=37.51&lon=127.06`);
+      const response = await fetch(`${baseUrl}/api/emergency/nearby-facilities?lat=37.5283&lon=126.9347`);
       const body = await response.json();
 
       expect(response.status).toBe(200);
       expect(body.status).toBe("sample-fallback");
       expect(body.goldenTimeMinutes).toBeGreaterThan(0);
       expect(body.facilities.length).toBeGreaterThan(0);
+      expect(body.facilities[0].facilityName).toContain("여의도");
     });
   });
 

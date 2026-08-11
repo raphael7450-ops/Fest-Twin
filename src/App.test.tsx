@@ -70,13 +70,13 @@ describe("App", () => {
     ]);
     getFestivalCandidatesMock.mockResolvedValue([
       {
-        id: "3439947",
-        title: "강남 미디어 윈터페스타",
-        address: "서울특별시 강남구 영동대로 511",
-        startDate: "2025-12-19",
-        endDate: "2026-01-03",
-        mapX: "127.0610512042",
-        mapY: "37.5103955843",
+        id: "seoul-fireworks-2026",
+        title: "2026 서울세계불꽃축제",
+        address: "서울특별시 영등포구 여의도 한강공원",
+        startDate: "2026-09-04",
+        endDate: "2026-09-05",
+        mapX: "126.9347",
+        mapY: "37.5283",
         searchScope: "exact-period",
       },
     ]);
@@ -110,7 +110,7 @@ describe("App", () => {
     expect(screen.queryByText("제출 데모 검증 현황")).not.toBeInTheDocument();
     expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
-    expect(screen.getAllByText("서울특별시 강남구 영동대로 511 (삼성동)").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("서울특별시 영등포구 여의도동 여의도 한강공원 및 이촌 한강공원 일대").length).toBeGreaterThan(0);
     expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
     expect(screen.getAllByText("안전관리 요원 추천 배치").length).toBeGreaterThan(0);
     expect(screen.getAllByText("의료/구급 인력 추천 배치").length).toBeGreaterThan(0);
@@ -118,7 +118,7 @@ describe("App", () => {
 
     openDashboardSection("기획");
     expect(screen.getByRole("button", { name: "대시보드 섹션: 기획" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("2026 서울세계불꽃축제")).toBeInTheDocument();
     expect(screen.getByText("축제 기획안 입력")).toBeInTheDocument();
     expect(screen.getByText("지역 우선 조회")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 지역 기반 후보 조회")).toBeInTheDocument();
@@ -127,7 +127,7 @@ describe("App", () => {
     expect(screen.getByLabelText("종료일")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 후보 보기")).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
-    expect(screen.getAllByText("서울특별시 강남구 영동대로 511 (삼성동)").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("서울특별시 영등포구 여의도동 여의도 한강공원 및 이촌 한강공원 일대").length).toBeGreaterThan(0);
     expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
 
     openDashboardSection("예측");
@@ -172,7 +172,7 @@ describe("App", () => {
       fireEvent.click(screen.getByRole("button", { name: "이 축제 선택" }));
 
       expect(screen.queryByRole("dialog", { name: "TourAPI 축제 후보" })).not.toBeInTheDocument();
-      expect(screen.getByDisplayValue("강남 미디어 윈터페스타")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("2026 서울세계불꽃축제")).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -367,13 +367,13 @@ describe("App", () => {
   it("restores selected TourAPI festival basis from a shared scenario link", async () => {
     window.history.pushState({}, "", "/?share_token=token_selected_festival");
     const selectedFestivalBasis = {
-      contentId: "3439947",
-      title: "강남 미디어 윈터페스타",
-      address: "서울특별시 강남구 영동대로 511",
-      startDate: "2025-12-19",
-      endDate: "2026-01-03",
-      mapX: "127.0610512042",
-      mapY: "37.5103955843",
+      contentId: "seoul-fireworks-2026",
+      title: "2026 서울세계불꽃축제",
+      address: "서울특별시 영등포구 여의도 한강공원",
+      startDate: "2026-09-04",
+      endDate: "2026-09-05",
+      mapX: "126.9347",
+      mapY: "37.5283",
       sourceName: "TourAPI selected festival candidate",
     };
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -383,11 +383,11 @@ describe("App", () => {
           json: async () => ({
             parameters: {
               plan: {
-                name: "강남 미디어 윈터페스타",
+                name: "2026 서울세계불꽃축제",
                 region: "서울",
-                venueAddress: "서울특별시 강남구 영동대로 511",
-                startDate: "2025-12-19",
-                endDate: "2026-01-03",
+                venueAddress: "서울특별시 영등포구 여의도 한강공원",
+                startDate: "2026-09-04",
+                endDate: "2026-09-05",
               },
               selectedHour: 20,
               selectedFestivalBasis,

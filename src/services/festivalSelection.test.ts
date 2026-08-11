@@ -66,8 +66,23 @@ describe("festivalSelection", () => {
       endDate: "2026-01-03",
       searchScope: "exact-period",
     };
-    const candidatePlan = applyFestivalCandidateToPlan(sampleFestivalPlan, seoulLightCandidate);
-    const demandBackdata = getDemandBackdataContext(candidatePlan);
+    const demandBackdata = {
+      status: "file-normalized" as const,
+      similarFestivalBaselines: [
+        {
+          id: "mcst-seoul-light-gwanghwamun",
+          name: "서울라이트 광화문",
+          region: "서울 종로구",
+          type: "도시문화/미디어",
+          periodLabel: "겨울 야간형",
+          budgetMillionKrw: 1100,
+          visitors: 61000,
+          similarityScore: 95,
+          sourceName: "문화체육관광부_지역축제 정보",
+        },
+      ],
+      sourceDetails: [],
+    };
 
     const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, seoulLightCandidate, {
       demandBackdata,

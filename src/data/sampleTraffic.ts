@@ -11,6 +11,14 @@ export interface TrafficLinkMapping {
 
 export const trafficLinkMappings: TrafficLinkMapping[] = [
   {
+    id: "yeouido-hangang",
+    regionKeyword: "서울",
+    venueKeyword: "여의도",
+    linkId: "1000001",
+    roadName: "View-T 공식 예시 링크",
+    note: "View-T 공식 문서에서 정상 조회를 확인한 7자리 링크입니다. 행사장 인접 도로 자동 매칭 전까지 실 API 연동 검증용으로 사용합니다.",
+  },
+  {
     id: "gangnam-teheran",
     regionKeyword: "서울",
     venueKeyword: "강남",
@@ -43,15 +51,15 @@ export const sampleTrafficSourceDetails: MetricEvidenceSourceDetail[] = [
     ],
     records: [
       {
-        label: "테헤란로",
+        label: "여의동로",
         fields: [
           { label: "LINKID", value: "1000001" },
-          { label: "도로명", value: "테헤란로" },
+          { label: "도로명", value: "여의동로" },
           { label: "도로등급", value: "주간선도로" },
           { label: "차로수", value: "6" },
-          { label: "진입 차량량", value: "3,200대" },
-          { label: "진출 차량량", value: "2,800대" },
-          { label: "총 교통량", value: "6,000대" },
+          { label: "진입 차량량", value: "4,800대" },
+          { label: "진출 차량량", value: "4,300대" },
+          { label: "총 교통량", value: "9,100대" },
         ],
       },
     ],
@@ -64,17 +72,17 @@ export const sampleTrafficContext: TrafficContext = {
   year: 2024,
   weekType: "weekend",
   time: "20",
-  riskScore: 68,
-  riskLabel: "보통",
+  riskScore: 82,
+  riskLabel: "높음",
   links: [
     {
       linkId: "1000001",
-      roadName: "테헤란로",
+      roadName: "여의동로",
       roadRank: "주간선도로",
       lanes: 6,
-      inboundVolume: 3200,
-      outboundVolume: 2800,
-      totalVolume: 6000,
+      inboundVolume: 4800,
+      outboundVolume: 4300,
+      totalVolume: 9100,
     },
   ],
   provenance: {

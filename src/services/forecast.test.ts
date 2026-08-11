@@ -14,7 +14,7 @@ describe("createForecast", () => {
     );
 
     expect(forecast.expectedVisitors).toBeGreaterThan(30000);
-    expect(forecast.peakHour).toBe(20);
+    expect(forecast.peakHour).toBe(21);
     expect(forecast.reasons).toHaveLength(6);
     expect(forecast.reasons.map((reason) => reason.label)).toContain(
       "Naver DataLab 검색량 보정",
@@ -53,13 +53,17 @@ describe("createForecast", () => {
       ...sampleTourismContext,
       similarFestivals: [],
     };
+    const comparisonPlan = {
+      ...sampleFestivalPlan,
+      expectedCapacity: 800000,
+    };
     const forecastWithoutBackdata = createForecast(
-      sampleFestivalPlan,
+      comparisonPlan,
       tourismWithoutSimilarFestivals,
       sampleTrendContext,
     );
     const forecastWithBackdata = createForecast(
-      sampleFestivalPlan,
+      comparisonPlan,
       tourismWithoutSimilarFestivals,
       sampleTrendContext,
       sampleDemandBackdataContext,
@@ -205,7 +209,11 @@ describe("createForecast", () => {
   it("applies bounded search trend correction to demand forecasting", () => {
     const scalablePlan = {
       ...sampleFestivalPlan,
-      expectedCapacity: 80000,
+      expectedCapacity: 300000,
+    };
+    const trendTourism = {
+      ...sampleTourismContext,
+      similarFestivals: [],
     };
     const neutralTrends = {
       ...sampleTrendContext,
@@ -231,17 +239,17 @@ describe("createForecast", () => {
 
     const neutralForecast = createForecast(
       scalablePlan,
-      sampleTourismContext,
+      trendTourism,
       neutralTrends,
     );
     const risingForecast = createForecast(
       scalablePlan,
-      sampleTourismContext,
+      trendTourism,
       risingTrends,
     );
     const coolingForecast = createForecast(
       scalablePlan,
-      sampleTourismContext,
+      trendTourism,
       coolingTrends,
     );
 

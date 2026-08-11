@@ -38,7 +38,7 @@ const CHECKS = [
   },
   {
     id: "scenario-share",
-    endpoint: "/api/scenarios/share/token_gn_winter_2026",
+    endpoint: "/api/scenarios/share/token_seoul_fireworks_2026",
     validate: validateSharedScenario,
   },
 ];
@@ -122,7 +122,7 @@ export function validateScenarioDetail(result) {
 export function validateSharedScenario(result) {
   validateStatus(result, [200]);
   const payload = parseJson(result.body, result.endpoint);
-  assert(payload.share_token === "token_gn_winter_2026", "shared scenario token does not match baseline token");
+  assert(payload.share_token === "token_seoul_fireworks_2026", "shared scenario token does not match baseline token");
   assert(payload.parameters?.plan?.name, "shared scenario does not include plan parameters");
 
   const basis = payload.parameters?.selectedFestivalBasis;

@@ -176,6 +176,13 @@ function getOdZoneMapping(plan: FestivalPlan): OdZoneMapping | null {
       note: "강남 삼성동 축제장 후보의 개최지 행정동 차량 유입량 기준입니다.",
     };
   }
+  if (basis.includes("여의도") || basis.includes("영등포") || basis.includes("한강공원")) {
+    return {
+      zoneId: "1119054",
+      zoneName: "서울특별시 영등포구 여의동",
+      note: "여의도 한강공원권 대형 축제 후보의 개최지 행정동 차량 유입량 기준입니다.",
+    };
+  }
   if (basis.includes("서울") || basis.includes("광화문")) {
     return {
       zoneId: "1101053",
@@ -218,6 +225,7 @@ function calculateTrafficRisk(
 
 function regionTrafficFactor(plan: FestivalPlan) {
   const basis = `${plan.region} ${plan.venueAddress} ${plan.name}`;
+  if (basis.includes("여의도") || basis.includes("영등포") || basis.includes("한강공원")) return 1.28;
   if (basis.includes("부산") || basis.includes("광안") || basis.includes("해운대")) return 1.18;
   if (basis.includes("서울") || basis.includes("강남") || basis.includes("광화문")) return 1.15;
   if (basis.includes("인천")) return 1.08;

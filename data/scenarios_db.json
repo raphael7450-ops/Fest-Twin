@@ -1,24 +1,24 @@
 [
   {
     "id": "scen_sample_01",
-    "title": "2026 강남 미디어 윈터페스타 (기본 기획안)",
-    "description": "관광데이터랩 객단가 117,000원 및 KTDB 영동대로 정체 시뮬레이션 적용안",
+    "title": "2026 서울세계불꽃축제 (기본 기획안)",
+    "description": "한강 수변 대형 불꽃 행사 기준 교통·안전·수요 사전진단 시뮬레이션 적용안",
     "parameters": {
       "selectedHour": 20,
       "plan": {
-        "name": "2026 강남 미디어 윈터페스타",
-        "region": "서울특별시 강남구",
-        "venueAddress": "서울특별시 강남구 영동대로 513",
-        "startDate": "2026-12-20",
-        "endDate": "2026-12-25",
+        "name": "2026 서울세계불꽃축제",
+        "region": "서울특별시 영등포구",
+        "venueAddress": "서울특별시 영등포구 여의도 한강공원 및 이촌 한강공원 일대",
+        "startDate": "2026-09-04",
+        "endDate": "2026-09-05",
         "targetVisitors": 120000,
         "budgetKrw": 350000000,
         "venueCapacity": 15000,
         "keywords": [
-          "미디어아트",
-          "겨울축제",
-          "빛축제",
-          "강남"
+          "서울세계불꽃축제",
+          "여의도한강공원",
+          "한강",
+          "불꽃"
         ]
       }
     },
@@ -27,7 +27,7 @@
       "peakDensity": 4.8,
       "riskLevel": "medium"
     },
-    "share_token": "token_gn_winter_2026",
+    "share_token": "token_seoul_fireworks_2026",
     "created_at": "2026-07-23T12:27:34.824Z",
     "updated_at": "2026-07-23T12:27:34.824Z"
   }

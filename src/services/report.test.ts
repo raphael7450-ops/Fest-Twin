@@ -16,7 +16,7 @@ describe("createPlanningReport", () => {
     const simulation = createSimulation(sampleFestivalPlan, forecast, forecast.peakHour);
     const report = createPlanningReport(sampleFestivalPlan, forecast, simulation);
 
-    expect(report.summary).toContain("강남 미디어 윈터페스타");
+    expect(report.summary).toContain("2026 서울세계불꽃축제");
     expect(report.governmentReviewNote).toContain("예산 집행 전");
     expect(report.recommendations.length).toBeGreaterThanOrEqual(4);
   });

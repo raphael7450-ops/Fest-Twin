@@ -67,10 +67,10 @@ describe("deploy-check validation gates", () => {
 
     const scenario = {
       id: "scen_sample_01",
-      share_token: "token_gn_winter_2026",
+      share_token: "token_seoul_fireworks_2026",
       parameters: {
         selectedHour: 20,
-        plan: { name: "2026 강남 미디어 윈터페스타" },
+        plan: { name: "2026 서울세계불꽃축제" },
       },
     };
 
@@ -78,7 +78,7 @@ describe("deploy-check validation gates", () => {
       "restores plan",
     );
     expect(
-      validateSharedScenario(result("/api/scenarios/share/token_gn_winter_2026", 200, scenario)),
+      validateSharedScenario(result("/api/scenarios/share/token_seoul_fireworks_2026", 200, scenario)),
     ).toContain("legacy scenario fallback-compatible");
   });
 });

@@ -120,10 +120,10 @@ function emergencyFacilitySourceDetails(): MetricEvidence["sourceDetails"] {
         {
           label: "반경 5km 응급의료 및 비상 이송 지표",
           fields: [
-            { label: "권역응급의료센터", value: "강남세브란스병원 (2.1km)" },
-            { label: "119 안전센터", value: "강남소방서 119안전센터 (1.2km)" },
-            { label: "평균 비상 이송 시간", value: "7.2분 (골든타임 확보)" },
-            { label: "안전 인프라 준비도", value: "92점" },
+            { label: "권역응급의료센터", value: "여의도성모병원 응급의료권역 (2.4km)" },
+            { label: "119 안전센터", value: "여의도119안전센터 (1.0km)" },
+            { label: "평균 비상 이송 시간", value: "7.5분 (골든타임 확보)" },
+            { label: "안전 인프라 준비도", value: "93점" },
           ],
         },
       ],

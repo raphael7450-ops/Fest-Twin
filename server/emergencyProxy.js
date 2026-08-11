@@ -11,8 +11,8 @@ export function createEmergencyProxyRouter(options = {}) {
   const logger = options.logger;
 
   router.get("/nearby-facilities", async (req, res) => {
-    const lat = parseFloat(req.query.lat ?? "37.510395");
-    const lon = parseFloat(req.query.lon ?? "127.061051");
+    const lat = parseFloat(req.query.lat ?? "37.5283");
+    const lon = parseFloat(req.query.lon ?? "126.9347");
     const apiKey =
       options.apiKey ??
       process.env.EMERGENCY_API_KEY ??
@@ -25,12 +25,12 @@ export function createEmergencyProxyRouter(options = {}) {
       }
       return res.json({
         status: "sample-fallback",
-        goldenTimeMinutes: 7.2,
-        readinessScore: 92,
+        goldenTimeMinutes: 7.5,
+        readinessScore: 93,
         facilities: [
-          { facilityName: "권역응급의료센터 (강남세브란스)", category: "권역응급센터", distanceKm: 2.1, estimatedMinutes: 6 },
-          { facilityName: "강남소방서 119 안전센터", category: "119안전센터", distanceKm: 1.2, estimatedMinutes: 4 },
-          { facilityName: "지역응급의료기관 (삼성서울병원)", category: "지역응급센터", distanceKm: 3.5, estimatedMinutes: 9 },
+          { facilityName: "여의도성모병원 응급의료권역", category: "권역응급센터", distanceKm: 2.4, estimatedMinutes: 7 },
+          { facilityName: "여의도119안전센터", category: "119안전센터", distanceKm: 1.0, estimatedMinutes: 4 },
+          { facilityName: "영등포구 응급의료 지원권", category: "지역응급센터", distanceKm: 3.1, estimatedMinutes: 9 },
         ],
         provenance: {
           sourceName: "보건복지부/소방청 응급의료기관 샘플",

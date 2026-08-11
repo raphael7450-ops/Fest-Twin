@@ -74,7 +74,7 @@ describe("src/utils/csvExport - B2G CSV Report Generator", () => {
       report: dummyReport,
       spending: sampleSpendingContext,
       evidenceSet,
-      shareToken: "token_gn_winter_2026",
+      shareToken: "token_seoul_fireworks_2026",
     });
 
     // 4대 구획 헤더 검증
@@ -85,7 +85,7 @@ describe("src/utils/csvExport - B2G CSV Report Generator", () => {
 
     // 구획 1 세부 항목
     expect(csv).toContain("[Fest-Twin] 축제·행사 사전 진단 및 수요 추정 결과 보고서");
-    expect(csv).toContain("token_gn_winter_2026");
+    expect(csv).toContain("token_seoul_fireworks_2026");
     expect(csv).toContain(sampleFestivalPlan.name);
     expect(csv).toContain("Fest-Twin B2G SaaS Web v0.1.0");
 
@@ -102,15 +102,15 @@ describe("src/utils/csvExport - B2G CSV Report Generator", () => {
 
     // 구획 4 행정 감사 항목
     expect(csv).toContain("한국관광공사 TourAPI 4.0");
-    expect(csv).toContain("AUDIT-HASH-SHA256-token_gn_winter_2026");
+    expect(csv).toContain("AUDIT-HASH-SHA256-token_seoul_fireworks_2026");
     expect(csv).toContain("개인정보 미수집 (0건 준수)");
   });
 
   it("generates filenames in the standardized format: Fest-Twin_시나리오명_YYYYMMDD_HHmm.csv", () => {
     const fixedDate = new Date("2026-08-04T13:08:43");
-    const filename = generateCsvFilename("2026 강남 미디어 윈터페스타", fixedDate);
+    const filename = generateCsvFilename("2026 서울세계불꽃축제", fixedDate);
 
-    expect(filename).toBe("Fest-Twin_2026_강남_미디어_윈터페스타_20260804_1308.csv");
+    expect(filename).toBe("Fest-Twin_2026_서울세계불꽃축제_20260804_1308.csv");
   });
 
   it("sanitizes forbidden filename characters like slashes, colons, and question marks", () => {

@@ -29,7 +29,7 @@ describe("scenarioStorage", () => {
     expect(scenario.name).toContain(sampleFestivalPlan.name);
     expect(scenario.selectedHour).toBe(20);
     expect(loadScenarios()).toHaveLength(1);
-    expect(loadScenarios()[0].plan.totalBudgetMillionKrw).toBe(920);
+    expect(loadScenarios()[0].plan.totalBudgetMillionKrw).toBe(sampleFestivalPlan.totalBudgetMillionKrw);
   });
 
   it("stores and loads the selected TourAPI festival basis", () => {

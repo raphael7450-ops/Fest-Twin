@@ -87,7 +87,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   } = input;
 
   const { formattedDate } = formatYYYYMMDD_HHmm(timestamp);
-  const scenarioId = shareToken || (plan as any).id || "token_gn_winter_2026";
+  const scenarioId = shareToken || (plan as any).id || "token_seoul_fireworks_2026";
   const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
 
   // 근거 세트 수치 추출
