@@ -119,6 +119,7 @@ describe("App selected festival basis", () => {
   it("shows selected TourAPI title after a festival candidate is selected", async () => {
     vi.useFakeTimers();
     const view = render(<App />);
+    await act(async () => Promise.resolve());
     openDashboardSection("기획");
 
     await act(async () => {
@@ -152,6 +153,7 @@ describe("App selected festival basis", () => {
   it("updates budget and expected capacity inputs when a selected TourAPI candidate matches DB backdata", async () => {
     vi.useFakeTimers();
     const view = render(<App />);
+    await act(async () => Promise.resolve());
     fireEvent.click(screen.getByRole("button", { name: "대시보드 섹션: 기획" }));
 
     await act(async () => {
@@ -172,6 +174,7 @@ describe("App selected festival basis", () => {
   it("refreshes trend, traffic, and spending contexts from the selected candidate plan", async () => {
     vi.useFakeTimers();
     const view = render(<App />);
+    await act(async () => Promise.resolve());
     openDashboardSection("기획");
 
     await act(async () => {
@@ -265,6 +268,62 @@ describe("App selected festival basis", () => {
         startDate: "2026-02-11",
       }),
       expect.any(Object),
+    );
+  });
+
+  it("keeps dashboard title, dates, metrics, and basis on the committed festival during refresh", async () => {
+    vi.useFakeTimers();
+    let resolveNextTourism!: (value: typeof sampleTourismContext) => void;
+    getTourismContextMock
+      .mockResolvedValueOnce(structuredClone(sampleTourismContext))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveNextTourism = resolve;
+          }),
+      );
+
+    const view = render(<App />);
+    await act(async () => Promise.resolve());
+    const initialAnalysis = view.container.querySelector(".ops-context-card");
+    expect(initialAnalysis).toHaveTextContent("2026 서울세계불꽃축제");
+    expect(initialAnalysis).toHaveTextContent("2026-09-04 ~ 2026-09-05");
+
+    openDashboardSection("기획");
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+      await Promise.resolve();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /TourAPI/ }));
+    const selectButton = view.container.querySelector<HTMLButtonElement>(
+      ".candidate-card .secondary-button",
+    );
+    fireEvent.click(selectButton!);
+    await act(async () => Promise.resolve());
+
+    expect(screen.getByDisplayValue("Gangnam Media Winter Festa")).toBeInTheDocument();
+    expect(view.container.querySelector(".analysis-refresh-status")).toHaveTextContent(
+      "Gangnam Media Winter Festa",
+    );
+    expect(view.container.querySelector(".ops-context-card")).toHaveTextContent(
+      "2026 서울세계불꽃축제",
+    );
+    expect(view.container.querySelector(".ops-context-card")).toHaveTextContent(
+      "2026-09-04 ~ 2026-09-05",
+    );
+    expect(view.container.querySelector(".ops-context-card")).not.toHaveTextContent(
+      "Gangnam Media Winter Festa",
+    );
+
+    await act(async () => {
+      resolveNextTourism(structuredClone(sampleTourismContext));
+      await Promise.resolve();
+    });
+    expect(view.container.querySelector(".ops-context-card")).toHaveTextContent(
+      "Gangnam Media Winter Festa",
+    );
+    expect(view.container.querySelector(".ops-context-card")).toHaveTextContent(
+      "2025-12-19 ~ 2026-01-03",
     );
   });
 });

@@ -5,6 +5,7 @@ import { sampleTourismContext } from "./data/sampleTourApi";
 import { sampleTrafficContext } from "./data/sampleTraffic";
 import { sampleSpendingContext } from "./data/sampleSpending";
 import { sampleTrendContext } from "./data/sampleTrends";
+import { sampleDemandBackdataContext } from "./data/sampleDemandBackdata";
 
 const {
   getTourismContextMock,
@@ -13,6 +14,7 @@ const {
   getTrafficContextMock,
   getSpendingContextMock,
   getTrendContextMock,
+  getDemandBackdataContextFromApiMock,
 } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
@@ -20,6 +22,7 @@ const {
   getTrafficContextMock: vi.fn(),
   getSpendingContextMock: vi.fn(),
   getTrendContextMock: vi.fn(),
+  getDemandBackdataContextFromApiMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -44,10 +47,19 @@ vi.mock("./services/trendAdapter", async (importOriginal) => ({
   getTrendContext: getTrendContextMock,
 }));
 
+vi.mock("./services/demandBackdataAdapter", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./services/demandBackdataAdapter")>()),
+  getDemandBackdataContextFromApi: getDemandBackdataContextFromApiMock,
+}));
+
 import { App } from "./App";
 
 const openDashboardSection = (label: string) => {
   fireEvent.click(screen.getByRole("button", { name: `대시보드 섹션: ${label}` }));
+};
+
+const settleInitialAnalysis = async () => {
+  await act(async () => Promise.resolve());
 };
 
 describe("App", () => {
@@ -58,10 +70,12 @@ describe("App", () => {
     getTrafficContextMock.mockReset();
     getSpendingContextMock.mockReset();
     getTrendContextMock.mockReset();
+    getDemandBackdataContextFromApiMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
     getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
     getSpendingContextMock.mockResolvedValue(sampleSpendingContext);
     getTrendContextMock.mockResolvedValue(sampleTrendContext);
+    getDemandBackdataContextFromApiMock.mockResolvedValue(sampleDemandBackdataContext);
     getTourApiAreaCodesMock.mockResolvedValue([
       { code: "1", name: "서울" },
       { code: "1-legacy", name: "서울시" },
@@ -91,6 +105,7 @@ describe("App", () => {
 
   it("renders the government-guided Fest-Twin MVP dashboard", async () => {
     render(<App />);
+    await settleInitialAnalysis();
 
     expect(screen.getByText("페스트트윈(Fest-Twin)")).toBeInTheDocument();
     expect(screen.getByText("공공 검토 대시보드")).toBeInTheDocument();
@@ -101,7 +116,7 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "대시보드 섹션: 현장" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대시보드 섹션: 근거" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대시보드 섹션: 리포트" })).toBeInTheDocument();
-    expect(screen.getAllByText("흥행 예측 지수").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("흥행 가능성 점수").length).toBeGreaterThan(0);
     expect(screen.getAllByText("최고 밀집 위험도").length).toBeGreaterThan(0);
     expect(screen.getByText("예산 효율성 점수")).toBeInTheDocument();
     expect(screen.getByText("지역 상권 유출 연계도")).toBeInTheDocument();
@@ -158,6 +173,7 @@ describe("App", () => {
 
     try {
       render(<App />);
+      await settleInitialAnalysis();
       openDashboardSection("기획");
 
       await act(async () => {
@@ -178,10 +194,11 @@ describe("App", () => {
     }
   });
 
-  it("keeps the region selector usable while live area codes are still loading", () => {
+  it("keeps the region selector usable while live area codes are still loading", async () => {
     getTourApiAreaCodesMock.mockReturnValue(new Promise(() => {}));
 
     render(<App />);
+    await settleInitialAnalysis();
     openDashboardSection("기획");
 
     const regionSelect = screen.getByLabelText("개최 지역");
@@ -194,6 +211,7 @@ describe("App", () => {
 
     try {
       render(<App />);
+      await settleInitialAnalysis();
       openDashboardSection("기획");
 
       await act(async () => {
@@ -238,6 +256,7 @@ describe("App", () => {
 
     try {
       render(<App />);
+      await settleInitialAnalysis();
       openDashboardSection("기획");
 
       await act(async () => {
@@ -257,8 +276,9 @@ describe("App", () => {
     }
   });
 
-  it("opens a metric evidence drawer from the dashboard", () => {
+  it("opens a metric evidence drawer from the dashboard", async () => {
     render(<App />);
+    await settleInitialAnalysis();
 
     fireEvent.click(screen.getAllByRole("button", { name: "근거 보기" })[0]);
 
@@ -275,6 +295,7 @@ describe("App", () => {
 
   it("shows KTDB access traffic risk in the safety logistics panel and evidence drawer", async () => {
     render(<App />);
+    await settleInitialAnalysis();
 
     expect(await screen.findByText("접근 교통 위험도")).toBeInTheDocument();
 
@@ -305,6 +326,7 @@ describe("App", () => {
       ],
     });
     render(<App />);
+    await settleInitialAnalysis();
 
     await waitFor(() => expect(getTourismContextMock).toHaveBeenCalled());
 
@@ -355,6 +377,7 @@ describe("App", () => {
     });
 
     render(<App />);
+    await settleInitialAnalysis();
     await waitFor(() => expect(getTourismContextMock).toHaveBeenCalled());
 
     fireEvent.click(screen.getAllByRole("button", { name: "근거 보기" })[0]);
@@ -404,13 +427,13 @@ describe("App", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     render(<App />);
+    await settleInitialAnalysis();
     openDashboardSection("근거");
 
     expect((await screen.findAllByText("선택 TourAPI 축제 기준")).length).toBeGreaterThan(0);
   });
 
-  it("debounces TourAPI-relevant changes, cancels stale loads, and ignores budget changes", async () => {
-    vi.useFakeTimers();
+  it("refreshes all analysis inputs atomically and aborts superseded requests", async () => {
     getTourismContextMock.mockResolvedValue({
       ...sampleTourismContext,
       provenance: {
@@ -420,54 +443,36 @@ describe("App", () => {
       },
     });
 
-    try {
-      const view = render(<App />);
-      openDashboardSection("기획");
+    const view = render(<App />);
+    await settleInitialAnalysis();
+    openDashboardSection("기획");
 
-      expect(getTourismContextMock).not.toHaveBeenCalled();
-      await act(async () => {
-        vi.advanceTimersByTime(300);
-      });
+    expect(getTourismContextMock).toHaveBeenCalledTimes(1);
+    const initialSignal = getTourismContextMock.mock.calls[0][1].signal as AbortSignal;
 
-      openDashboardSection("근거");
-      expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
-      openDashboardSection("기획");
-      expect(getTourismContextMock).toHaveBeenCalledTimes(1);
-      const initialSignal = getTourismContextMock.mock.calls[0][1].signal as AbortSignal;
+    fireEvent.change(view.getByLabelText("총 예산(백만원)"), {
+      target: { value: "1200" },
+    });
+    await act(async () => Promise.resolve());
 
-      fireEvent.change(view.getByLabelText("총 예산(백만원)"), {
-        target: { value: "1200" },
-      });
-      await act(async () => {
-        vi.advanceTimersByTime(500);
-      });
-      expect(getTourismContextMock).toHaveBeenCalledTimes(1);
+    expect(initialSignal.aborted).toBe(true);
+    expect(getTourismContextMock).toHaveBeenCalledTimes(2);
+    const budgetSignal = getTourismContextMock.mock.calls[1][1].signal as AbortSignal;
 
-      fireEvent.change(view.getByLabelText("개최 지역"), {
-        target: { value: "서울시" },
-      });
-      fireEvent.change(view.getByLabelText("개최 지역"), {
-        target: { value: "서울특별시" },
-      });
+    fireEvent.change(view.getByLabelText("개최 지역"), {
+      target: { value: "서울시" },
+    });
+    fireEvent.change(view.getByLabelText("개최 지역"), {
+      target: { value: "서울특별시" },
+    });
+    await act(async () => Promise.resolve());
 
-      expect(initialSignal.aborted).toBe(true);
-      await act(async () => {
-        vi.advanceTimersByTime(299);
-      });
-      expect(getTourismContextMock).toHaveBeenCalledTimes(1);
-      await act(async () => {
-        vi.advanceTimersByTime(1);
-      });
-
-      expect(getTourismContextMock).toHaveBeenCalledTimes(2);
-      expect(getTourismContextMock.mock.calls[1][0].region).toBe("서울특별시");
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(budgetSignal.aborted).toBe(true);
+    expect(getTourismContextMock).toHaveBeenCalledTimes(4);
+    expect(getTourismContextMock.mock.calls[3][0].region).toBe("서울특별시");
   });
 
-  it("does not show prior live TourAPI evidence while a changed region is loading", async () => {
-    vi.useFakeTimers();
+  it("retains prior live TourAPI evidence while a changed region is loading", async () => {
     let resolveChangedRegion: ((value: typeof sampleTourismContext) => void) | undefined;
     const liveTourismContext = {
       ...sampleTourismContext,
@@ -487,30 +492,24 @@ describe("App", () => {
           }),
       );
 
-    try {
-      const view = render(<App />);
-      openDashboardSection("기획");
-      await act(async () => {
-        vi.advanceTimersByTime(300);
-      });
-      openDashboardSection("근거");
-      expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
-      openDashboardSection("기획");
+    const view = render(<App />);
+    await settleInitialAnalysis();
+    openDashboardSection("근거");
+    expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
+    openDashboardSection("기획");
 
-      fireEvent.change(view.getByLabelText("개최 지역"), {
-        target: { value: "부산광역시" },
-      });
+    fireEvent.change(view.getByLabelText("개최 지역"), {
+      target: { value: "부산광역시" },
+    });
+    await act(async () => Promise.resolve());
 
-      openDashboardSection("근거");
-      expect(screen.queryByText("실제 TourAPI 조회 성공")).not.toBeInTheDocument();
-      expect(screen.getByText("샘플 데이터 대체 사용")).toBeInTheDocument();
+    openDashboardSection("근거");
+    expect(screen.getAllByText("실제 TourAPI 조회 성공").length).toBeGreaterThan(0);
+    expect(view.container.querySelector(".analysis-refresh-status")).toBeInTheDocument();
 
-      await act(async () => {
-        vi.advanceTimersByTime(300);
-      });
+    await act(async () => {
       resolveChangedRegion?.(liveTourismContext);
-    } finally {
-      vi.useRealTimers();
-    }
+      await Promise.resolve();
+    });
   });
 });

@@ -90,10 +90,10 @@ describe("Festival State & Reactive Data Switch Tests (tests/festivalSwitch.test
       weather,
     );
 
-    // 1:1 consistency check for demand-index (expected visitors evidence)
+    // 1:1 consistency check for the canonical bounded success metric.
     const demandEvidence = evidenceSetB["demand-index"];
     expect(demandEvidence).toBeDefined();
-    expect(demandEvidence.summary).toContain(forecastB.expectedVisitors.toLocaleString("ko-KR"));
+    expect(demandEvidence.summary).toContain(String(forecastB.successScore));
 
     // Physical density remains unavailable when the selected preset has no venue area.
     const densityEvidence = evidenceSetB["peak-density"];

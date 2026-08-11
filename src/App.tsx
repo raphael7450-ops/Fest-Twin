@@ -4,7 +4,7 @@
  * 수정 : 2026-08-03. TourAPI 후보 조회와 지역 fallback 표시 안정화
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, BriefcaseBusiness, Clock3, FileText, Home, UsersRound } from "lucide-react";
 import { B2gPrintReport } from "./components/B2gPrintReport";
 import { DataBasisPanel } from "./components/DataBasisPanel";
@@ -26,37 +26,20 @@ import { ScenarioControls } from "./components/ScenarioControls";
 import { SelectedFestivalCard } from "./components/SelectedFestivalCard";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
-import { FESTIVAL_PRESETS, type FestivalPreset } from "./data/festivalPresets";
+import type { FestivalPreset } from "./data/festivalPresets";
 import { loadScenarios, normalizeFestivalPlan } from "./services/scenarioStorage";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
-import { sampleSpendingContext } from "./data/sampleSpending";
-import { sampleTourismContext } from "./data/sampleTourApi";
-import { sampleTrafficContext } from "./data/sampleTraffic";
-import { sampleTrendContext } from "./data/sampleTrends";
 import type { MetricEvidenceId, SelectedFestivalBasis } from "./domain/types";
-import {
-  getDemandBackdataContext,
-  getDemandBackdataContextFromApi,
-} from "./services/demandBackdataAdapter";
+import { useFestivalAnalysis } from "./hooks/useFestivalAnalysis";
+import { createAnalysisKey } from "./services/analysisSnapshot";
 import {
   applyFestivalCandidateToPlan,
   createSelectedFestivalBasis,
 } from "./services/festivalSelection";
-import { createForecast } from "./services/forecast";
 import { createLogisticsMetrics } from "./services/impactMetrics";
-import { getFallbackWeatherContext } from "./services/weatherAdapter";
-import { createMetricEvidenceSet } from "./services/metricEvidence";
-import { createPlanningReport } from "./services/report";
-import { createSafetyDecisionProfiles } from "./services/safetyDecisionMetrics";
-import { createSimulation } from "./services/simulation";
-import { getSpendingContext } from "./services/spendingAdapter";
-import { getTrafficContext } from "./services/trafficAdapter";
-import { getTrendContext } from "./services/trendAdapter";
 import {
-  createFallbackTourismContext,
   getFestivalCandidates,
   getTourApiAreaCodes,
-  getTourismContext,
   type FestivalCandidate,
   type TourApiAreaCode,
 } from "./services/tourApiAdapter";
@@ -140,100 +123,24 @@ export function App() {
     candidates: [],
     isLoading: true,
   }));
-  const tourApiPlanKey = JSON.stringify({
-    region: plan.region,
-    venueAddress: plan.venueAddress,
-    startDate: plan.startDate,
-    endDate: plan.endDate,
-    name: plan.name,
-    keywords: plan.keywords,
-    selectedContentId: selectedFestivalBasis?.contentId,
-    selectedMapX: selectedFestivalBasis?.mapX,
-    selectedMapY: selectedFestivalBasis?.mapY,
-  });
-  const [tourismState, setTourismState] = useState(() => ({
-    planKey: tourApiPlanKey,
-    context: sampleTourismContext,
-  }));
-  const pendingTourism = useMemo(
-    () =>
-      createFallbackTourismContext(
-        plan,
-        "TourAPI 관련 기획 정보가 변경되어 최신 관광 데이터를 조회하는 동안 지역계획 샘플 데이터를 사용합니다.",
-      ),
-    [tourApiPlanKey],
+  const draftAnalysisInput = useMemo(
+    () => ({
+      plan,
+      selectedFestivalBasis,
+      selectedCandidate,
+      selectedHour,
+    }),
+    [plan, selectedFestivalBasis, selectedCandidate, selectedHour],
   );
-  const tourism =
-    tourismState.planKey === tourApiPlanKey ? tourismState.context : pendingTourism;
-  const trafficPlanKey = JSON.stringify({
-    region: plan.region,
-    venueAddress: plan.venueAddress,
-    name: plan.name,
-    startDate: plan.startDate,
-    endDate: plan.endDate,
-    selectedHour,
-    selectedContentId: selectedFestivalBasis?.contentId,
-    selectedTitle: selectedFestivalBasis?.title,
-    selectedMapX: selectedFestivalBasis?.mapX,
-    selectedMapY: selectedFestivalBasis?.mapY,
-  });
-  const [trafficState, setTrafficState] = useState(() => ({
-    planKey: trafficPlanKey,
-    context: sampleTrafficContext,
-  }));
-  const traffic =
-    trafficState.planKey === trafficPlanKey ? trafficState.context : sampleTrafficContext;
-  const spendingPlanKey = JSON.stringify({
-    region: plan.region,
-    name: plan.name,
-    startDate: plan.startDate,
-    endDate: plan.endDate,
-    selectedContentId: selectedFestivalBasis?.contentId,
-    selectedTitle: selectedFestivalBasis?.title,
-  });
-  const [spendingState, setSpendingState] = useState(() => ({
-    planKey: spendingPlanKey,
-    context: sampleSpendingContext,
-  }));
-  const spending =
-    spendingState.planKey === spendingPlanKey ? spendingState.context : sampleSpendingContext;
-  const demandBackdataPlanKey = JSON.stringify({
-    region: plan.region,
-    name: plan.name,
-    startDate: plan.startDate,
-    endDate: plan.endDate,
-    totalBudgetMillionKrw: plan.totalBudgetMillionKrw,
-    keywords: plan.keywords,
-    selectedContentId: selectedFestivalBasis?.contentId,
-    selectedTitle: selectedFestivalBasis?.title,
-  });
-  const pendingDemandBackdata = useMemo(
-    () => getDemandBackdataContext(plan),
-    [demandBackdataPlanKey],
-  );
-  const [demandBackdataState, setDemandBackdataState] = useState(() => ({
-    planKey: demandBackdataPlanKey,
-    context: getDemandBackdataContext(plan),
-  }));
-  const demandBackdata =
-    demandBackdataState.planKey === demandBackdataPlanKey
-      ? demandBackdataState.context
-      : pendingDemandBackdata;
-  const trendPlanKey = JSON.stringify({
-    region: plan.region,
-    name: plan.name,
-    startDate: plan.startDate,
-    endDate: plan.endDate,
-    keywords: plan.keywords,
-    selectedContentId: selectedFestivalBasis?.contentId,
-    selectedTitle: selectedFestivalBasis?.title,
-  });
-  const [trendState, setTrendState] = useState(() => ({
-    planKey: trendPlanKey,
-    context: sampleTrendContext,
-  }));
-  const trends =
-    trendState.planKey === trendPlanKey ? trendState.context : sampleTrendContext;
+  const lastValidAnalysisInput = useRef(draftAnalysisInput);
+  if (isValidPlanDateRange(plan.startDate, plan.endDate)) {
+    lastValidAnalysisInput.current = draftAnalysisInput;
+  }
+  const analysisInput = isValidPlanDateRange(plan.startDate, plan.endDate)
+    ? draftAnalysisInput
+    : lastValidAnalysisInput.current;
+  const analysis = useFestivalAnalysis(analysisInput);
+  const committed = analysis.snapshot;
 
   const candidates =
     candidateState.planKey === candidatePlanKey ? candidateState.candidates : [];
@@ -372,217 +279,31 @@ export function App() {
     };
   }, [candidatePlanKey]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const planSnapshot = plan;
-    const timeoutId = window.setTimeout(() => {
-      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
-        return;
-      }
-
-      getTourismContext(planSnapshot, {
-        signal: controller.signal,
-        selectedCandidate,
-      })
-        .then((nextTourism) => {
-          if (!controller.signal.aborted) {
-            setTourismState({ planKey: tourApiPlanKey, context: nextTourism });
-          }
-        })
-        .catch((error: unknown) => {
-          if (
-            !controller.signal.aborted &&
-            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
-          ) {
-            console.error("TourAPI context loading failed", error);
-          }
-        });
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-    // The serialized key intentionally excludes budget, capacity, facilities, and programs.
-  }, [tourApiPlanKey]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const planSnapshot = plan;
-    const timeoutId = window.setTimeout(() => {
-      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
-        return;
-      }
-
-      getTrafficContext(planSnapshot, {
-        signal: controller.signal,
-        hour: selectedHour,
-      })
-        .then((nextTraffic) => {
-          if (!controller.signal.aborted) {
-            setTrafficState({ planKey: trafficPlanKey, context: nextTraffic });
-          }
-        })
-        .catch((error: unknown) => {
-          if (
-            !controller.signal.aborted &&
-            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
-          ) {
-            console.error("Traffic context loading failed", error);
-          }
-        });
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [trafficPlanKey]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const planSnapshot = plan;
-    const timeoutId = window.setTimeout(() => {
-      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
-        return;
-      }
-
-      getSpendingContext(planSnapshot, { signal: controller.signal })
-        .then((nextSpending) => {
-          if (!controller.signal.aborted) {
-            setSpendingState({ planKey: spendingPlanKey, context: nextSpending });
-          }
-        })
-        .catch((error: unknown) => {
-          if (
-            !controller.signal.aborted &&
-            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
-          ) {
-            console.error("Spending context loading failed", error);
-          }
-        });
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [spendingPlanKey]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const planSnapshot = plan;
-    const timeoutId = window.setTimeout(() => {
-      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
-        return;
-      }
-
-      getDemandBackdataContextFromApi(planSnapshot, { signal: controller.signal })
-        .then((nextDemandBackdata) => {
-          if (!controller.signal.aborted) {
-            setDemandBackdataState({ planKey: demandBackdataPlanKey, context: nextDemandBackdata });
-          }
-        })
-        .catch((error: unknown) => {
-          if (
-            !controller.signal.aborted &&
-            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
-          ) {
-            console.error("Regional festival backdata loading failed", error);
-          }
-        });
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [demandBackdataPlanKey]);
-  useEffect(() => {
-    const controller = new AbortController();
-    const planSnapshot = plan;
-    const timeoutId = window.setTimeout(() => {
-      if (!isValidPlanDateRange(planSnapshot.startDate, planSnapshot.endDate)) {
-        return;
-      }
-
-      getTrendContext(planSnapshot, { signal: controller.signal })
-        .then((nextTrends) => {
-          if (!controller.signal.aborted) {
-            setTrendState({ planKey: trendPlanKey, context: nextTrends });
-          }
-        })
-        .catch((error: unknown) => {
-          if (
-            !controller.signal.aborted &&
-            !(typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")
-          ) {
-            console.error("Trend context loading failed", error);
-          }
-        });
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [trendPlanKey]);
-
-  const weather = useMemo(() => getFallbackWeatherContext(), []);
-  const forecast = useMemo(
-    () => createForecast(plan, tourism, trends, demandBackdata, weather),
-    [plan, tourism, trends, demandBackdata, weather],
-  );
-  const simulation = useMemo(
-    () => createSimulation(plan, forecast, selectedHour),
-    [forecast, plan, selectedHour],
-  );
-  const safetyDecisionProfiles = useMemo(
-    () => createSafetyDecisionProfiles(plan, forecast, simulation, traffic),
-    [forecast, plan, simulation, traffic],
-  );
+  const committedMatchesDraft =
+    committed?.analysisKey === createAnalysisKey(analysisInput);
+  const planningDemandBackdata = committedMatchesDraft
+    ? committed?.datasets.demandBackdata.value
+    : undefined;
   const logisticsMetrics = useMemo(
-    () => createLogisticsMetrics(plan, forecast, simulation, traffic),
-    [forecast, plan, simulation, traffic],
-  );
-  const metricEvidence = useMemo(
-    () => createMetricEvidenceSet(
-      plan,
-      forecast,
-      simulation,
-      tourism,
-      trends,
-      traffic,
-      spending,
-      demandBackdata,
-      selectedFestivalBasis,
-      weather,
-      safetyDecisionProfiles,
-    ),
-    [
-      forecast,
-      plan,
-      simulation,
-      tourism,
-      trends,
-      traffic,
-      spending,
-      demandBackdata,
-      selectedFestivalBasis,
-      weather,
-      safetyDecisionProfiles,
-    ],
-  );
-  const report = useMemo(
-    () => createPlanningReport(plan, forecast, simulation),
-    [forecast, plan, simulation],
+    () =>
+      committed
+        ? createLogisticsMetrics(
+            committed.plan,
+            committed.forecast,
+            committed.simulation,
+            committed.datasets.traffic.value,
+          )
+        : undefined,
+    [committed],
   );
 
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
     setPresetBasis(null);
     setPlan((currentPlan) =>
-      applyFestivalCandidateToPlan(currentPlan, candidate, { demandBackdata }),
+      applyFestivalCandidateToPlan(currentPlan, candidate, {
+        demandBackdata: planningDemandBackdata,
+      }),
     );
     setIsCandidatePanelOpen(false);
   };
@@ -603,6 +324,37 @@ export function App() {
     { label: "근거", section: "evidence", icon: UsersRound },
     { label: "리포트", section: "report", icon: FileText },
   ];
+
+  if (!committed || !logisticsMetrics) {
+    return (
+      <main className="app-shell">
+        <div className="dashboard-canvas">
+          <div className="dashboard-content">
+            <GovernmentHeader />
+            <section className="analysis-loading-state" role="status">
+              {analysis.phase === "error"
+                ? "분석 데이터를 준비하지 못했습니다."
+                : "분석 데이터를 불러오는 중입니다."}
+            </section>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const analysisPlan = committed.plan;
+  const analysisSelectedFestivalBasis = committed.selectedFestivalBasis;
+  const tourism = committed.datasets.tourism.value!;
+  const trends = committed.datasets.trends.value!;
+  const traffic = committed.datasets.traffic.value;
+  const spending = committed.datasets.spending.value;
+  const demandBackdata = committed.datasets.demandBackdata.value;
+  const weather = committed.datasets.weather.value;
+  const forecast = committed.forecast;
+  const simulation = committed.simulation;
+  const safetyDecisionProfiles = committed.safety;
+  const metricEvidence = committed.evidence;
+  const report = committed.report;
 
   return (
     <>
@@ -631,12 +383,17 @@ export function App() {
           </aside>
           <div className="dashboard-content">
             <GovernmentHeader />
+          {analysis.phase === "refreshing" && analysis.pendingFestivalTitle && (
+            <div className="analysis-refresh-status" role="status">
+              {analysis.pendingFestivalTitle} 분석을 준비하고 있습니다.
+            </div>
+          )}
           <OperationalScoreHeader
-            plan={plan}
+            plan={analysisPlan}
             forecast={forecast}
             report={report}
             evidenceSet={metricEvidence}
-            selectedFestivalBasis={selectedFestivalBasis}
+            selectedFestivalBasis={analysisSelectedFestivalBasis}
           />
           {restoredNotice && (
             <div
@@ -670,11 +427,11 @@ export function App() {
             </div>
           )}
           <SelectedFestivalCard
-            selectedFestivalBasis={selectedFestivalBasis}
+            selectedFestivalBasis={analysisSelectedFestivalBasis}
             onClearSelection={() => setSelectedCandidate(null)}
           />
           <SummaryKpiCards
-            plan={plan}
+            plan={analysisPlan}
             forecast={forecast}
             simulation={simulation}
             tourism={tourism}
@@ -701,7 +458,7 @@ export function App() {
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <ForecastChart forecast={forecast} />
-                    <VenueMapPanel plan={plan} />
+                    <VenueMapPanel plan={analysisPlan} />
                   </div>
                   <aside className="right-column">
                     <SafetyLogisticsPanel
@@ -765,13 +522,13 @@ export function App() {
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <ScenarioControls
-                      hours={plan.operatingHours}
-                      selectedHour={selectedHour}
+                      hours={analysisPlan.operatingHours}
+                      selectedHour={committed.selectedHour}
                       onSelectedHourChange={setSelectedHour}
                     />
                     <ForecastChart forecast={forecast} />
-                    <Heatmap plan={plan} simulation={simulation} />
-                    <InfrastructureCapacityPanel plan={plan} forecast={forecast} onOpenEvidence={setSelectedEvidenceId} />
+                    <Heatmap plan={analysisPlan} simulation={simulation} />
+                    <InfrastructureCapacityPanel plan={analysisPlan} forecast={forecast} onOpenEvidence={setSelectedEvidenceId} />
                   </div>
                 </div>
               </section>
@@ -809,7 +566,7 @@ export function App() {
                   spending={spending}
                   demandBackdata={demandBackdata}
                   weather={weather}
-                  selectedFestivalBasis={selectedFestivalBasis}
+                  selectedFestivalBasis={analysisSelectedFestivalBasis}
                 />
               </section>
             )}
@@ -818,10 +575,10 @@ export function App() {
               <section className="dashboard-section-panel active">
                 <ReportView
                   report={report}
-                  plan={plan}
+                  plan={analysisPlan}
                   forecast={forecast}
                   spending={spending}
-                  selectedFestivalBasis={selectedFestivalBasis}
+                  selectedFestivalBasis={analysisSelectedFestivalBasis}
                   evidenceSet={metricEvidence}
                   safetyDecisionProfiles={safetyDecisionProfiles}
                   onOpenEvidence={setSelectedEvidenceId}
@@ -854,9 +611,9 @@ export function App() {
     </main>
     <B2gPrintReport
       report={report}
-      plan={plan}
+      plan={analysisPlan}
       forecast={forecast}
-      selectedFestivalBasis={selectedFestivalBasis}
+      selectedFestivalBasis={analysisSelectedFestivalBasis}
       spending={spending}
       evidenceSet={metricEvidence}
       safetyDecisionProfiles={safetyDecisionProfiles}
