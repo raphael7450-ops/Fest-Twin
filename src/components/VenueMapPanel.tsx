@@ -67,8 +67,8 @@ export function buildVenueOperationalNotes(plan: FestivalPlan): string[] {
       ? `주요 진출입 후보: ${entrances.map((item) => item.name).join(", ")}`
       : "주요 진출입 후보: 기획안 입력 필요",
     stages.length > 0
-      ? `관객 집중 후보: ${stages.map((item) => item.name).join(", ")}`
-      : "관객 집중 후보: 기획안 입력 필요",
+      ? `관람 집중 후보: ${stages.map((item) => item.name).join(", ")}`
+      : "관람 집중 후보: 기획안 입력 필요",
     booths.length > 0
       ? `분산 운영 후보: ${booths.map((item) => item.name).join(", ")}`
       : "분산 운영 후보: 기획안 입력 필요",

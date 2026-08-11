@@ -109,7 +109,7 @@ describe("VenueMapPanel VWorld integration", () => {
         .filter((facility) => facility.type === "entrance")
         .map((facility) => facility.name)
         .join(", ")}`,
-      `관객 집중 후보: ${sampleFestivalPlan.facilities
+      `관람 집중 후보: ${sampleFestivalPlan.facilities
         .filter((facility) => facility.type === "stage")
         .map((facility) => facility.name)
         .join(", ")}`,
