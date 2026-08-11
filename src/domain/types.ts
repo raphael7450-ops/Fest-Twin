@@ -309,6 +309,7 @@ export interface PlanningReport {
 
 export type MetricEvidenceId =
   | "demand-index"
+  | "capacity-pressure"
   | "peak-density"
   | "budget-efficiency"
   | "commercial-spillover"

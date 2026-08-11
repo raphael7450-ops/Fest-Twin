@@ -33,34 +33,51 @@ function simulationWithRelativeScore(relativeDensityScore: number): SimulationRe
 }
 
 describe("createSummaryKpiMetrics", () => {
-  it("keeps demand index responsive above the previous 145 percent cap", () => {
-    const cappedLikeForecast = {
+  it("separates bounded success potential from uncapped capacity pressure", () => {
+    const forecast = {
       ...baseForecast,
-      expectedVisitors: Math.round(sampleFestivalPlan.expectedCapacity * 1.45),
+      expectedVisitors: 240_000,
+      successScore: 78,
     };
-    const largerForecast = {
-      ...baseForecast,
-      expectedVisitors: Math.round(sampleFestivalPlan.expectedCapacity * 2.1),
-    };
+    const plan = { ...sampleFestivalPlan, expectedCapacity: 120_000 };
 
-    const cappedLikeMetrics = createSummaryKpiMetrics(
-      sampleFestivalPlan,
-      cappedLikeForecast,
-      simulationWithRelativeScore(100),
-      sampleTourismContext,
-    );
-    const largerMetrics = createSummaryKpiMetrics(
-      sampleFestivalPlan,
-      largerForecast,
+    const metrics = createSummaryKpiMetrics(
+      plan,
+      forecast,
       simulationWithRelativeScore(100),
       sampleTourismContext,
     );
 
-    expect(cappedLikeMetrics.demandIndex.percent).toBe(145);
-    expect(largerMetrics.demandIndex.percent).toBe(210);
+    expect(metrics.successPotential).toMatchObject({ score: 78, grade: "중" });
+    expect(metrics.capacityPressure).toEqual({
+      ratio: 2,
+      displayPercent: 200,
+      status: "over",
+    });
   });
 
-  it("reflects regional festival DB visitors and budget in demand, budget, and spillover metrics", () => {
+  it("clamps success potential inputs below zero and above one hundred", () => {
+    const simulation = simulationWithRelativeScore(80);
+
+    expect(
+      createSummaryKpiMetrics(
+        sampleFestivalPlan,
+        { ...baseForecast, successScore: -12 },
+        simulation,
+        sampleTourismContext,
+      ).successPotential.score,
+    ).toBe(0);
+    expect(
+      createSummaryKpiMetrics(
+        sampleFestivalPlan,
+        { ...baseForecast, successScore: 132 },
+        simulation,
+        sampleTourismContext,
+      ).successPotential.score,
+    ).toBe(100);
+  });
+
+  it("uses the selected plan capacity even when similar festivals have different attendance", () => {
     const dbContext: DemandBackdataContext = {
       status: "file-normalized",
       similarFestivalBaselines: [
@@ -80,20 +97,14 @@ describe("createSummaryKpiMetrics", () => {
     };
     const plan = {
       ...sampleFestivalPlan,
-      expectedCapacity: 300000,
+      expectedCapacity: 120000,
       totalBudgetMillionKrw: 3500,
     };
     const forecast = {
       ...baseForecast,
-      expectedVisitors: 90000,
+      expectedVisitors: 240000,
     };
 
-    const withoutDb = createSummaryKpiMetrics(
-      plan,
-      forecast,
-      simulationWithRelativeScore(80),
-      sampleTourismContext,
-    );
     const withDb = createSummaryKpiMetrics(
       plan,
       forecast,
@@ -102,10 +113,36 @@ describe("createSummaryKpiMetrics", () => {
       dbContext,
     );
 
-    expect(withDb.demandIndex.percent).toBeGreaterThan(withoutDb.demandIndex.percent);
-    expect(withDb.budgetEfficiency.costPerVisitorKrw).not.toBe(
-      withoutDb.budgetEfficiency.costPerVisitorKrw,
-    );
-    expect(withDb.spillover.nearbyInflowRate).toBeGreaterThan(withoutDb.spillover.nearbyInflowRate);
+    expect(withDb.capacityPressure).toMatchObject({ ratio: 2, displayPercent: 200 });
+  });
+
+  it("guards zero capacity and uses deterministic pressure status boundaries", () => {
+    const plan = { ...sampleFestivalPlan, expectedCapacity: 0 };
+    const simulation = simulationWithRelativeScore(80);
+
+    expect(
+      createSummaryKpiMetrics(
+        plan,
+        { ...baseForecast, expectedVisitors: 240000 },
+        simulation,
+        sampleTourismContext,
+      ).capacityPressure,
+    ).toEqual({ ratio: 240000, displayPercent: 24000000, status: "over" });
+
+    for (const [expectedVisitors, status] of [
+      [85_000, "within"],
+      [85_001, "caution"],
+      [100_000, "caution"],
+      [100_001, "over"],
+    ] as const) {
+      expect(
+        createSummaryKpiMetrics(
+          { ...sampleFestivalPlan, expectedCapacity: 100_000 },
+          { ...baseForecast, expectedVisitors },
+          simulation,
+          sampleTourismContext,
+        ).capacityPressure.status,
+      ).toBe(status);
+    }
   });
 });

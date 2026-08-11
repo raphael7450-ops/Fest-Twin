@@ -17,12 +17,11 @@ import type {
 } from "../domain/types";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 
+// Metric contracts kept separate so opportunity and load are not conflated.
+
 export interface SummaryKpiMetrics {
-  demandIndex: {
-    percent: number;
-    grade: "상" | "중" | "하";
-    description: string;
-  };
+  successPotential: SuccessPotentialMetric;
+  capacityPressure: CapacityPressureMetric;
   peakDensity: MetricEstimate;
   budgetEfficiency: {
     costPerVisitorKrw: number;
@@ -32,6 +31,18 @@ export interface SummaryKpiMetrics {
     nearbyInflowRate: number;
     description: string;
   };
+}
+
+export interface SuccessPotentialMetric {
+  score: number;
+  grade: "상" | "중" | "하";
+  description: string;
+}
+
+export interface CapacityPressureMetric {
+  ratio: number;
+  displayPercent: number;
+  status: "within" | "caution" | "over";
 }
 
 export interface LogisticsMetrics {
@@ -133,6 +144,39 @@ export function calculateCommercialSpilloverRate(tourism: TourismContext) {
   return Math.round(clamp(nearbyAppeal * 0.72 + nearbyCountBonus, 25, 88));
 }
 
+export function createSuccessPotentialMetric(
+  forecast: ForecastResult,
+): SuccessPotentialMetric {
+  const score = Math.round(clamp(forecast.successScore, 0, 100));
+
+  return {
+    score,
+    grade: score >= 85 ? "상" : score >= 70 ? "중" : "하",
+    description: "예측 모델의 성공 가능성을 0~100점 범위로 정규화한 점수입니다.",
+  };
+}
+
+export function createCapacityPressureMetric(
+  plan: FestivalPlan,
+  forecast: ForecastResult,
+): CapacityPressureMetric {
+  const expectedVisitors = Math.max(
+    Number.isFinite(forecast.expectedVisitors) ? forecast.expectedVisitors : 0,
+    0,
+  );
+  const expectedCapacity = Math.max(
+    Number.isFinite(plan.expectedCapacity) ? plan.expectedCapacity : 0,
+    1,
+  );
+  const ratio = expectedVisitors / expectedCapacity;
+
+  return {
+    ratio,
+    displayPercent: Math.max(Math.round(ratio * 100), 0),
+    status: ratio <= 0.85 ? "within" : ratio <= 1 ? "caution" : "over",
+  };
+}
+
 export function createSummaryKpiMetrics(
   plan: FestivalPlan,
   forecast: ForecastResult,
@@ -142,29 +186,6 @@ export function createSummaryKpiMetrics(
   safetyMetrics?: SafetyDecisionMetrics,
 ): SummaryKpiMetrics {
   const benchmark = demandBackdataBenchmark(demandBackdata);
-  const expectedCapacity = Math.max(
-    Number.isFinite(plan.expectedCapacity) ? plan.expectedCapacity : 0,
-    1,
-  );
-  const expectedVisitors = Math.max(
-    Number.isFinite(forecast.expectedVisitors) ? forecast.expectedVisitors : 0,
-    0,
-  );
-  const forecastDemandIndex = Math.max(
-    (expectedVisitors / expectedCapacity) * 100,
-    0,
-  );
-  const benchmarkDemandIndex =
-    benchmark.visitors > 0
-      ? Math.max((benchmark.visitors / expectedCapacity) * 100, 0)
-      : 0;
-  const demandIndex = Math.round(
-    benchmarkDemandIndex > 0
-      ? forecastDemandIndex * 0.68 + benchmarkDemandIndex * 0.32
-      : forecastDemandIndex,
-  );
-  const demandGrade =
-    demandIndex >= 90 ? "상" : demandIndex >= 70 ? "중" : "하";
   const peakDensity =
     safetyMetrics?.peakDensity ??
     createSafetyDecisionProfiles(plan, forecast, simulation).summary.peakDensity;
@@ -176,14 +197,9 @@ export function createSummaryKpiMetrics(
   const nearbyInflowRate = Math.round(
     clamp(calculateCommercialSpilloverRate(tourism) + backdataSpilloverBonus, 25, 95),
   );
-  const backdataLabel = benchmark.visitors > 0 ? "DB 실적 반영" : "추정값";
-
   return {
-    demandIndex: {
-      percent: demandIndex,
-      grade: demandGrade,
-      description: `${forecast.peakHour}:00 피크 수요와 유사축제 ${backdataLabel}`,
-    },
+    successPotential: createSuccessPotentialMetric(forecast),
+    capacityPressure: createCapacityPressureMetric(plan, forecast),
     peakDensity,
     budgetEfficiency: {
       costPerVisitorKrw,

@@ -9,6 +9,7 @@ import type {
   SpendingContext,
 } from "../domain/types";
 import { createSimulation } from "../services/simulation";
+import { createSuccessPotentialMetric } from "../services/impactMetrics";
 import { createSafetyDecisionProfiles } from "../services/safetyDecisionMetrics";
 import { CsvExportButton } from "./CsvExportButton";
 import { EvidenceButton } from "./EvidenceButton";
@@ -62,6 +63,7 @@ export function ReportView({
 }: ReportViewProps) {
   const limitations = uniqueLimitations(evidenceSet);
   const peakHour = forecast.visitorsByHour.find((item) => item.hour === forecast.peakHour);
+  const successPotential = createSuccessPotentialMetric(forecast);
   const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
   const reportSimulation = createSimulation(plan, forecast, forecast.peakHour);
   const reportSafetyProfiles =
@@ -115,7 +117,7 @@ export function ReportView({
           </article>
           <article>
             <span>성공 예측 점수</span>
-            <strong>{forecast.successScore}점</strong>
+            <strong>{successPotential.score}점</strong>
             <small>신뢰도 {forecast.confidence}</small>
           </article>
         </div>

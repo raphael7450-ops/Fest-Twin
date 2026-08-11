@@ -53,12 +53,24 @@ export function SummaryKpiCards({
     demandBackdata,
     safetyMetrics,
   );
-  const demandTone =
-    metrics.demandIndex.grade === "상"
+  const successTone =
+    metrics.successPotential.grade === "상"
       ? "high"
-      : metrics.demandIndex.grade === "중"
+      : metrics.successPotential.grade === "중"
         ? "medium"
         : "low";
+  const capacityTone =
+    metrics.capacityPressure.status === "within"
+      ? "high"
+      : metrics.capacityPressure.status === "caution"
+        ? "medium"
+        : "low";
+  const capacityLabel =
+    metrics.capacityPressure.status === "within"
+      ? "여유"
+      : metrics.capacityPressure.status === "caution"
+        ? "주의"
+        : "초과";
   const densityTone =
     metrics.peakDensity.status === "available" && metrics.peakDensity.value >= 5
       ? "warning"
@@ -78,16 +90,21 @@ export function SummaryKpiCards({
     <section className="summary-grid summary-kpi-grid" aria-label="핵심 진단 지표">
       <article className="metric-card metric-card--primary">
         <div className="kpi-title-row">
-          <span>흥행 예측 지수</span>
+          <span>흥행 가능성 점수</span>
           <div className="kpi-actions">
             <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
-            <em className={`kpi-badge kpi-badge-${demandTone}`}>
-              {metrics.demandIndex.grade}
+            <em className={`kpi-badge kpi-badge-${successTone}`}>
+              {metrics.successPotential.grade}
+            </em>
+            <em className={`kpi-badge kpi-badge-${capacityTone}`}>
+              {capacityLabel}
             </em>
           </div>
         </div>
-        <strong>{metrics.demandIndex.percent}%</strong>
-        <small className="metric-trend">{metrics.demandIndex.description}</small>
+        <strong>{metrics.successPotential.score}점</strong>
+        <small className="metric-trend">
+          수용 정원률 {metrics.capacityPressure.displayPercent}%
+        </small>
       </article>
 
       <article className="metric-card metric-card--danger">

@@ -686,8 +686,8 @@ export function createMetricEvidenceSet(
   return {
     "demand-index": {
       metricId: "demand-index",
-      title: "흥행 예측 지수",
-      summary: `예상 방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명을 수용 인원 ${plan.expectedCapacity.toLocaleString("ko-KR")}명과 비교한 지표입니다.`,
+      title: "흥행 가능성 점수",
+      summary: `예측 모델의 성공 점수 ${summary.successPotential.score}점을 0~100 범위로 정규화한 지표입니다.`,
       dataSources: [
         "기상청 단기예보 OpenAPI",
         "TourAPI 주변 관광지 매력도",
@@ -696,8 +696,7 @@ export function createMetricEvidenceSet(
         "네이버 데이터랩 트렌드 관심도",
         "사용자 입력 수용 인원",
       ],
-      formulaSummary:
-        "예상 방문객 = 유사 축제 수요, 기상 조건 보정, 수용 인원, 주변 관광 매력도, 트렌드 관심도, 프로그램 매력도, 예산 규모를 가중 반영한 값입니다.",
+      formulaSummary: "흥행 가능성 점수 = 예측 모델의 성공 점수(0~100)입니다.",
       calculationSteps: [
         {
           stepNumber: 1,
@@ -760,6 +759,46 @@ export function createMetricEvidenceSet(
         value: `${reason.impact.toLocaleString("ko-KR")}점`,
         effect: effectFromScore(reason.impact),
       })),
+    },
+    "capacity-pressure": {
+      metricId: "capacity-pressure",
+      title: "수용 정원률",
+      summary: `예상 방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명을 선택 기획안 수용 인원 ${plan.expectedCapacity.toLocaleString("ko-KR")}명과 비교한 결과 ${summary.capacityPressure.displayPercent}%입니다.`,
+      dataSources: ["예상 방문객", "선택 기획안 수용 인원"],
+      sourceDetails: [
+        {
+          sourceId: "derived-capacity-pressure",
+          sourceName: "선택 기획안 수용 인원 대비 예상 방문객",
+          sourceType: "derived",
+          statusLabel: "수용 정원률 산출",
+          calculationInputs: [
+            { label: "예상 방문객", value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명` },
+            { label: "선택 기획안 수용 인원", value: `${plan.expectedCapacity.toLocaleString("ko-KR")}명` },
+          ],
+        },
+      ],
+      formulaSummary: "수용 정원률 = 예상 방문객 / 선택 기획안 수용 인원",
+      calculationSteps: [
+        {
+          stepNumber: 1,
+          title: "선택 기획안 수용 인원 대비 예상 방문객 계산",
+          formula: "수용 정원률 = 예상 방문객 / 선택 기획안 수용 인원",
+          inputValue: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명 / ${Math.max(Number.isFinite(plan.expectedCapacity) ? plan.expectedCapacity : 0, 1).toLocaleString("ko-KR")}명`,
+          coefficient: "선택 기획안 수용 인원만 사용",
+          subtotal: `${summary.capacityPressure.displayPercent}%`,
+        },
+      ],
+      assumptions: [
+        "수용 인원은 유사 축제 방문객이 아니라 선택 기획안의 입력값을 사용합니다.",
+        "수용 인원이 0 또는 유효하지 않으면 1명으로 보정합니다.",
+      ],
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
+      limitations,
+      contributors: [
+        { label: "예상 방문객", value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`, effect: "risk" },
+        { label: "수용 정원률", value: `${summary.capacityPressure.displayPercent}%`, effect: summary.capacityPressure.status === "over" ? "risk" : "neutral" },
+      ],
     },
     "peak-density": {
       metricId: "peak-density",
@@ -1272,6 +1311,7 @@ export function createReportEvidenceSummaries(
 ) {
   return [
     evidenceSet["demand-index"],
+    evidenceSet["capacity-pressure"],
     evidenceSet["peak-density"],
     evidenceSet["safety-staff"],
     evidenceSet["economic-roi"],

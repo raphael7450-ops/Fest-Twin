@@ -5,7 +5,7 @@ import { sampleSpendingContext } from "../data/sampleSpending";
 import { sampleTrafficContext } from "../data/sampleTraffic";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
-import type { SelectedFestivalBasis } from "../domain/types";
+import type { MetricEvidence, SelectedFestivalBasis } from "../domain/types";
 import { createForecast } from "./forecast";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 import { createSimulation } from "./simulation";
@@ -36,6 +36,33 @@ const selectedFestivalBasis: SelectedFestivalBasis = {
 };
 
 describe("metricEvidence", () => {
+  it("keeps success potential evidence separate from capacity pressure evidence", () => {
+    const plan = { ...sampleFestivalPlan, expectedCapacity: 120_000 };
+    const forecast = {
+      ...sampleForecastResult,
+      expectedVisitors: 240_000,
+      successScore: 78,
+    };
+    const simulation = createSimulation(plan, forecast, forecast.peakHour);
+    const evidence = createMetricEvidenceSet(
+      plan,
+      forecast,
+      simulation,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+    const capacityEvidence = evidence as unknown as Record<string, MetricEvidence>;
+
+    expect(evidence["demand-index"]).toMatchObject({
+      title: "흥행 가능성 점수",
+      formulaSummary: "흥행 가능성 점수 = 예측 모델의 성공 점수(0~100)입니다.",
+    });
+    expect(capacityEvidence["capacity-pressure"]).toMatchObject({
+      title: "수용 정원률",
+      formulaSummary: "수용 정원률 = 예상 방문객 / 선택 기획안 수용 인원",
+    });
+  });
+
   it("keeps canonical safety evidence low confidence with live tourism and trends", () => {
     const plan = {
       ...sampleFestivalPlan,
@@ -442,6 +469,7 @@ describe("metricEvidence", () => {
 
     expect(Object.keys(evidence)).toEqual([
       "demand-index",
+      "capacity-pressure",
       "peak-density",
       "budget-efficiency",
       "commercial-spillover",
@@ -456,7 +484,7 @@ describe("metricEvidence", () => {
       "safety-guards-allocation",
       "evacuation-golden-time",
     ]);
-    expect(evidence["demand-index"].title).toBe("흥행 예측 지수");
+    expect(evidence["demand-index"].title).toBe("흥행 가능성 점수");
     expect(evidence["demand-index"].dataSources).toContain(
       "TourAPI 주변 관광지 매력도",
     );
@@ -517,7 +545,7 @@ describe("metricEvidence", () => {
     expect(createReportEvidenceSummaries(evidence)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          title: "흥행 예측 지수",
+          title: "흥행 가능성 점수",
           confidenceLabel: expect.any(String),
         }),
       ]),

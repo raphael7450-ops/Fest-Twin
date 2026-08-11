@@ -69,7 +69,7 @@ const evidenceSet = {
 } as unknown as Record<string, MetricEvidence>;
 
 describe("OperationalScoreHeader", () => {
-  it("renders B2G operating score, forecast, risk, actions, and selected festival context", () => {
+  it("renders the bounded success potential score, forecast, risk, actions, and selected festival context", () => {
     render(
       <OperationalScoreHeader
         plan={sampleFestivalPlan}
@@ -80,7 +80,7 @@ describe("OperationalScoreHeader", () => {
       />,
     );
 
-    expect(screen.getByText("운영 종합 점수")).toBeInTheDocument();
+    expect(screen.getByText("흥행 가능성 점수")).toBeInTheDocument();
     expect(screen.getByText("88점")).toBeInTheDocument();
     expect(screen.getByText("예상 방문")).toBeInTheDocument();
     expect(screen.getByText("125,000명")).toBeInTheDocument();
@@ -91,5 +91,18 @@ describe("OperationalScoreHeader", () => {
     expect(screen.getByText("선택 축제 기준")).toBeInTheDocument();
     expect(screen.getByText("강남 미디어 윈터페스타")).toBeInTheDocument();
     expect(screen.getByText("2026-12-19 ~ 2026-12-31")).toBeInTheDocument();
+  });
+
+  it("does not render a success score above one hundred", () => {
+    render(
+      <OperationalScoreHeader
+        plan={sampleFestivalPlan}
+        forecast={{ ...forecast, successScore: 132 }}
+        report={report}
+        evidenceSet={evidenceSet}
+      />,
+    );
+
+    expect(screen.getByText("100점")).toBeInTheDocument();
   });
 });

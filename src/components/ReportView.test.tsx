@@ -102,7 +102,7 @@ describe("ReportView", () => {
     const onOpenEvidence = vi.fn();
     renderReportView(onOpenEvidence);
 
-    fireEvent.click(screen.getByRole("button", { name: "흥행 예측 지수 근거 보기" }));
+    fireEvent.click(screen.getByRole("button", { name: "흥행 가능성 점수 근거 보기" }));
 
     expect(onOpenEvidence).toHaveBeenCalled();
   });

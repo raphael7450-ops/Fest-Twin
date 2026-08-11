@@ -3,6 +3,7 @@ import type {
   PlanningReport,
   SimulationResult,
 } from "../domain/types";
+import { createSuccessPotentialMetric } from "../services/impactMetrics";
 
 interface SummaryCardsProps {
   forecast: ForecastResult;
@@ -11,6 +12,7 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ forecast, simulation, report }: SummaryCardsProps) {
+  const successPotential = createSuccessPotentialMetric(forecast);
   const budgetRisk = report.scores.find(
     (score) => score.label === "예산 낭비 위험",
   );
@@ -24,7 +26,7 @@ export function SummaryCards({ forecast, simulation, report }: SummaryCardsProps
       </article>
       <article className="metric-card metric-card--success">
         <span>흥행 가능성</span>
-        <strong>{forecast.successScore}점</strong>
+        <strong>{successPotential.score}점</strong>
         <small className="metric-trend">데이터 신뢰도</small>
       </article>
       <article className="metric-card metric-card--danger">

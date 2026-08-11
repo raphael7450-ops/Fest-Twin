@@ -6,6 +6,7 @@ import type {
   PlanningReport,
   SelectedFestivalBasis,
 } from "../domain/types";
+import { createSuccessPotentialMetric } from "../services/impactMetrics";
 
 interface OperationalScoreHeaderProps {
   plan: FestivalPlan;
@@ -43,7 +44,8 @@ export function OperationalScoreHeader({
     Math.max(...forecast.visitorsByHour.map((item) => item.visitors));
   const actionCount = report.recommendations.length;
   const evidenceCount = Object.keys(evidenceSet).length;
-  const scoreTone = getScoreTone(forecast.successScore);
+  const successPotential = createSuccessPotentialMetric(forecast);
+  const scoreTone = getScoreTone(successPotential.score);
   const actionStatus = getActionStatus(actionCount);
   const festivalTitle = selectedFestivalBasis?.title ?? plan.name;
   const region = selectedFestivalBasis?.address ?? plan.venueAddress;
@@ -53,9 +55,9 @@ export function OperationalScoreHeader({
   return (
     <section className="operational-score-header" aria-label="B2G 운영 분석 요약">
       <div className="ops-score-card ops-score-card--hero">
-        <span className="ops-card-label">운영 종합 점수</span>
+        <span className="ops-card-label">흥행 가능성 점수</span>
         <strong className={`ops-score-value ops-score-value--${scoreTone}`}>
-          {forecast.successScore}점
+          {successPotential.score}점
         </strong>
         <small>공공 검토용 사전 진단 기준</small>
       </div>

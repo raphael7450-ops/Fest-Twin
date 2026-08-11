@@ -10,6 +10,7 @@ import type {
 } from "../domain/types";
 import { createSimulation } from "../services/simulation";
 import { createSafetyDecisionProfiles } from "../services/safetyDecisionMetrics";
+import { createSuccessPotentialMetric } from "../services/impactMetrics";
 
 interface B2gPrintReportProps {
   report?: PlanningReport;
@@ -46,6 +47,9 @@ export function B2gPrintReport({
       ? `${safety.peakDensity.value.toFixed(2)} 명/㎡`
       : "산출 불가";
   const expectedVisitors = forecast?.expectedVisitors ?? 0;
+  const successPotential = forecast
+    ? createSuccessPotentialMetric(forecast)
+    : null;
   const expectedCapacity = plan?.expectedCapacity ?? 1;
   const budgetKrw = (plan?.totalBudgetMillionKrw ?? 0) * 1_000_000;
   const avgSpend = spending?.averageSpendPerVisitorKrw ?? 42000;
@@ -162,7 +166,7 @@ export function B2gPrintReport({
               <p>TourAPI 4.0 및 KTDB 이동 데이터 합성 추산</p>
               <ul>
                 <li>예상 방문객: {expectedVisitors.toLocaleString("ko-KR")}명</li>
-                <li>예측 신뢰도: {forecast?.confidence ?? "보통"} ({forecast?.successScore ?? 80}점)</li>
+                <li>예측 신뢰도: {forecast?.confidence ?? "보통"} ({successPotential?.score ?? 80}점)</li>
               </ul>
             </div>
             <div className="b2g-breakdown-step">

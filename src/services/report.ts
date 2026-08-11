@@ -14,6 +14,10 @@ import type {
   SimulationResult,
 } from "../domain/types";
 import { clamp } from "./forecast";
+import {
+  createCapacityPressureMetric,
+  createSuccessPotentialMetric,
+} from "./impactMetrics";
 
 export function scoreToLevel(score: number): RiskLevel {
   if (score >= 85) return "critical";
@@ -27,7 +31,8 @@ export function createPlanningReport(
   forecast: ForecastResult,
   simulation: SimulationResult,
 ): PlanningReport {
-  const capacityPressure = (forecast.expectedVisitors / plan.expectedCapacity) * 100;
+  const successPotential = createSuccessPotentialMetric(forecast);
+  const capacityPressure = createCapacityPressureMetric(plan, forecast);
   const promotionShare =
     (plan.promotionBudgetMillionKrw / plan.totalBudgetMillionKrw) * 100;
   const congestionRisk = clamp(
@@ -42,12 +47,16 @@ export function createPlanningReport(
     0,
     100,
   );
-  const satisfactionRisk = clamp(congestionRisk * 0.7 + capacityPressure * 0.3, 0, 100);
+  const satisfactionRisk = clamp(
+    congestionRisk * 0.7 + capacityPressure.displayPercent * 0.3,
+    0,
+    100,
+  );
   const scores: RiskScore[] = [
     {
       label: "흥행 가능성",
-      score: forecast.successScore,
-      level: scoreToLevel(forecast.successScore),
+      score: successPotential.score,
+      level: scoreToLevel(successPotential.score),
       reason:
         "관광 매력도, 유사 축제 추정 수요와 트렌드 관심도 프록시, 프로그램 매력도를 종합했습니다.",
     },
@@ -105,6 +114,13 @@ export function createPlanningReport(
     summary: `${plan.name}은 흥행 가능성이 높지만 ${forecast.peakHour}:00 피크 시간대 밀집 관리와 예산 효율 검토가 필요합니다.`,
     scores,
     findings: [
+      `수용 정원률 ${capacityPressure.displayPercent}%로 ${
+        capacityPressure.status === "over"
+          ? "정원 초과가 예상됩니다."
+          : capacityPressure.status === "caution"
+            ? "정원 근접이 예상됩니다."
+            : "선택 기획안 정원 내입니다."
+      }`,
       `${forecast.peakHour}:00 이후 방문객 집중 가능성이 높습니다.`,
       `예상 방문객은 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명입니다.`,
       `감지된 병목 지점은 ${simulation.bottlenecks.length}곳입니다.`,

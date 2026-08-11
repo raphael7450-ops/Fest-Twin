@@ -13,6 +13,7 @@ import type {
   SelectedFestivalBasis,
   SpendingContext,
 } from "../domain/types";
+import { createSuccessPotentialMetric } from "../services/impactMetrics";
 
 export interface CsvReportInput {
   plan: FestivalPlan;
@@ -89,6 +90,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   const { formattedDate } = formatYYYYMMDD_HHmm(timestamp);
   const scenarioId = shareToken || (plan as any).id || "token_seoul_fireworks_2026";
   const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+  const successPotential = createSuccessPotentialMetric(forecast);
 
   // 근거 세트 수치 추출
   const peakDensityEvidence = evidenceSet?.["peak-density"];
@@ -170,7 +172,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   rows.push(
     formatCsvRow([
       "성공 예측 점수",
-      `${forecast.successScore}점 (신뢰도 ${forecast.confidence})`,
+      `${successPotential.score}점 (신뢰도 ${forecast.confidence})`,
     ]),
   );
   rows.push(formatCsvRow(["최고 밀집 위험도", peakDensityValue]));
