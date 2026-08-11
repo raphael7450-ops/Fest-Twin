@@ -83,6 +83,30 @@ describe("B2gPrintReport", () => {
     expect(screen.getByText("30,000 명")).toBeInTheDocument();
   });
 
+  it("labels the success score separately from forecast confidence", () => {
+    const simulation = createSimulation(sampleFestivalPlan, forecast, forecast.peakHour);
+    const evidenceSet = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      forecast,
+      simulation,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+
+    render(
+      <B2gPrintReport
+        report={report}
+        plan={sampleFestivalPlan}
+        forecast={forecast}
+        spending={sampleSpendingContext}
+        evidenceSet={evidenceSet}
+      />,
+    );
+
+    expect(screen.getByText("흥행 가능성 점수: 82점")).toBeInTheDocument();
+    expect(screen.getByText("예측 신뢰도: medium")).toBeInTheDocument();
+  });
+
   it("renders 4-Step breakdown and data integrity labels on page 2", () => {
     const simulation = createSimulation(sampleFestivalPlan, forecast, forecast.peakHour);
     const evidenceSet = createMetricEvidenceSet(

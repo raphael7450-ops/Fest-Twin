@@ -77,6 +77,20 @@ describe("createSummaryKpiMetrics", () => {
     ).toBe(100);
   });
 
+  it("preserves fractional success potential scores for grade thresholds", () => {
+    const fractionalMetrics = createSummaryKpiMetrics(
+      sampleFestivalPlan,
+      { ...baseForecast, successScore: 84.6 },
+      simulationWithRelativeScore(80),
+      sampleTourismContext,
+    );
+
+    expect(fractionalMetrics.successPotential).toMatchObject({
+      score: 84.6,
+      grade: "중",
+    });
+  });
+
   it("uses the selected plan capacity even when similar festivals have different attendance", () => {
     const dbContext: DemandBackdataContext = {
       status: "file-normalized",

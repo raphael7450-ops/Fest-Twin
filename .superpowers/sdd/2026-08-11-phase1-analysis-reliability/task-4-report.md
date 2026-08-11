@@ -32,3 +32,12 @@
 ## Concerns
 
 - None. The repository reports its pre-existing LF-to-CRLF conversion warnings during diff checks; no whitespace errors were reported.
+
+## Fix Round 1
+
+- Corrected `successPotential.score` to preserve the exact clamped forecast value without rounding; grade thresholds now evaluate that exact value.
+- Corrected the B2G print artifact to render `흥행 가능성 점수` separately from `예측 신뢰도`.
+- RED: focused tests failed because `84.6` became `85`/`상` and the print artifact lacked the separate score label.
+- GREEN: focused `summaryKpiMetrics` and `B2gPrintReport` tests passed, 2 files and 8 tests.
+- Verification: Task 4 required suite, direct callers, type check, production greps, and `git diff --check` were rerun before commit.
+- Commit: `fix: preserve success score semantics`.

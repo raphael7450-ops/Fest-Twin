@@ -166,7 +166,8 @@ export function B2gPrintReport({
               <p>TourAPI 4.0 및 KTDB 이동 데이터 합성 추산</p>
               <ul>
                 <li>예상 방문객: {expectedVisitors.toLocaleString("ko-KR")}명</li>
-                <li>예측 신뢰도: {forecast?.confidence ?? "보통"} ({successPotential?.score ?? 80}점)</li>
+                <li>흥행 가능성 점수: {successPotential?.score ?? 80}점</li>
+                <li>예측 신뢰도: {forecast?.confidence ?? "보통"}</li>
               </ul>
             </div>
             <div className="b2g-breakdown-step">

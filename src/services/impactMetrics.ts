@@ -147,7 +147,7 @@ export function calculateCommercialSpilloverRate(tourism: TourismContext) {
 export function createSuccessPotentialMetric(
   forecast: ForecastResult,
 ): SuccessPotentialMetric {
-  const score = Math.round(clamp(forecast.successScore, 0, 100));
+  const score = clamp(forecast.successScore, 0, 100);
 
   return {
     score,
