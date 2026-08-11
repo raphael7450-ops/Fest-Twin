@@ -27,6 +27,78 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("TourAPI candidate regional DB supplement", () => {
+  it("shows Busan Sea Festival only once and keeps the verified seven-day schedule", async () => {
+    let festivalCallCount = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "6", name: "부산" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        festivalCallCount += 1;
+        if (festivalCallCount === 1) return jsonResponse(tourApiPayload([], 0));
+
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "tourapi-busan-sea",
+              title: "부산바다축제",
+              eventstartdate: "20260807",
+              eventenddate: "20260813",
+              addr1: "부산 다대포해수욕장",
+            },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({
+          count: 1,
+          records: [
+            {
+              id: "mcst-busan-sea-2026",
+              year: 2026,
+              name: "제30회 부산바다축제",
+              region: "부산",
+              venue: "다대포해수욕장",
+              startDate: "2026-08-07",
+              endDate: "2026-08-13",
+              budgetMillionKrw: 1260,
+              visitors: 82435,
+            },
+          ],
+        });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "부산바다축제",
+        region: "부산",
+        startDate: "2026-08-01",
+        endDate: "2026-08-31",
+        keywords: ["부산바다축제"],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    const busanSeaCandidates = candidates.filter((candidate) =>
+      candidate.title.replace(/\s+/g, "").includes("부산바다축제"),
+    );
+
+    expect(busanSeaCandidates).toHaveLength(1);
+    expect(busanSeaCandidates[0]).toMatchObject({
+      title: "제30회 부산바다축제",
+      startDate: "2026-08-07",
+      endDate: "2026-08-13",
+    });
+  });
+
   it("does not show annual fallback candidates outside the selected date range", async () => {
     let festivalCallCount = 0;
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {

@@ -64,11 +64,43 @@ function getBaseFestivalKey(name) {
     .toLowerCase();
 }
 
+function getCanonicalFestivalKey(name) {
+  return String(name || "")
+    .replace(/20\d{2}년?/g, "")
+    .replace(/제\s*\d+\s*회/g, "")
+    .replace(/\d+\s*회/g, "")
+    .replace(/[()[\]{}·ㆍ.,/\\\-_:]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function hasEditionNumber(name) {
+  return /제\s*\d+\s*회|\d+\s*회/.test(String(name || ""));
+}
+
+function applyVerifiedFestivalCorrections(record) {
+  if (
+    record.region === "부산" &&
+    Number(record.year) === 2026 &&
+    getCanonicalFestivalKey(record.name) === "부산바다축제"
+  ) {
+    return {
+      ...record,
+      startDate: "2026-08-07",
+      endDate: "2026-08-13",
+      periodLabel: "2026-08-07 ~ 2026-08-13",
+      sourceName: record.sourceName || "부산축제조직위원회 / 대한민국 구석구석",
+    };
+  }
+
+  return record;
+}
+
 function deduplicateLatestFestivals(records) {
   const map = new Map();
 
   for (const record of records) {
-    const baseKey = getBaseFestivalKey(record.name);
+    const baseKey = getCanonicalFestivalKey(record.name);
     const key = `${record.region || ""}_${baseKey}`;
 
     const existing = map.get(key);
@@ -83,6 +115,16 @@ function deduplicateLatestFestivals(records) {
       if (currentYear > existingYear) {
         map.set(key, record);
       } else if (currentYear === existingYear) {
+        const currentHasEdition = hasEditionNumber(record.name);
+        const existingHasEdition = hasEditionNumber(existing.name);
+        if (currentHasEdition && !existingHasEdition) {
+          map.set(key, record);
+          continue;
+        }
+        if (!currentHasEdition && existingHasEdition) {
+          continue;
+        }
+
         if (currentStart > existingStart || (record.visitors || 0) > (existing.visitors || 0)) {
           map.set(key, record);
         }
@@ -136,6 +178,7 @@ export class RegionalFestivalDatabase {
     const hasSearchTerms = searchTerms.length > 0;
 
     const filtered = this.records
+      .map(applyVerifiedFestivalCorrections)
       .filter((record) => {
         if (!normalizedRegion) return true;
         return record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion);

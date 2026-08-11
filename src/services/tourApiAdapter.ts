@@ -695,6 +695,90 @@ function shouldFetchRegionalSupplement(plan: FestivalPlan, festivalItems: TourAp
   return festivalItems.length === 0 || planRangeDays(plan) >= 30;
 }
 
+function normalizeFestivalTitleKey(value: string | number | undefined) {
+  return String(value ?? "")
+    .replace(/20\d{2}년?/g, "")
+    .replace(/제\s*\d+\s*회/g, "")
+    .replace(/\d+\s*회/g, "")
+    .replace(/[()[\]{}·ㆍ.,/\\\-_:]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function hasFestivalEditionNumber(value: string | number | undefined) {
+  return /제\s*\d+\s*회|\d+\s*회/.test(String(value ?? ""));
+}
+
+function applyVerifiedFestivalItemCorrections(item: TourApiItem): TourApiItem {
+  const titleKey = normalizeFestivalTitleKey(item.title);
+  const address = String(item.addr1 ?? "");
+
+  if (titleKey === "부산바다축제" && (address.includes("부산") || address.includes("다대포"))) {
+    return {
+      ...item,
+      eventstartdate: "20260807",
+      eventenddate: "20260813",
+    };
+  }
+
+  return item;
+}
+
+function laterFestivalDate(left: string | number | undefined, right: string | number | undefined) {
+  const leftDate = parseTourApiDate(left);
+  const rightDate = parseTourApiDate(right);
+  if (leftDate === undefined) return right === undefined ? undefined : String(right);
+  if (rightDate === undefined) return left === undefined ? undefined : String(left);
+  return String(rightDate > leftDate ? right : left);
+}
+
+function earlierFestivalDate(left: string | number | undefined, right: string | number | undefined) {
+  const leftDate = parseTourApiDate(left);
+  const rightDate = parseTourApiDate(right);
+  if (leftDate === undefined) return right === undefined ? undefined : String(right);
+  if (rightDate === undefined) return left === undefined ? undefined : String(left);
+  return String(rightDate < leftDate ? right : left);
+}
+
+function mergeDuplicateFestivalItems(items: TourApiItem[]) {
+  const map = new Map<string, TourApiItem>();
+
+  for (const rawItem of items) {
+    const item = applyVerifiedFestivalItemCorrections(rawItem);
+    const titleKey = normalizeFestivalTitleKey(item.title);
+    const key = titleKey || String(item.contentid ?? Math.random());
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, item);
+      continue;
+    }
+
+    const preferredTitle =
+      hasFestivalEditionNumber(item.title) && !hasFestivalEditionNumber(existing.title)
+        ? item.title
+        : existing.title ?? item.title;
+
+    map.set(key, {
+      ...item,
+      ...existing,
+      contentid: existing.contentid ?? item.contentid,
+      title: preferredTitle,
+      addr1: existing.addr1 ?? item.addr1,
+      mapx: existing.mapx ?? item.mapx,
+      mapy: existing.mapy ?? item.mapy,
+      firstimage: existing.firstimage ?? item.firstimage,
+      eventstartdate: earlierFestivalDate(existing.eventstartdate, item.eventstartdate),
+      eventenddate: laterFestivalDate(existing.eventenddate, item.eventenddate),
+      budgetMillionKrw: item.budgetMillionKrw ?? existing.budgetMillionKrw,
+      visitors: item.visitors ?? existing.visitors,
+      overview: item.overview ?? existing.overview,
+    });
+  }
+
+  return Array.from(map.values());
+}
+
 function buildRegionalFestivalSupplementUrl(plan: FestivalPlan) {
   const params = new URLSearchParams();
   params.set("region", plan.region);
@@ -1285,18 +1369,9 @@ export async function getFestivalCandidates(
   const supplementalItems = shouldFetchRegionalSupplement(plan, festivalItems)
     ? await fetchRegionalSupplementFestivalItems(plan, fetchImpl, options.signal)
     : [];
-  const supplementalIds = new Set(
-    festivalItems.map((item) => String(item.contentid ?? "")).concat(
-      festivalItems.map((item) => String(item.title ?? "").replace(/\s+/g, "")),
-    ),
-  );
-  const uniqueSupplementalItems = supplementalItems.filter(
-    (item) =>
-      !supplementalIds.has(String(item.contentid ?? "")) &&
-      !supplementalIds.has(String(item.title ?? "").replace(/\s+/g, "")),
-  );
+  const mergedFestivalItems = mergeDuplicateFestivalItems([...festivalItems, ...supplementalItems]);
   const candidateItems = sortFestivalItemsForPlan(
-    [...festivalItems, ...uniqueSupplementalItems].filter(
+    mergedFestivalItems.filter(
       (item) =>
         (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
         dateOverlapDays(item.eventstartdate, item.eventenddate, plan.startDate, plan.endDate) > 0,
@@ -1351,16 +1426,22 @@ export async function getFestivalCandidates(
     detailLookups.map((lookup) => lookup.succeeded),
   );
   const supplementSourceDetails =
-    uniqueSupplementalItems.length > 0
-      ? [createRegionalSupplementSourceDetail(uniqueSupplementalItems)]
+    supplementalItems.length > 0
+      ? [createRegionalSupplementSourceDetail(supplementalItems)]
       : [];
   const sourceDetails = [searchSourceDetail, ...supplementSourceDetails, ...detailSourceDetails];
+
+  const supplementalContentIds = new Set(supplementalItems.map((item) => String(item.contentid ?? "")));
+  const supplementalTitleKeys = new Set(
+    supplementalItems.map((item) => normalizeFestivalTitleKey(item.title)),
+  );
 
   return detailItems
     .map((item) =>
       mapFestivalCandidate(
         item,
-        uniqueSupplementalItems.some((supplement) => supplement.contentid === item.contentid)
+        supplementalContentIds.has(String(item.contentid ?? "")) ||
+          supplementalTitleKeys.has(normalizeFestivalTitleKey(item.title))
           ? "regional-supplement"
           : festivalSearchScope,
         sourceDetails,

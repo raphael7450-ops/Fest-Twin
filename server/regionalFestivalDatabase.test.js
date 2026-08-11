@@ -28,6 +28,51 @@ function createTestDatabase(records) {
 }
 
 describe("RegionalFestivalDatabase", () => {
+  it("deduplicates edition-numbered Busan Sea Festival records and applies the verified 2026 schedule", () => {
+    const db = createTestDatabase([
+      {
+        id: "tourapi-busan-sea-2026",
+        year: 2026,
+        name: "부산바다축제",
+        region: "부산",
+        localGovernment: "",
+        type: "문화예술",
+        venue: "다대포해수욕장",
+        startDate: "2026-08-07",
+        endDate: "2026-08-13",
+        visitors: 90000,
+        budgetMillionKrw: 1260,
+      },
+      {
+        id: "mcst-busan-sea-2026",
+        year: 2026,
+        name: "제30회 부산바다축제",
+        region: "부산",
+        localGovernment: "",
+        type: "문화예술",
+        venue: "다대포해수욕장",
+        startDate: "2026-08-07",
+        endDate: "2026-08-09",
+        visitors: 82435,
+        budgetMillionKrw: 1260,
+      },
+    ]);
+
+    const records = db.searchFestivals({
+      region: "부산",
+      startDate: "2026-08-01",
+      endDate: "2026-08-31",
+      limit: 10,
+    });
+
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({
+      name: "제30회 부산바다축제",
+      startDate: "2026-08-07",
+      endDate: "2026-08-13",
+    });
+  });
+
   it("excludes same-year regional festivals that do not overlap the requested date range when no search term is provided", () => {
     const db = createTestDatabase([
       {
