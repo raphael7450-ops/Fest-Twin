@@ -285,4 +285,31 @@ describe("createForecast", () => {
     expect(forecast.dayTypeCounts?.weekdayDays).toBeGreaterThan(0);
     expect(forecast.dayTypeCounts?.weekendDays).toBeGreaterThan(0);
   });
+
+  it("keeps long pre-peak hourly demand bands from repeating the same visitor count", () => {
+    const longOperatingPlan = {
+      ...sampleFestivalPlan,
+      operatingHours: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+      programs: [
+        {
+          id: "main-program",
+          name: "main stage program",
+          startHour: 18,
+          endHour: 21,
+          expectedDraw: 90,
+        },
+      ],
+    };
+
+    const forecast = createForecast(
+      longOperatingPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+    const prePeakVisitors = forecast.visitorsByHour
+      .filter((item) => item.hour >= 10 && item.hour <= 16)
+      .map((item) => item.visitors);
+
+    expect(new Set(prePeakVisitors).size).toBeGreaterThan(3);
+  });
 });

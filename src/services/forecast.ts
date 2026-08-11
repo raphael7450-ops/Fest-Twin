@@ -95,6 +95,18 @@ function normalizedOperatingHours(hours: number[]) {
   return normalized.length > 0 ? normalized : [18];
 }
 
+function operatingHourFlowMultiplier(hour: number, operatingHours: number[]) {
+  const firstHour = operatingHours[0] ?? hour;
+  const lastHour = operatingHours[operatingHours.length - 1] ?? hour;
+  const progress = clamp((hour - firstHour) / Math.max(lastHour - firstHour, 1), 0, 1);
+  const arrivalRamp = 0.86 + progress * 0.26;
+  const lunchDwell = hour >= 12 && hour <= 13 ? 1.03 : 1;
+  const eveningDwell = hour >= 17 && hour <= 19 ? 1.04 : 1;
+  const hourTexture = 1 + ((((hour * 37) % 7) - 3) * 0.012);
+
+  return clamp(arrivalRamp * lunchDwell * eveningDwell * hourTexture, 0.82, 1.16);
+}
+
 function confidenceFromEvidence(
   tourism: TourismContext,
   trends: TrendContext,
@@ -343,8 +355,9 @@ export function createForecast(
         0,
       );
     const typePatternBoost = timePattern.weightForHour(hour);
+    const flowMultiplier = operatingHourFlowMultiplier(hour, operatingHours);
 
-    return Math.max(0.7, 0.8 + programDraw / 180) * typePatternBoost;
+    return Math.max(0.7, 0.8 + programDraw / 180) * typePatternBoost * flowMultiplier;
   });
   const totalWeight = Math.max(hourWeights.reduce((sum, weight) => sum + weight, 0), 1);
   const visitorsByHour = operatingHours.map((hour, index) => ({
