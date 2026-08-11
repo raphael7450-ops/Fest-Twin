@@ -42,6 +42,19 @@ describe("festival corrections", () => {
     ).toBe(false);
   });
 
+  it("leaves a Daegu record titled Daejeon 0 O'clock Festival available without a correction", () => {
+    const record = {
+      title: "제4회 2026 대전 0시 축제",
+      region: "대구",
+      year: 2026,
+      startDate: "2026-08-07",
+      endDate: "2026-08-17",
+    };
+
+    expect(isFestivalAvailableForPlanning(record)).toBe(true);
+    expect(applyFestivalCorrection(record)).toEqual(record);
+  });
+
   it("does not apply a correction when the festival region is unavailable", () => {
     expect(
       applyFestivalCorrection({

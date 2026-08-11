@@ -17,10 +17,8 @@ function canonicalizeFestivalTitle(value) {
 }
 
 function normalizeRegion(value) {
-  return String(value ?? "")
-    .replace(/\s+/g, "")
-    .replace(/특별자치도|특별자치시|광역시|특별시|자치도|도|시|군|구/g, "")
-    .toLowerCase();
+  const [region = ""] = String(value ?? "").trim().toLowerCase().split(/[\s,]+/, 1);
+  return region.replace(/특별자치도|특별자치시|광역시|특별시|자치도|도|시$/, "");
 }
 
 function sourceRecordYear(record) {
@@ -35,11 +33,7 @@ function regionsMatch(inputRegion, correctionRegions) {
   if (!normalizedInput) return false;
   return correctionRegions.some((region) => {
     const normalizedCorrection = normalizeRegion(region);
-    return (
-      normalizedInput === normalizedCorrection ||
-      normalizedInput.includes(normalizedCorrection) ||
-      normalizedCorrection.includes(normalizedInput)
-    );
+    return normalizedInput === normalizedCorrection;
   });
 }
 
