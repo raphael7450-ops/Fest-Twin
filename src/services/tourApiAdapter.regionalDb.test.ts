@@ -209,6 +209,83 @@ describe("TourAPI candidate regional DB supplement", () => {
     expect(candidates.map((candidate) => candidate.id)).toEqual(["ongoing"]);
   });
 
+  it("does not narrow long regional planning searches with stale plan keywords", async () => {
+    let festivalCallCount = 0;
+    const regionalUrls: URL[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "1", name: "Seoul" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        festivalCallCount += 1;
+        if (festivalCallCount === 1) return jsonResponse(tourApiPayload([], 0));
+
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "tourapi-gangnam",
+              title: "Gangnam Festival",
+              eventstartdate: "20261001",
+              eventenddate: "20261004",
+              addr1: "Seoul Gangnam",
+            },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        regionalUrls.push(url);
+        return jsonResponse({
+          count: 2,
+          records: [
+            {
+              id: "mcst-seoul-light",
+              year: 2026,
+              name: "Seoul Light Festival",
+              region: "Seoul",
+              venue: "Gwanghwamun",
+              startDate: "2026-12-18",
+              endDate: "2026-12-31",
+              visitors: 3100000,
+            },
+            {
+              id: "mcst-gangnam",
+              year: 2026,
+              name: "Gangnam Festival",
+              region: "Seoul",
+              venue: "COEX",
+              startDate: "2026-10-01",
+              endDate: "2026-10-04",
+              visitors: 900000,
+            },
+          ],
+        });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "Gangnam Festival",
+        region: "Seoul",
+        startDate: "2026-10-01",
+        endDate: "2026-12-31",
+        keywords: ["Gangnam Festival"],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-11" },
+    );
+
+    expect(regionalUrls[0].searchParams.get("keywords")).toBe("");
+    expect(candidates.map((candidate) => candidate.id)).toEqual(
+      expect.arrayContaining(["mcst-seoul-light", "tourapi-gangnam"]),
+    );
+  });
+
   it("uses server regional festival DB records as selectable candidates", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input), "http://localhost");

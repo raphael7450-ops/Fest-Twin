@@ -792,13 +792,17 @@ function mergeDuplicateFestivalItems(items: TourApiItem[]) {
   return Array.from(map.values());
 }
 
-function buildRegionalFestivalSupplementUrl(plan: FestivalPlan, minEndDate: string) {
+function buildRegionalFestivalSupplementUrl(
+  plan: FestivalPlan,
+  minEndDate: string,
+  options: { includeKeywords?: boolean } = {},
+) {
   const params = new URLSearchParams();
   params.set("region", plan.region);
   params.set("startDate", plan.startDate);
   params.set("endDate", plan.endDate);
   params.set("minEndDate", minEndDate);
-  params.set("keywords", plan.keywords.join(","));
+  params.set("keywords", options.includeKeywords ? plan.keywords.join(",") : "");
   params.set("limit", String(MAX_FESTIVAL_CANDIDATES));
   return `/api/regional-festivals?${params.toString()}`;
 }
@@ -822,10 +826,11 @@ async function fetchRegionalSupplementFestivalItems(
   plan: FestivalPlan,
   fetchImpl: typeof fetch,
   minEndDate: string,
+  options: { includeKeywords?: boolean } = {},
   signal?: AbortSignal,
 ): Promise<TourApiItem[]> {
   try {
-    const response = await fetchImpl(buildRegionalFestivalSupplementUrl(plan, minEndDate), { signal });
+    const response = await fetchImpl(buildRegionalFestivalSupplementUrl(plan, minEndDate, options), { signal });
     if (!response.ok) throw new Error(`Regional festival DB HTTP ${response.status}`);
     const payload = (await response.json()) as { records?: RegionalFestivalApiRecord[] };
     const records = Array.isArray(payload.records) ? payload.records : [];
@@ -1383,7 +1388,13 @@ export async function getFestivalCandidates(
   }
 
   const supplementalItems = shouldFetchRegionalSupplement(plan, festivalItems)
-    ? await fetchRegionalSupplementFestivalItems(plan, fetchImpl, today, options.signal)
+    ? await fetchRegionalSupplementFestivalItems(
+        plan,
+        fetchImpl,
+        today,
+        { includeKeywords: festivalItems.length === 0 && planRangeDays(plan) < 30 },
+        options.signal,
+      )
     : [];
   const mergedFestivalItems = mergeDuplicateFestivalItems([...festivalItems, ...supplementalItems]);
   const candidateItems = sortFestivalItemsForPlan(
