@@ -23,7 +23,7 @@ function normalizePositiveNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
-function normalizeVenueCoordinates(value: unknown) {
+function normalizeVenueCoordinates(value: unknown): FestivalPlan["venueCoordinates"] {
   if (!value || typeof value !== "object") return undefined;
 
   const { latitude, longitude, source } = value as Record<string, unknown>;
