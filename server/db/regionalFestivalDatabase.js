@@ -45,6 +45,13 @@ function endsOnOrAfter(record, minEndDate) {
   return Boolean(recordEnd && recordEnd >= minEndDate);
 }
 
+function isInactivePlanningFestival(record) {
+  const region = normalizeText(record.region);
+  const titleKey = getCanonicalFestivalKey(record.name);
+
+  return region === "대전" && titleKey === "대전0시축제";
+}
+
 function keywordScore(record, keywords) {
   const haystack = normalizeText(`${record.name} ${record.type} ${record.venue} ${record.localGovernment}`);
   return keywords.reduce((score, keyword) => {
@@ -213,7 +220,8 @@ export class RegionalFestivalDatabase {
         if (startDate || endDate) return overlapsDateRange(record, startDate, endDate);
         return true;
       })
-      .filter((record) => endsOnOrAfter(record, minEndDate));
+      .filter((record) => endsOnOrAfter(record, minEndDate))
+      .filter((record) => !minEndDate || !isInactivePlanningFestival(record));
 
     // 중복 축제 제거 (동일 축제일 경우 가장 최근 연도 데이터만 유지)
     const deduped = deduplicateLatestFestivals(filtered);

@@ -164,6 +164,44 @@ describe("RegionalFestivalDatabase", () => {
     expect(backdataRecords.map((record) => record.id)).toContain("ended-2026");
   });
 
+  it("hides inactive planning festivals while keeping them available for backdata", () => {
+    const db = createTestDatabase([
+      {
+        id: "daejeon-midnight-2026",
+        year: 2026,
+        name: "제4회 2026 대전 0시 축제",
+        region: "대전",
+        startDate: "2026-08-07",
+        endDate: "2026-08-17",
+        visitors: 1000000,
+        budgetMillionKrw: 9600,
+      },
+      {
+        id: "daejeon-art-2026",
+        year: 2026,
+        name: "2026 대전 서구 아트페스티벌",
+        region: "대전",
+        startDate: "2026-10-01",
+        endDate: "2026-10-01",
+        visitors: 100000,
+        budgetMillionKrw: 500,
+      },
+    ]);
+
+    const planningRecords = db.searchFestivals({
+      region: "대전",
+      minEndDate: "2026-08-11",
+      limit: 10,
+    });
+    const backdataRecords = db.searchFestivals({
+      region: "대전",
+      limit: 10,
+    });
+
+    expect(planningRecords.map((record) => record.id)).toEqual(["daejeon-art-2026"]);
+    expect(backdataRecords.map((record) => record.id)).toContain("daejeon-midnight-2026");
+  });
+
   it("keeps same-year keyword matches when normalized MCST dates do not overlap selected festival dates", () => {
     const db = createTestDatabase([
       {

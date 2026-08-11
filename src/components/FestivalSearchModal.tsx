@@ -145,17 +145,27 @@ function getNormalizedBaseName(name: string): string {
     .toLowerCase();
 }
 
+function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
+  const titleKey = getNormalizedBaseName(`${preset.name} ${preset.basis.title}`);
+  const regionKey = getNormalizedBaseName(preset.region);
+
+  return titleKey.includes("대전0시축제") && regionKey.includes("대전");
+}
+
   const combinedPresets = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const activePlanningPresets = FESTIVAL_PRESETS.filter((preset) =>
+      isOngoingOrUpcomingFestival(preset, today) && !isInactivePlanningFestivalPreset(preset)
+    );
     const presetMatches = q
-      ? FESTIVAL_PRESETS.filter((preset) => isOngoingOrUpcomingFestival(preset, today)).filter((preset) => {
+      ? activePlanningPresets.filter((preset) => {
           const titleMatch = preset.name.toLowerCase().includes(q) || preset.basis.title.toLowerCase().includes(q);
           const regionMatch = preset.region.toLowerCase().includes(q) || preset.plan.venueAddress.toLowerCase().includes(q);
           const keywordMatch = preset.plan.keywords.some((kw) => kw.toLowerCase().includes(q));
           const descriptionMatch = preset.description.toLowerCase().includes(q);
           return titleMatch || regionMatch || keywordMatch || descriptionMatch;
         })
-      : FESTIVAL_PRESETS.filter((preset) => isOngoingOrUpcomingFestival(preset, today));
+      : activePlanningPresets;
 
     const presetBaseKeys = new Set(presetMatches.map((p) => getNormalizedBaseName(p.name)));
     const nonDuplicateApi = apiPresets.filter((p) => !presetBaseKeys.has(getNormalizedBaseName(p.name)));

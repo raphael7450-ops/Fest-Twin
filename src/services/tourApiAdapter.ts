@@ -589,6 +589,13 @@ function festivalItemEndsOnOrAfter(item: TourApiItem, minEndDate: string) {
   return Boolean(endDate && endDate >= minEndDate);
 }
 
+function isInactivePlanningFestivalItem(item: TourApiItem) {
+  const titleKey = normalizeFestivalTitleKey(item.title);
+  const addressKey = normalizeRegionText(item.addr1);
+
+  return titleKey === "대전0시축제" && (addressKey.includes("대전") || addressKey.includes("daejeon"));
+}
+
 function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
   return [...items].sort((left, right) => {
     const overlapDifference =
@@ -1402,6 +1409,7 @@ export async function getFestivalCandidates(
       (item) =>
         (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
         festivalItemEndsOnOrAfter(item, today) &&
+        !isInactivePlanningFestivalItem(item) &&
         dateOverlapDays(item.eventstartdate, item.eventenddate, plan.startDate, plan.endDate) > 0,
     ),
     plan,

@@ -209,6 +209,61 @@ describe("TourAPI candidate regional DB supplement", () => {
     expect(candidates.map((candidate) => candidate.id)).toEqual(["ongoing"]);
   });
 
+  it("does not show inactive planning festivals even when TourAPI returns them", async () => {
+    let festivalCallCount = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "3", name: "대전" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        festivalCallCount += 1;
+        if (festivalCallCount === 1) return jsonResponse(tourApiPayload([], 0));
+
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "daejeon-midnight",
+              title: "제4회 2026 대전 0시 축제",
+              eventstartdate: "20260807",
+              eventenddate: "20260817",
+              addr1: "대전 중앙로",
+            },
+            {
+              contentid: "daejeon-art",
+              title: "2026 대전 서구 아트페스티벌",
+              eventstartdate: "20261001",
+              eventenddate: "20261001",
+              addr1: "대전 서구",
+            },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({ count: 0, records: [] });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "대전 축제",
+        region: "대전",
+        startDate: "2026-08-01",
+        endDate: "2026-12-31",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-11" },
+    );
+
+    expect(candidates.map((candidate) => candidate.id)).toEqual(["daejeon-art"]);
+  });
+
   it("does not narrow long regional planning searches with stale plan keywords", async () => {
     let festivalCallCount = 0;
     const regionalUrls: URL[] = [];

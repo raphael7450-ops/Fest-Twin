@@ -25,6 +25,7 @@ describe("FestivalSearchModal", () => {
   it("renders only ongoing or upcoming preset festivals and filters them by keyword", () => {
     const futurePreset = FESTIVAL_PRESETS.find((preset) => preset.id === "preset_busan_fireworks");
     const pastPreset = FESTIVAL_PRESETS.find((preset) => preset.id === "preset_boryeong_mud");
+    const inactivePreset = FESTIVAL_PRESETS.find((preset) => preset.id === "preset_daejeon_0시축제");
 
     render(
       <FestivalSearchModal
@@ -36,12 +37,14 @@ describe("FestivalSearchModal", () => {
 
     expect(screen.getByText(futurePreset?.name ?? "")).toBeInTheDocument();
     expect(screen.queryByText(pastPreset?.name ?? "")).toBeNull();
+    expect(screen.queryByText(inactivePreset?.name ?? "")).toBeNull();
 
     const searchInput = screen.getByRole("searchbox");
     fireEvent.change(searchInput, { target: { value: futurePreset?.name.slice(0, 2) ?? "" } });
 
     expect(screen.getByText(futurePreset?.name ?? "")).toBeInTheDocument();
     expect(screen.queryByText(pastPreset?.name ?? "")).toBeNull();
+    expect(screen.queryByText(inactivePreset?.name ?? "")).toBeNull();
   });
 
   it("requests only ongoing or upcoming DB festivals for planning search", () => {
