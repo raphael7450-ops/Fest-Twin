@@ -254,6 +254,7 @@ describe("public data adapters", () => {
 
     const candidates = await getFestivalCandidates(sampleFestivalPlan, {
       fetchImpl: candidateFetchMock as unknown as typeof fetch,
+      today: "2025-12-01",
     });
 
     expect(candidates).toMatchObject([
@@ -301,6 +302,7 @@ describe("public data adapters", () => {
 
     const candidates = await getFestivalCandidates(sampleFestivalPlan, {
       fetchImpl: fetchImpl as unknown as typeof fetch,
+      today: "2025-12-01",
     });
 
     const sourceDetails = candidates[0].sourceDetails ?? [];
@@ -507,7 +509,7 @@ describe("public data adapters", () => {
         endDate: "2026-08-31",
         region: "부산",
       },
-      { fetchImpl: fetchMock as unknown as typeof fetch },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-01" },
     );
 
     expect(candidates).toMatchObject([
@@ -576,7 +578,7 @@ describe("public data adapters", () => {
         startDate: "2025-12-19",
         endDate: "2026-01-03",
       },
-      { fetchImpl: fetchMock as unknown as typeof fetch },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2025-12-01" },
     );
 
     expect(candidates.map((candidate) => candidate.id)).toEqual(["period-2"]);
@@ -617,7 +619,7 @@ describe("public data adapters", () => {
         startDate: "2025-01-01",
         endDate: "2025-05-31",
       },
-      { fetchImpl: fetchMock as unknown as typeof fetch },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2025-01-01" },
     );
 
     expect(candidates.map((candidate) => candidate.title)).toEqual(
@@ -646,7 +648,7 @@ describe("public data adapters", () => {
         startDate: "2025-01-01",
         endDate: "2025-05-31",
       },
-      { fetchImpl: fetchMock as unknown as typeof fetch },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2025-01-01" },
     );
 
     const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));

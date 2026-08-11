@@ -39,6 +39,12 @@ function overlapsDateRange(record, startDate, endDate) {
   return (!endDate || recordStart <= endDate) && (!startDate || recordEnd >= startDate);
 }
 
+function endsOnOrAfter(record, minEndDate) {
+  if (!minEndDate) return true;
+  const recordEnd = record.endDate ?? record.startDate;
+  return Boolean(recordEnd && recordEnd >= minEndDate);
+}
+
 function keywordScore(record, keywords) {
   const haystack = normalizeText(`${record.name} ${record.type} ${record.venue} ${record.localGovernment}`);
   return keywords.reduce((score, keyword) => {
@@ -162,7 +168,7 @@ export class RegionalFestivalDatabase {
     };
   }
 
-  searchFestivals({ query, region, year, startDate, endDate, keywords = [], limit = 30 } = {}) {
+  searchFestivals({ query, region, year, startDate, endDate, minEndDate, keywords = [], limit = 30 } = {}) {
     const normalizedRegion = normalizeRegion(region);
     const rawKeywords = Array.isArray(keywords)
       ? keywords
@@ -206,7 +212,8 @@ export class RegionalFestivalDatabase {
         if (hasSearchTerms) return record.keywordMatchScore > 0;
         if (startDate || endDate) return overlapsDateRange(record, startDate, endDate);
         return true;
-      });
+      })
+      .filter((record) => endsOnOrAfter(record, minEndDate));
 
     // 중복 축제 제거 (동일 축제일 경우 가장 최근 연도 데이터만 유지)
     const deduped = deduplicateLatestFestivals(filtered);

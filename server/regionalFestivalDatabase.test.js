@@ -113,6 +113,57 @@ describe("RegionalFestivalDatabase", () => {
     expect(records.map((record) => record.id)).toEqual(["busan-august-2026"]);
   });
 
+  it("can limit planning search results to festivals that are ongoing or upcoming", () => {
+    const db = createTestDatabase([
+      {
+        id: "ended-2026",
+        year: 2026,
+        name: "Ended Summer Festival",
+        region: "Busan",
+        startDate: "2026-08-01",
+        endDate: "2026-08-09",
+        visitors: 100000,
+        budgetMillionKrw: 500,
+      },
+      {
+        id: "ongoing-2026",
+        year: 2026,
+        name: "Ongoing Summer Festival",
+        region: "Busan",
+        startDate: "2026-08-08",
+        endDate: "2026-08-13",
+        visitors: 100000,
+        budgetMillionKrw: 500,
+      },
+      {
+        id: "upcoming-2026",
+        year: 2026,
+        name: "Upcoming Autumn Festival",
+        region: "Busan",
+        startDate: "2026-10-01",
+        endDate: "2026-10-03",
+        visitors: 100000,
+        budgetMillionKrw: 500,
+      },
+    ]);
+
+    const planningRecords = db.searchFestivals({
+      region: "Busan",
+      minEndDate: "2026-08-11",
+      limit: 10,
+    });
+    const backdataRecords = db.searchFestivals({
+      region: "Busan",
+      limit: 10,
+    });
+
+    expect(planningRecords.map((record) => record.id)).toEqual([
+      "ongoing-2026",
+      "upcoming-2026",
+    ]);
+    expect(backdataRecords.map((record) => record.id)).toContain("ended-2026");
+  });
+
   it("keeps same-year keyword matches when normalized MCST dates do not overlap selected festival dates", () => {
     const db = createTestDatabase([
       {

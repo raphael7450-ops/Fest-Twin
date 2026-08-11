@@ -48,6 +48,7 @@ export function createRegionalFestivalRouter(options = {}) {
       year: request.query.year,
       startDate: request.query.startDate,
       endDate: request.query.endDate,
+      minEndDate: request.query.minEndDate,
       keywords: parseKeywords(request.query.keywords),
       limit: request.query.limit,
     }).map(sanitizeRecord);

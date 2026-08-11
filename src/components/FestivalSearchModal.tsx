@@ -80,6 +80,17 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
   };
 }
 
+function formatLocalDate(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isOngoingOrUpcomingFestival(preset: FestivalPreset, today: string) {
+  return preset.plan.endDate >= today;
+}
+
 export function FestivalSearchModal({
   isOpen,
   onClose,
@@ -88,6 +99,7 @@ export function FestivalSearchModal({
   const [query, setQuery] = useState("");
   const [apiPresets, setApiPresets] = useState<FestivalPreset[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const today = useMemo(() => formatLocalDate(), []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -95,9 +107,12 @@ export function FestivalSearchModal({
     const controller = new AbortController();
     setIsLoading(true);
 
-    const url = query.trim()
-      ? `/api/regional-festivals?q=${encodeURIComponent(query.trim())}&limit=30`
-      : `/api/regional-festivals?limit=20`;
+    const params = new URLSearchParams({
+      limit: query.trim() ? "30" : "20",
+      minEndDate: today,
+    });
+    if (query.trim()) params.set("q", query.trim());
+    const url = `/api/regional-festivals?${params.toString()}`;
 
     fetch(url, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
@@ -119,7 +134,7 @@ export function FestivalSearchModal({
     return () => {
       controller.abort();
     };
-  }, [query, isOpen]);
+  }, [query, isOpen, today]);
 
 function getNormalizedBaseName(name: string): string {
   return name
@@ -133,20 +148,20 @@ function getNormalizedBaseName(name: string): string {
   const combinedPresets = useMemo(() => {
     const q = query.trim().toLowerCase();
     const presetMatches = q
-      ? FESTIVAL_PRESETS.filter((preset) => {
+      ? FESTIVAL_PRESETS.filter((preset) => isOngoingOrUpcomingFestival(preset, today)).filter((preset) => {
           const titleMatch = preset.name.toLowerCase().includes(q) || preset.basis.title.toLowerCase().includes(q);
           const regionMatch = preset.region.toLowerCase().includes(q) || preset.plan.venueAddress.toLowerCase().includes(q);
           const keywordMatch = preset.plan.keywords.some((kw) => kw.toLowerCase().includes(q));
           const descriptionMatch = preset.description.toLowerCase().includes(q);
           return titleMatch || regionMatch || keywordMatch || descriptionMatch;
         })
-      : FESTIVAL_PRESETS;
+      : FESTIVAL_PRESETS.filter((preset) => isOngoingOrUpcomingFestival(preset, today));
 
     const presetBaseKeys = new Set(presetMatches.map((p) => getNormalizedBaseName(p.name)));
     const nonDuplicateApi = apiPresets.filter((p) => !presetBaseKeys.has(getNormalizedBaseName(p.name)));
 
     return [...presetMatches, ...nonDuplicateApi];
-  }, [query, apiPresets]);
+  }, [query, apiPresets, today]);
 
   if (!isOpen) return null;
 

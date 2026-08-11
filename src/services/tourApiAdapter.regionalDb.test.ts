@@ -84,7 +84,7 @@ describe("TourAPI candidate regional DB supplement", () => {
         endDate: "2026-08-31",
         keywords: ["부산바다축제"],
       },
-      { fetchImpl: fetchMock as unknown as typeof fetch },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-07-20" },
     );
 
     const busanSeaCandidates = candidates.filter((candidate) =>
@@ -148,10 +148,65 @@ describe("TourAPI candidate regional DB supplement", () => {
         endDate: "2026-08-31",
         keywords: [],
       },
-      { fetchImpl: fetchMock as unknown as typeof fetch },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-07-20" },
     );
 
     expect(candidates.map((candidate) => candidate.id)).toEqual(["august"]);
+  });
+
+  it("does not show candidate festivals that already ended before today", async () => {
+    let festivalCallCount = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "6", name: "Busan" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        festivalCallCount += 1;
+        if (festivalCallCount === 1) return jsonResponse(tourApiPayload([], 0));
+
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "ended",
+              title: "Already Ended Festival",
+              eventstartdate: "20260801",
+              eventenddate: "20260809",
+              addr1: "Busan",
+            },
+            {
+              contentid: "ongoing",
+              title: "Ongoing Festival",
+              eventstartdate: "20260808",
+              eventenddate: "20260813",
+              addr1: "Busan",
+            },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({ count: 0, records: [] });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "Busan August Planning",
+        region: "Busan",
+        startDate: "2026-08-01",
+        endDate: "2026-08-31",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-11" },
+    );
+
+    expect(candidates.map((candidate) => candidate.id)).toEqual(["ongoing"]);
   });
 
   it("uses server regional festival DB records as selectable candidates", async () => {
@@ -201,7 +256,7 @@ describe("TourAPI candidate regional DB supplement", () => {
         endDate: "2026-07-31",
         keywords: ["보령", "머드"],
       },
-      { fetchImpl: fetchMock as unknown as typeof fetch },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-07-20" },
     );
 
     expect(fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost").pathname)).toContain(
@@ -269,6 +324,7 @@ describe("TourAPI candidate regional DB supplement", () => {
       },
       {
         fetchImpl: fetchMock as unknown as typeof fetch,
+        today: "2026-04-01",
       },
     );
     const sorted = sortFestivalCandidatesByDateAsc(candidates);

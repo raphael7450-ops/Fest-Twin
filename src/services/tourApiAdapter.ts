@@ -20,6 +20,7 @@ interface TourApiOptions {
   fetchImpl?: typeof fetch;
   signal?: AbortSignal;
   selectedCandidate?: FestivalCandidate | null;
+  today?: string;
 }
 
 export interface TourApiAreaCode {
@@ -576,6 +577,18 @@ function dateOverlapDays(
   return Math.floor((overlapEnd - overlapStart) / 86_400_000) + 1;
 }
 
+function formatLocalDate(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function festivalItemEndsOnOrAfter(item: TourApiItem, minEndDate: string) {
+  const endDate = formatTourApiDateForInput(item.eventenddate) || formatTourApiDateForInput(item.eventstartdate);
+  return Boolean(endDate && endDate >= minEndDate);
+}
+
 function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
   return [...items].sort((left, right) => {
     const overlapDifference =
@@ -779,11 +792,12 @@ function mergeDuplicateFestivalItems(items: TourApiItem[]) {
   return Array.from(map.values());
 }
 
-function buildRegionalFestivalSupplementUrl(plan: FestivalPlan) {
+function buildRegionalFestivalSupplementUrl(plan: FestivalPlan, minEndDate: string) {
   const params = new URLSearchParams();
   params.set("region", plan.region);
   params.set("startDate", plan.startDate);
   params.set("endDate", plan.endDate);
+  params.set("minEndDate", minEndDate);
   params.set("keywords", plan.keywords.join(","));
   params.set("limit", String(MAX_FESTIVAL_CANDIDATES));
   return `/api/regional-festivals?${params.toString()}`;
@@ -807,10 +821,11 @@ function regionalFestivalRecordToTourApiItem(record: RegionalFestivalApiRecord):
 async function fetchRegionalSupplementFestivalItems(
   plan: FestivalPlan,
   fetchImpl: typeof fetch,
+  minEndDate: string,
   signal?: AbortSignal,
 ): Promise<TourApiItem[]> {
   try {
-    const response = await fetchImpl(buildRegionalFestivalSupplementUrl(plan), { signal });
+    const response = await fetchImpl(buildRegionalFestivalSupplementUrl(plan, minEndDate), { signal });
     if (!response.ok) throw new Error(`Regional festival DB HTTP ${response.status}`);
     const payload = (await response.json()) as { records?: RegionalFestivalApiRecord[] };
     const records = Array.isArray(payload.records) ? payload.records : [];
@@ -1342,6 +1357,7 @@ export async function getFestivalCandidates(
   options: TourApiOptions = {},
 ): Promise<FestivalCandidate[]> {
   const fetchImpl = options.fetchImpl ?? fetch;
+  const today = options.today ?? formatLocalDate();
   const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
 
   if (!areaCode) return [];
@@ -1367,13 +1383,14 @@ export async function getFestivalCandidates(
   }
 
   const supplementalItems = shouldFetchRegionalSupplement(plan, festivalItems)
-    ? await fetchRegionalSupplementFestivalItems(plan, fetchImpl, options.signal)
+    ? await fetchRegionalSupplementFestivalItems(plan, fetchImpl, today, options.signal)
     : [];
   const mergedFestivalItems = mergeDuplicateFestivalItems([...festivalItems, ...supplementalItems]);
   const candidateItems = sortFestivalItemsForPlan(
     mergedFestivalItems.filter(
       (item) =>
         (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
+        festivalItemEndsOnOrAfter(item, today) &&
         dateOverlapDays(item.eventstartdate, item.eventenddate, plan.startDate, plan.endDate) > 0,
     ),
     plan,

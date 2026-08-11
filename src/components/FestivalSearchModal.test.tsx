@@ -1,32 +1,63 @@
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FESTIVAL_PRESETS } from "../data/festivalPresets";
 import { FestivalSearchModal } from "./FestivalSearchModal";
 
 describe("FestivalSearchModal", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-11T09:00:00+09:00"));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ count: 0, records: [] }),
+      })),
+    );
+  });
+
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
-  it("renders festival search modal and filters presets by keyword", () => {
-    const handleClose = vi.fn();
-    const handleSelectPreset = vi.fn();
+
+  it("renders only ongoing or upcoming preset festivals and filters them by keyword", () => {
+    const futurePreset = FESTIVAL_PRESETS.find((preset) => preset.id === "preset_busan_fireworks");
+    const pastPreset = FESTIVAL_PRESETS.find((preset) => preset.id === "preset_boryeong_mud");
 
     render(
       <FestivalSearchModal
         isOpen={true}
-        onClose={handleClose}
-        onSelectPreset={handleSelectPreset}
-      />
+        onClose={vi.fn()}
+        onSelectPreset={vi.fn()}
+      />,
     );
 
-    expect(screen.getByText("전체 축제 실시간 검색")).toBeInTheDocument();
-    expect(screen.getByText("보령 머드축제")).toBeInTheDocument();
-    expect(screen.getByText("부산 불꽃축제")).toBeInTheDocument();
+    expect(screen.getByText(futurePreset?.name ?? "")).toBeInTheDocument();
+    expect(screen.queryByText(pastPreset?.name ?? "")).toBeNull();
 
-    const searchInput = screen.getByRole("searchbox", { name: "축제 검색어 입력" });
-    fireEvent.change(searchInput, { target: { value: "머드" } });
+    const searchInput = screen.getByRole("searchbox");
+    fireEvent.change(searchInput, { target: { value: futurePreset?.name.slice(0, 2) ?? "" } });
 
-    expect(screen.getByText("보령 머드축제")).toBeInTheDocument();
-    expect(screen.queryByText("부산 불꽃축제")).toBeNull();
+    expect(screen.getByText(futurePreset?.name ?? "")).toBeInTheDocument();
+    expect(screen.queryByText(pastPreset?.name ?? "")).toBeNull();
+  });
+
+  it("requests only ongoing or upcoming DB festivals for planning search", () => {
+    render(
+      <FestivalSearchModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onSelectPreset={vi.fn()}
+      />,
+    );
+
+    expect(fetch).toHaveBeenCalled();
+
+    const firstUrl = new URL(String(vi.mocked(fetch).mock.calls[0][0]), "http://localhost");
+    expect(firstUrl.pathname).toBe("/api/regional-festivals");
+    expect(firstUrl.searchParams.get("minEndDate")).toBe("2026-08-11");
   });
 
   it("calls onSelectPreset when apply button is clicked", () => {
@@ -38,7 +69,7 @@ describe("FestivalSearchModal", () => {
         isOpen={true}
         onClose={handleClose}
         onSelectPreset={handleSelectPreset}
-      />
+      />,
     );
 
     const applyButtons = screen.getAllByTestId("apply-preset-btn");
@@ -54,7 +85,7 @@ describe("FestivalSearchModal", () => {
         isOpen={true}
         onClose={vi.fn()}
         onSelectPreset={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.queryAllByRole("img")).toHaveLength(0);

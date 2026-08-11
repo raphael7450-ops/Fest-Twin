@@ -51,6 +51,39 @@ function callRegionalFestivalRoute(path: string) {
 }
 
 describe("regionalFestivalRouter", () => {
+  it("passes the planning minEndDate filter to the regional festival database", () => {
+    let receivedSearchParams: any;
+    const db = {
+      searchFestivals: (params: any) => {
+        receivedSearchParams = params;
+        return [];
+      },
+      getSummary: () => ({ totalCount: 0, years: [], regions: [] }),
+    };
+    const router = createRegionalFestivalRouter({ db });
+    const app = express();
+    app.use("/api/regional-festivals", router);
+
+    const req: any = {
+      method: "GET",
+      url: "/api/regional-festivals?minEndDate=2026-08-11&limit=20",
+      headers: { "content-type": "application/json" },
+    };
+    const res: any = {
+      setHeader() {},
+      json(data: unknown) {
+        return data;
+      },
+    };
+
+    app(req, res, () => {});
+
+    expect(receivedSearchParams).toMatchObject({
+      minEndDate: "2026-08-11",
+      limit: "20",
+    });
+  });
+
   it("returns normalized MCST festival rows for dashboard backdata", () => {
     const response = callRegionalFestivalRoute(
       "/?region=충청남도&year=2025&keywords=딸기,특산물&limit=3",
