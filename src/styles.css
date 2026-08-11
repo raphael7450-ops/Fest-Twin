@@ -2773,27 +2773,56 @@ a:focus-visible {
 
 .print-button,
 .secondary-button {
-  background: linear-gradient(135deg, #287c83 0%, #d8694d 100%);
-  border: 1px solid #f0bc72;
+  background: #287c83;
+  border: 1px solid #287c83;
   border-radius: 7px;
-  box-shadow: 0 8px 18px rgba(216, 105, 77, 0.16);
+  box-shadow: 0 8px 18px rgba(40, 124, 131, 0.14);
+  color: #ffffff;
 }
 
 .print-button:hover,
 .secondary-button:hover {
-  background: linear-gradient(135deg, #17666d 0%, #c65b42 100%);
-  box-shadow: 0 10px 22px rgba(216, 105, 77, 0.22);
+  background: #17666d;
+  border-color: #17666d;
+  box-shadow: 0 10px 22px rgba(40, 124, 131, 0.2);
+}
+
+.csv-export-button {
+  background: #217346;
+  border-color: #217346;
+  box-shadow: 0 8px 18px rgba(33, 115, 70, 0.16);
+}
+
+.csv-export-button:hover {
+  background: #185c37;
+  border-color: #185c37;
+  box-shadow: 0 10px 22px rgba(33, 115, 70, 0.22);
+}
+
+.report-print-button {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.1);
+  color: #1e3a8a;
+}
+
+.report-print-button:hover {
+  background: #eff6ff;
+  border-color: #1d4ed8;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16);
+  color: #1d4ed8;
 }
 
 .b2g-pdf-button {
-  background: linear-gradient(135deg, #e53935 0%, #b71c1c 100%);
-  border-color: #ffb4a8;
+  background: #d32f2f;
+  border-color: #d32f2f;
   box-shadow: 0 8px 18px rgba(229, 57, 53, 0.18);
   color: #ffffff;
 }
 
 .b2g-pdf-button:hover {
-  background: linear-gradient(135deg, #f04b45 0%, #c62828 100%);
+  background: #b71c1c;
+  border-color: #b71c1c;
   box-shadow: 0 10px 22px rgba(229, 57, 53, 0.25);
 }
 
@@ -3738,7 +3767,7 @@ a:focus-visible {
 }
 
 .presentation-toggle-button {
-  background: linear-gradient(135deg, #287c83, #d8694d);
+  background: #287c83;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -3751,9 +3780,9 @@ a:focus-visible {
 }
 
 .presentation-toggle-button:hover {
-  background: linear-gradient(135deg, #17666d, #c65b42);
+  background: #17666d;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(216, 105, 77, 0.28);
+  box-shadow: 0 6px 16px rgba(40, 124, 131, 0.24);
 }
 
 .presentation-toggle-button--active {
