@@ -61,7 +61,13 @@ export function applyFestivalCandidateToPlan(
   const planningPatch = createFestivalTypePlanningPatch(candidate, options.demandBackdata);
   const longitude = Number(candidate.mapX);
   const latitude = Number(candidate.mapY);
+  const hasCoordinateValues =
+    typeof candidate.mapX === "string" &&
+    candidate.mapX.trim().length > 0 &&
+    typeof candidate.mapY === "string" &&
+    candidate.mapY.trim().length > 0;
   const venueCoordinates =
+    hasCoordinateValues &&
     Number.isFinite(longitude) &&
     longitude >= -180 &&
     longitude <= 180 &&

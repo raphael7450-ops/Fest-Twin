@@ -103,9 +103,17 @@ describe("VenueMapPanel VWorld integration", () => {
       facilities: sampleFestivalPlan.facilities.filter((facility) => facility.type !== "booth"),
     });
 
-    expect(notes[0]).toBe(`행사장 중심 구역: ${sampleFestivalPlan.name}`);
-    expect(notes[1]).toContain(sampleFestivalPlan.facilities.find((facility) => facility.type === "entrance")?.name);
-    expect(notes[2]).toContain(sampleFestivalPlan.facilities.find((facility) => facility.type === "stage")?.name);
-    expect(notes[3]).toBe("분산 운영: 기획자 입력 필요");
+    expect(notes).toEqual([
+      `행사장 중심 구역: ${sampleFestivalPlan.name}`,
+      `주요 진출입 후보: ${sampleFestivalPlan.facilities
+        .filter((facility) => facility.type === "entrance")
+        .map((facility) => facility.name)
+        .join(", ")}`,
+      `관객 집중 후보: ${sampleFestivalPlan.facilities
+        .filter((facility) => facility.type === "stage")
+        .map((facility) => facility.name)
+        .join(", ")}`,
+      "분산 운영 후보: 기획안 입력 필요",
+    ]);
   });
 });

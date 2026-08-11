@@ -93,6 +93,33 @@ describe("festivalSelection", () => {
     expect(nextPlan.venueCoordinates).toBeUndefined();
   });
 
+  it("clears stale coordinates for missing, null-like, empty, and whitespace-only candidate coordinates", () => {
+    const planWithCoordinates = {
+      ...sampleFestivalPlan,
+      venueCoordinates: {
+        longitude: 126.9348,
+        latitude: 37.5284,
+        source: "tourapi" as const,
+      },
+    };
+    const invalidCoordinates: Array<[string | undefined, string | undefined]> = [
+      [undefined, undefined],
+      [null as unknown as string, "37.5284"],
+      ["", ""],
+      ["  ", "\t"],
+    ];
+
+    for (const [mapX, mapY] of invalidCoordinates) {
+      const nextPlan = applyFestivalCandidateToPlan(planWithCoordinates, {
+        ...candidate,
+        mapX,
+        mapY,
+      });
+
+      expect(nextPlan.venueCoordinates).toBeUndefined();
+    }
+  });
+
   it("prefills budget and expected capacity from the best matching festival backdata", () => {
     const seoulLightCandidate: FestivalCandidate = {
       id: "4000001",
