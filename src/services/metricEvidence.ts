@@ -777,8 +777,8 @@ export function createMetricEvidenceSet(
         "피크 방문객이 입력된 행사장 면적에 고르게 분포한다고 가정합니다.",
         "행사장 면적은 현장 도면과 실측으로 별도 검증해야 합니다.",
       ],
-      confidence,
-      confidenceLabel: confidenceLabel(confidence),
+      confidence: safety.peakDensity.confidence,
+      confidenceLabel: confidenceLabel(safety.peakDensity.confidence),
       limitations,
       sourceDetails: [...layoutUserInputs, ...peakDensityDetails],
       contributors: [
@@ -861,8 +861,8 @@ export function createMetricEvidenceSet(
       formulaSummary:
         "추천 인원 = ceil(피크 방문객 ÷ 820 + 병목 후보 × 2 + 상대 혼잡 점수 ÷ 50), 최소 8명",
       assumptions: ["병목 후보가 늘어나면 현장 통제 인력 필요량을 높입니다."],
-      confidence,
-      confidenceLabel: confidenceLabel(confidence),
+      confidence: safety.staffing.confidence,
+      confidenceLabel: confidenceLabel(safety.staffing.confidence),
       limitations,
       sourceDetails: [
         ...safetyLogisticsBasisDetails,
@@ -891,21 +891,21 @@ export function createMetricEvidenceSet(
           ? `피크 방문객과 임계 상대 혼잡 격자를 기준으로 ${safety.medicalStaff.value}명을 추천합니다.`
           : `의료 인력 산출 불가: ${safety.medicalStaff.reason}`,
       dataSources: [
-        "보건복지부/소방청 응급의료기관 및 119 안전센터",
         "피크 시간대 예상 방문객",
         "고위험 및 임계 상대 혼잡 격자",
       ],
       formulaSummary:
-        "추천 인원 = 피크 방문객 규모와 임계 혼잡 격자 수, 인접 권역응급센터 이송 시간을 반영한 구급 대응 검토값입니다.",
+        safety.medicalStaff.status === "available"
+          ? safety.medicalStaff.basis
+          : safety.medicalStaff.reason,
       assumptions: ["임계 혼잡 격자가 많을수록 응급 대응 여력을 높입니다."],
-      confidence,
-      confidenceLabel: confidenceLabel(confidence),
+      confidence: safety.medicalStaff.confidence,
+      confidenceLabel: confidenceLabel(safety.medicalStaff.confidence),
       limitations,
       sourceDetails: [
         ...safetyLogisticsBasisDetails,
         ...layoutUserInputs,
         ...medicalStaffDetails,
-        ...emergencyDetails,
       ],
       contributors: [
         {
@@ -1211,8 +1211,8 @@ export function createMetricEvidenceSet(
       assumptions: [
         "행사장 입퇴장 피크 시간대 1시간 전 집중 배치를 권고합니다.",
       ],
-      confidence,
-      confidenceLabel: confidenceLabel(confidence),
+      confidence: safety.staffing.confidence,
+      confidenceLabel: confidenceLabel(safety.staffing.confidence),
       limitations,
       sourceDetails: [...safetyLogisticsBasisDetails, ...layoutUserInputs, ...safetyStaffDetails],
       contributors: [
@@ -1255,8 +1255,8 @@ export function createMetricEvidenceSet(
         "총 출구 폭 1m당 초당 1.3명이 통과한다고 가정합니다.",
         "피난 보행 속도는 초당 1.0m로 가정합니다.",
       ],
-      confidence,
-      confidenceLabel: confidenceLabel(confidence),
+      confidence: safety.evacuationTime.confidence,
+      confidenceLabel: confidenceLabel(safety.evacuationTime.confidence),
       limitations,
       sourceDetails: [...safetyLogisticsBasisDetails, ...peakDensityDetails],
       contributors: [

@@ -7,6 +7,7 @@ import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
 import type { SelectedFestivalBasis } from "../domain/types";
 import { createForecast } from "./forecast";
+import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 import { createSimulation } from "./simulation";
 import {
   createMetricEvidenceSet,
@@ -35,6 +36,78 @@ const selectedFestivalBasis: SelectedFestivalBasis = {
 };
 
 describe("metricEvidence", () => {
+  it("keeps canonical safety evidence low confidence with live tourism and trends", () => {
+    const plan = {
+      ...sampleFestivalPlan,
+      venueAreaSquareMeters: 12000,
+      totalExitWidthMeters: 8,
+      evacuationDistanceMeters: 140,
+    };
+    const liveTourism = {
+      ...sampleTourismContext,
+      provenance: {
+        ...sampleTourismContext.provenance,
+        sourceStatus: "live" as const,
+      },
+    };
+    const liveTrends = {
+      ...sampleTrendContext,
+      provenance: {
+        ...sampleTrendContext.provenance,
+        sourceStatus: "live" as const,
+      },
+    };
+    const forecast = createForecast(plan, liveTourism, liveTrends);
+    const simulation = createSimulation(plan, forecast, forecast.peakHour);
+    const evidence = createMetricEvidenceSet(
+      plan,
+      forecast,
+      simulation,
+      liveTourism,
+      liveTrends,
+    );
+
+    for (const metricId of [
+      "peak-density",
+      "safety-staff",
+      "medical-staff",
+      "safety-guards-allocation",
+      "evacuation-golden-time",
+    ] as const) {
+      expect(evidence[metricId].confidence, metricId).toBe("low");
+      expect(evidence[metricId].confidenceLabel, metricId).toBe("낮음");
+    }
+  });
+
+  it("uses the canonical medical staffing basis without transfer-time claims", () => {
+    const profiles = createSafetyDecisionProfiles(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+    );
+    const evidence = createMetricEvidenceSet(
+      sampleFestivalPlan,
+      sampleForecastResult,
+      sampleSimulationResult,
+      sampleTourismContext,
+      sampleTrendContext,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      profiles,
+    );
+
+    expect(profiles.summary.medicalStaff.status).toBe("available");
+    if (profiles.summary.medicalStaff.status === "available") {
+      expect(evidence["medical-staff"].formulaSummary).toBe(
+        profiles.summary.medicalStaff.basis,
+      );
+    }
+    expect(evidence["medical-staff"].formulaSummary).not.toContain("이송 시간");
+  });
+
   it("includes KTDB traffic evidence for parking metrics only", () => {
     const evidence = createMetricEvidenceSet(
       sampleFestivalPlan,
