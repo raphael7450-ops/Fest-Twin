@@ -1,0 +1,20 @@
+[
+  {
+    "canonicalKey": "부산바다축제",
+    "regions": ["부산", "부산광역시"],
+    "status": "active",
+    "officialStartDate": "2026-08-07",
+    "officialEndDate": "2026-08-13",
+    "verifiedAt": "2026-08-11",
+    "sourceName": "부산축제조직위원회 / 대한민국 구석구석",
+    "sourceUrl": "https://korean.visitkorea.or.kr/"
+  },
+  {
+    "canonicalKey": "대전0시축제",
+    "regions": ["대전", "대전광역시"],
+    "status": "inactive",
+    "verifiedAt": "2026-08-11",
+    "sourceName": "운영 확인 정정 데이터",
+    "sourceUrl": "https://www.daejeon.go.kr/"
+  }
+]

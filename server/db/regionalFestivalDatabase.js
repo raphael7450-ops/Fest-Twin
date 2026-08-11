@@ -6,10 +6,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createFestivalCorrectionRegistry } from "../festivalCorrectionRegistry.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DB_FILE_PATH = path.resolve(__dirname, "../../data/regional_festivals_db.json");
+const festivalCorrectionRegistry = createFestivalCorrectionRegistry();
 
 function normalizeText(value) {
   return String(value ?? "").replace(/\s+/g, "").toLowerCase();
@@ -43,13 +45,6 @@ function endsOnOrAfter(record, minEndDate) {
   if (!minEndDate) return true;
   const recordEnd = record.endDate ?? record.startDate;
   return Boolean(recordEnd && recordEnd >= minEndDate);
-}
-
-function isInactivePlanningFestival(record) {
-  const region = normalizeText(record.region);
-  const titleKey = getCanonicalFestivalKey(record.name);
-
-  return region === "대전" && titleKey === "대전0시축제";
 }
 
 function keywordScore(record, keywords) {
@@ -89,24 +84,6 @@ function getCanonicalFestivalKey(name) {
 
 function hasEditionNumber(name) {
   return /제\s*\d+\s*회|\d+\s*회/.test(String(name || ""));
-}
-
-function applyVerifiedFestivalCorrections(record) {
-  if (
-    record.region === "부산" &&
-    Number(record.year) === 2026 &&
-    getCanonicalFestivalKey(record.name) === "부산바다축제"
-  ) {
-    return {
-      ...record,
-      startDate: "2026-08-07",
-      endDate: "2026-08-13",
-      periodLabel: "2026-08-07 ~ 2026-08-13",
-      sourceName: record.sourceName || "부산축제조직위원회 / 대한민국 구석구석",
-    };
-  }
-
-  return record;
 }
 
 function deduplicateLatestFestivals(records) {
@@ -191,7 +168,7 @@ export class RegionalFestivalDatabase {
     const hasSearchTerms = searchTerms.length > 0;
 
     const filtered = this.records
-      .map(applyVerifiedFestivalCorrections)
+      .map((record) => festivalCorrectionRegistry.apply(record))
       .filter((record) => {
         if (!normalizedRegion) return true;
         return record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion);
@@ -221,7 +198,7 @@ export class RegionalFestivalDatabase {
         return true;
       })
       .filter((record) => endsOnOrAfter(record, minEndDate))
-      .filter((record) => !minEndDate || !isInactivePlanningFestival(record));
+      .filter((record) => !minEndDate || festivalCorrectionRegistry.isAvailable(record));
 
     // 중복 축제 제거 (동일 축제일 경우 가장 최근 연도 데이터만 유지)
     const deduped = deduplicateLatestFestivals(filtered);

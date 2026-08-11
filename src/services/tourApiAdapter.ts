@@ -7,6 +7,10 @@
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { regionalFestivalCandidateRecords } from "../data/regionalFestivalCandidates";
 import { getRepresentativeFestivalImage } from "./festivalImageProvider";
+import {
+  applyFestivalCorrection,
+  isFestivalAvailableForPlanning,
+} from "./festivalCorrections";
 import type {
   FestivalPlan,
   MetricEvidenceSourceDetail,
@@ -589,13 +593,6 @@ function festivalItemEndsOnOrAfter(item: TourApiItem, minEndDate: string) {
   return Boolean(endDate && endDate >= minEndDate);
 }
 
-function isInactivePlanningFestivalItem(item: TourApiItem) {
-  const titleKey = normalizeFestivalTitleKey(item.title);
-  const addressKey = normalizeRegionText(item.addr1);
-
-  return titleKey === "대전0시축제" && (addressKey.includes("대전") || addressKey.includes("daejeon"));
-}
-
 function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
   return [...items].sort((left, right) => {
     const overlapDifference =
@@ -729,19 +726,20 @@ function hasFestivalEditionNumber(value: string | number | undefined) {
   return /제\s*\d+\s*회|\d+\s*회/.test(String(value ?? ""));
 }
 
-function applyVerifiedFestivalItemCorrections(item: TourApiItem): TourApiItem {
-  const titleKey = normalizeFestivalTitleKey(item.title);
-  const address = String(item.addr1 ?? "");
+function applyFestivalCorrectionToTourApiItem(item: TourApiItem): TourApiItem {
+  const corrected = applyFestivalCorrection({
+    ...item,
+    region: item.addr1,
+    sourceRecordYear: String(item.eventstartdate ?? item.eventenddate ?? "").slice(0, 4),
+    startDate: formatTourApiDateForInput(item.eventstartdate),
+    endDate: formatTourApiDateForInput(item.eventenddate),
+  });
 
-  if (titleKey === "부산바다축제" && (address.includes("부산") || address.includes("다대포"))) {
-    return {
-      ...item,
-      eventstartdate: "20260807",
-      eventenddate: "20260813",
-    };
-  }
-
-  return item;
+  return {
+    ...item,
+    eventstartdate: corrected.startDate?.replace(/-/g, "") ?? item.eventstartdate,
+    eventenddate: corrected.endDate?.replace(/-/g, "") ?? item.eventenddate,
+  };
 }
 
 function laterFestivalDate(left: string | number | undefined, right: string | number | undefined) {
@@ -763,8 +761,7 @@ function earlierFestivalDate(left: string | number | undefined, right: string | 
 function mergeDuplicateFestivalItems(items: TourApiItem[]) {
   const map = new Map<string, TourApiItem>();
 
-  for (const rawItem of items) {
-    const item = applyVerifiedFestivalItemCorrections(rawItem);
+  for (const item of items) {
     const titleKey = normalizeFestivalTitleKey(item.title);
     const key = titleKey || String(item.contentid ?? Math.random());
     const existing = map.get(key);
@@ -1403,13 +1400,21 @@ export async function getFestivalCandidates(
         options.signal,
       )
     : [];
-  const mergedFestivalItems = mergeDuplicateFestivalItems([...festivalItems, ...supplementalItems]);
+  const mergedFestivalItems = mergeDuplicateFestivalItems(
+    [...festivalItems, ...supplementalItems].map(applyFestivalCorrectionToTourApiItem),
+  );
   const candidateItems = sortFestivalItemsForPlan(
     mergedFestivalItems.filter(
       (item) =>
         (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
         festivalItemEndsOnOrAfter(item, today) &&
-        !isInactivePlanningFestivalItem(item) &&
+        isFestivalAvailableForPlanning({
+          title: item.title,
+          region: item.addr1,
+          sourceRecordYear: String(item.eventstartdate ?? item.eventenddate ?? "").slice(0, 4),
+          startDate: formatTourApiDateForInput(item.eventstartdate),
+          endDate: formatTourApiDateForInput(item.eventenddate),
+        }) &&
         dateOverlapDays(item.eventstartdate, item.eventenddate, plan.startDate, plan.endDate) > 0,
     ),
     plan,
