@@ -265,7 +265,7 @@ export interface ForecastResult {
 export interface HeatmapCell {
   x: number;
   y: number;
-  density: number;
+  relativeDensityScore: number;
   level: RiskLevel;
 }
 
@@ -427,12 +427,44 @@ export interface SafetyZoneGuardAllocation {
   reason: string;
 }
 
-export interface SafetyGuardAllocationForecast {
-  totalRecommendedGuards: number;
+export type AnalysisConfidence = "high" | "medium" | "low";
+
+export type MetricEstimate =
+  | {
+      status: "available";
+      value: number;
+      unit: "people" | "people_per_square_meter" | "seconds" | "score" | "percent";
+      confidence: AnalysisConfidence;
+      basis: string;
+    }
+  | {
+      status: "unavailable";
+      unit: "people" | "people_per_square_meter" | "seconds" | "score" | "percent";
+      confidence: "low";
+      reason: string;
+    };
+
+export interface StaffingRange {
+  min: number;
+  recommended: number;
+  max: number;
+  unit: "people";
+  confidence: AnalysisConfidence;
+  basis: string;
+}
+
+export interface SafetyDecisionMetrics {
+  staffing: StaffingRange;
   zoneAllocations: SafetyZoneGuardAllocation[];
-  expectedMedicalIncidentsPerHour: number;
-  recommendedMedicalStaff: number;
-  recommendedAmbulances: number;
-  evacuationGoldenTimeSeconds: number;
-  evacuationStatus: "양호" | "주의" | "경고";
+  relativeCongestion: MetricEstimate;
+  peakDensity: MetricEstimate;
+  medicalStaff: MetricEstimate;
+  ambulances: MetricEstimate;
+  evacuationTime: MetricEstimate;
+}
+
+export interface SafetyDecisionProfiles {
+  summary: SafetyDecisionMetrics;
+  weekday: SafetyDecisionMetrics;
+  weekend: SafetyDecisionMetrics;
 }

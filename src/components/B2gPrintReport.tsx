@@ -4,10 +4,12 @@ import type {
   MetricEvidence,
   MetricEvidenceId,
   PlanningReport,
+  SafetyDecisionProfiles,
   SelectedFestivalBasis,
   SpendingContext,
 } from "../domain/types";
 import { createSimulation } from "../services/simulation";
+import { createSafetyDecisionProfiles } from "../services/safetyDecisionMetrics";
 
 interface B2gPrintReportProps {
   report?: PlanningReport;
@@ -16,6 +18,7 @@ interface B2gPrintReportProps {
   selectedFestivalBasis?: SelectedFestivalBasis | null;
   spending?: SpendingContext;
   evidenceSet?: Record<MetricEvidenceId, MetricEvidence>;
+  safetyDecisionProfiles?: SafetyDecisionProfiles;
 }
 
 function formatKrw(value: number) {
@@ -29,12 +32,19 @@ export function B2gPrintReport({
   selectedFestivalBasis,
   spending,
   evidenceSet = {} as Record<MetricEvidenceId, MetricEvidence>,
+  safetyDecisionProfiles,
 }: B2gPrintReportProps) {
   const simulation = plan && forecast ? createSimulation(plan, forecast, forecast?.peakHour ?? 20) : null;
-  const maxDensityVal = simulation?.cells?.length
-    ? Math.max(...simulation.cells.map((c) => c.density))
-    : (simulation?.congestionScore ?? 45);
-  const maxDensityPerSqm = Number.isFinite(maxDensityVal) ? (maxDensityVal / 25).toFixed(2) : "1.80";
+  const safetyProfiles =
+    safetyDecisionProfiles ??
+    (plan && forecast && simulation
+      ? createSafetyDecisionProfiles(plan, forecast, simulation)
+      : undefined);
+  const safety = safetyProfiles?.summary;
+  const densityText =
+    safety?.peakDensity.status === "available"
+      ? `${safety.peakDensity.value.toFixed(2)} 명/㎡`
+      : "산출 불가";
   const expectedVisitors = forecast?.expectedVisitors ?? 0;
   const expectedCapacity = plan?.expectedCapacity ?? 1;
   const budgetKrw = (plan?.totalBudgetMillionKrw ?? 0) * 1_000_000;
@@ -109,9 +119,13 @@ export function B2gPrintReport({
               <span className="b2g-kpi-sub">피크 시간: {forecast?.peakHour ?? 20}:00 ({peakVisitorCount.toLocaleString("ko-KR")}명)</span>
             </div>
             <div className="b2g-kpi-card">
-              <span className="b2g-kpi-title">피크 시간대 최고 밀집도</span>
-              <strong className="b2g-kpi-val">{maxDensityPerSqm} 명/㎡</strong>
-              <span className="b2g-kpi-sub">수용 능력 한계비율: {Math.round((expectedVisitors / expectedCapacity) * 100)}%</span>
+              <span className="b2g-kpi-title">피크 시간대 물리 밀도</span>
+              <strong className="b2g-kpi-val">{densityText}</strong>
+              <span className="b2g-kpi-sub">
+                {safety?.peakDensity.status === "unavailable"
+                  ? safety.peakDensity.reason
+                  : `수용 능력 한계비율: ${Math.round((expectedVisitors / expectedCapacity) * 100)}%`}
+              </span>
             </div>
             <div className="b2g-kpi-card">
               <span className="b2g-kpi-title">추정 상권 경제 파급효과</span>
@@ -155,8 +169,8 @@ export function B2gPrintReport({
               <h3>Step 2. 밀집도 & 안전인력</h3>
               <p>행정안전부 안전 관리 매뉴얼 수용 한계 검토</p>
               <ul>
-                <li>최고 밀집도: {maxDensityPerSqm} 명/㎡</li>
-                <li>최소 안전 인력: {Math.ceil(expectedVisitors / 400)}명</li>
+                <li>물리 밀도: {densityText}</li>
+                <li>안전 인력 권고: {safety?.staffing.recommended ?? "산출 불가"}명</li>
               </ul>
             </div>
             <div className="b2g-breakdown-step">

@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import type { DemandBackdataContext, ForecastResult, SimulationResult } from "../domain/types";
-import {
-  calculatePeakDensityPerSquareMeter,
-  createSummaryKpiMetrics,
-} from "./impactMetrics";
+import { createSummaryKpiMetrics } from "./impactMetrics";
 
 const baseForecast: ForecastResult = {
   expectedVisitors: 52000,
@@ -19,13 +16,18 @@ const baseForecast: ForecastResult = {
   ],
 };
 
-function simulationWithPeakDensity(density: number): SimulationResult {
+function simulationWithRelativeScore(relativeDensityScore: number): SimulationResult {
   return {
     hour: 20,
-    congestionScore: density,
+    congestionScore: relativeDensityScore,
     bottlenecks: [],
     cells: [
-      { x: 0, y: 0, density, level: density >= 85 ? "critical" : "high" },
+      {
+        x: 0,
+        y: 0,
+        relativeDensityScore,
+        level: relativeDensityScore >= 85 ? "critical" : "high",
+      },
     ],
   };
 }
@@ -44,13 +46,13 @@ describe("createSummaryKpiMetrics", () => {
     const cappedLikeMetrics = createSummaryKpiMetrics(
       sampleFestivalPlan,
       cappedLikeForecast,
-      simulationWithPeakDensity(100),
+      simulationWithRelativeScore(100),
       sampleTourismContext,
     );
     const largerMetrics = createSummaryKpiMetrics(
       sampleFestivalPlan,
       largerForecast,
-      simulationWithPeakDensity(100),
+      simulationWithRelativeScore(100),
       sampleTourismContext,
     );
 
@@ -58,12 +60,7 @@ describe("createSummaryKpiMetrics", () => {
     expect(largerMetrics.demandIndex.percent).toBe(210);
   });
 
-  it("keeps peak density responsive above the previous 6.2 people per square meter cap", () => {
-    expect(calculatePeakDensityPerSquareMeter(simulationWithPeakDensity(100))).toBe(6.2);
-    expect(calculatePeakDensityPerSquareMeter(simulationWithPeakDensity(125))).toBe(7.8);
-  });
-
-  it("reflects regional festival DB visitors and budget in all top KPI metrics", () => {
+  it("reflects regional festival DB visitors and budget in demand, budget, and spillover metrics", () => {
     const dbContext: DemandBackdataContext = {
       status: "file-normalized",
       similarFestivalBaselines: [
@@ -94,21 +91,18 @@ describe("createSummaryKpiMetrics", () => {
     const withoutDb = createSummaryKpiMetrics(
       plan,
       forecast,
-      simulationWithPeakDensity(80),
+      simulationWithRelativeScore(80),
       sampleTourismContext,
     );
     const withDb = createSummaryKpiMetrics(
       plan,
       forecast,
-      simulationWithPeakDensity(80),
+      simulationWithRelativeScore(80),
       sampleTourismContext,
       dbContext,
     );
 
     expect(withDb.demandIndex.percent).toBeGreaterThan(withoutDb.demandIndex.percent);
-    expect(withDb.peakDensity.peoplePerSquareMeter).toBeGreaterThan(
-      withoutDb.peakDensity.peoplePerSquareMeter,
-    );
     expect(withDb.budgetEfficiency.costPerVisitorKrw).not.toBe(
       withoutDb.budgetEfficiency.costPerVisitorKrw,
     );

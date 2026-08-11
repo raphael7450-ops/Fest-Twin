@@ -1,7 +1,7 @@
 /**
  * 파일 : src/services/simulation.ts
  * 내용 : 96개 격자 공간 기반 군중 밀집 위험 시뮬레이션 및 병목 구역 진단 엔진
- * 수정 : 2026-07-24. 피크 시간대 수용 인원 밀집도(명/m²) 및 밀집 위험 등급 계산
+ * 수정 : 2026-08-11. 물리 밀도와 분리된 상대 혼잡 점수 및 위험 등급 계산
  */
 
 // 96격자 시뮬레이션 관련 도메인 타입 정의 불러오기
@@ -17,13 +17,13 @@ import type {
 // 수치 범주 제한 클램프 헬퍼 함수 불러오기
 import { clamp } from "./forecast";
 
-const MAX_CELL_DENSITY_SCORE = 160;
+const MAX_RELATIVE_DENSITY_SCORE = 100;
 
-// 격자 밀집 수치(명/m²)를 기준으로 위험 등급을 분류하는 헬퍼 함수
-export function riskLevelFromDensity(density: number): RiskLevel {
-  if (density >= 85) return "critical";
-  if (density >= 60) return "high";
-  if (density >= 30) return "medium";
+// 격자 상대 혼잡 점수를 기준으로 위험 등급을 분류하는 헬퍼 함수
+export function riskLevelFromRelativeDensityScore(relativeDensityScore: number): RiskLevel {
+  if (relativeDensityScore >= 85) return "critical";
+  if (relativeDensityScore >= 60) return "high";
+  if (relativeDensityScore >= 30) return "medium";
   return "low";
 }
 
@@ -64,24 +64,24 @@ export function createSimulation(
 
         return sum + (facility.weight * stageBoost) / (distance * distance);
       }, 0);
-      const density = clamp(
+      const relativeDensityScore = clamp(
         (visitors / expectedCapacity) * 42 + attraction * 19,
         0,
-        MAX_CELL_DENSITY_SCORE,
+        MAX_RELATIVE_DENSITY_SCORE,
       );
 
       cells.push({
         x,
         y,
-        density: Math.round(density),
-        level: riskLevelFromDensity(density),
+        relativeDensityScore: Math.round(relativeDensityScore),
+        level: riskLevelFromRelativeDensityScore(relativeDensityScore),
       });
     }
   }
 
   const bottlenecks: Bottleneck[] = cells
     .filter((cell) => cell.level === "high" || cell.level === "critical")
-    .sort((a, b) => b.density - a.density)
+    .sort((a, b) => b.relativeDensityScore - a.relativeDensityScore)
     .slice(0, 5)
     .map((cell, index) => ({
       id: `bn-${index + 1}`,
@@ -89,7 +89,7 @@ export function createSimulation(
       x: cell.x,
       y: cell.y,
       level: cell.level,
-      reason: `${hour}:00 기준 밀집도 ${cell.density}로 병목 가능성이 높습니다.`,
+      reason: `${hour}:00 기준 상대 혼잡 점수 ${cell.relativeDensityScore}로 병목 가능성이 높습니다.`,
     }));
 
   return {
@@ -97,7 +97,7 @@ export function createSimulation(
     cells,
     bottlenecks,
     congestionScore: Math.round(
-      cells.reduce((sum, cell) => sum + cell.density, 0) / cells.length,
+      cells.reduce((sum, cell) => sum + cell.relativeDensityScore, 0) / cells.length,
     ),
   };
 }

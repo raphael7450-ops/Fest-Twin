@@ -43,9 +43,11 @@ import {
   createSelectedFestivalBasis,
 } from "./services/festivalSelection";
 import { createForecast } from "./services/forecast";
+import { createLogisticsMetrics } from "./services/impactMetrics";
 import { getFallbackWeatherContext } from "./services/weatherAdapter";
 import { createMetricEvidenceSet } from "./services/metricEvidence";
 import { createPlanningReport } from "./services/report";
+import { createSafetyDecisionProfiles } from "./services/safetyDecisionMetrics";
 import { createSimulation } from "./services/simulation";
 import { getSpendingContext } from "./services/spendingAdapter";
 import { getTrafficContext } from "./services/trafficAdapter";
@@ -535,6 +537,14 @@ export function App() {
     () => createSimulation(plan, forecast, selectedHour),
     [forecast, plan, selectedHour],
   );
+  const safetyDecisionProfiles = useMemo(
+    () => createSafetyDecisionProfiles(plan, forecast, simulation, traffic),
+    [forecast, plan, simulation, traffic],
+  );
+  const logisticsMetrics = useMemo(
+    () => createLogisticsMetrics(plan, forecast, simulation, traffic),
+    [forecast, plan, simulation, traffic],
+  );
   const metricEvidence = useMemo(
     () => createMetricEvidenceSet(
       plan,
@@ -547,6 +557,7 @@ export function App() {
       demandBackdata,
       selectedFestivalBasis,
       weather,
+      safetyDecisionProfiles,
     ),
     [
       forecast,
@@ -559,6 +570,7 @@ export function App() {
       demandBackdata,
       selectedFestivalBasis,
       weather,
+      safetyDecisionProfiles,
     ],
   );
   const report = useMemo(
@@ -667,6 +679,7 @@ export function App() {
             simulation={simulation}
             tourism={tourism}
             demandBackdata={demandBackdata}
+            safetyMetrics={safetyDecisionProfiles.summary}
             onOpenEvidence={setSelectedEvidenceId}
           />
           <div className="dashboard-section-tabs" aria-label="대시보드 섹션">
@@ -692,10 +705,9 @@ export function App() {
                   </div>
                   <aside className="right-column">
                     <SafetyLogisticsPanel
-                      plan={plan}
-                      forecast={forecast}
-                      simulation={simulation}
-                      traffic={traffic}
+                      metrics={safetyDecisionProfiles.summary}
+                      logistics={logisticsMetrics}
+                      hour={simulation.hour}
                       onOpenEvidence={setSelectedEvidenceId}
                     />
                     <RiskPanel report={report} />
@@ -770,16 +782,14 @@ export function App() {
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <SafetyLogisticsPanel
-                      plan={plan}
-                      forecast={forecast}
-                      simulation={simulation}
-                      traffic={traffic}
+                      metrics={safetyDecisionProfiles.summary}
+                      logistics={logisticsMetrics}
+                      hour={simulation.hour}
                       onOpenEvidence={setSelectedEvidenceId}
                     />
                     <SafetyGuardAllocationPanel
-                      plan={plan}
-                      forecast={forecast}
-                      simulation={simulation}
+                      profiles={safetyDecisionProfiles}
+                      dayTypeCounts={forecast.dayTypeCounts}
                       onOpenEvidence={setSelectedEvidenceId}
                     />
                   </div>
@@ -813,6 +823,7 @@ export function App() {
                   spending={spending}
                   selectedFestivalBasis={selectedFestivalBasis}
                   evidenceSet={metricEvidence}
+                  safetyDecisionProfiles={safetyDecisionProfiles}
                   onOpenEvidence={setSelectedEvidenceId}
                 />
               </section>
@@ -848,6 +859,7 @@ export function App() {
       selectedFestivalBasis={selectedFestivalBasis}
       spending={spending}
       evidenceSet={metricEvidence}
+      safetyDecisionProfiles={safetyDecisionProfiles}
     />
   </>
   );

@@ -92,7 +92,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
 
   // 근거 세트 수치 추출
   const peakDensityEvidence = evidenceSet?.["peak-density"];
-  const peakDensityValue = peakDensityEvidence?.contributors?.[0]?.value || "12.3명/m²";
+  const peakDensityValue = peakDensityEvidence?.summary || "산출 불가: 물리 밀도 근거 없음";
 
   const trafficRiskEvidence = evidenceSet?.["traffic-risk"];
   const trafficRiskGrade = trafficRiskEvidence?.summary || "보통 (기준 링크 통행량 반영)";
@@ -195,15 +195,17 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   rows.push(
     formatCsvRow([
       "Step 1 (베이스라인)",
-      "행사장 유효 공간 면적",
-      `${(plan.gridWidth * plan.gridHeight * 100).toLocaleString("ko-KR")}m² (격자 ${plan.gridWidth}x${plan.gridHeight})`,
+      "행사장 면적",
+      Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0
+        ? `${plan.venueAreaSquareMeters!.toLocaleString("ko-KR")}m² (사용자 입력)`
+        : "산출 불가: 행사장 면적 미입력",
     ]),
   );
   rows.push(
     formatCsvRow([
       "Step 1 (베이스라인)",
-      "기본 단위 용량 및 밀집 한계",
-      "3.0명/m² (주의 경계 기준)",
+      "상대 혼잡 점수 범위",
+      "0~100점 (물리 밀도와 구분)",
     ]),
   );
 

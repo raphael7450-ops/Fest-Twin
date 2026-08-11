@@ -95,10 +95,12 @@ describe("Festival State & Reactive Data Switch Tests (tests/festivalSwitch.test
     expect(demandEvidence).toBeDefined();
     expect(demandEvidence.summary).toContain(forecastB.expectedVisitors.toLocaleString("ko-KR"));
 
-    // 1:1 consistency check for peak congestion density evidence
+    // Physical density remains unavailable when the selected preset has no venue area.
     const densityEvidence = evidenceSetB["peak-density"];
     expect(densityEvidence).toBeDefined();
-    expect(densityEvidence.summary).toContain("명/m²");
+    expect(densityEvidence.summary).toContain("산출 불가");
+    expect(densityEvidence.summary).toContain("행사장 면적");
+    expect(densityEvidence.summary).not.toContain("명/m²");
 
     // Verify Evidence Drawer contains Sejong parameters and no Daejeon residual text
     expect(demandEvidence.formulaSummary).toBeDefined();

@@ -4,10 +4,12 @@ import type {
   MetricEvidence,
   MetricEvidenceId,
   PlanningReport,
+  SafetyDecisionProfiles,
   SelectedFestivalBasis,
   SpendingContext,
 } from "../domain/types";
 import { createSimulation } from "../services/simulation";
+import { createSafetyDecisionProfiles } from "../services/safetyDecisionMetrics";
 import { CsvExportButton } from "./CsvExportButton";
 import { EvidenceButton } from "./EvidenceButton";
 import { InfrastructureCapacityPanel } from "./InfrastructureCapacityPanel";
@@ -23,6 +25,7 @@ interface ReportViewProps {
   selectedFestivalBasis?: SelectedFestivalBasis | null;
   spending?: SpendingContext;
   evidenceSet: Record<MetricEvidenceId, MetricEvidence>;
+  safetyDecisionProfiles?: SafetyDecisionProfiles;
   onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
@@ -54,11 +57,16 @@ export function ReportView({
   selectedFestivalBasis,
   spending,
   evidenceSet,
+  safetyDecisionProfiles,
   onOpenEvidence,
 }: ReportViewProps) {
   const limitations = uniqueLimitations(evidenceSet);
   const peakHour = forecast.visitorsByHour.find((item) => item.hour === forecast.peakHour);
   const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
+  const reportSimulation = createSimulation(plan, forecast, forecast.peakHour);
+  const reportSafetyProfiles =
+    safetyDecisionProfiles ??
+    createSafetyDecisionProfiles(plan, forecast, reportSimulation);
   const safetyFindings =
     report.findings.length > 0
       ? report.findings
@@ -187,7 +195,11 @@ export function ReportView({
           <h3>[모델 1 & 2] 수용성 및 안전배치 시뮬레이션</h3>
         </div>
         <InfrastructureCapacityPanel plan={plan} forecast={forecast} onOpenEvidence={onOpenEvidence} />
-        <SafetyGuardAllocationPanel plan={plan} forecast={forecast} simulation={createSimulation(plan, forecast, forecast.peakHour)} onOpenEvidence={onOpenEvidence} />
+        <SafetyGuardAllocationPanel
+          profiles={reportSafetyProfiles}
+          dayTypeCounts={forecast.dayTypeCounts}
+          onOpenEvidence={onOpenEvidence}
+        />
       </section>
 
       <section className="report-section openapi-operations-report" aria-label="OpenAPI 운영계정 신청 증빙">

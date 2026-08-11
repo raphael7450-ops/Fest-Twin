@@ -20,10 +20,10 @@ export function Heatmap({ plan, simulation }: HeatmapProps) {
       >
         {simulation.cells.map((cell) => (
           <div
-            aria-label={`${cell.x + 1}열 ${cell.y + 1}행 밀집도 ${cell.density}, 위험 ${cell.level}`}
+            aria-label={`${cell.x + 1}열 ${cell.y + 1}행 상대 혼잡 점수 ${cell.relativeDensityScore}, 위험 ${cell.level}`}
             className={`heat-cell heat-${cell.level}`}
             key={`${cell.x}-${cell.y}`}
-            title={`밀집도 ${cell.density}`}
+            title={`상대 혼잡 점수 ${cell.relativeDensityScore}`}
           />
         ))}
       </div>

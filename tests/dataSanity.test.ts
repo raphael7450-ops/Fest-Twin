@@ -5,11 +5,9 @@ import { sampleTourismContext } from "../src/data/sampleTourApi";
 import { sampleTrendContext } from "../src/data/sampleTrends";
 import type { ForecastResult } from "../src/domain/types";
 import { createForecast } from "../src/services/forecast";
-import {
-  calculatePeakDensityPerSquareMeter,
-  createEconomicImpactMetrics,
-} from "../src/services/impactMetrics";
+import { createEconomicImpactMetrics } from "../src/services/impactMetrics";
 import { createMetricEvidenceSet } from "../src/services/metricEvidence";
+import { createSafetyDecisionProfiles } from "../src/services/safetyDecisionMetrics";
 import { createSimulation } from "../src/services/simulation";
 
 function expectFiniteNonNegative(value: number) {
@@ -41,7 +39,7 @@ describe("Data Reliability & Evidence Auditor sanity checks", () => {
     }
   });
 
-  it("keeps simulation density within physical dashboard bounds for zero-area layouts", () => {
+  it("keeps relative simulation scores bounded and physical density unavailable for zero-area layouts", () => {
     const invalidPlan = {
       ...sampleFestivalPlan,
       gridWidth: 0,
@@ -58,11 +56,15 @@ describe("Data Reliability & Evidence Auditor sanity checks", () => {
     };
 
     const simulation = createSimulation(invalidPlan, forecast, 20);
-    const peakDensity = calculatePeakDensityPerSquareMeter(simulation);
+    const safety = createSafetyDecisionProfiles(invalidPlan, forecast, simulation).summary;
 
     expect(simulation.cells.length).toBeGreaterThan(0);
     expectFiniteNonNegative(simulation.congestionScore);
-    expect(peakDensity).toBeLessThanOrEqual(9.9);
+    expect(simulation.cells.every((cell) => cell.relativeDensityScore <= 100)).toBe(true);
+    expect(safety.peakDensity).toMatchObject({
+      status: "unavailable",
+      unit: "people_per_square_meter",
+    });
   });
 
   it("clamps economic impact values when budget, visitors, or spending inputs are invalid", () => {

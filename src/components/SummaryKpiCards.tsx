@@ -10,6 +10,7 @@ import type {
   FestivalPlan, // 축제 기획안 모델
   ForecastResult, // 수요 예측 결과 모델
   MetricEvidenceId, // 근거 보기 지표 ID
+  SafetyDecisionMetrics,
   SimulationResult, // 96격자 군중 밀집 시뮬레이션 결과
   TourismContext, // TourAPI 관광지 연동 맥락
 } from "../domain/types";
@@ -25,6 +26,7 @@ interface SummaryKpiCardsProps {
   simulation: SimulationResult; // 피크 혼잡 시뮬레이션 결과
   tourism: TourismContext; // 주변 관광 매력도 정보
   demandBackdata?: DemandBackdataContext;
+  safetyMetrics?: SafetyDecisionMetrics;
   onOpenEvidence: (metricId: MetricEvidenceId) => void; // 근거 모달 오픈 콜백
 }
 
@@ -40,15 +42,37 @@ export function SummaryKpiCards({
   simulation,
   tourism,
   demandBackdata,
+  safetyMetrics,
   onOpenEvidence,
 }: SummaryKpiCardsProps) {
-  const metrics = createSummaryKpiMetrics(plan, forecast, simulation, tourism, demandBackdata);
+  const metrics = createSummaryKpiMetrics(
+    plan,
+    forecast,
+    simulation,
+    tourism,
+    demandBackdata,
+    safetyMetrics,
+  );
   const demandTone =
     metrics.demandIndex.grade === "상"
       ? "high"
       : metrics.demandIndex.grade === "중"
         ? "medium"
         : "low";
+  const densityTone =
+    metrics.peakDensity.status === "available" && metrics.peakDensity.value >= 5
+      ? "warning"
+      : metrics.peakDensity.status === "available" && metrics.peakDensity.value >= 3
+        ? "caution"
+        : "normal";
+  const densityLabel =
+    metrics.peakDensity.status === "unavailable"
+      ? "근거 부족"
+      : metrics.peakDensity.value >= 5
+        ? "경고"
+        : metrics.peakDensity.value >= 3
+          ? "주의"
+          : "정상";
 
   return (
     <section className="summary-grid summary-kpi-grid" aria-label="핵심 진단 지표">
@@ -71,14 +95,20 @@ export function SummaryKpiCards({
           <span>최고 밀집 위험도</span>
           <div className="kpi-actions">
             <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
-            <em className={`risk-badge risk-badge-${metrics.peakDensity.status}`}>
-              {metrics.peakDensity.label}
+            <em className={`risk-badge risk-badge-${densityTone}`}>
+              {densityLabel}
             </em>
           </div>
         </div>
-        <strong>{metrics.peakDensity.peoplePerSquareMeter}명/m²</strong>
+        <strong>
+          {metrics.peakDensity.status === "available"
+            ? `${metrics.peakDensity.value.toFixed(2)}명/m²`
+            : "산출 불가"}
+        </strong>
         <small className="metric-trend">
-          시뮬레이션 셀 최고 밀집도를 현장 진단 단위로 환산
+          {metrics.peakDensity.status === "available"
+            ? metrics.peakDensity.basis
+            : metrics.peakDensity.reason}
         </small>
       </article>
 

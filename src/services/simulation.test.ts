@@ -18,6 +18,12 @@ describe("createSimulation", () => {
       sampleFestivalPlan.gridWidth * sampleFestivalPlan.gridHeight,
     );
     expect(simulation.bottlenecks.length).toBeGreaterThan(0);
-    expect(simulation.bottlenecks[0].reason).toContain("밀집도");
+    expect(simulation.bottlenecks[0].reason).toContain("상대 혼잡 점수");
+    expect(
+      simulation.cells.every(
+        (cell) => cell.relativeDensityScore >= 0 && cell.relativeDensityScore <= 100,
+      ),
+    ).toBe(true);
+    expect(simulation.cells.some((cell) => "density" in cell)).toBe(false);
   });
 });

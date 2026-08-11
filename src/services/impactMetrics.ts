@@ -8,13 +8,14 @@ import type {
   DemandBackdataContext,
   FestivalPlan,
   ForecastResult,
+  MetricEstimate,
+  SafetyDecisionMetrics,
   SimulationResult,
   SpendingContext,
   TourismContext,
   TrafficContext,
 } from "../domain/types";
-
-export type DensityRiskStatus = "normal" | "caution" | "warning";
+import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 
 export interface SummaryKpiMetrics {
   demandIndex: {
@@ -22,11 +23,7 @@ export interface SummaryKpiMetrics {
     grade: "상" | "중" | "하";
     description: string;
   };
-  peakDensity: {
-    peoplePerSquareMeter: number;
-    status: DensityRiskStatus;
-    label: "정상" | "주의" | "경고";
-  };
+  peakDensity: MetricEstimate;
   budgetEfficiency: {
     costPerVisitorKrw: number;
     description: string;
@@ -37,9 +34,7 @@ export interface SummaryKpiMetrics {
   };
 }
 
-export interface SafetyLogisticsMetrics {
-  safetyStaff: number;
-  medicalStaff: number;
+export interface LogisticsMetrics {
   parkingOccupancyRate: number;
   trafficRiskScore: number;
   trafficRiskLabel: "낮음" | "보통" | "높음";
@@ -47,8 +42,6 @@ export interface SafetyLogisticsMetrics {
   trafficSourceLabel: string;
   trafficSourceStatusLabel: string;
   parkingBaseOccupancyRate: number;
-  peakDensity: number;
-  peakVisitors: number;
 }
 
 export interface EconomicImpactMetrics {
@@ -62,8 +55,6 @@ export interface EconomicImpactMetrics {
 }
 
 const FALLBACK_SPEND_PER_VISITOR_KRW = 58400;
-const PEAK_DENSITY_STANDARD_PEOPLE_PER_SQUARE_METER = 6.2;
-const PEAK_DENSITY_DISPLAY_MAX_PEOPLE_PER_SQUARE_METER = 9.9;
 
 function clamp(value: number, min: number, max: number) {
   const safeMin = Number.isFinite(min) ? min : 0;
@@ -111,49 +102,6 @@ function demandBackdataBenchmark(demandBackdata?: DemandBackdataContext) {
   };
 }
 
-export function calculatePeakDensityPerSquareMeter(
-  simulation: SimulationResult,
-) {
-  const peakCellDensity = Math.max(
-    ...simulation.cells.map((cell) => cell.density),
-    0,
-  );
-
-  return Math.round(
-    clamp(
-      (peakCellDensity / 100) * PEAK_DENSITY_STANDARD_PEOPLE_PER_SQUARE_METER,
-      0.2,
-      PEAK_DENSITY_DISPLAY_MAX_PEOPLE_PER_SQUARE_METER,
-    ) * 10,
-  ) / 10;
-}
-
-export function getDensityRisk(
-  peoplePerSquareMeter: number,
-): SummaryKpiMetrics["peakDensity"] {
-  if (peoplePerSquareMeter >= 5) {
-    return {
-      peoplePerSquareMeter,
-      status: "warning",
-      label: "경고",
-    };
-  }
-
-  if (peoplePerSquareMeter >= 3) {
-    return {
-      peoplePerSquareMeter,
-      status: "caution",
-      label: "주의",
-    };
-  }
-
-  return {
-    peoplePerSquareMeter,
-    status: "normal",
-    label: "정상",
-  };
-}
-
 export function calculateBudgetPerVisitor(
   plan: FestivalPlan,
   forecast: ForecastResult,
@@ -191,6 +139,7 @@ export function createSummaryKpiMetrics(
   simulation: SimulationResult,
   tourism: TourismContext,
   demandBackdata?: DemandBackdataContext,
+  safetyMetrics?: SafetyDecisionMetrics,
 ): SummaryKpiMetrics {
   const benchmark = demandBackdataBenchmark(demandBackdata);
   const expectedCapacity = Math.max(
@@ -216,14 +165,9 @@ export function createSummaryKpiMetrics(
   );
   const demandGrade =
     demandIndex >= 90 ? "상" : demandIndex >= 70 ? "중" : "하";
-  const backdataDensityAdjustment =
-    benchmark.visitors > 0
-      ? clamp((benchmark.visitors / expectedCapacity - 1) * 0.42, 0, 2.4)
-      : 0;
-  const peakDensity = getDensityRisk(
-    Math.round((calculatePeakDensityPerSquareMeter(simulation) + backdataDensityAdjustment) * 10) /
-      10,
-  );
+  const peakDensity =
+    safetyMetrics?.peakDensity ??
+    createSafetyDecisionProfiles(plan, forecast, simulation).summary.peakDensity;
   const costPerVisitorKrw = calculateBudgetPerVisitor(plan, forecast, demandBackdata);
   const backdataSpilloverBonus =
     benchmark.visitors > 0
@@ -258,34 +202,21 @@ export function createSummaryKpiMetrics(
   };
 }
 
-export function createSafetyLogisticsMetrics(
+export function createLogisticsMetrics(
   plan: FestivalPlan,
   forecast: ForecastResult,
   simulation: SimulationResult,
   traffic?: TrafficContext,
-): SafetyLogisticsMetrics {
+): LogisticsMetrics {
   const peakVisitors = Math.max(
     ...forecast.visitorsByHour.map((item) =>
       Number.isFinite(item.visitors) ? item.visitors : 0,
     ),
     0,
   );
-  const peakDensity = calculatePeakDensityPerSquareMeter(simulation);
-  const criticalCells = simulation.cells.filter(
-    (cell) => cell.level === "critical",
-  ).length;
   const highRiskCells = simulation.cells.filter(
     (cell) => cell.level === "high" || cell.level === "critical",
   ).length;
-  const bottleneckWeight = simulation.bottlenecks.length * 2;
-  const safetyStaff = Math.max(
-    8,
-    Math.ceil(peakVisitors / 820 + peakDensity * 2 + bottleneckWeight),
-  );
-  const medicalStaff = Math.max(
-    2,
-    Math.ceil(peakVisitors / 7200 + criticalCells / 14),
-  );
   const estimatedCars = peakVisitors * 0.18;
   const assumedParkingCapacity = Math.max(
     180,
@@ -302,8 +233,6 @@ export function createSafetyLogisticsMetrics(
   );
 
   return {
-    safetyStaff,
-    medicalStaff,
     parkingOccupancyRate,
     trafficRiskScore,
     trafficRiskLabel: traffic?.riskLabel ?? "낮음",
@@ -312,8 +241,6 @@ export function createSafetyLogisticsMetrics(
     trafficSourceStatusLabel:
       traffic?.status === "sample-fallback" ? "샘플 대체" : `${traffic?.year ?? 2024}년 기준`,
     parkingBaseOccupancyRate,
-    peakDensity,
-    peakVisitors,
   };
 }
 

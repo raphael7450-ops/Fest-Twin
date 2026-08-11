@@ -1,55 +1,57 @@
 import { useState } from "react";
 import type {
   DayType,
-  FestivalPlan,
-  ForecastResult,
+  DayTypeCounts,
+  MetricEstimate,
   MetricEvidenceId,
-  SimulationResult,
+  SafetyDecisionProfiles,
 } from "../domain/types";
-import { calculateSafetyGuardAllocationForecast } from "../services/capacityAndSafetyForecast";
 import { EvidenceButton } from "./EvidenceButton";
 
 interface SafetyGuardAllocationPanelProps {
-  plan: FestivalPlan;
-  forecast: ForecastResult;
-  simulation: SimulationResult;
+  profiles: SafetyDecisionProfiles;
+  dayTypeCounts?: DayTypeCounts;
   onOpenEvidence?: (metricId: MetricEvidenceId) => void;
 }
 
+function availableValue(metric: MetricEstimate, suffix: string) {
+  return metric.status === "available" ? `${Math.round(metric.value)}${suffix}` : "산출 불가";
+}
+
+function evacuationValue(metric: MetricEstimate) {
+  if (metric.status === "unavailable") {
+    return "산출 불가";
+  }
+
+  const totalSeconds = Math.round(metric.value);
+  return `${Math.floor(totalSeconds / 60)}분 ${totalSeconds % 60}초`;
+}
+
 export function SafetyGuardAllocationPanel({
-  plan,
-  forecast,
-  simulation,
+  profiles,
+  dayTypeCounts,
   onOpenEvidence,
 }: SafetyGuardAllocationPanelProps) {
   const [selectedDayType, setSelectedDayType] = useState<DayType>("summary");
-
-  const profiles = forecast.dayTypeProfiles;
-  const currentProfile = profiles?.[selectedDayType];
-
-  const safety = calculateSafetyGuardAllocationForecast(plan, forecast, simulation, currentProfile);
-
-  const dayTypeCounts = forecast.dayTypeCounts ?? {
+  const safety = profiles[selectedDayType];
+  const counts = dayTypeCounts ?? {
     totalDays: 3,
     weekdayDays: 2,
     weekendDays: 1,
   };
-
-  const goldenMinutes = Math.floor(safety.evacuationGoldenTimeSeconds / 60);
-  const goldenSeconds = safety.evacuationGoldenTimeSeconds % 60;
 
   return (
     <section className="panel safety-allocation-panel" aria-label="[모델 2] 인파 사고 리스크 & 안전요원 배치 모델">
       <div className="panel-heading">
         <div>
           <h2>인파 사고 리스크 & 구역별 안전요원 배치 모델</h2>
-          <p>구역별 추천 배치 인원, 의료 지원 및 비상 탈출 골든타임 진단</p>
+          <p>구역별 추천 배치 인원, 의료 지원 및 비상 탈출 시간 진단</p>
         </div>
         <div className="panel-actions-inline">
           <span className="badge badge-warning">모델 2 안전배치</span>
-          {onOpenEvidence && (
+          {onOpenEvidence ? (
             <EvidenceButton onClick={() => onOpenEvidence("safety-guards-allocation")} />
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -61,7 +63,7 @@ export function SafetyGuardAllocationPanel({
           className={`day-type-tab ${selectedDayType === "summary" ? "active" : ""}`}
           onClick={() => setSelectedDayType("summary")}
         >
-          전체 요약 ({dayTypeCounts.totalDays}일간)
+          전체 요약 ({counts.totalDays}일간)
         </button>
         <button
           type="button"
@@ -70,7 +72,7 @@ export function SafetyGuardAllocationPanel({
           className={`day-type-tab ${selectedDayType === "weekday" ? "active" : ""}`}
           onClick={() => setSelectedDayType("weekday")}
         >
-          평일 평균 ({dayTypeCounts.weekdayDays}일)
+          평일 평균 ({counts.weekdayDays}일)
         </button>
         <button
           type="button"
@@ -79,7 +81,7 @@ export function SafetyGuardAllocationPanel({
           className={`day-type-tab ${selectedDayType === "weekend" ? "active" : ""}`}
           onClick={() => setSelectedDayType("weekend")}
         >
-          주말 피크 ({dayTypeCounts.weekendDays}일)
+          주말 피크 ({counts.weekendDays}일)
         </button>
       </div>
 
@@ -87,43 +89,47 @@ export function SafetyGuardAllocationPanel({
         <article className="safety-summary-card">
           <div className="safety-card-header">
             <span>총 추천 안전관리요원</span>
-            {onOpenEvidence && (
+            {onOpenEvidence ? (
               <EvidenceButton onClick={() => onOpenEvidence("safety-guards-allocation")} />
-            )}
+            ) : null}
           </div>
-          <strong>{safety.totalRecommendedGuards}명</strong>
-          <small>행안부 인파 안전관리 지침 반영 수치</small>
+          <strong>{safety.staffing.recommended}명</strong>
+          <small>{safety.staffing.min}~{safety.staffing.max}명 사전 배치 범위</small>
         </article>
 
         <article className="safety-summary-card">
           <div className="safety-card-header">
-            <span>예상 응급환자 / 의료 지원</span>
-            {onOpenEvidence && (
+            <span>의료 지원</span>
+            {onOpenEvidence ? (
               <EvidenceButton onClick={() => onOpenEvidence("medical-staff")} />
-            )}
+            ) : null}
           </div>
-          <strong>시간당 {safety.expectedMedicalIncidentsPerHour}건</strong>
-          <small>추천 의료진 {safety.recommendedMedicalStaff}명 / 구급차 {safety.recommendedAmbulances}대</small>
+          <strong>{availableValue(safety.medicalStaff, "명")}</strong>
+          <small>구급차 {availableValue(safety.ambulances, "대")}</small>
         </article>
 
         <article className="safety-summary-card">
           <div className="safety-card-header">
-            <span>비상 탈출 골든타임</span>
-            {onOpenEvidence && (
+            <span>비상 탈출 예상 시간</span>
+            {onOpenEvidence ? (
               <EvidenceButton onClick={() => onOpenEvidence("evacuation-golden-time")} />
-            )}
+            ) : null}
           </div>
-          <strong>{goldenMinutes}분 {goldenSeconds}초 ({safety.evacuationStatus})</strong>
-          <small>100m 비상 동선 탈출 예상 시간</small>
+          <strong>{evacuationValue(safety.evacuationTime)}</strong>
+          <small>
+            {safety.evacuationTime.status === "available"
+              ? safety.evacuationTime.basis
+              : safety.evacuationTime.reason}
+          </small>
         </article>
       </div>
 
       <div className="zone-allocation-table-wrapper">
         <div className="table-heading-with-action">
           <h3>구역별 안전요원 추천 배치 명세</h3>
-          {onOpenEvidence && (
+          {onOpenEvidence ? (
             <EvidenceButton onClick={() => onOpenEvidence("safety-guards-allocation")} />
-          )}
+          ) : null}
         </div>
         <table className="zone-allocation-table">
           <thead>
@@ -141,7 +147,7 @@ export function SafetyGuardAllocationPanel({
                 <td><span className="badge-highlight">{zone.recommendedGuards}명</span></td>
                 <td>
                   <span className={`risk-badge risk-badge-${zone.priority === "high" ? "high" : "low"}`}>
-                    {zone.priority === "high" ? "상 (필수)" : "중 (권고)"}
+                    {zone.priority === "high" ? "상 (필수)" : zone.priority === "medium" ? "중 (권고)" : "낮음"}
                   </span>
                 </td>
                 <td>{zone.reason}</td>

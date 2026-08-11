@@ -11,6 +11,9 @@ import type {
   ForecastResult,
   MetricEvidence,
   MetricEvidenceId,
+  MetricEstimate,
+  SafetyDecisionMetrics,
+  SafetyDecisionProfiles,
   SelectedFestivalBasis,
   SimulationResult,
   SpendingContext,
@@ -21,9 +24,11 @@ import type {
 import type { WeatherContext } from "./weatherAdapter";
 import {
   createEconomicImpactMetrics,
-  createSafetyLogisticsMetrics,
+  createLogisticsMetrics,
   createSummaryKpiMetrics,
+  type LogisticsMetrics,
 } from "./impactMetrics";
+import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 
 function weatherSourceDetails(weather?: WeatherContext): MetricEvidence["sourceDetails"] {
   return [
@@ -359,11 +364,17 @@ function formatOperatingHours(hours: number[]) {
   return hours.map((hour) => `${hour}:00`).join(", ");
 }
 
+function formatMetricEstimate(metric: MetricEstimate, suffix: string) {
+  return metric.status === "available" ? `${metric.value.toFixed(2)}${suffix}` : `산출 불가: ${metric.reason}`;
+}
+
 function selectedSafetyLogisticsBasisDetails(
   plan: FestivalPlan,
   forecast: ForecastResult,
   simulation: SimulationResult,
-  safety: ReturnType<typeof createSafetyLogisticsMetrics>,
+  safety: SafetyDecisionMetrics,
+  logistics: LogisticsMetrics,
+  peakVisitors: number,
   traffic?: TrafficContext,
   selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): MetricEvidence["sourceDetails"] {
@@ -419,11 +430,11 @@ function selectedSafetyLogisticsBasisDetails(
             { label: "피크 시간", value: `${peakHour}:00` },
             {
               label: "피크 방문객",
-              value: `${safety.peakVisitors.toLocaleString("ko-KR")}명`,
+              value: `${peakVisitors.toLocaleString("ko-KR")}명`,
             },
             {
               label: "최고 밀집도",
-              value: `${safety.peakDensity}명/m²`,
+              value: formatMetricEstimate(safety.peakDensity, "명/m²"),
             },
             { label: "병목 후보", value: `${simulation.bottlenecks.length}곳` },
             {
@@ -432,7 +443,7 @@ function selectedSafetyLogisticsBasisDetails(
             },
             {
               label: "교통 기준 도로",
-              value: traffic?.links[0]?.roadName ?? safety.trafficRoadName,
+              value: traffic?.links[0]?.roadName ?? logistics.trafficRoadName,
             },
             {
               label: "교통 데이터 상태",
@@ -528,9 +539,20 @@ export function createMetricEvidenceSet(
   demandBackdata?: DemandBackdataContext,
   selectedFestivalBasis?: SelectedFestivalBasis | null,
   weather?: WeatherContext,
+  safetyDecisionProfiles?: SafetyDecisionProfiles,
 ): Record<MetricEvidenceId, MetricEvidence> {
-  const summary = createSummaryKpiMetrics(plan, forecast, simulation, tourism, demandBackdata);
-  const safety = createSafetyLogisticsMetrics(plan, forecast, simulation, traffic);
+  const safetyProfiles =
+    safetyDecisionProfiles ?? createSafetyDecisionProfiles(plan, forecast, simulation, traffic);
+  const safety = safetyProfiles.summary;
+  const logistics = createLogisticsMetrics(plan, forecast, simulation, traffic);
+  const summary = createSummaryKpiMetrics(
+    plan,
+    forecast,
+    simulation,
+    tourism,
+    demandBackdata,
+    safety,
+  );
   const economy = createEconomicImpactMetrics(plan, forecast, spending);
   const confidence = sourceConfidence(tourism, trends);
   const limitations = fallbackLimitations(tourism, trends);
@@ -548,6 +570,8 @@ export function createMetricEvidenceSet(
     forecast,
     simulation,
     safety,
+    logistics,
+    Math.max(...forecast.visitorsByHour.map((item) => item.visitors), 0),
     traffic,
     selectedFestivalBasis,
   );
@@ -627,7 +651,7 @@ export function createMetricEvidenceSet(
       { label: "혼잡도 기준 시간", value: `${simulation.hour}:00` },
       {
         label: "최고 밀집도",
-        value: `${summary.peakDensity.peoplePerSquareMeter}명/m²`,
+        value: formatMetricEstimate(summary.peakDensity, "명/m²"),
       },
     ],
   );
@@ -636,7 +660,7 @@ export function createMetricEvidenceSet(
     "안전 인력 산출값",
     [
       { label: "피크 방문객", value: `${peakVisitors.toLocaleString("ko-KR")}명` },
-      { label: "최고 밀집도", value: `${safety.peakDensity}명/m²` },
+      { label: "최고 밀집도", value: formatMetricEstimate(safety.peakDensity, "명/m²") },
       { label: "병목 후보", value: `${simulation.bottlenecks.length}곳` },
     ],
   );
@@ -654,7 +678,7 @@ export function createMetricEvidenceSet(
     [
       { label: "피크 방문객", value: `${peakVisitors.toLocaleString("ko-KR")}명` },
       { label: "고위험 격자", value: `${highRiskCells}곳` },
-      { label: "주차 수용률", value: `${safety.parkingOccupancyRate}%` },
+      { label: "주차 수용률", value: `${logistics.parkingOccupancyRate}%` },
     ],
   );
   const roiDetails = economicDerivedDetails(economy);
@@ -740,17 +764,18 @@ export function createMetricEvidenceSet(
     "peak-density": {
       metricId: "peak-density",
       title: "최고 밀집 위험도",
-      summary: `시뮬레이션 격자의 최고 혼잡도를 ${summary.peakDensity.peoplePerSquareMeter}명/m²로 환산했습니다.`,
+      summary:
+        summary.peakDensity.status === "available"
+          ? `피크 방문객과 입력된 행사장 면적으로 물리 밀도 ${summary.peakDensity.value.toFixed(2)}명/m²를 산출했습니다.`
+          : `물리 밀도 산출 불가: ${summary.peakDensity.reason}`,
       dataSources: [
         "시간대별 예상 방문객",
-        "행사장 격자",
-        "무대, 출입구, 부스, 주차장 시설 배치",
+        "사용자 입력 행사장 면적",
       ],
-      formulaSummary:
-        "격자 밀집도 = 시간대 방문객 비율과 시설 매력도를 결합하고, 최고 격자값을 명/m² 단위로 환산합니다.",
+      formulaSummary: "물리 밀도 = 피크 방문객 / 입력된 행사장 면적",
       assumptions: [
-        "시설 가까이에 인파가 더 집중된다고 가정합니다.",
-        "무대 프로그램 시간에는 무대 주변 가중치를 높입니다.",
+        "피크 방문객이 입력된 행사장 면적에 고르게 분포한다고 가정합니다.",
+        "행사장 면적은 현장 도면과 실측으로 별도 검증해야 합니다.",
       ],
       confidence,
       confidenceLabel: confidenceLabel(confidence),
@@ -826,7 +851,7 @@ export function createMetricEvidenceSet(
     "safety-staff": {
       metricId: "safety-staff",
       title: "안전관리 요원 추천 배치",
-      summary: `피크 방문객과 병목 후보를 기준으로 ${safety.safetyStaff}명을 추천합니다.`,
+      summary: `피크 방문객과 병목 후보를 기준으로 ${safety.staffing.recommended}명을 추천합니다.`,
       dataSources: [
         "보건복지부/소방청 응급의료기관 및 119 안전센터",
         "피크 시간대 예상 방문객",
@@ -834,7 +859,7 @@ export function createMetricEvidenceSet(
         "병목 후보 수",
       ],
       formulaSummary:
-        "추천 인원 = 피크 방문객 규모, 최고 밀집도, 병목 후보 수, 인접 응급/소방센터 거리를 함께 반영한 배치 검토값입니다.",
+        "추천 인원 = ceil(피크 방문객 ÷ 820 + 병목 후보 × 2 + 상대 혼잡 점수 ÷ 50), 최소 8명",
       assumptions: ["병목 후보가 늘어나면 현장 통제 인력 필요량을 높입니다."],
       confidence,
       confidenceLabel: confidenceLabel(confidence),
@@ -848,7 +873,7 @@ export function createMetricEvidenceSet(
       contributors: [
         {
           label: "피크 방문객",
-          value: `${safety.peakVisitors.toLocaleString("ko-KR")}명`,
+          value: `${peakVisitors.toLocaleString("ko-KR")}명`,
           effect: "risk",
         },
         {
@@ -861,11 +886,14 @@ export function createMetricEvidenceSet(
     "medical-staff": {
       metricId: "medical-staff",
       title: "의료/구급 인력 추천 배치",
-      summary: `피크 방문객과 고위험 격자를 기준으로 ${safety.medicalStaff}명을 추천합니다.`,
+      summary:
+        safety.medicalStaff.status === "available"
+          ? `피크 방문객과 임계 상대 혼잡 격자를 기준으로 ${safety.medicalStaff.value}명을 추천합니다.`
+          : `의료 인력 산출 불가: ${safety.medicalStaff.reason}`,
       dataSources: [
         "보건복지부/소방청 응급의료기관 및 119 안전센터",
         "피크 시간대 예상 방문객",
-        "고위험 및 임계 혼잡 격자",
+        "고위험 및 임계 상대 혼잡 격자",
       ],
       formulaSummary:
         "추천 인원 = 피크 방문객 규모와 임계 혼잡 격자 수, 인접 권역응급센터 이송 시간을 반영한 구급 대응 검토값입니다.",
@@ -882,12 +910,18 @@ export function createMetricEvidenceSet(
       contributors: [
         {
           label: "최고 밀집도",
-          value: `${safety.peakDensity}명/m²`,
-          effect: safety.peakDensity >= 3 ? "risk" : "neutral",
+          value: formatMetricEstimate(safety.peakDensity, "명/m²"),
+          effect:
+            safety.peakDensity.status === "available" && safety.peakDensity.value >= 3
+              ? "risk"
+              : "neutral",
         },
         {
           label: "추천 인원",
-          value: `${safety.medicalStaff}명`,
+          value:
+            safety.medicalStaff.status === "available"
+              ? `${safety.medicalStaff.value}명`
+              : "산출 불가",
           effect: "neutral",
         },
       ],
@@ -895,7 +929,7 @@ export function createMetricEvidenceSet(
     "traffic-risk": {
       metricId: "traffic-risk",
       title: "접근 교통 위험도",
-      summary: `${safety.trafficRoadName} 접근 구간의 교통 위험도를 ${safety.trafficRiskScore}점, ${safety.trafficRiskLabel} 단계로 산출했습니다.`,
+      summary: `${logistics.trafficRoadName} 접근 구간의 교통 위험도를 ${logistics.trafficRiskScore}점, ${logistics.trafficRiskLabel} 단계로 산출했습니다.`,
       dataSources: [
         "국토교통부 TAGO 대중교통 정류소/노선 API",
         "KTDB/View-T 선택 링크 교통량",
@@ -915,17 +949,17 @@ export function createMetricEvidenceSet(
       contributors: [
         {
           label: "위험도",
-          value: `${safety.trafficRiskScore}점`,
-          effect: safety.trafficRiskScore >= 70 ? "risk" : "neutral",
+          value: `${logistics.trafficRiskScore}점`,
+          effect: logistics.trafficRiskScore >= 70 ? "risk" : "neutral",
         },
         {
           label: "위험 단계",
-          value: safety.trafficRiskLabel,
-          effect: safety.trafficRiskLabel === "높음" ? "risk" : "neutral",
+          value: logistics.trafficRiskLabel,
+          effect: logistics.trafficRiskLabel === "높음" ? "risk" : "neutral",
         },
         {
           label: "기준 도로",
-          value: safety.trafficRoadName,
+          value: logistics.trafficRoadName,
           effect: "neutral",
         },
       ],
@@ -933,7 +967,7 @@ export function createMetricEvidenceSet(
     "parking-occupancy": {
       metricId: "parking-occupancy",
       title: "주차 수용 차오름 비율",
-      summary: `피크 방문객의 차량 유입을 가정해 주차 수용률 ${safety.parkingOccupancyRate}%를 산출했습니다.`,
+      summary: `피크 방문객의 차량 유입을 가정해 주차 수용률 ${logistics.parkingOccupancyRate}%를 산출했습니다.`,
       dataSources: [
         "피크 시간대 예상 방문객",
         "행사장 수용 인원",
@@ -954,12 +988,12 @@ export function createMetricEvidenceSet(
       contributors: [
         {
           label: "주차 차오름",
-          value: `${safety.parkingOccupancyRate}%`,
-          effect: safety.parkingOccupancyRate >= 85 ? "risk" : "neutral",
+          value: `${logistics.parkingOccupancyRate}%`,
+          effect: logistics.parkingOccupancyRate >= 85 ? "risk" : "neutral",
         },
         {
           label: "피크 방문객",
-          value: `${safety.peakVisitors.toLocaleString("ko-KR")}명`,
+          value: `${peakVisitors.toLocaleString("ko-KR")}명`,
           effect: "risk",
         },
       ],
@@ -1150,34 +1184,28 @@ export function createMetricEvidenceSet(
       dataSources: [
         "행정안전부 다중운집 인파사고 안전관리 기본계획",
         "문화체육관광부 공연·축제 현장안전 가이드라인",
-        "2D 인파 밀집도 시뮬레이션 병목 고위험 셀",
+        "2D 인파 상대 혼잡 시뮬레이션 병목 후보",
       ],
       formulaSummary:
-        "추천 인원 = 메인무대(2,200명/1명) + 주요 출입구(4,200명/1명) + 병목 보행로(고위험 셀×3명 + 혼잡도 점수 비례)",
+        "추천 인원 = ceil(피크 방문객 ÷ 820 + 병목 후보 × 2 + 상대 혼잡 점수 ÷ 50), 최소 8명",
       calculationSteps: [
         {
           stepNumber: 1,
-          title: "1단계: 메인 무대 및 핵심 행사 구역 산출",
-          formula: "무대 안전요원 = 예상 방문객 ÷ 2,200명 (최소 10명)",
-          inputValue: `방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
-          coefficient: "2,200명/명 기준",
-          subtotal: `${Math.max(10, Math.round(forecast.expectedVisitors / 2200))}명 배치`,
+          title: "1단계: 총 안전관리요원 범위 산출",
+          formula: "ceil(피크 방문객 ÷ 820 + 병목 후보 × 2 + 상대 혼잡 점수 ÷ 50)",
+          inputValue: `피크 방문객 ${peakVisitors.toLocaleString("ko-KR")}명 / 병목 ${simulation.bottlenecks.length}곳 / 상대 혼잡 ${safety.relativeCongestion.status === "available" ? safety.relativeCongestion.value : 0}점`,
+          coefficient: "최소 8명",
+          subtotal: `${safety.staffing.recommended}명 권고`,
         },
         {
           stepNumber: 2,
-          title: "2단계: 주요 출입구 및 동선 통제 인원 산출",
-          formula: "출입구 안전요원 = 예상 방문객 ÷ 4,200명 (최소 6명)",
-          inputValue: `방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
-          coefficient: "4,200명/명 기준",
-          subtotal: `${Math.max(6, Math.round(forecast.expectedVisitors / 4200))}명 배치`,
-        },
-        {
-          stepNumber: 3,
-          title: "3단계: 병목 구간 및 고위험 시뮬레이션 셀 연동",
-          formula: "병목 안전요원 = 고위험 셀 수 × 3명 + (혼잡도 점수 × 0.2)",
-          inputValue: `고위험 셀 ${simulation.cells.filter(c => c.density >= 4.0).length}곳 / 혼잡점수 ${simulation.congestionScore}점`,
-          coefficient: "3명/셀 가중치",
-          subtotal: `${Math.max(6, Math.round(simulation.cells.filter(c => c.density >= 4.0).length * 3 + simulation.congestionScore * 0.2))}명 배치`,
+          title: "2단계: 구역별 정규화 배분",
+          formula: "총 권고 인원 × 무대·출입구·병목 가중치 / 전체 가중치",
+          inputValue: safety.zoneAllocations
+            .map((zone) => `${zone.zoneName} ${zone.recommendedGuards}명`)
+            .join(" / "),
+          coefficient: "최대 나머지 방식 반올림 보정",
+          subtotal: `합계 ${safety.zoneAllocations.reduce((total, zone) => total + zone.recommendedGuards, 0)}명`,
         },
       ],
       assumptions: [
@@ -1188,48 +1216,52 @@ export function createMetricEvidenceSet(
       limitations,
       sourceDetails: [...safetyLogisticsBasisDetails, ...layoutUserInputs, ...safetyStaffDetails],
       contributors: [
-        { label: "총 추천 인원", value: `${Math.max(10, Math.round(forecast.expectedVisitors / 2200)) + Math.max(6, Math.round(forecast.expectedVisitors / 4200)) + Math.max(6, Math.round(simulation.cells.filter(c => c.density >= 4.0).length * 3 + simulation.congestionScore * 0.2))}명`, effect: "positive" },
-        { label: "지침 준수 여부", value: "행안부 표준 충족", effect: "positive" },
+        { label: "총 추천 인원", value: `${safety.staffing.recommended}명`, effect: "positive" },
+        { label: "배치 범위", value: `${safety.staffing.min}~${safety.staffing.max}명`, effect: "neutral" },
       ],
     },
     "evacuation-golden-time": {
       metricId: "evacuation-golden-time",
       title: "[모델 2] 비상 탈출 골든타임 소요시간 산출 근거",
-      summary: `국립재난안전연구원(NDMI) 및 SFPE 피난 유동 방정식 기반 100m 비상 동선 탈출 시간을 진단했습니다.`,
+      summary:
+        safety.evacuationTime.status === "available"
+          ? `입력된 총 출구 폭과 피난 거리로 비상 탈출 예상 시간 ${Math.round(safety.evacuationTime.value)}초를 산출했습니다.`
+          : `비상 탈출 시간 산출 불가: ${safety.evacuationTime.reason}`,
       dataSources: [
         "국립재난안전연구원(NDMI) 군중 이동 시뮬레이션 연구",
         "SFPE(소방방재공학회) 피난 유동 방정식",
       ],
       formulaSummary:
-        "골든타임(초) = 180초(기본 정상보행) + (혼잡도 점수 × 2.2초) + (고위험 셀 × 15초)",
+        "피난 시간(초) = 피크 방문객 ÷ (총 출구 폭 × 초당 1.3명/m) + 피난 거리 ÷ 초당 1.0m",
       calculationSteps: [
         {
           stepNumber: 1,
-          title: "1단계: 100m 기본 이동시간 설정",
-          formula: "기본 이동시간 = 100m / 0.55m/s (서행 보행 기준)",
-          inputValue: "거리 100m 기준",
-          coefficient: "180초 베이스라인",
-          subtotal: "180초",
+          title: "1단계: 출구 처리 대기시간",
+          formula: "대기시간 = 피크 방문객 ÷ (총 출구 폭 × 1.3명/초/m)",
+          inputValue: `피크 방문객 ${peakVisitors.toLocaleString("ko-KR")}명 / 총 출구 폭 ${plan.totalExitWidthMeters ?? "미입력"}m`,
+          coefficient: "출구 폭 1m당 초당 1.3명",
+          subtotal: safety.evacuationTime.status === "available" ? "출구 처리시간 반영" : "산출 불가",
         },
         {
           stepNumber: 2,
-          title: "2단계: 인파 과밀 집적 지연 가산",
-          formula: "과밀 지연 = (혼잡도 점수 × 2.2초) + (고위험 셀 × 15초)",
-          inputValue: `혼잡점수 ${simulation.congestionScore}점 / 고위험셀 ${simulation.cells.filter(c => c.density >= 4.0).length}곳`,
-          coefficient: "지연 가산",
-          subtotal: `+${Math.round(simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15)}초 지연`,
+          title: "2단계: 피난 거리 보행시간",
+          formula: "보행시간 = 피난 거리 ÷ 1.0m/s",
+          inputValue: `피난 거리 ${plan.evacuationDistanceMeters ?? "미입력"}m`,
+          coefficient: "보행 속도 초당 1.0m",
+          subtotal: formatMetricEstimate(safety.evacuationTime, "초"),
         },
       ],
       assumptions: [
-        "피난 시 밀집도 4.0명/m² 초과 구간에서 군중 이동 속도가 0.35m/s로 감쇄함을 반영합니다.",
+        "총 출구 폭 1m당 초당 1.3명이 통과한다고 가정합니다.",
+        "피난 보행 속도는 초당 1.0m로 가정합니다.",
       ],
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
       sourceDetails: [...safetyLogisticsBasisDetails, ...peakDensityDetails],
       contributors: [
-        { label: "골든타임 소요", value: `${Math.floor((180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15) / 60)}분 ${Math.round((180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15) % 60)}초`, effect: "neutral" },
-        { label: "위험 등급", value: 180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15 >= 360 ? "경고" : 180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15 >= 240 ? "주의" : "양호", effect: 180 + simulation.congestionScore * 2.2 + simulation.cells.filter(c => c.density >= 4.0).length * 15 >= 240 ? "risk" : "positive" },
+        { label: "피난 예상 시간", value: formatMetricEstimate(safety.evacuationTime, "초"), effect: "neutral" },
+        { label: "입력 완전성", value: safety.evacuationTime.status === "available" ? "출구 폭·피난 거리 입력" : "필수 기하 정보 미입력", effect: safety.evacuationTime.status === "available" ? "positive" : "risk" },
       ],
     },
   };
