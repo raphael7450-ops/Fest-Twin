@@ -68,4 +68,17 @@ describe("tourism spending server proxy", () => {
     expect(JSON.stringify(body)).not.toContain("client-key");
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("serves fallback spending data when upstream fails", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({}, { ok: false, status: 503 }));
+
+    const { response, body } = await request(
+      "/api/spending/consumer-strength?areaCd=11&baseYm=202510&tarExpDsIxCd=2203",
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(response.status).toBe(200);
+    expect(body._fallback).toBe(true);
+    expect(body.response.body.items.item[0].avgSpendPerVisitorKrw).toBe(58400);
+  });
 });
