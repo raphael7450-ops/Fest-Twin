@@ -16,7 +16,8 @@ import { fromLonLat } from "ol/proj";
 import "ol/ol.css";
 import type { FestivalPlan } from "../domain/types";
 
-const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim();
+const DEFAULT_VWORLD_KEY = "2BEE395D-834A-3F75-BC64-CAC185A7A442";
+const vworldApiKey = import.meta.env.VITE_VWORLD_API_KEY?.trim() || DEFAULT_VWORLD_KEY;
 
 type MapStatus = "missing-key" | "loading" | "ready" | "failed";
 
@@ -162,18 +163,18 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
         <h2>실제 행사장 지도</h2>
         <span>TourAPI 좌표 + VWorld 2D 지도 API</span>
       </div>
-      <div className="venue-map-canvas">
+      <div className="venue-map-canvas" style={{ position: "relative", width: "100%", height: "380px", borderRadius: "12px", overflow: "hidden", background: "#f1f5f9" }}>
         {coordinates ? (
           <>
-            <div className="venue-map-stage" ref={mapStageRef} />
+            <div className="venue-map-stage" ref={mapStageRef} style={{ width: "100%", height: "380px" }} />
             {status !== "ready" ? (
-              <div className="venue-map-fallback">
+              <div className="venue-map-fallback" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(241, 245, 249, 0.85)", zIndex: 10 }}>
                 <strong>{statusText}</strong>
               </div>
             ) : null}
           </>
         ) : (
-          <div className="venue-map-fallback">
+          <div className="venue-map-fallback" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9" }}>
             <strong>행사장 좌표 확인 필요</strong>
           </div>
         )}

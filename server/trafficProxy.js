@@ -2,11 +2,42 @@
  * 파일 : server/trafficProxy.js
  * 내용 : 국가교통DB(KTDB) & ITS 도로 링크별 통행 속도 및 교통량 중계 프록시 라우터
  * 수정 : 2026-07-24. View-T 선택 링크 교통량 API 중계 및 LINKID 파라미터 검증
+ * 수정 : 2026-08-12. 업스트림 실패 시 로컬 폴백 데이터(data/traffic_fallback.json) 반환
  */
 
+import { createRequire } from "module";
+import { fileURLToPath } from "url";
+import path from "path";
 import express from "express";
 import { getCachedData, setCachedData } from "./cache.js";
 import { noopLogger } from "./logger.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let fallbackData = null;
+function loadFallbackData() {
+  if (fallbackData !== null) return fallbackData;
+  try {
+    const require = createRequire(import.meta.url);
+    const fallbackPath = path.resolve(__dirname, "../data/traffic_fallback.json");
+    fallbackData = require(fallbackPath);
+  } catch {
+    fallbackData = { selectedLink: {}, odEmd: {} };
+  }
+  return fallbackData;
+}
+
+function buildFallbackKey(type, query) {
+  const fb = loadFallbackData();
+  const section = type === "selectedLink" ? fb.selectedLink : fb.odEmd;
+  if (!section) return null;
+  const id = type === "selectedLink" ? query.linkId : query.zoneId;
+  const weekTypeCode = query.weekType === "weekend" ? "1" : "0";
+  const time = String(query.time).toUpperCase();
+  const key = `${id}_${weekTypeCode}_${time}`;
+  return section[key] ?? null;
+}
 
 const VIEWT_SELECTED_LINK_URL = "https://viewt.ktdb.go.kr/cong/api/selectedLink_road.do";
 const VIEWT_OD_EMD_URL = "https://viewt.ktdb.go.kr/cong/api/basedPathOD_emd2emd.do";
@@ -187,6 +218,7 @@ async function forwardViewTRequest({
   cacheKey,
   buildUrl,
   normalizePayload,
+  fallbackType,
 }) {
   const cachedData = getCachedData(cacheKey);
   if (cachedData) {
@@ -200,6 +232,15 @@ async function forwardViewTRequest({
         event: "TRAFFIC_UPSTREAM_FALLBACK",
         upstreamStatus: upstreamResponse.status,
       });
+      const fallbackRecord = buildFallbackKey(fallbackType, request.query);
+      if (fallbackRecord) {
+        const fallbackPayload = normalizePayload(fallbackRecord, request.query);
+        log.info("Traffic upstream failed, serving fallback data", {
+          event: "TRAFFIC_FALLBACK_SERVED",
+          fallbackType,
+        });
+        return response.status(200).json({ ...fallbackPayload, _fallback: true });
+      }
       return errorResponse(
         response,
         502,
@@ -220,6 +261,16 @@ async function forwardViewTRequest({
       errorCode: code,
       message: error.message,
     });
+    const fallbackRecord = buildFallbackKey(fallbackType, request.query);
+    if (fallbackRecord) {
+      const fallbackPayload = normalizePayload(fallbackRecord, request.query);
+      log.info("Traffic proxy error, serving fallback data", {
+        event: "TRAFFIC_FALLBACK_SERVED",
+        fallbackType,
+        errorCode: code,
+      });
+      return response.status(200).json({ ...fallbackPayload, _fallback: true });
+    }
     return errorResponse(response, 502, code, "Traffic proxy request failed.");
   }
 }
@@ -243,6 +294,7 @@ export function createTrafficProxyRouter(options = {}) {
       cacheKey: `traffic:selected-link:${JSON.stringify(request.query)}`,
       buildUrl: buildViewTUrl,
       normalizePayload: normalizeViewTPayload,
+      fallbackType: "selectedLink",
     });
   });
 
@@ -260,6 +312,7 @@ export function createTrafficProxyRouter(options = {}) {
       cacheKey: `traffic:od-emd:${JSON.stringify(request.query)}`,
       buildUrl: buildOdEmdViewTUrl,
       normalizePayload: normalizeOdPayload,
+      fallbackType: "odEmd",
     });
   });
 

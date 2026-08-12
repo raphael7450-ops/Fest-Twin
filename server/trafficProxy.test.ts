@@ -153,16 +153,29 @@ describe("KTDB/View-T traffic proxy", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("maps upstream failures without leaking raw URLs", async () => {
+  it("maps upstream failures without leaking raw URLs when no fallback is available", async () => {
     const fetchMock = vi.fn(async () => jsonResponse({}, { ok: false, status: 502 }));
 
     const { response, body } = await request(
-      "/api/traffic/selected-link?linkId=1000001&year=2025&weekType=weekday&time=ALL",
+      "/api/traffic/selected-link?linkId=9999999&year=2025&weekType=weekday&time=ALL",
       fetchMock as unknown as typeof fetch,
     );
 
     expect(response.status).toBe(502);
     expect(body.error.code).toBe("TRAFFIC_UPSTREAM_ERROR");
     expect(JSON.stringify(body)).not.toContain("viewt.ktdb.go.kr");
+  });
+
+  it("serves fallback data when upstream fails and a matching fallback record exists", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({}, { ok: false, status: 503 }));
+
+    const { response, body } = await request(
+      "/api/traffic/selected-link?linkId=1000007&year=2024&weekType=weekday&time=ALL",
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(response.status).toBe(200);
+    expect(body._fallback).toBe(true);
+    expect(body.result).toBeDefined();
   });
 });
