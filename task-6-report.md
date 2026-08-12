@@ -65,3 +65,26 @@ Commit: `test: enforce analysis output consistency`
 - `npm audit --omit=dev --audit-level=high`: exits 1 with the pre-existing `nanoid` high and `postcss` moderate findings; no dependency changes were made.
 
 Commit: `fix: align snapshot outputs and setup guidance`
+
+## Fix Round 2
+
+### Reviewer Follow-up
+
+- `useFestivalAnalysis` now exposes `requestBasis?.title ?? requestPlan.name` while a committed snapshot is refreshing. The regression test uses a selected basis title that differs from the request plan name and verifies the canonical basis title reaches the pending banner state.
+- `docs/guides/deployment-and-cicd.md` now documents VWorld 2D setup exclusively: `VITE_VWORLD_API_KEY` is set before the browser build, and the deployment example passes `VWORLD_API_KEY` to Docker's matching build argument. Obsolete Naver map variables and instructions were removed.
+
+### TDD Evidence
+
+- Red: the deferred-refresh hook test expected `Selected Festival B` but received the request plan name, `Festival B`.
+- Green: the hook suite passed after the pending title used the selected-basis fallback expression.
+
+### Verification
+
+- Focused hook/banner/docs suite: 3 files, 16 tests passed.
+- `npm run test:docs`: passed.
+- Full suite: 63 files, 294 tests passed.
+- `npx tsc -b --pretty false`: passed.
+- `npm run build`: passed; 1,633 modules transformed. It warns only that `VITE_VWORLD_API_KEY` was intentionally unset for this local build.
+- The deployment guide contains no `VITE_NAVER_MAP_NCP_KEY_ID`, `NAVER_MAP_CLIENT_ID`, `Naver 지도`, or `네이버 지도` references.
+
+Commit: `fix: align pending title and map deployment docs`

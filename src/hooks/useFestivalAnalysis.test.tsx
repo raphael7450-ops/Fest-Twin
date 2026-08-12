@@ -156,11 +156,18 @@ describe("useFestivalAnalysis", () => {
     await waitFor(() => expect(result.current.phase).toBe("ready"));
     expect(result.current.snapshot?.festivalId).toBe("festival-a");
 
-    rerender({ input: inputB });
+    const inputBWithCanonicalTitle: FestivalAnalysisInput = {
+      ...inputB,
+      selectedFestivalBasis: {
+        ...inputB.selectedFestivalBasis!,
+        title: "Selected Festival B",
+      },
+    };
+    rerender({ input: inputBWithCanonicalTitle });
     await waitFor(() => expect(result.current.phase).toBe("refreshing"));
     expect(result.current.snapshot?.festivalId).toBe("festival-a");
     expect(result.current.snapshot?.plan.name).toBe(planA.name);
-    expect(result.current.pendingFestivalTitle).toBe(planB.name);
+    expect(result.current.pendingFestivalTitle).toBe("Selected Festival B");
 
     act(() => nextTourism.resolve(structuredClone(sampleTourismContext)));
     await waitFor(() => expect(result.current.phase).toBe("ready"));

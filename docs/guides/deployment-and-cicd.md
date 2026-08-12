@@ -1,6 +1,6 @@
 # Fest-Twin 배포 및 CI/CD 파이프라인 가이드
 
-Fest-Twin 애플리케이션의 개발 환경 실행, 네이버 지도 API 설정, 원격 Docker 서버 무중단 배포 및 GitHub Actions CI/CD 파이프라인 운영을 위한 가이드입니다.
+Fest-Twin 애플리케이션의 개발 환경 실행, VWorld 2D 지도 API 설정, 원격 Docker 서버 무중단 배포 및 GitHub Actions CI/CD 파이프라인 운영을 위한 가이드입니다.
 
 ---
 
@@ -23,11 +23,11 @@ npm run dev
 npm start
 ```
 
-### 1.3 네이버 지도 API 키 설정
-네이버 지도 API 인증을 위해 Client ID를 환경변수로 전달할 수 있습니다.
+### 1.3 VWorld 2D 지도 API 키 설정
+VWorld 2D 지도 JavaScript API 키는 브라우저 번들에 포함되는 빌드 환경변수입니다. 키와 등록 URI가 일치해야 하며, `npm run build` 전에 `VITE_VWORLD_API_KEY`를 설정해야 합니다. 키를 설정하지 않아도 빌드는 완료되지만 지도 패널은 키 미설정 상태로 표시됩니다.
 ```bash
-# 개발/빌드 시 환경변수 지정 (미지정 시 기본 5mcwlg6qwo 적용)
-export VITE_NAVER_MAP_NCP_KEY_ID="your_naver_map_client_id"
+# 개발/빌드 셸의 공개 지도 API 키
+export VITE_VWORLD_API_KEY="your_vworld_api_key"
 npm run build
 ```
 
@@ -105,7 +105,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-      - run: VITE_NAVER_MAP_NCP_KEY_ID="${{ secrets.NAVER_MAP_CLIENT_ID || '5mcwlg6qwo' }}" npm run build
+      - run: VITE_VWORLD_API_KEY="${{ secrets.VWORLD_API_KEY }}" npm run build
 
   deploy:
     name: "CD - Remote Docker Deploy"
@@ -137,7 +137,7 @@ jobs:
             cd ~/fest-twin-demo || (git clone https://github.com/raphael7450-ops/Fest-Twin.git ~/fest-twin-demo && cd ~/fest-twin-demo)
             git fetch origin main
             git reset --hard origin/main
-            docker build --build-arg NAVER_MAP_CLIENT_ID="5mcwlg6qwo" -t fest-twin-demo:latest .
+            docker build --build-arg VWORLD_API_KEY="${{ secrets.VWORLD_API_KEY }}" -t fest-twin-demo:latest .
             if [ "$(docker ps -aq -f name=^fest-twin-demo$)" ]; then
               docker stop fest-twin-demo || true
               docker rm fest-twin-demo || true

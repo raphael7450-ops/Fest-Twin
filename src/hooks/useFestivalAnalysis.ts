@@ -323,7 +323,7 @@ export function useFestivalAnalysis(
     setState((current) => ({
       snapshot: current.snapshot,
       phase: current.snapshot ? "refreshing" : "loading",
-      pendingFestivalTitle: current.snapshot ? requestPlan.name : undefined,
+      pendingFestivalTitle: current.snapshot ? requestBasis?.title ?? requestPlan.name : undefined,
       errorMessages: [],
     }));
 
