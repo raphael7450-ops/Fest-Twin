@@ -30,10 +30,10 @@ jobs:
 
       - name: Build production bundle
         env:
-          VITE_NAVER_MAP_NCP_KEY_ID: ${{ secrets.NAVER_MAP_CLIENT_ID }}
+          VITE_VWORLD_API_KEY: ${{ secrets.VWORLD_API_KEY }}
         run: |
-          KEY_ID="${VITE_NAVER_MAP_NCP_KEY_ID:-5mcwlg6qwo}"
-          VITE_NAVER_MAP_NCP_KEY_ID="$KEY_ID" npm run build
+          test -n "$VITE_VWORLD_API_KEY" || { echo "VWORLD_API_KEY secret is required for the Vite build."; exit 1; }
+          npm run build
 
   deploy:
     name: "CD - Remote Docker Deploy"
@@ -46,11 +46,11 @@ jobs:
       - name: Check deployment secrets
         id: check_secrets
         run: |
-          if [ -n "${{ secrets.REMOTE_HOST }}" ] && [ -n "${{ secrets.REMOTE_USER }}" ] && [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+          if [ -n "${{ secrets.REMOTE_HOST }}" ] && [ -n "${{ secrets.REMOTE_USER }}" ] && [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ] && [ -n "${{ secrets.VWORLD_API_KEY }}" ]; then
             echo "has_secrets=true" >> $GITHUB_OUTPUT
           else
             echo "has_secrets=false" >> $GITHUB_OUTPUT
-            echo "[NOTICE] Remote SSH secrets (REMOTE_HOST, REMOTE_USER, SSH_PRIVATE_KEY) are not set. Skipping SSH deployment."
+            echo "[NOTICE] Remote deployment secrets (REMOTE_HOST, REMOTE_USER, SSH_PRIVATE_KEY, VWORLD_API_KEY) are not set. Skipping SSH deployment."
           fi
 
       - name: Deploy container on remote Docker server via SSH
@@ -69,9 +69,8 @@ jobs:
             git reset --hard origin/main
 
             echo "==> Building Docker image..."
-            NAVER_KEY="${{ secrets.NAVER_MAP_CLIENT_ID }}"
-            if [ -z "$NAVER_KEY" ]; then NAVER_KEY="5mcwlg6qwo"; fi
-            docker build --build-arg NAVER_MAP_CLIENT_ID="$NAVER_KEY" -t fest-twin-demo:latest .
+            VWORLD_API_KEY="${{ secrets.VWORLD_API_KEY }}"
+            docker build --build-arg VWORLD_API_KEY="$VWORLD_API_KEY" -t fest-twin-demo:latest .
 
             echo "==> Stopping old container..."
             EXISTING_CONTAINER=$(docker ps -aq -f name=^fest-twin-demo$)

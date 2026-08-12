@@ -16,6 +16,7 @@ const PROJECT_ROOT = path.resolve(__dirname, "..");
 const REMOTE_USER = "cwuser";
 const REMOTE_HOST = "100.104.94.112";
 const REMOTE_PASS = process.env.REMOTE_PASS || "ckddnjsl";
+const VWORLD_API_KEY = process.env.VWORLD_API_KEY;
 const TAR_FILE = "fest-twin-demo.tar";
 const PLINK = "C:\\Program Files (x86)\\PuTTY\\plink.exe";
 const PSCP = "C:\\Program Files (x86)\\PuTTY\\pscp.exe";
@@ -25,6 +26,12 @@ function run(cmd, opts = {}) {
 }
 
 async function main() {
+  if (!VWORLD_API_KEY) {
+    console.error("[ERROR] VWORLD_API_KEY is required to build the VWorld map bundle.");
+    process.exitCode = 1;
+    return;
+  }
+
   console.log("======================================================");
   console.log("[INFO] 원격지(100.104.94.112) Docker 자동 재배포 시작");
   console.log("======================================================");
@@ -53,7 +60,7 @@ async function main() {
       "tar -xf $HOME/fest-twin-demo.tar -C $staging_dir",
       "rm -f $HOME/fest-twin-demo.tar",
       "echo '==> Docker 이미지 빌드 시작...'",
-      "docker build --build-arg VWORLD_API_KEY=2BEE395D-834A-3F75-BC64-CAC185A7A442 -t $new_image $staging_dir",
+      `docker build --build-arg VWORLD_API_KEY=${VWORLD_API_KEY} -t $new_image $staging_dir`,
       "existing=$(docker ps -aq --filter name=^fest-twin-demo$)",
       "if [ -n \"$existing\" ]; then echo '==> 기존 컨테이너 중지 및 제거...'; docker stop $existing; docker rm $existing; fi",
       "rm -rf $release_dir",

@@ -31,6 +31,8 @@ export VITE_VWORLD_API_KEY="your_vworld_api_key"
 npm run build
 ```
 
+GitHub Actions와 수동 원격 배포는 같은 키를 `VWORLD_API_KEY` 이름으로 관리합니다. GitHub 저장소에는 `VWORLD_API_KEY` Secret을 등록하고, 워크플로가 이를 `VITE_VWORLD_API_KEY`로 매핑해 Vite 빌드에 전달하며 Docker에는 `--build-arg VWORLD_API_KEY`로 전달합니다. PowerShell에서 `npm run deploy:remote`를 실행할 때도 먼저 `$env:VWORLD_API_KEY="your_vworld_api_key"`를 설정합니다.
+
 ---
 
 ## 2. 원격 Docker 서버 무중단 배포 (`npm run deploy:remote`)
@@ -105,7 +107,11 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-      - run: VITE_VWORLD_API_KEY="${{ secrets.VWORLD_API_KEY }}" npm run build
+      - env:
+          VITE_VWORLD_API_KEY: ${{ secrets.VWORLD_API_KEY }}
+        run: |
+          test -n "$VITE_VWORLD_API_KEY" || { echo "VWORLD_API_KEY secret is required for the Vite build."; exit 1; }
+          npm run build
 
   deploy:
     name: "CD - Remote Docker Deploy"

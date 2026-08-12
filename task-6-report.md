@@ -88,3 +88,28 @@ Commit: `fix: align snapshot outputs and setup guidance`
 - The deployment guide contains no `VITE_NAVER_MAP_NCP_KEY_ID`, `NAVER_MAP_CLIENT_ID`, `Naver 지도`, or `네이버 지도` references.
 
 Commit: `fix: align pending title and map deployment docs`
+
+## Fix Round 3
+
+### Reviewer Follow-up
+
+- `.github/workflows/deploy.yml` now requires `secrets.VWORLD_API_KEY`, maps it to `VITE_VWORLD_API_KEY` for the Vite build, and passes the same value to Docker as `--build-arg VWORLD_API_KEY`.
+- The workflow no longer contains `VITE_NAVER_MAP_NCP_KEY_ID` or `NAVER_MAP_CLIENT_ID`; deployment is skipped when the VWorld key is absent instead of building a map bundle without it.
+- `Dockerfile` already accepted `ARG VWORLD_API_KEY` and exposed it to Vite as `VITE_VWORLD_API_KEY`, so no Dockerfile change was required.
+- `scripts/remote-deploy.js` now requires `VWORLD_API_KEY` from its caller instead of embedding a map key. The deployment guide documents the same GitHub Secret, Docker build argument, and PowerShell environment variable names.
+
+### TDD Evidence
+
+- Red: `scripts/deploymentConfiguration.test.js` failed because the workflow still declared Naver variables and the manual deploy script embedded a VWorld key.
+- Green: the configuration test now verifies the secret-to-Vite mapping, Docker build argument, removal of retired Naver map names, and manual-deploy environment requirement.
+
+### Verification
+
+- Focused deployment configuration/docs suite: 3 files, 6 tests passed.
+- `npm run test:docs`: passed.
+- `npx tsc -b --pretty false`: passed.
+- `VITE_VWORLD_API_KEY=test-vworld-key npm run build`: passed; 1,633 modules transformed with no missing-Vite-key warning.
+- `git diff --check`: passed.
+- Native Docker and YAML parsers are unavailable in this environment; the static deployment-configuration regression test covers the checked-in workflow and Docker argument contract.
+
+Commit: `fix: deploy with vworld map configuration`
