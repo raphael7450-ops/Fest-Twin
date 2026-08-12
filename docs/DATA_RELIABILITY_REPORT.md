@@ -82,4 +82,4 @@
 
 1. `forecast.ts`가 내부 중간값을 `ForecastAuditBreakdown` 형태로 반환하게 하여 흥행 예측 지수 Drawer의 단계별 subtotal을 실제 모델 계산값으로 교체한다.
 2. View-T `ZONEID/LINKID` 자동 매핑을 확정해 교통 Fallback 비중을 낮춘다.
-3. PostgreSQL 저장소 전환은 현재 구현이 아닌 Phase 2 범위로 유지하고, 현재 저장소는 `JSON ?뚯씪 ??μ냼`(JSON 파일 저장소)로 설명한다.
+3. PostgreSQL 저장소 전환은 현재 구현이 아닌 Phase 2 범위로 유지하고, 현재 저장소는 `JSON 파일 저장소`로 설명한다.

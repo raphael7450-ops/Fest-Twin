@@ -1,4 +1,5 @@
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
+import { formatDurationSecondsKorean } from "../utils/duration";
 
 interface B2gPrintReportProps {
   snapshot?: FestivalAnalysisSnapshot;
@@ -21,7 +22,7 @@ export function B2gPrintReport({
       : "산출 불가";
   const evacuationText =
     safety.evacuationTime.status === "available"
-      ? `${safety.evacuationTime.value.toFixed(1)}분`
+      ? formatDurationSecondsKorean(safety.evacuationTime.value)
       : "산출 불가";
   const expectedVisitors = forecast.expectedVisitors;
   const successPotential = metrics.summary.successPotential;

@@ -59,7 +59,7 @@ docs/
 - [architecture-and-api.md](specs/architecture-and-api.md)
   - React 18 / Vite 6 SPA 프론트엔드 및 Express 백엔드 전체 시스템 블록 다이어그램 기술
   - OWASP CSP 보안 헤더 및 2단계 계층형 Rate Limiter(분당 300회/120회) 설계
-  - 현재 시나리오 저장은 `JSON ?뚯씪 ??μ냼`(JSON 파일 저장소)이며 PostgreSQL은 Phase 2 전환 계획
+  - 현재 시나리오 저장은 `JSON 파일 저장소`이며 PostgreSQL은 Phase 2 전환 계획
 
 - [data-and-simulation-methodology.md](specs/data-and-simulation-methodology.md)
   - 한국관광공사 TourAPI 4.0, 관광데이터랩 지출 객단가, 국가교통DB(KTDB View-T) 연동 방법론
@@ -73,7 +73,7 @@ docs/
 ### 2.2 배포 및 운영 가이드 (`docs/guides/`)
 
 - [deployment-and-cicd.md](guides/deployment-and-cicd.md)
-  - 로컬 개발 환경 실행 및 네이버 지도 API Client ID 설정법
+  - 로컬 개발 환경 실행 및 VWorld 2D 지도 API 키 설정법
   - 원격 Docker 서버(100.104.94.112:18080) 원클릭 무중단 배포 스크립트 (`npm run deploy:remote`) 사용법
   - GitHub Actions 파이프라인 (`.github/workflows/deploy.yml`) 구성 및 헬스체크 타임아웃 재시도 처리
 

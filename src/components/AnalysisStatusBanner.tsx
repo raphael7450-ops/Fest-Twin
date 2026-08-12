@@ -8,10 +8,10 @@ export interface AnalysisStatusBannerProps {
 }
 
 const datasetStatusLabels = {
-  live: "?ㅼ떆媛?",
-  cached: "?좏슚 ??μ옄猷?",
-  supplemented: "寃利?蹂댁셿",
-  unavailable: "?ъ슜 遺덇?",
+  live: "실시간",
+  cached: "유효 저장자료",
+  supplemented: "검증 보완",
+  unavailable: "사용 불가",
 } as const;
 
 function DatasetStatusSummary({ snapshot }: { snapshot: FestivalAnalysisSnapshot }) {
@@ -53,12 +53,13 @@ export function AnalysisStatusBanner({
   let message;
 
   if (phase === "loading") {
-    message = <p>遺꾩꽍 ?먮즺瑜?以鍮꾪븯怨??덉뒿?덈떎.</p>;
+    message = <p>분석 자료를 준비하고 있습니다.</p>;
   } else if (phase === "refreshing" && snapshot) {
+    const displayTitle = snapshot.selectedFestivalBasis?.title ?? snapshot.plan.name;
     message = (
       <p>
-        현재 결과는 {snapshot.plan.name}의 이전 스냅샷입니다. {pendingFestivalTitle ?? "새 축제"}
-        분석을 새로고침하고 있습니다. <SnapshotIdentity snapshot={snapshot} />
+        현재 결과는 {displayTitle}의 이전 분석입니다. {pendingFestivalTitle ?? "새 축제"} 분석을
+        새로고침하고 있습니다. <SnapshotIdentity snapshot={snapshot} />
       </p>
     );
   } else if (phase === "ready" && snapshot) {

@@ -9,6 +9,7 @@ import {
   createFestivalAnalysisSnapshot,
   type AnalysisDataStatus,
   type AnalysisDatasets,
+  type FestivalAnalysisSnapshot,
 } from "../services/analysisSnapshot";
 import { getFallbackWeatherContext } from "../services/weatherAdapter";
 
@@ -76,4 +77,26 @@ export function createTestAnalysisSnapshot(
     datasets,
     now: options.now ?? new Date("2026-08-11T03:04:05.000Z"),
   });
+}
+
+export function withAvailableEvacuationSeconds(
+  snapshot: FestivalAnalysisSnapshot,
+  seconds: number,
+): FestivalAnalysisSnapshot {
+  return {
+    ...snapshot,
+    safety: {
+      ...snapshot.safety,
+      summary: {
+        ...snapshot.safety.summary,
+        evacuationTime: {
+          status: "available",
+          value: seconds,
+          unit: "seconds",
+          confidence: "low",
+          basis: "Test evacuation geometry",
+        },
+      },
+    },
+  };
 }

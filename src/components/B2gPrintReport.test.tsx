@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   createTestAnalysisSnapshot,
   testSelectedFestivalBasis,
+  withAvailableEvacuationSeconds,
 } from "../test/analysisSnapshotFixture";
 import { B2gPrintReport } from "./B2gPrintReport";
 
@@ -31,6 +32,15 @@ describe("B2gPrintReport", () => {
       screen.getByText(`흥행 가능성 점수: ${snapshot.metrics.summary.successPotential.score}점`),
     ).toBeInTheDocument();
     expect(screen.getByText(`예측 신뢰도: ${snapshot.forecast.confidence}`)).toBeInTheDocument();
+  });
+
+  it("formats available canonical evacuation seconds as Korean minutes and seconds", () => {
+    const snapshot = withAvailableEvacuationSeconds(createTestAnalysisSnapshot(), 125);
+
+    render(<B2gPrintReport snapshot={snapshot} />);
+
+    expect(screen.getByText("대피 시간: 2분 5초")).toBeInTheDocument();
+    expect(screen.queryByText("대피 시간: 125분")).not.toBeInTheDocument();
   });
 
   it("renders 4-Step breakdown and every dataset status on page 2", () => {

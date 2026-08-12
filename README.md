@@ -4,14 +4,20 @@
 
 ## 빠른 시작
 
-권장 환경은 Node.js 20 이상입니다.
+권장 환경은 Node.js 20 이상과 npm입니다. 프론트엔드와 Express API를 함께 실행하려면 다음 PowerShell 명령을 사용합니다.
 
 ```powershell
 npm install
-npm run dev
+$env:VITE_VWORLD_API_KEY="발급받은_VWorld_API_키"
+npm run build
+$env:TOUR_API_KEY="발급받은_TourAPI_Decoding_인증키"
+$env:PORT="3000"
+npm start
 ```
 
-개발 서버는 기본적으로 `http://127.0.0.1:5173/`에서 실행됩니다.
+통합 애플리케이션은 `http://127.0.0.1:3000/`에서 실행됩니다. `VITE_VWORLD_API_KEY`는 VWorld 2D 지도를 위한 빌드 환경변수이므로 `npm run build` 전에 설정해야 합니다. `TOUR_API_KEY`는 실제 TourAPI 조회를 위한 서버 런타임 환경변수입니다. 키가 없거나 외부 API가 실패하면 해당 기능은 상태를 명시한 보완 화면 또는 데이터로 전환합니다.
+
+프론트엔드만 빠르게 개발할 때는 `npm run dev`를 실행하고 `http://127.0.0.1:5173/`에 접속합니다. 이 모드에는 Express API 프록시가 없으므로 통합 TourAPI 및 시나리오 저장 흐름을 재현하지 않습니다.
 
 ## 검증
 
@@ -34,13 +40,13 @@ npm run build
 
 ## 데이터와 저장소
 
-현재 시나리오 저장 구현은 `JSON ?뚯씪 ??μ냼`(JSON 파일 저장소)입니다. PostgreSQL 전환은 현재 기능이 아니라 Phase 2 계획입니다.
+현재 시나리오 저장 구현은 `JSON 파일 저장소`입니다. PostgreSQL 전환은 현재 기능이 아니라 Phase 2 계획입니다.
 
 MVP는 담당자 실명, 연락처, 이메일, 주민등록번호, 결제정보, 개인별 위치 이력을 수집하지 않습니다.
 
 ## TourAPI 연동
 
-배포 환경에서는 TourAPI 인증키를 서버 런타임 환경변수로 제공합니다.
+실제 TourAPI 조회가 필요한 통합 환경에서는 인증키를 서버 런타임 환경변수로 제공합니다.
 
 ```env
 TOUR_API_KEY=발급받은_일반_인증키_Decoding_값

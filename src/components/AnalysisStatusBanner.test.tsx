@@ -12,7 +12,7 @@ describe("AnalysisStatusBanner", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "遺꾩꽍 ?먮즺瑜?以鍮꾪븯怨??덉뒿?덈떎.",
+      "분석 자료를 준비하고 있습니다.",
     );
   });
 
@@ -28,7 +28,8 @@ describe("AnalysisStatusBanner", () => {
     );
 
     const status = screen.getByRole("status");
-    expect(status).toHaveTextContent(snapshot.plan.name);
+    expect(status).toHaveTextContent(snapshot.selectedFestivalBasis!.title);
+    expect(status).not.toHaveTextContent(snapshot.plan.name);
     expect(status).toHaveTextContent("새 축제");
     expect(status).toHaveTextContent(snapshot.analysisId);
   });
@@ -41,10 +42,10 @@ describe("AnalysisStatusBanner", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent(snapshot.createdAt);
     expect(screen.getByTestId("analysis-id")).toHaveTextContent(snapshot.analysisId);
-    expect(screen.getByText("?ㅼ떆媛? 2")).toBeInTheDocument();
-    expect(screen.getByText("?좏슚 ??μ옄猷? 2")).toBeInTheDocument();
-    expect(screen.getByText("寃利?蹂댁셿 1")).toBeInTheDocument();
-    expect(screen.getByText("?ъ슜 遺덇? 1")).toBeInTheDocument();
+    expect(screen.getByText("실시간 2")).toBeInTheDocument();
+    expect(screen.getByText("유효 저장자료 2")).toBeInTheDocument();
+    expect(screen.getByText("검증 보완 1")).toBeInTheDocument();
+    expect(screen.getByText("사용 불가 1")).toBeInTheDocument();
     expect(screen.queryByText("전체 데이터 실시간")).not.toBeInTheDocument();
   });
 

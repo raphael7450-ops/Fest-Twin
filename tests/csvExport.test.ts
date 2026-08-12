@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createTestAnalysisSnapshot } from "../src/test/analysisSnapshotFixture";
+import {
+  createTestAnalysisSnapshot,
+  withAvailableEvacuationSeconds,
+} from "../src/test/analysisSnapshotFixture";
 import {
   buildCsvReportContent,
   escapeCsvCell,
@@ -52,6 +55,14 @@ describe("src/utils/csvExport - B2G CSV Report Generator", () => {
       expect(csv).toContain(`dataset:${name}`);
       expect(csv).toContain(dataset.status);
     });
+  });
+
+  it("formats available canonical evacuation seconds without treating them as minutes", () => {
+    const snapshot = withAvailableEvacuationSeconds(createTestAnalysisSnapshot(), 125);
+    const csv = buildCsvReportContent({ snapshot });
+
+    expect(csv).toContain("2분 5초");
+    expect(csv).not.toContain("125.0분");
   });
 
   it("generates filenames in the standardized format: Fest-Twin_시나리오명_YYYYMMDD_HHmm.csv", () => {

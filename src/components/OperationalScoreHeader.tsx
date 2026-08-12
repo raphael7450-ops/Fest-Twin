@@ -6,7 +6,7 @@ import type {
   PlanningReport,
   SelectedFestivalBasis,
 } from "../domain/types";
-import { createSuccessPotentialMetric } from "../services/impactMetrics";
+import type { SuccessPotentialMetric } from "../services/impactMetrics";
 
 interface OperationalScoreHeaderProps {
   plan: FestivalPlan;
@@ -14,6 +14,7 @@ interface OperationalScoreHeaderProps {
   report: PlanningReport;
   evidenceSet: Record<MetricEvidenceId, MetricEvidence>;
   selectedFestivalBasis?: SelectedFestivalBasis | null;
+  successPotential: SuccessPotentialMetric;
 }
 
 function formatNumber(value: number) {
@@ -38,13 +39,13 @@ export function OperationalScoreHeader({
   report,
   evidenceSet,
   selectedFestivalBasis,
+  successPotential,
 }: OperationalScoreHeaderProps) {
   const peakVisitors =
     forecast.visitorsByHour.find((item) => item.hour === forecast.peakHour)?.visitors ??
     Math.max(...forecast.visitorsByHour.map((item) => item.visitors));
   const actionCount = report.recommendations.length;
   const evidenceCount = Object.keys(evidenceSet).length;
-  const successPotential = createSuccessPotentialMetric(forecast);
   const scoreTone = getScoreTone(successPotential.score);
   const actionStatus = getActionStatus(actionCount);
   const festivalTitle = selectedFestivalBasis?.title ?? plan.name;

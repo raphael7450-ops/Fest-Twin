@@ -397,6 +397,7 @@ export function App() {
             report={report}
             evidenceSet={metricEvidence}
             selectedFestivalBasis={analysisSelectedFestivalBasis}
+            successPotential={committed.metrics.summary.successPotential}
           />
           {restoredNotice && (
             <div
@@ -434,12 +435,7 @@ export function App() {
             onClearSelection={() => setSelectedCandidate(null)}
           />
           <SummaryKpiCards
-            plan={analysisPlan}
-            forecast={forecast}
-            simulation={simulation}
-            tourism={tourism}
-            demandBackdata={demandBackdata}
-            safetyMetrics={safetyDecisionProfiles.summary}
+            metrics={committed.metrics.summary}
             onOpenEvidence={setSelectedEvidenceId}
           />
           <div className="dashboard-section-tabs" aria-label="대시보드 섹션">

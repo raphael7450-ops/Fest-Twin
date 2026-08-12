@@ -25,6 +25,7 @@ describe("analysis output consistency", () => {
           report={snapshot.report}
           evidenceSet={snapshot.evidence}
           selectedFestivalBasis={snapshot.selectedFestivalBasis}
+          successPotential={snapshot.metrics.summary.successPotential}
         />
         <ReportView snapshot={snapshot} onOpenEvidence={vi.fn()} />
         <B2gPrintReport snapshot={snapshot} />

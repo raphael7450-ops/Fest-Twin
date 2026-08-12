@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type {
   ForecastResult,
   MetricEvidence,
@@ -7,6 +7,7 @@ import type {
   SelectedFestivalBasis,
 } from "../domain/types";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
+import * as impactMetrics from "../services/impactMetrics";
 import { OperationalScoreHeader } from "./OperationalScoreHeader";
 
 const forecast: ForecastResult = {
@@ -70,6 +71,7 @@ const evidenceSet = {
 
 describe("OperationalScoreHeader", () => {
   it("renders the bounded success potential score, forecast, risk, actions, and selected festival context", () => {
+    const metricFactory = vi.spyOn(impactMetrics, "createSuccessPotentialMetric");
     render(
       <OperationalScoreHeader
         plan={sampleFestivalPlan}
@@ -77,9 +79,11 @@ describe("OperationalScoreHeader", () => {
         report={report}
         evidenceSet={evidenceSet}
         selectedFestivalBasis={selectedBasis}
+        successPotential={{ score: 88, grade: "상", description: "Committed metric" }}
       />,
     );
 
+    expect(metricFactory).not.toHaveBeenCalled();
     expect(screen.getByText("흥행 가능성 점수")).toBeInTheDocument();
     expect(screen.getByText("88점")).toBeInTheDocument();
     expect(screen.getByText("예상 방문")).toBeInTheDocument();
@@ -100,6 +104,7 @@ describe("OperationalScoreHeader", () => {
         forecast={{ ...forecast, successScore: 132 }}
         report={report}
         evidenceSet={evidenceSet}
+        successPotential={{ score: 100, grade: "상", description: "Committed bounded metric" }}
       />,
     );
 

@@ -45,3 +45,23 @@
 - Browser visual verification was intentionally not performed; the controller will perform it after code review.
 
 Commit: `test: enforce analysis output consistency`
+
+## Fix Round 1
+
+### Reviewer Follow-up
+
+- Print and CSV render canonical evacuation values as Korean minutes and seconds from the snapshot's seconds value (for example, `125` becomes `2분 5초`), with focused regression coverage in both output suites.
+- `SummaryKpiCards` consumes committed summary metrics and `OperationalScoreHeader` consumes the committed success-potential metric; their tests assert that neither component invokes a metric factory.
+- The refreshing banner uses `selectedFestivalBasis.title ?? plan.name`, and its labels/tests use corrected Korean text.
+- README now documents the integrated build-and-Express startup path, including build-time `VITE_VWORLD_API_KEY`, runtime `TOUR_API_KEY`, and `PORT`; the documentation index identifies the VWorld 2D map setup.
+
+### Verification
+
+- Focused Task 6 suite: 6 files, 24 tests passed.
+- Full suite: 63 files, 294 tests passed.
+- `npm run test:docs`: passed.
+- `npx tsc -b --pretty false`: passed.
+- `npm run build`: passed; 1,633 modules transformed. It warns only that `VITE_VWORLD_API_KEY` was intentionally unset for this build.
+- `npm audit --omit=dev --audit-level=high`: exits 1 with the pre-existing `nanoid` high and `postcss` moderate findings; no dependency changes were made.
+
+Commit: `fix: align snapshot outputs and setup guidance`

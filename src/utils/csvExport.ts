@@ -5,6 +5,7 @@
  */
 
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
+import { formatDurationSecondsKorean } from "./duration";
 
 export interface CsvReportInput {
   snapshot: FestivalAnalysisSnapshot;
@@ -78,7 +79,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
       : "산출 불가";
   const evacuationValue =
     snapshot.safety.summary.evacuationTime.status === "available"
-      ? `${snapshot.safety.summary.evacuationTime.value.toFixed(1)}분`
+      ? formatDurationSecondsKorean(snapshot.safety.summary.evacuationTime.value)
       : "산출 불가";
 
   const trafficRiskEvidence = evidenceSet?.["traffic-risk"];
