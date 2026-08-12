@@ -150,15 +150,11 @@ export function createTrendProxyRouter(options = {}) {
       process.env.NAVER_CLIENT_SECRET ??
       "";
 
-    const ncpClientId = process.env.VITE_NAVER_MAP_NCP_KEY_ID ?? "";
-    const ncpClientSecret = process.env.NAVER_MAP_NCP_CLIENT_SECRET ?? "";
-
     const requestBody = buildNaverRequestBody(request.body);
 
     const hasDevelopersKeys = Boolean(developersClientId && developersClientSecret);
-    const hasNcpKeys = Boolean(ncpClientId && ncpClientSecret);
 
-    if (!hasDevelopersKeys && !hasNcpKeys) {
+    if (!hasDevelopersKeys) {
       return response
         .status(200)
         .json(fallbackResponse("Naver DataLab credentials are not configured.", requestBody.keywordGroups));
@@ -171,30 +167,15 @@ export function createTrendProxyRouter(options = {}) {
     }
 
     try {
-      let upstreamResponse;
-
-      if (hasDevelopersKeys) {
-        upstreamResponse = await fetchImpl(NAVER_DATALAB_SEARCH_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Naver-Client-Id": developersClientId,
-            "X-Naver-Client-Secret": developersClientSecret,
-          },
-          body: JSON.stringify(requestBody),
-        });
-      } else {
-        const ncpUrl = "https://naveropenapi.apigw.ntruss.com/datalab/v1/search";
-        upstreamResponse = await fetchImpl(ncpUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-NCP-APIGW-API-KEY-ID": ncpClientId,
-            "X-NCP-APIGW-API-KEY": ncpClientSecret,
-          },
-          body: JSON.stringify(requestBody),
-        });
-      }
+      const upstreamResponse = await fetchImpl(NAVER_DATALAB_SEARCH_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Naver-Client-Id": developersClientId,
+          "X-Naver-Client-Secret": developersClientSecret,
+        },
+        body: JSON.stringify(requestBody),
+      });
 
       if (!upstreamResponse.ok) {
         log.warn("Naver DataLab upstream error", {

@@ -11,7 +11,7 @@ Tech Stack: React 18, TypeScript, Vite, Vitest, Testing Library, NAVER Maps Java
 ## Global Constraints
 
 - Do not commit NAVER Maps keys or TourAPI keys.
-- Read the NAVER Maps public client key from `VITE_NAVER_MAP_NCP_KEY_ID`.
+- Read the NAVER Maps public client key from `VITE_VWORLD_API_KEY`.
 - Use NAVER Maps JS API v3 with the `ncpKeyId` query parameter.
 - Keep the app usable when the key is missing or the SDK fails to load.
 - Push every completed task to GitHub `main` so the work can continue from home.
@@ -72,7 +72,7 @@ Files:
 - Test: `src/App.test.tsx`
 
 Interfaces:
-- Consumes: `VITE_NAVER_MAP_NCP_KEY_ID`.
+- Consumes: `VITE_VWORLD_API_KEY`.
 - Produces: SDK loader behavior inside `<VenueMapPanel />`.
 
 - [ ] Step 1: Write the failing test
@@ -91,7 +91,7 @@ Expected: FAIL if the source text is not present.
 
 - [ ] Step 3: Add SDK loader and types
 
-Define `ImportMetaEnv.VITE_NAVER_MAP_NCP_KEY_ID?: string` and `window.naver` types in `src/vite-env.d.ts`. In `VenueMapPanel`, load `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${key}` only when a key exists.
+Define `ImportMetaEnv.VITE_VWORLD_API_KEY?: string` and `window.naver` types in `src/vite-env.d.ts`. In `VenueMapPanel`, load `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${key}` only when a key exists.
 
 - [ ] Step 4: Keep fallback safe
 
@@ -116,7 +116,7 @@ Interfaces:
 
 - [ ] Step 1: Document local setup
 
-Create `docs/naver-map-api-setup.md` explaining `VITE_NAVER_MAP_NCP_KEY_ID`, no-secret Git policy, fallback behavior, and official NAVER Maps JS API reference.
+Create `docs/naver-map-api-setup.md` explaining `VITE_VWORLD_API_KEY`, no-secret Git policy, fallback behavior, and official NAVER Maps JS API reference.
 
 - [ ] Step 2: Link docs
 

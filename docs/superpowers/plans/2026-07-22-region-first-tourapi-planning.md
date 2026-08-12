@@ -109,7 +109,7 @@ Commit source and docs. Push to `origin/main`.
 
 - [ ] Step 3: Remote Docker deploy
 
-Create `git archive HEAD`, upload it to `cwserver`, build Docker with `--build-arg NAVER_MAP_CLIENT_ID=5mcwlg6qwo`, replace `fest-twin-demo`, and verify `https://cwserver.tail97dbc3.ts.net/` returns `200 OK`.
+Create `git archive HEAD`, upload it to `cwserver`, build Docker with `--build-arg VWORLD_API_KEY=your_vworld_api_key`, replace `fest-twin-demo`, and verify `https://cwserver.tail97dbc3.ts.net/` returns `200 OK`.
 
 - [ ] Step 4: Verify deployed bundle
 

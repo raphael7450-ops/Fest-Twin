@@ -16,7 +16,7 @@ Tech Stack: React, TypeScript, Vite, Vitest, Testing Library, Express, Docker, K
 - Preserve the region-first TourAPI lookup flow and existing TourAPI proxy behavior.
 - Use manual/sample `LINKID` mapping in the first implementation; do not implement Shape-file automatic road matching.
 - Fallback states must still produce visible source-detail evidence explaining which sample link and assumptions were used.
-- End with `npm run test`, `$env:VITE_NAVER_MAP_NCP_KEY_ID='5mcwlg6qwo'; npm run build`, GitHub push, and remote Docker deployment verification.
+- End with `npm run test`, `$env:VITE_VWORLD_API_KEY='your_vworld_api_key'; npm run build`, GitHub push, and remote Docker deployment verification.
 
 ---
 
@@ -1278,7 +1278,7 @@ Expected: all tests pass.
 Run:
 
 ```bash
-$env:VITE_NAVER_MAP_NCP_KEY_ID='5mcwlg6qwo'; npm run build
+$env:VITE_VWORLD_API_KEY='your_vworld_api_key'; npm run build
 ```
 
 Expected: build passes.

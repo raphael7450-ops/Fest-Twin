@@ -962,7 +962,7 @@ Expected: all test files pass.
 Run:
 
 ```bash
-$env:VITE_NAVER_MAP_NCP_KEY_ID='5mcwlg6qwo'; npm run build
+$env:VITE_VWORLD_API_KEY='your_vworld_api_key'; npm run build
 ```
 
 Expected: Vite build completes and `dist` is generated.

@@ -485,7 +485,7 @@ Run the existing remote Docker deployment command with a fresh tag and preserve:
 
 ```text
 --env-file /home/cwuser/fest-twin-demo.env
---build-arg NAVER_MAP_CLIENT_ID=5mcwlg6qwo
+--build-arg VWORLD_API_KEY=your_vworld_api_key
 ```
 
 - [ ] Step 6: Verify public deployment

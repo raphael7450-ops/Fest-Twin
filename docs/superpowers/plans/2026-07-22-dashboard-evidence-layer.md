@@ -1091,7 +1091,7 @@ Expected: all Vitest tests pass.
 
 - [ ] Step 2: Run production build
 
-Run: `VITE_NAVER_MAP_NCP_KEY_ID=5mcwlg6qwo npm run build`
+Run: `VITE_VWORLD_API_KEY=your_vworld_api_key npm run build`
 
 Expected: TypeScript and Vite build pass.
 
@@ -1116,7 +1116,7 @@ Expected: `main -> main`.
 
 - [ ] Step 5: Deploy Docker demo
 
-Create an archive from `HEAD`, upload it to `cwuser@100.104.94.112`, build with `NAVER_MAP_CLIENT_ID=5mcwlg6qwo`, and replace the `fest-twin-demo` container. When `/home/cwuser/fest-twin-demo.env` exists, the replacement container must be started with `--env-file /home/cwuser/fest-twin-demo.env`; otherwise the server-side TourAPI proxy returns `TOUR_API_KEY_MISSING` and the region selector cannot load real area codes.
+Create an archive from `HEAD`, upload it to `cwuser@100.104.94.112`, build with `VWORLD_API_KEY=your_vworld_api_key`, and replace the `fest-twin-demo` container. When `/home/cwuser/fest-twin-demo.env` exists, the replacement container must be started with `--env-file /home/cwuser/fest-twin-demo.env`; otherwise the server-side TourAPI proxy returns `TOUR_API_KEY_MISSING` and the region selector cannot load real area codes.
 
 Use the same deployment pattern already proven in this project:
 

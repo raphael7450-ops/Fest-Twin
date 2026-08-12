@@ -85,7 +85,7 @@ Commit: `fix: align snapshot outputs and setup guidance`
 - Full suite: 63 files, 294 tests passed.
 - `npx tsc -b --pretty false`: passed.
 - `npm run build`: passed; 1,633 modules transformed. It warns only that `VITE_VWORLD_API_KEY` was intentionally unset for this local build.
-- The deployment guide contains no `VITE_NAVER_MAP_NCP_KEY_ID`, `NAVER_MAP_CLIENT_ID`, `Naver 지도`, or `네이버 지도` references.
+- The deployment guide contains no retired Naver map variables or map instructions.
 
 Commit: `fix: align pending title and map deployment docs`
 
@@ -94,7 +94,7 @@ Commit: `fix: align pending title and map deployment docs`
 ### Reviewer Follow-up
 
 - `.github/workflows/deploy.yml` now requires `secrets.VWORLD_API_KEY`, maps it to `VITE_VWORLD_API_KEY` for the Vite build, and passes the same value to Docker as `--build-arg VWORLD_API_KEY`.
-- The workflow no longer contains `VITE_NAVER_MAP_NCP_KEY_ID` or `NAVER_MAP_CLIENT_ID`; deployment is skipped when the VWorld key is absent instead of building a map bundle without it.
+- The workflow no longer contains retired Naver map variables; deployment is skipped when the VWorld key is absent instead of building a map bundle without it.
 - `Dockerfile` already accepted `ARG VWORLD_API_KEY` and exposed it to Vite as `VITE_VWORLD_API_KEY`, so no Dockerfile change was required.
 - `scripts/remote-deploy.js` now requires `VWORLD_API_KEY` from its caller instead of embedding a map key. The deployment guide documents the same GitHub Secret, Docker build argument, and PowerShell environment variable names.
 
@@ -113,3 +113,27 @@ Commit: `fix: align pending title and map deployment docs`
 - Native Docker and YAML parsers are unavailable in this environment; the static deployment-configuration regression test covers the checked-in workflow and Docker argument contract.
 
 Commit: `fix: deploy with vworld map configuration`
+
+## Fix Round 4
+
+### Reviewer Follow-up
+
+- Replaced the deployment configuration test's key-specific negative assertion with structural checks: VWorld flows through the documented GitHub Secret, Vite variable, and Docker build argument without embedding a literal value.
+- Removed the legacy map-named NCP credential branch from `server/trendProxy.js`. Naver DataLab requests now use only the existing server-side DataLab/search credentials and retain their safe fallback behavior.
+- Tracked source, docs, workflows, Task 6 records, and dated planning archives contain no retired map environment names or former embedded map-key value. Original historical wording remains available through Git history.
+
+### TDD Evidence
+
+- Red: the new structural proxy guard failed because `trendProxy` still matched the retired map-environment pattern.
+- Green: the deployment configuration and trend-proxy suites passed after removing the legacy NCP branch.
+
+### Verification
+
+- Focused deployment/server/docs suite: 4 files, 11 tests passed.
+- Full suite: 64 files, 297 tests passed.
+- `npm run test:docs`: passed.
+- `npx tsc -b --pretty false`: passed.
+- `VITE_VWORLD_API_KEY=test-vworld-key npm run build`: passed; 1,633 modules transformed with no missing-key warning.
+- `git diff --check`: passed.
+
+Commit: `fix: remove legacy map credentials`
