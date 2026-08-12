@@ -8,14 +8,6 @@
       content="페스트트윈은 지자체 축제 기획안을 데이터 기반으로 사전 진단하는 B2G SaaS입니다."
     />
     <title>페스트트윈(Fest-Twin)</title>
-    <script>
-      (() => {
-        const apiKey = "%VITE_VWORLD_API_KEY%";
-        if (!apiKey || apiKey.startsWith("%")) return;
-        const src = `https://map.vworld.kr/js/vworldMapInit.js.do?version=2.0&apiKey=${encodeURIComponent(apiKey)}`;
-        document.write(`<script data-fest-twin-vworld-map src="${src}"><\/script>`);
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
