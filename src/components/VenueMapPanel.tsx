@@ -110,8 +110,9 @@ function waitForVWorldMap() {
         resolve();
         return;
       }
-      if (window.performance.now() - startedAt > 8000) {
-        reject(new Error("VWorld map load timed out"));
+      const elapsed = window.performance.now() - startedAt;
+      if (elapsed > 20000) {
+        reject(new Error(`VWorld map load timed out after ${Math.round(elapsed)}ms`));
         return;
       }
       window.setTimeout(poll, 100);
@@ -123,6 +124,7 @@ function waitForVWorldMap() {
 export function VenueMapPanel({ plan }: VenueMapPanelProps) {
   const mapStageRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<MapStatus>(vworldApiKey ? "loading" : "missing-key");
+  const [failReason, setFailReason] = useState<string>("");
   const coordinates = plan.venueCoordinates;
   const notes = buildVenueOperationalNotes(plan);
 
@@ -182,6 +184,8 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
       })
       .catch((error: Error) => {
         if (!cancelled) {
+          console.error("[VenueMapPanel] VWorld map load error:", error.message);
+          setFailReason(error.message);
           setStatus(error.message === "VWORLD_KEY_REJECTED" ? "key-rejected" : "failed");
         }
       });
@@ -191,15 +195,16 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
     };
   }, [coordinates, plan.name]);
 
+
   const statusText =
     status === "ready"
       ? "VWorld 지도 표시 중"
       : status === "key-rejected"
         ? "VWorld API 키와 등록 도메인이 일치하지 않습니다"
         : status === "failed"
-          ? "VWorld 지도 로드 실패"
+          ? `VWorld 지도 로드 실패${failReason ? `: ${failReason}` : ""}`
           : status === "loading"
-            ? "VWorld 지도 로드 중"
+            ? "VWorld 지도 로드 중..."
             : "VWorld 지도 API 키 미설정";
 
   return (
