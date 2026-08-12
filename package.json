@@ -9,6 +9,7 @@
     "start": "node server/index.js",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
+    "test:docs": "node scripts/docs-link-check.js README.md docs/README.md",
     "deploy:check": "node scripts/deploy-check.js",
     "deploy:remote": "node scripts/remote-deploy.js",
     "build:zip": "node scripts/build-submission-zip.js",

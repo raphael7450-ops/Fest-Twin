@@ -5,22 +5,14 @@
  */
 
 // 핵심 도메인 인터페이스 및 타입 정의 불러오기
-import type {
-  FestivalPlan, // 축제 기획안 데이터 모델
-  ForecastResult, // 수요 예측 산출 결과 모델
-  MetricEvidenceId, // 지표 산출 근거 식별자 타입
-  SpendingContext, // 관광데이터랩 소비지출 연동 맥락
-} from "../domain/types";
-// 경제적 파급효과 및 ROI 지표 계산 비즈니스 함수 불러오기
-import { createEconomicImpactMetrics } from "../services/impactMetrics";
+import type { MetricEvidenceId } from "../domain/types";
+import type { EconomicImpactMetrics } from "../services/impactMetrics";
 // 산출 근거 보기 공통 버튼 컴포넌트 불러오기
 import { EvidenceButton } from "./EvidenceButton";
 
 // 컴포넌트에 전달되는 입력 프로퍼티(Props) 타입 정의
 interface RoiEconomicImpactProps {
-  plan: FestivalPlan; // 기획안 (투입 예산 포함)
-  forecast: ForecastResult; // 수요 예측 인원 수
-  spending?: SpendingContext; // 소비 객단가 백데이터
+  metrics: EconomicImpactMetrics;
   onOpenEvidence: (metricId: MetricEvidenceId) => void; // 근거 보기 모달 오픈 콜백
 }
 
@@ -37,21 +29,16 @@ function formatKrw(value: number) {
 
 // 예산 대비 경제적 파급효과(ROI) 시각화 메인 컴포넌트
 export function RoiEconomicImpact({
-  plan,
-  forecast,
-  spending,
+  metrics,
   onOpenEvidence,
 }: RoiEconomicImpactProps) {
-  // 1. 투입 예산과 예상 소비액을 기반으로 ROI 배율 및 객단가 지표 계산
-  const metrics = createEconomicImpactMetrics(plan, forecast, spending);
-
-  // 2. 차트 바 비례 비율 계산을 위한 최대 기준값 산출
+  // 차트 바 비례 비율 계산을 위한 최대 기준값 산출
   const maxValue = Math.max(
     metrics.totalBudgetKrw,
     metrics.expectedLocalSpendingKrw,
     1,
   );
-  // 3. 그래프 바 너비 퍼센트 산출 (0 ~ 100%)
+  // 그래프 바 너비 퍼센트 산출 (0 ~ 100%)
   const budgetWidth = Math.round((metrics.totalBudgetKrw / maxValue) * 100);
   const impactWidth = Math.round(
     (metrics.expectedLocalSpendingKrw / maxValue) * 100,

@@ -4,7 +4,6 @@ import { getFallbackWeatherContext } from "../src/services/weatherAdapter";
 import { createForecast } from "../src/services/forecast";
 import { createSimulation } from "../src/services/simulation";
 import { createMetricEvidenceSet } from "../src/services/metricEvidence";
-import { createPlanningReport } from "../src/services/report";
 import { buildCsvReportContent, generateCsvFilename } from "../src/utils/csvExport";
 import {
   createFallbackTourismContext,
@@ -13,6 +12,8 @@ import { sampleTourismContext } from "../src/data/sampleTourApi";
 import { sampleTrendContext } from "../src/data/sampleTrends";
 import { sampleTrafficContext } from "../src/data/sampleTraffic";
 import { sampleSpendingContext } from "../src/data/sampleSpending";
+import { sampleDemandBackdataContext } from "../src/data/sampleDemandBackdata";
+import { createFestivalAnalysisSnapshot } from "../src/services/analysisSnapshot";
 
 describe("Festival State & Reactive Data Switch Tests (tests/festivalSwitch.test.ts)", () => {
   const daejeonPreset = FESTIVAL_PRESETS.find((p) => p.id === "preset_daejeon_0시축제")!;
@@ -110,44 +111,28 @@ describe("Festival State & Reactive Data Switch Tests (tests/festivalSwitch.test
 
   it("exports CSV reports containing strictly fresh parameters for the newly selected festival", () => {
     const weather = getFallbackWeatherContext();
-    const forecastB = createForecast(
-      sejongPreset.plan,
-      sampleTourismContext,
-      sampleTrendContext,
-      undefined,
-      weather,
-    );
-    const simulationB = createSimulation(sejongPreset.plan, forecastB, forecastB.peakHour);
-    const reportB = createPlanningReport(sejongPreset.plan, forecastB, simulationB);
-
-    const evidenceSetB = createMetricEvidenceSet(
-      sejongPreset.plan,
-      forecastB,
-      simulationB,
-      sampleTourismContext,
-      sampleTrendContext,
-      sampleTrafficContext,
-      sampleSpendingContext,
-      undefined,
-      sejongPreset.basis,
-      weather,
-    );
-
-    const csvB = buildCsvReportContent({
+    const snapshotB = createFestivalAnalysisSnapshot({
       plan: sejongPreset.plan,
-      forecast: forecastB,
-      report: reportB,
-      spending: sampleSpendingContext,
-      evidenceSet: evidenceSetB,
-      shareToken: "token_sejong_2026",
+      selectedFestivalBasis: sejongPreset.basis,
+      selectedHour: 20,
+      datasets: {
+        tourism: { status: "supplemented", value: sampleTourismContext, sourceName: "TourAPI" },
+        trends: { status: "supplemented", value: sampleTrendContext, sourceName: "Naver DataLab" },
+        traffic: { status: "supplemented", value: sampleTrafficContext, sourceName: "KTDB/View-T" },
+        spending: { status: "supplemented", value: sampleSpendingContext, sourceName: "Tourism spending" },
+        demandBackdata: { status: "supplemented", value: sampleDemandBackdataContext, sourceName: "Regional festival DB" },
+        weather: { status: "supplemented", value: weather, sourceName: "Seasonal climate sample" },
+      },
+      now: new Date("2026-08-07T10:00:00.000Z"),
     });
+    const csvB = buildCsvReportContent({ snapshot: snapshotB });
 
     const filenameB = generateCsvFilename(sejongPreset.plan.name, new Date("2026-08-07T10:00:00"));
 
     // Verify CSV filename and content reflect Sejong Festival
     expect(filenameB).toContain("세종");
     expect(csvB).toContain("2026 세종 축제");
-    expect(csvB).toContain("token_sejong_2026");
+    expect(csvB).toContain(snapshotB.analysisId);
     expect(csvB).not.toContain("대전 0시 축제");
     expect(csvB).not.toContain("보령 머드축제");
   });

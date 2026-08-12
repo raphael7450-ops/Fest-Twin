@@ -10,7 +10,7 @@
 | 평가 영역 | 점수 | 판정 | 감사 의견 |
 | --- | ---: | --- | --- |
 | 수치 경계값 방어 | 25/25 | PASS | 음수 예산, 0 수용 인원, 빈 운영시간, 0 격자 입력 시 `NaN`, 음수, 무한대가 노출되지 않도록 방어 테스트를 추가했다. |
-| 물리적 한계치 | 25/25 | PASS | 최고 밀집도 표출값은 9.9명/m² 상한으로 제한되어 10명/m² 초과 수치가 대시보드에 노출되지 않는다. |
+| 물리적 한계치 | 25/25 | PASS | 행사장 면적이 없으면 물리 밀도는 `산출 불가`, 총 출구 폭 또는 피난 거리가 없으면 대피 시간은 `산출 불가`로 표시한다. 필요한 지오메트리가 있을 때만 물리 단위 값을 산출한다. |
 | 출처 및 Fallback 라벨링 | 22/25 | PASS | TourAPI, KTDB/View-T, 관광 소비 백데이터, 샘플/Fallback 상태가 근거 Drawer에 표시된다. 다만 View-T 세부 ZONEID 자동 매핑은 추가 고도화가 필요하다. |
 | 4단계 산출 정합성 | 22/25 | PASS with Watch | ROI 4단계 산식은 실제 표출값과 일치하도록 정정했다. 흥행 예측 지수 단계는 현재 설명형 분해이므로 향후 내부 예측 모델의 실제 중간값을 노출하는 방식으로 개선 권고한다. |
 
@@ -47,7 +47,7 @@
 | 테스트 항목 | 입력 조건 | 기대 방어 | 결과 |
 | --- | --- | --- | --- |
 | 수요 예측 경계값 | 운영시간 없음, 음수 예산, 음수 수용 인원, `NaN` 프로그램 점수 | 방문객/시간대별 수요가 유한한 0 이상 값으로 정규화 | PASS |
-| 시뮬레이션 경계값 | 0×0 격자, 수용 인원 0, 방문객 1,000,000명 | 최소 1개 격자 생성, 혼잡도 유한값, 최고 밀집도 9.9명/m² 이하 | PASS |
+| 시뮬레이션 경계값 | 0×0 격자, 수용 인원 0, 방문객 1,000,000명 | 최소 1개 격자와 유한한 상대 혼잡값 생성. 물리 밀도는 행사장 면적이 없으면 `산출 불가` | PASS |
 | 경제효과 경계값 | 음수 예산, 음수 방문객, 음수 객단가 | 예산/소비액/ROI가 0 이상 유한값으로 정규화 | PASS |
 | ROI Drawer 정합성 | 기준 시나리오 | 산식 문구와 subtotal/ROI가 실제 계산값과 일치 | PASS |
 
@@ -69,9 +69,10 @@
 | 안전 및 물류 패널 | `createSafetyLogisticsMetrics` | PASS |
 | ROI 패널 | `createEconomicImpactMetrics` | PASS |
 | Metric Evidence Drawer | `createMetricEvidenceSet` | PASS with Watch |
-| 리포트 화면 | 동일 `forecast`, `simulation`, `evidenceSet` props | PASS |
 | 공유 토큰 복원 화면 | 시나리오 저장/복원 후 동일 계산 모듈 재실행 | PASS |
-| CSV/PDF 다운로드 | 별도 CSV/PDF 전용 산출 경로 확인 필요 | Watch |
+| 리포트 화면 | 커밋된 `FestivalAnalysisSnapshot` | PASS |
+| 인쇄 보고서 | 커밋된 `FestivalAnalysisSnapshot`과 분석 ID | PASS |
+| CSV 다운로드 | 커밋된 `FestivalAnalysisSnapshot`, 데이터셋별 상태, UTF-8 BOM | PASS |
 
 ## 6. 결론 및 후속 권고
 
@@ -81,4 +82,4 @@
 
 1. `forecast.ts`가 내부 중간값을 `ForecastAuditBreakdown` 형태로 반환하게 하여 흥행 예측 지수 Drawer의 단계별 subtotal을 실제 모델 계산값으로 교체한다.
 2. View-T `ZONEID/LINKID` 자동 매핑을 확정해 교통 Fallback 비중을 낮춘다.
-3. CSV/PDF 전용 내보내기 기능이 추가되면 `evidenceSet`과 동일 수치인지 별도 회귀 테스트를 추가한다.
+3. PostgreSQL 저장소 전환은 현재 구현이 아닌 Phase 2 범위로 유지하고, 현재 저장소는 `JSON ?뚯씪 ??μ냼`(JSON 파일 저장소)로 설명한다.

@@ -1,25 +1,7 @@
-import type {
-  FestivalPlan,
-  ForecastResult,
-  MetricEvidence,
-  MetricEvidenceId,
-  PlanningReport,
-  SafetyDecisionProfiles,
-  SelectedFestivalBasis,
-  SpendingContext,
-} from "../domain/types";
-import { createSimulation } from "../services/simulation";
-import { createSafetyDecisionProfiles } from "../services/safetyDecisionMetrics";
-import { createSuccessPotentialMetric } from "../services/impactMetrics";
+import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
 
 interface B2gPrintReportProps {
-  report?: PlanningReport;
-  plan?: FestivalPlan;
-  forecast?: ForecastResult;
-  selectedFestivalBasis?: SelectedFestivalBasis | null;
-  spending?: SpendingContext;
-  evidenceSet?: Record<MetricEvidenceId, MetricEvidence>;
-  safetyDecisionProfiles?: SafetyDecisionProfiles;
+  snapshot?: FestivalAnalysisSnapshot;
 }
 
 function formatKrw(value: number) {
@@ -27,49 +9,42 @@ function formatKrw(value: number) {
 }
 
 export function B2gPrintReport({
-  report,
-  plan,
-  forecast,
-  selectedFestivalBasis,
-  spending,
-  evidenceSet = {} as Record<MetricEvidenceId, MetricEvidence>,
-  safetyDecisionProfiles,
+  snapshot,
 }: B2gPrintReportProps) {
-  const simulation = plan && forecast ? createSimulation(plan, forecast, forecast?.peakHour ?? 20) : null;
-  const safetyProfiles =
-    safetyDecisionProfiles ??
-    (plan && forecast && simulation
-      ? createSafetyDecisionProfiles(plan, forecast, simulation)
-      : undefined);
-  const safety = safetyProfiles?.summary;
+  if (!snapshot) return null;
+
+  const { plan, forecast, report, selectedFestivalBasis, datasets, metrics } = snapshot;
+  const safety = snapshot.safety.summary;
   const densityText =
-    safety?.peakDensity.status === "available"
+    safety.peakDensity.status === "available"
       ? `${safety.peakDensity.value.toFixed(2)} 명/㎡`
       : "산출 불가";
-  const expectedVisitors = forecast?.expectedVisitors ?? 0;
-  const successPotential = forecast
-    ? createSuccessPotentialMetric(forecast)
-    : null;
-  const expectedCapacity = plan?.expectedCapacity ?? 1;
-  const budgetKrw = (plan?.totalBudgetMillionKrw ?? 0) * 1_000_000;
-  const avgSpend = spending?.averageSpendPerVisitorKrw ?? 42000;
-  const totalEconomicEffect = expectedVisitors * avgSpend;
-  const roi = budgetKrw > 0 && Number.isFinite(totalEconomicEffect) ? (totalEconomicEffect / budgetKrw).toFixed(2) : "0.0";
-  const nowStr = new Date().toISOString().slice(0, 10);
-  const regionName = plan?.region ?? "서울";
-  const planName = (plan?.name ?? "축제").replace(/\s+/g, "_");
-  const scenarioId = selectedFestivalBasis?.contentId
-    ? `SCN-${selectedFestivalBasis.contentId}`
-    : `SCN-${regionName}-${planName}`;
-
-  const peakVisitorCount = forecast?.visitorsByHour?.find((v) => v.hour === forecast?.peakHour)?.visitors ?? 0;
-  const overallRiskLevel = report?.scores?.find((s) => s.level === "critical" || s.level === "high")?.level ?? report?.scores?.[0]?.level ?? "medium";
-
-  // Filter evidence list to key items for clean print presentation
-  const evidenceEntries = Object.entries(evidenceSet || {}).slice(0, 8);
+  const evacuationText =
+    safety.evacuationTime.status === "available"
+      ? `${safety.evacuationTime.value.toFixed(1)}분`
+      : "산출 불가";
+  const expectedVisitors = forecast.expectedVisitors;
+  const successPotential = metrics.summary.successPotential;
+  const capacityPressure = metrics.summary.capacityPressure;
+  const budgetKrw = metrics.economic.totalBudgetKrw;
+  const avgSpend = metrics.economic.averageSpendPerVisitorKrw;
+  const totalEconomicEffect = metrics.economic.expectedLocalSpendingKrw;
+  const roi = metrics.economic.roiMultiplier.toFixed(1);
+  const festivalTitle = selectedFestivalBasis?.title ?? plan.name;
+  const peakVisitorCount =
+    forecast.visitorsByHour.find((value) => value.hour === forecast.peakHour)?.visitors ?? 0;
+  const overallRiskLevel =
+    report.scores.find((score) => score.level === "critical" || score.level === "high")?.level ??
+    report.scores[0]?.level ??
+    "medium";
+  const datasetEntries = Object.entries(datasets);
 
   return (
-    <div className="b2g-print-report-wrapper" aria-label="B2G 행정 결재 및 감사 제출용 보고서">
+    <div
+      className="b2g-print-report-wrapper"
+      aria-label="B2G 행정 결재 및 감사 제출용 보고서"
+      data-print-analysis-id={snapshot.analysisId}
+    >
       {/* 1페이지: 행정 결재 개요, 핵심 지표 요약 및 4단계 산출 근거 */}
       <section className="b2g-print-page b2g-print-page-1">
         <header className="b2g-print-header">
@@ -81,8 +56,9 @@ export function B2gPrintReport({
             </div>
           </div>
           <div className="b2g-print-header__meta">
-            <div><span className="meta-label">문서 번호:</span> {scenarioId}</div>
-            <div><span className="meta-label">발행 일자:</span> {nowStr}</div>
+            <div><span className="meta-label">분석 ID:</span> {snapshot.analysisId}</div>
+            <div><span className="meta-label">모델 버전:</span> {snapshot.modelVersion}</div>
+            <div><span className="meta-label">생성 시각:</span> {snapshot.createdAt}</div>
             <div><span className="meta-label">검토 구분:</span> 사전 진단 및 수요 추정</div>
           </div>
         </header>
@@ -100,15 +76,21 @@ export function B2gPrintReport({
             <tbody>
               <tr>
                 <th>축제명</th>
-                <td>{selectedFestivalBasis?.title || plan?.name || "미지정 축제"}</td>
+                <td>{festivalTitle}</td>
                 <th>개최 지역</th>
-                <td>{plan?.region ?? ""} {plan?.venueAddress ?? ""}</td>
+                <td>{plan.region} {plan.venueAddress}</td>
               </tr>
               <tr>
                 <th>개최 기간</th>
-                <td>{selectedFestivalBasis ? `${selectedFestivalBasis.startDate} ~ ${selectedFestivalBasis.endDate}` : `${plan?.startDate ?? ""} ~ ${plan?.endDate ?? ""}`}</td>
+                <td>{selectedFestivalBasis ? `${selectedFestivalBasis.startDate} ~ ${selectedFestivalBasis.endDate}` : `${plan.startDate} ~ ${plan.endDate}`}</td>
                 <th>총 투입 예산</th>
-                <td>{formatKrw(budgetKrw)} (안전 예산: {plan?.safetyBudgetMillionKrw ?? 0}백만원)</td>
+                <td>{formatKrw(budgetKrw)} (안전 예산: {plan.safetyBudgetMillionKrw}백만원)</td>
+              </tr>
+              <tr>
+                <th>축제 ID</th>
+                <td>{snapshot.festivalId}</td>
+                <th>분석 ID</th>
+                <td>{snapshot.analysisId}</td>
               </tr>
             </tbody>
           </table>
@@ -120,15 +102,15 @@ export function B2gPrintReport({
             <div className="b2g-kpi-card">
               <span className="b2g-kpi-title">총 예상 방문객</span>
               <strong className="b2g-kpi-val">{expectedVisitors.toLocaleString("ko-KR")} 명</strong>
-              <span className="b2g-kpi-sub">피크 시간: {forecast?.peakHour ?? 20}:00 ({peakVisitorCount.toLocaleString("ko-KR")}명)</span>
+              <span className="b2g-kpi-sub">피크 시간: {forecast.peakHour}:00 ({peakVisitorCount.toLocaleString("ko-KR")}명)</span>
             </div>
             <div className="b2g-kpi-card">
               <span className="b2g-kpi-title">피크 시간대 물리 밀도</span>
               <strong className="b2g-kpi-val">{densityText}</strong>
               <span className="b2g-kpi-sub">
-                {safety?.peakDensity.status === "unavailable"
+                {safety.peakDensity.status === "unavailable"
                   ? safety.peakDensity.reason
-                  : `수용 능력 한계비율: ${Math.round((expectedVisitors / expectedCapacity) * 100)}%`}
+                  : `수용 능력 한계비율: ${capacityPressure.displayPercent}%`}
               </span>
             </div>
             <div className="b2g-kpi-card">
@@ -150,7 +132,7 @@ export function B2gPrintReport({
             </div>
             <div className="b2g-findings-area">
               <ul>
-                {(report?.findings ?? []).map((finding, idx) => (
+                {report.findings.map((finding, idx) => (
                   <li key={idx}>{finding}</li>
                 ))}
               </ul>
@@ -166,8 +148,8 @@ export function B2gPrintReport({
               <p>TourAPI 4.0 및 KTDB 이동 데이터 합성 추산</p>
               <ul>
                 <li>예상 방문객: {expectedVisitors.toLocaleString("ko-KR")}명</li>
-                <li>흥행 가능성 점수: {successPotential?.score ?? 80}점</li>
-                <li>예측 신뢰도: {forecast?.confidence ?? "보통"}</li>
+                <li>흥행 가능성 점수: {successPotential.score}점</li>
+                <li>예측 신뢰도: {forecast.confidence}</li>
               </ul>
             </div>
             <div className="b2g-breakdown-step">
@@ -175,7 +157,8 @@ export function B2gPrintReport({
               <p>행정안전부 안전 관리 매뉴얼 수용 한계 검토</p>
               <ul>
                 <li>물리 밀도: {densityText}</li>
-                <li>안전 인력 권고: {safety?.staffing.recommended ?? "산출 불가"}명</li>
+                <li>안전 인력 권고: {safety.staffing.recommended}명</li>
+                <li>대피 시간: {evacuationText}</li>
               </ul>
             </div>
             <div className="b2g-breakdown-step">
@@ -190,8 +173,8 @@ export function B2gPrintReport({
               <h3>Step 4. 수용성 & 리스크</h3>
               <p>행사장 면적 및 주차/편의시설 지수 산출</p>
               <ul>
-                <li>수용성 점수: {report?.scores?.find(s => s.label.includes("수용"))?.score ?? 85}점</li>
-                <li>교통/주차 점수: {report?.scores?.find(s => s.label.includes("주차") || s.label.includes("교통"))?.score ?? 80}점</li>
+                <li>수용 정원률: {capacityPressure.displayPercent}% ({capacityPressure.status})</li>
+                <li>교통/주차 점수: {report.scores.find(s => s.label.includes("주차") || s.label.includes("교통"))?.score ?? "검토 필요"}점</li>
               </ul>
             </div>
           </div>
@@ -211,7 +194,7 @@ export function B2gPrintReport({
             <span className="b2g-org-sub">Fest-Twin Audit & Compliance Sheet</span>
           </div>
           <div className="b2g-print-header__meta">
-            <div><span className="meta-label">문서 번호:</span> {scenarioId}</div>
+            <div><span className="meta-label">분석 ID:</span> {snapshot.analysisId}</div>
           </div>
         </header>
 
@@ -220,29 +203,23 @@ export function B2gPrintReport({
           <table className="b2g-table">
             <thead>
               <tr>
-                <th>지표 구분</th>
+                <th>데이터셋</th>
                 <th>데이터 출처</th>
-                <th>제공 기관</th>
-                <th>무결성 및 라벨 상태</th>
+                <th>상태</th>
+                <th>상태 설명</th>
               </tr>
             </thead>
             <tbody>
-              {evidenceEntries.map(([key, item]) => {
-                const sourceName = item?.sourceDetails?.[0]?.sourceName || item?.dataSources?.join(", ") || "공공데이터";
-                const sourceTypeLabel = item?.sourceDetails?.[0]?.sourceType === "tourapi" ? "한국관광공사" : "공공데이터 포털";
-                const statusText = item?.confidenceLabel === "높음" ? "실시간 검증 완료" : "데이터 오염 검증 필터 적용";
-
-                return (
-                  <tr key={key}>
-                    <td>[지표] {item?.title ?? key}</td>
-                    <td>{sourceName}</td>
-                    <td>{sourceTypeLabel}</td>
-                    <td>
-                      <span className="b2g-integrity-tag">{statusText}</span>
-                    </td>
-                  </tr>
-                );
-              })}
+              {datasetEntries.map(([name, dataset]) => (
+                <tr key={name}>
+                  <td>{name}</td>
+                  <td>{dataset.sourceName}</td>
+                  <td>
+                    <span className="b2g-integrity-tag">{dataset.status}</span>
+                  </td>
+                  <td>{dataset.message ?? "-"}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

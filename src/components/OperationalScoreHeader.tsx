@@ -64,7 +64,9 @@ export function OperationalScoreHeader({
 
       <div className="ops-score-card">
         <span className="ops-card-label">예상 방문</span>
-        <strong>{formatNumber(forecast.expectedVisitors)}명</strong>
+        <strong data-testid="dashboard-expected-visitors">
+          {formatNumber(forecast.expectedVisitors)}명
+        </strong>
         <small>{forecast.peakHour}:00 피크 기준</small>
       </div>
 

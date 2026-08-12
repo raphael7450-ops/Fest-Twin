@@ -4,26 +4,10 @@
  * 작성 : 2026-08-04. UTF-8 BOM, 4대 체계적 구획 구조화, 규격화된 파일명 및 감사 토큰 생성
  */
 
-import type {
-  FestivalPlan,
-  ForecastResult,
-  MetricEvidence,
-  MetricEvidenceId,
-  PlanningReport,
-  SelectedFestivalBasis,
-  SpendingContext,
-} from "../domain/types";
-import { createSuccessPotentialMetric } from "../services/impactMetrics";
+import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
 
 export interface CsvReportInput {
-  plan: FestivalPlan;
-  forecast: ForecastResult;
-  report: PlanningReport;
-  spending?: SpendingContext;
-  selectedFestivalBasis?: SelectedFestivalBasis | null;
-  evidenceSet?: Record<MetricEvidenceId, MetricEvidence>;
-  shareToken?: string;
-  timestamp?: Date;
+  snapshot: FestivalAnalysisSnapshot;
 }
 
 /**
@@ -76,35 +60,33 @@ export function generateCsvFilename(planName: string, date: Date = new Date()): 
  * B2G 행정 제출 및 감사(Audit) 대응용 4대 구획 구조화 CSV 리포트 텍스트 생성
  */
 export function buildCsvReportContent(input: CsvReportInput): string {
-  const {
-    plan,
-    forecast,
-    report,
-    spending,
-    selectedFestivalBasis,
-    evidenceSet,
-    shareToken,
-    timestamp = new Date(),
-  } = input;
+  const { snapshot } = input;
+  const { plan, forecast, report, selectedFestivalBasis, datasets, metrics } = snapshot;
+  const spending = datasets.spending.value;
+  const evidenceSet = snapshot.evidence;
+  const timestamp = new Date(snapshot.createdAt);
 
   const { formattedDate } = formatYYYYMMDD_HHmm(timestamp);
-  const scenarioId = shareToken || (plan as any).id || "token_seoul_fireworks_2026";
-  const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
-  const successPotential = createSuccessPotentialMetric(forecast);
+  const scenarioId = snapshot.analysisId;
+  const budgetKrw = metrics.economic.totalBudgetKrw;
+  const successPotential = metrics.summary.successPotential;
 
   // 근거 세트 수치 추출
-  const peakDensityEvidence = evidenceSet?.["peak-density"];
-  const peakDensityValue = peakDensityEvidence?.summary || "산출 불가: 물리 밀도 근거 없음";
+  const peakDensityValue =
+    metrics.summary.peakDensity.status === "available"
+      ? `${metrics.summary.peakDensity.value.toFixed(2)}명/㎡`
+      : "산출 불가";
+  const evacuationValue =
+    snapshot.safety.summary.evacuationTime.status === "available"
+      ? `${snapshot.safety.summary.evacuationTime.value.toFixed(1)}분`
+      : "산출 불가";
 
   const trafficRiskEvidence = evidenceSet?.["traffic-risk"];
   const trafficRiskGrade = trafficRiskEvidence?.summary || "보통 (기준 링크 통행량 반영)";
 
-  const economicRoiEvidence = evidenceSet?.["economic-roi"];
-  const roiMultiplier =
-    economicRoiEvidence?.contributors.find((c) => c.label.includes("ROI"))?.value || "3.3배";
-
-  const avgSpend = spending ? spending.averageSpendPerVisitorKrw : 45000;
-  const totalEconomicEffect = forecast.expectedVisitors * avgSpend;
+  const roiMultiplier = `${metrics.economic.roiMultiplier.toFixed(1)}배`;
+  const avgSpend = metrics.economic.averageSpendPerVisitorKrw;
+  const totalEconomicEffect = metrics.economic.expectedLocalSpendingKrw;
 
   const safetyScore = report.scores.find(
     (s) => s.label.includes("위험") || s.label.includes("안전"),
@@ -124,8 +106,11 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   rows.push(formatCsvRow(["[구획 1] 행정 메타데이터 (Document Metadata)", ""]));
   rows.push(formatCsvRow(["문서명", "[Fest-Twin] 축제·행사 사전 진단 및 수요 추정 결과 보고서"]));
   rows.push(formatCsvRow(["생성 일시", formattedDate]));
-  rows.push(formatCsvRow(["시나리오 식별자 (share_token)", scenarioId]));
-  rows.push(formatCsvRow(["대상 축제명", plan.name]));
+  rows.push(formatCsvRow(["createdAt", snapshot.createdAt]));
+  rows.push(formatCsvRow(["analysisId", snapshot.analysisId]));
+  rows.push(formatCsvRow(["modelVersion", snapshot.modelVersion]));
+  rows.push(formatCsvRow(["festivalId", snapshot.festivalId]));
+  rows.push(formatCsvRow(["대상 축제명", selectedFestivalBasis?.title ?? plan.name]));
   rows.push(
     formatCsvRow(["개최 지역 / 개최지 주소", `${plan.region} (${plan.venueAddress || "미정"})`]),
   );
@@ -176,6 +161,14 @@ export function buildCsvReportContent(input: CsvReportInput): string {
     ]),
   );
   rows.push(formatCsvRow(["최고 밀집 위험도", peakDensityValue]));
+  rows.push(
+    formatCsvRow([
+      "수용 정원률",
+      `${metrics.summary.capacityPressure.displayPercent}% (${metrics.summary.capacityPressure.status})`,
+    ]),
+  );
+  rows.push(formatCsvRow(["권고 안전 인력", snapshot.safety.summary.staffing.recommended]));
+  rows.push(formatCsvRow(["대피 시간", evacuationValue]));
   rows.push(formatCsvRow(["교통 혼잡도 등급", trafficRiskGrade]));
   rows.push(
     formatCsvRow(["추정 상권 경제 효과", `${totalEconomicEffect.toLocaleString("ko-KR")}원`]),
@@ -294,13 +287,10 @@ export function buildCsvReportContent(input: CsvReportInput): string {
       "한국관광공사 TourAPI 4.0, 국토교통부 KTDB/View-T, 네이버 DataLab API, 한국관광 데이터랩",
     ]),
   );
-  rows.push(
-    formatCsvRow([
-      "데이터 연동 상태 (Live/Fallback)",
-      "TourAPI 4.0 (Live 정상 연동), Naver DataLab (정규화 스냅샷 Fallback), KTDB (정적 도로링크 매핑)",
-    ]),
-  );
-  rows.push(formatCsvRow(["서버 수신 / 연산 시각", timestamp.toISOString()]));
+  Object.entries(datasets).forEach(([name, dataset]) => {
+    rows.push(formatCsvRow([`dataset:${name}`, `${dataset.status} | ${dataset.sourceName}`]));
+  });
+  rows.push(formatCsvRow(["서버 수신 / 연산 시각", snapshot.createdAt]));
   rows.push(
     formatCsvRow([
       "무결성 검증 토큰 (Audit Token)",

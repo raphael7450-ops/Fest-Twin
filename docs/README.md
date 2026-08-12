@@ -59,7 +59,7 @@ docs/
 - [architecture-and-api.md](specs/architecture-and-api.md)
   - React 18 / Vite 6 SPA 프론트엔드 및 Express 백엔드 전체 시스템 블록 다이어그램 기술
   - OWASP CSP 보안 헤더 및 2단계 계층형 Rate Limiter(분당 300회/120회) 설계
-  - 5,700여 건 전국 축제 DB 프록시(`/api/regional-festivals`) 및 SQLite 시나리오 RESTful API 상세 규격 명세
+  - 현재 시나리오 저장은 `JSON ?뚯씪 ??μ냼`(JSON 파일 저장소)이며 PostgreSQL은 Phase 2 전환 계획
 
 - [data-and-simulation-methodology.md](specs/data-and-simulation-methodology.md)
   - 한국관광공사 TourAPI 4.0, 관광데이터랩 지출 객단가, 국가교통DB(KTDB View-T) 연동 방법론
@@ -88,14 +88,16 @@ docs/
   - 공모전 평가 항목별 Fest-Twin 구현 내용 1:1 대응 매트릭스
 
 - [submission-checklist.md](contest/submission-checklist.md)
-  - Vitest 50개 테스트 파일, 206개 단위/통합 테스트 검증 목록 (100% PASS)
+  - 빌드, 테스트, 배포 헬스체크 및 시연 준비 검증 목록
   - 5대 REST API 엔드포인트 헬스체크 및 시연 준비 종합 체크리스트
 
 ### 2.4 진단 및 변경 내역 (`docs/CHANGELOG.md` 등)
 
 - [CHANGELOG.md](CHANGELOG.md)
   - v2.2.0 신규 기능 및 개선 사항 (전국 5,700여 건 축제 DB 연동, 중복 데이터 제거, 지역별 맞춤 관광지 Fallback, 상태 반응성 자동화 테스트)
-  - 전체 50개 테스트 파일 206개 테스트 100% PASS 달성 기록
+
+- [DATA_RELIABILITY_REPORT.md](DATA_RELIABILITY_REPORT.md)
+  - 단일 분석 스냅샷, 출력 수치 일관성, 데이터셋 상태, 물리 지표 산출 조건 점검
 
 - [PROJECT_COMPREHENSIVE_AUDIT.md](PROJECT_COMPREHENSIVE_AUDIT.md)
   - 시스템 전수 진단 및 우선순위별 고도화 과제 통합 보고서 (v2.2.0 반영)
@@ -116,3 +118,6 @@ docs/
 - 축제 전환 반응성 테스트: `npx vitest run tests/festivalSwitch.test.ts`
 - 부하 테스트 실행: `npm run test:load`
 - OpenAPI 신뢰도 진단: `node --experimental-vm-modules scripts/api-reliability-check.js`
+- 문서 로컬 링크 검사: `npm run test:docs`
+
+현재 구현의 저장소는 JSON 파일 저장소입니다. PostgreSQL은 Phase 2 고도화 범위이며 현재 운영 저장소로 설명하지 않습니다. 물리 밀도는 행사장 면적이 없으면, 대피 시간은 총 출구 폭 또는 피난 거리가 없으면 `산출 불가`입니다.

@@ -1,45 +1,15 @@
-import type {
-  FestivalPlan,
-  ForecastResult,
-  MetricEvidence,
-  MetricEvidenceId,
-  PlanningReport,
-  SelectedFestivalBasis,
-  SpendingContext,
-} from "../domain/types";
+import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
 import { buildCsvReportContent, generateCsvFilename } from "../utils/csvExport";
 
 interface CsvExportButtonProps {
-  plan: FestivalPlan;
-  forecast: ForecastResult;
-  report: PlanningReport;
-  spending?: SpendingContext;
-  selectedFestivalBasis?: SelectedFestivalBasis | null;
-  evidenceSet?: Record<MetricEvidenceId, MetricEvidence>;
-  shareToken?: string;
+  snapshot: FestivalAnalysisSnapshot;
 }
 
-export function CsvExportButton({
-  plan,
-  forecast,
-  report,
-  spending,
-  selectedFestivalBasis,
-  evidenceSet,
-  shareToken,
-}: CsvExportButtonProps) {
+export function CsvExportButton({ snapshot }: CsvExportButtonProps) {
   const handleExportCsv = () => {
-    const csvContent = buildCsvReportContent({
-      plan,
-      forecast,
-      report,
-      spending,
-      selectedFestivalBasis,
-      evidenceSet,
-      shareToken,
-    });
+    const csvContent = buildCsvReportContent({ snapshot });
 
-    const filename = generateCsvFilename(plan.name);
+    const filename = generateCsvFilename(snapshot.plan.name, new Date(snapshot.createdAt));
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);

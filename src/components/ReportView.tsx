@@ -1,16 +1,5 @@
-import type {
-  FestivalPlan,
-  ForecastResult,
-  MetricEvidence,
-  MetricEvidenceId,
-  PlanningReport,
-  SafetyDecisionProfiles,
-  SelectedFestivalBasis,
-  SpendingContext,
-} from "../domain/types";
-import { createSimulation } from "../services/simulation";
-import { createSuccessPotentialMetric } from "../services/impactMetrics";
-import { createSafetyDecisionProfiles } from "../services/safetyDecisionMetrics";
+import type { MetricEvidenceId } from "../domain/types";
+import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
 import { CsvExportButton } from "./CsvExportButton";
 import { EvidenceButton } from "./EvidenceButton";
 import { InfrastructureCapacityPanel } from "./InfrastructureCapacityPanel";
@@ -20,13 +9,7 @@ import { RoiEconomicImpact } from "./RoiEconomicImpact";
 import { SafetyGuardAllocationPanel } from "./SafetyGuardAllocationPanel";
 
 interface ReportViewProps {
-  report: PlanningReport;
-  plan: FestivalPlan;
-  forecast: ForecastResult;
-  selectedFestivalBasis?: SelectedFestivalBasis | null;
-  spending?: SpendingContext;
-  evidenceSet: Record<MetricEvidenceId, MetricEvidence>;
-  safetyDecisionProfiles?: SafetyDecisionProfiles;
+  snapshot: FestivalAnalysisSnapshot;
   onOpenEvidence: (metricId: MetricEvidenceId) => void;
 }
 
@@ -41,7 +24,7 @@ function formatKrw(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-function uniqueLimitations(evidenceSet: Record<MetricEvidenceId, MetricEvidence>) {
+function uniqueLimitations(evidenceSet: FestivalAnalysisSnapshot["evidence"]) {
   return Array.from(
     new Set(
       Object.values(evidenceSet)
@@ -52,23 +35,23 @@ function uniqueLimitations(evidenceSet: Record<MetricEvidenceId, MetricEvidence>
 }
 
 export function ReportView({
-  report,
-  plan,
-  forecast,
-  selectedFestivalBasis,
-  spending,
-  evidenceSet,
-  safetyDecisionProfiles,
+  snapshot,
   onOpenEvidence,
 }: ReportViewProps) {
+  const {
+    report,
+    plan,
+    forecast,
+    selectedFestivalBasis,
+    evidence: evidenceSet,
+    safety: safetyDecisionProfiles,
+    metrics,
+  } = snapshot;
+  const spending = snapshot.datasets.spending.value;
   const limitations = uniqueLimitations(evidenceSet);
   const peakHour = forecast.visitorsByHour.find((item) => item.hour === forecast.peakHour);
-  const successPotential = createSuccessPotentialMetric(forecast);
-  const budgetKrw = plan.totalBudgetMillionKrw * 1_000_000;
-  const reportSimulation = createSimulation(plan, forecast, forecast.peakHour);
-  const reportSafetyProfiles =
-    safetyDecisionProfiles ??
-    createSafetyDecisionProfiles(plan, forecast, reportSimulation);
+  const successPotential = metrics.summary.successPotential;
+  const budgetKrw = metrics.economic.totalBudgetKrw;
   const safetyFindings =
     report.findings.length > 0
       ? report.findings
@@ -83,17 +66,33 @@ export function ReportView({
         </div>
         <div className="panel-actions">
           <span>B2G 검토본</span>
-          <CsvExportButton
-            plan={plan}
-            forecast={forecast}
-            report={report}
-            spending={spending}
-            selectedFestivalBasis={selectedFestivalBasis}
-            evidenceSet={evidenceSet}
-          />
+          <CsvExportButton snapshot={snapshot} />
           <PrintReportButton />
         </div>
       </div>
+
+      <dl className="report-analysis-metadata" aria-label="분석 스냅샷 정보">
+        <div>
+          <dt>분석 ID</dt>
+          <dd data-testid="report-analysis-id">{snapshot.analysisId}</dd>
+        </div>
+        <div>
+          <dt>모델 버전</dt>
+          <dd>{snapshot.modelVersion}</dd>
+        </div>
+        <div>
+          <dt>생성 시각</dt>
+          <dd>{snapshot.createdAt}</dd>
+        </div>
+        <div>
+          <dt>축제 ID</dt>
+          <dd>{snapshot.festivalId}</dd>
+        </div>
+        <div>
+          <dt>축제명</dt>
+          <dd>{selectedFestivalBasis?.title ?? plan.name}</dd>
+        </div>
+      </dl>
 
       <section className="report-section" aria-labelledby="report-forecast-heading">
         <div className="report-section-heading">
@@ -108,7 +107,9 @@ export function ReportView({
         <div className="report-kpi-strip">
           <article>
             <span>예상 방문객</span>
-            <strong>{forecast.expectedVisitors.toLocaleString("ko-KR")}명</strong>
+            <strong data-testid="report-expected-visitors">
+              {forecast.expectedVisitors.toLocaleString("ko-KR")}명
+            </strong>
           </article>
           <article>
             <span>피크 시간</span>
@@ -119,6 +120,11 @@ export function ReportView({
             <span>성공 예측 점수</span>
             <strong>{successPotential.score}점</strong>
             <small>신뢰도 {forecast.confidence}</small>
+          </article>
+          <article>
+            <span>수용 정원률</span>
+            <strong>{metrics.summary.capacityPressure.displayPercent}%</strong>
+            <small>{metrics.summary.capacityPressure.status}</small>
           </article>
         </div>
       </section>
@@ -171,9 +177,7 @@ export function ReportView({
           </small>
         </div>
         <RoiEconomicImpact
-          plan={plan}
-          forecast={forecast}
-          spending={spending}
+          metrics={metrics.economic}
           onOpenEvidence={onOpenEvidence}
         />
       </section>
@@ -198,7 +202,7 @@ export function ReportView({
         </div>
         <InfrastructureCapacityPanel plan={plan} forecast={forecast} onOpenEvidence={onOpenEvidence} />
         <SafetyGuardAllocationPanel
-          profiles={reportSafetyProfiles}
+          profiles={safetyDecisionProfiles}
           dayTypeCounts={forecast.dayTypeCounts}
           onOpenEvidence={onOpenEvidence}
         />

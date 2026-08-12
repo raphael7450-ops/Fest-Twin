@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, BriefcaseBusiness, Clock3, FileText, Home, UsersRound } from "lucide-react";
+import { AnalysisStatusBanner } from "./components/AnalysisStatusBanner";
 import { B2gPrintReport } from "./components/B2gPrintReport";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
@@ -331,11 +332,12 @@ export function App() {
         <div className="dashboard-canvas">
           <div className="dashboard-content">
             <GovernmentHeader />
-            <section className="analysis-loading-state" role="status">
-              {analysis.phase === "error"
-                ? "분석 데이터를 준비하지 못했습니다."
-                : "분석 데이터를 불러오는 중입니다."}
-            </section>
+            <AnalysisStatusBanner
+              phase={analysis.phase}
+              snapshot={analysis.snapshot}
+              pendingFestivalTitle={analysis.pendingFestivalTitle}
+              errorMessages={analysis.errorMessages}
+            />
           </div>
         </div>
       </main>
@@ -383,11 +385,12 @@ export function App() {
           </aside>
           <div className="dashboard-content">
             <GovernmentHeader />
-          {analysis.phase === "refreshing" && analysis.pendingFestivalTitle && (
-            <div className="analysis-refresh-status" role="status">
-              {analysis.pendingFestivalTitle} 분석을 준비하고 있습니다.
-            </div>
-          )}
+          <AnalysisStatusBanner
+            phase={analysis.phase}
+            snapshot={committed}
+            pendingFestivalTitle={analysis.pendingFestivalTitle}
+            errorMessages={analysis.errorMessages}
+          />
           <OperationalScoreHeader
             plan={analysisPlan}
             forecast={forecast}
@@ -574,13 +577,7 @@ export function App() {
             {activeDashboardSection === "report" && (
               <section className="dashboard-section-panel active">
                 <ReportView
-                  report={report}
-                  plan={analysisPlan}
-                  forecast={forecast}
-                  spending={spending}
-                  selectedFestivalBasis={analysisSelectedFestivalBasis}
-                  evidenceSet={metricEvidence}
-                  safetyDecisionProfiles={safetyDecisionProfiles}
+                  snapshot={committed}
                   onOpenEvidence={setSelectedEvidenceId}
                 />
               </section>
@@ -610,13 +607,7 @@ export function App() {
       />
     </main>
     <B2gPrintReport
-      report={report}
-      plan={analysisPlan}
-      forecast={forecast}
-      selectedFestivalBasis={analysisSelectedFestivalBasis}
-      spending={spending}
-      evidenceSet={metricEvidence}
-      safetyDecisionProfiles={safetyDecisionProfiles}
+      snapshot={committed}
     />
   </>
   );
