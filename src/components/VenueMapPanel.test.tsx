@@ -17,7 +17,7 @@ describe("VenueMapPanel VWorld integration", () => {
   });
 
   it("shows a coordinate confirmation prompt without loading VWorld when the plan has no coordinates", () => {
-    render(<VenueMapPanel plan={sampleFestivalPlan} />);
+    render(<VenueMapPanel plan={{ ...sampleFestivalPlan, venueCoordinates: undefined }} />);
 
     expect(screen.getByText("행사장 좌표 확인 필요")).toBeInTheDocument();
   });

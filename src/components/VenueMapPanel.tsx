@@ -94,6 +94,14 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
     setStatus("loading");
 
     try {
+      if (typeof window !== "undefined" && !("ResizeObserver" in window)) {
+        (window as unknown as Record<string, unknown>).ResizeObserver = class {
+          observe() {}
+          unobserve() {}
+          disconnect() {}
+        };
+      }
+
       const position = fromLonLat([coordinates.longitude, coordinates.latitude]);
 
       const tileLayer = new TileLayer({
