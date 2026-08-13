@@ -131,6 +131,32 @@ describe("scenarioStorage", () => {
     expect(plan.venueAreaProvenance).toBeUndefined();
   });
 
+  it("discards provenance with an invalid calendar date or date-time", () => {
+    for (const field of ["referenceDate", "appliedAt"] as const) {
+      const plan = normalizeFestivalPlan({
+        ...sampleFestivalPlan,
+        venueAreaProvenance: {
+          ...venueAreaProvenance,
+          [field]: field === "referenceDate" ? "2026-02-31" : "2026-02-31T12:00:00.000Z",
+        },
+      });
+
+      expect(plan.venueAreaProvenance).toBeUndefined();
+    }
+  });
+
+  it("discards provenance from a dataset other than the National City Park dataset", () => {
+    const plan = normalizeFestivalPlan({
+      ...sampleFestivalPlan,
+      venueAreaProvenance: {
+        ...venueAreaProvenance,
+        sourceDataset: "another-dataset",
+      },
+    });
+
+    expect(plan.venueAreaProvenance).toBeUndefined();
+  });
+
   it("loads a legacy saved scenario with an area but no provenance", () => {
     localStorage.setItem(
       "fest-twin-scenarios",

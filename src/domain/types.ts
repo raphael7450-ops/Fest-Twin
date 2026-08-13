@@ -64,7 +64,7 @@ export interface VenueCoordinates {
 
 export interface VenueAreaProvenance {
   origin: "user-input" | "public-data" | "user-adjusted";
-  sourceDataset?: string;
+  sourceDataset?: "전국도시공원정보표준데이터";
   sourceRecordId?: string;
   sourceParkName?: string;
   referenceAreaSquareMeters?: number;

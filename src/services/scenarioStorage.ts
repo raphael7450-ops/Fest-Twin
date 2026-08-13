@@ -51,7 +51,20 @@ function normalizeBoundedString(value: unknown, maxLength = 200) {
 }
 
 function isIsoDate(value: string) {
-  return /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z)?$/.test(value) && !Number.isNaN(Date.parse(value));
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?Z)?$/.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth) return false;
+  if (!match[4]) return true;
+
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  return hour <= 23 && minute <= 59 && second <= 59;
 }
 
 function normalizeVenueAreaProvenance(value: unknown): VenueAreaProvenance | undefined {
@@ -68,8 +81,13 @@ function normalizeVenueAreaProvenance(value: unknown): VenueAreaProvenance | und
   );
   if (stringFields.some((field) => raw[field] !== undefined && normalizedStrings[field] === undefined)) return undefined;
 
-  const sourceDataset = raw.sourceDataset === undefined ? undefined : normalizeBoundedString(raw.sourceDataset);
-  if (raw.sourceDataset !== undefined && sourceDataset === undefined) return undefined;
+  const sourceDataset =
+    raw.sourceDataset === undefined
+      ? undefined
+      : raw.sourceDataset === "전국도시공원정보표준데이터"
+        ? "전국도시공원정보표준데이터"
+        : undefined;
+  if (raw.sourceDataset !== undefined && raw.sourceDataset !== "전국도시공원정보표준데이터") return undefined;
 
   const referenceAreaSquareMeters =
     raw.referenceAreaSquareMeters === undefined

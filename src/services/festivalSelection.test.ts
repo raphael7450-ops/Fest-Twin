@@ -126,7 +126,7 @@ describe("festivalSelection", () => {
       venueAreaSquareMeters: 1800,
       venueAreaProvenance: {
         origin: "public-data" as const,
-        sourceDataset: "전국도시공원정보표준데이터",
+        sourceDataset: "전국도시공원정보표준데이터" as const,
         sourceRecordId: "PARK-001",
         sourceParkName: "여의도공원",
         referenceAreaSquareMeters: 229539,
@@ -147,7 +147,7 @@ describe("festivalSelection", () => {
       venueAreaSquareMeters: 1800,
       venueAreaProvenance: {
         origin: "public-data" as const,
-        sourceDataset: "전국도시공원정보표준데이터",
+        sourceDataset: "전국도시공원정보표준데이터" as const,
         sourceRecordId: "PARK-001",
         sourceParkName: "여의도공원",
         referenceAreaSquareMeters: 229539,
