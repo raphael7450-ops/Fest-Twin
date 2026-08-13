@@ -326,8 +326,13 @@ export function createForecast(
     trends.signals.map((signal) => signal.interestScore),
   );
   const trendMultiplier = searchTrendMultiplier(trends, socialInterest);
-  const programScore = average(
+  const rawProgramScore = average(
     plan.programs.map((program) => program.expectedDraw),
+  );
+  const programScore = clamp(
+    rawProgramScore > 100 ? Math.round(rawProgramScore / 500) : rawProgramScore,
+    0,
+    100,
   );
   const budgetScale = clamp(safeBudgetMillionKrw / 700, 0.75, 1.35);
   const entranceFactor = plan.facilities.filter((item) => item.type === "entrance")

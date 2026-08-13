@@ -1,6 +1,7 @@
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 import { sortFestivalCandidatesByDateAsc } from "../services/tourApiAdapter";
 import { getRepresentativeFestivalImage } from "../services/festivalImageProvider";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface FestivalCandidatePanelProps {
   isOpen: boolean;
@@ -35,6 +36,8 @@ export function FestivalCandidatePanel({
   onClose,
   onSelectCandidate,
 }: FestivalCandidatePanelProps) {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   return (

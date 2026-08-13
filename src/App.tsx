@@ -457,7 +457,10 @@ export function App() {
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <ForecastChart forecast={forecast} />
-                    <VenueMapPanel plan={analysisPlan} />
+                    <VenueMapPanel
+                      key={`overview-map-${analysisPlan.name}-${analysisPlan.venueCoordinates?.latitude}-${analysisPlan.venueCoordinates?.longitude}`}
+                      plan={analysisPlan}
+                    />
                   </div>
                   <aside className="right-column">
                     <SafetyLogisticsPanel
@@ -500,7 +503,10 @@ export function App() {
                     />
                   </aside>
                   <section className="main-column">
-                    <VenueMapPanel plan={plan} />
+                    <VenueMapPanel
+                      key={`planning-map-${plan.name}-${plan.venueCoordinates?.latitude}-${plan.venueCoordinates?.longitude}`}
+                      plan={plan}
+                    />
                     <ScenarioLibrary
                       plan={plan}
                       selectedHour={selectedHour}

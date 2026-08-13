@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { FESTIVAL_PRESETS, type FestivalPreset } from "../data/festivalPresets";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface FestivalSearchModalProps {
   isOpen: boolean;
@@ -172,6 +173,8 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
 
     return [...presetMatches, ...nonDuplicateApi];
   }, [query, apiPresets, today]);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

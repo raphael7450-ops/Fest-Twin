@@ -6,6 +6,7 @@
 
 // 근거 정보 타입 정의 불러오기
 import type { MetricEvidence } from "../domain/types";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 // MetricEvidenceDrawer 입력 프로퍼티(Props) 정의
 interface MetricEvidenceDrawerProps {
@@ -33,6 +34,8 @@ export function MetricEvidenceDrawer({
   isOpen,
   onClose,
 }: MetricEvidenceDrawerProps) {
+  useBodyScrollLock(isOpen);
+
   if (!isOpen || !evidence) return null;
 
   return (

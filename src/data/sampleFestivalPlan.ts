@@ -18,6 +18,9 @@ export const sampleFestivalPlan: FestivalPlan = {
   targetGroups: ["families", "youth", "foreigners", "locals"],
   keywords: ["서울세계불꽃축제", "여의도한강공원", "한강", "불꽃", "야간관광"],
   expectedCapacity: 120000,
+  venueAreaSquareMeters: 100000,
+  totalExitWidthMeters: 40,
+  evacuationDistanceMeters: 200,
   gridWidth: 40,
   gridHeight: 24,
   programs: [

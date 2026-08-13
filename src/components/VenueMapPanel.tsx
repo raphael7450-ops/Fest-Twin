@@ -84,7 +84,50 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
   useEffect(() => {
     if (!coordinates || !vworldApiKey || !mapStageRef.current) return;
 
-    // cleanup previous map instance
+    if (typeof window !== "undefined" && !("ResizeObserver" in window)) {
+      (window as unknown as Record<string, unknown>).ResizeObserver = class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      };
+    }
+
+    const lat = coordinates.latitude;
+    const lon = coordinates.longitude;
+    const position = fromLonLat([lon, lat]);
+
+    if (mapInstanceRef.current && mapStageRef.current) {
+      try {
+        const map = mapInstanceRef.current;
+        map.setTarget(mapStageRef.current);
+        const view = map.getView();
+        view.setCenter(position);
+        view.setZoom(15);
+
+        const layers = map.getLayers().getArray();
+        const vectorLayer = layers.find((l) => l instanceof VectorLayer) as
+          | VectorLayer<VectorSource>
+          | undefined;
+        if (vectorLayer) {
+          const source = vectorLayer.getSource();
+          if (source) {
+            source.clear();
+            const newMarker = new Feature({
+              geometry: new Point(position),
+              name: plan.name,
+            });
+            newMarker.setStyle(buildMarkerStyle(plan.name));
+            source.addFeature(newMarker);
+          }
+        }
+        setStatus("ready");
+        map.updateSize();
+        return;
+      } catch {
+        // Fallback to recreation if reuse fails
+      }
+    }
+
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setTarget(undefined);
       mapInstanceRef.current = null;
@@ -94,16 +137,6 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
     setStatus("loading");
 
     try {
-      if (typeof window !== "undefined" && !("ResizeObserver" in window)) {
-        (window as unknown as Record<string, unknown>).ResizeObserver = class {
-          observe() {}
-          unobserve() {}
-          disconnect() {}
-        };
-      }
-
-      const position = fromLonLat([coordinates.longitude, coordinates.latitude]);
-
       const tileLayer = new TileLayer({
         source: new XYZ({
           url: buildVWorldTileUrl(vworldApiKey),
@@ -137,24 +170,27 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
       mapInstanceRef.current = map;
       setStatus("ready");
 
-      // trigger resize after mount to fix tile gaps
-      window.setTimeout(() => {
+      map.updateSize();
+      const timeoutId = window.setTimeout(() => {
         map.updateSize();
-      }, 200);
+      }, 100);
+
+      const observer = new ResizeObserver(() => {
+        map.updateSize();
+      });
+      observer.observe(mapEl);
+
+      return () => {
+        window.clearTimeout(timeoutId);
+        observer.disconnect();
+      };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("[VenueMapPanel] map init error:", msg);
       setFailReason(msg);
       setStatus("failed");
     }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.setTarget(undefined);
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [coordinates, plan.name]);
+  }, [coordinates?.latitude, coordinates?.longitude, plan.name]);
 
   const statusText =
     status === "ready"

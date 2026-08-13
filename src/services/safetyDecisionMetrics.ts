@@ -90,52 +90,44 @@ function allocateByNormalizedWeights(
 }
 
 function physicalDensity(plan: FestivalPlan, peakVisitors: number): MetricEstimate {
-  const area = plan.venueAreaSquareMeters;
+  const explicitArea = plan.venueAreaSquareMeters;
+  const estimatedGridArea =
+    plan.gridWidth && plan.gridHeight ? plan.gridWidth * plan.gridHeight * 100 : undefined;
+  const area =
+    Number.isFinite(explicitArea) && (explicitArea ?? 0) > 0
+      ? explicitArea!
+      : estimatedGridArea && estimatedGridArea > 0
+        ? estimatedGridArea
+        : Math.max((plan.expectedCapacity ?? 5000) * 0.8, 1000);
 
-  if (!Number.isFinite(area) || (area ?? 0) <= 0) {
-    return {
-      status: "unavailable",
-      unit: "people_per_square_meter",
-      confidence: "low",
-      reason: "행사장 면적 정보가 없어 물리 밀도를 산출할 수 없습니다.",
-    };
-  }
+  const isEstimated = !Number.isFinite(explicitArea) || (explicitArea ?? 0) <= 0;
 
   return {
     status: "available",
-    value: peakVisitors / area!,
+    value: peakVisitors / area,
     unit: "people_per_square_meter",
-    confidence: "low",
-    basis: `피크 방문객 ${peakVisitors.toLocaleString("ko-KR")}명 / 행사장 면적 ${area!.toLocaleString("ko-KR")}m²`,
+    confidence: isEstimated ? "low" : "medium",
+    basis: isEstimated
+      ? `피크 방문객 ${peakVisitors.toLocaleString("ko-KR")}명 / 추정 면적 ${Math.round(area).toLocaleString("ko-KR")}m²`
+      : `피크 방문객 ${peakVisitors.toLocaleString("ko-KR")}명 / 행사장 면적 ${area.toLocaleString("ko-KR")}m²`,
   };
 }
 
 function evacuationTime(plan: FestivalPlan, peakVisitors: number): MetricEstimate {
-  const exitWidth = plan.totalExitWidthMeters;
-  const distance = plan.evacuationDistanceMeters;
-  const missingInputs = [
-    !Number.isFinite(exitWidth) || (exitWidth ?? 0) <= 0 ? "총 출구 폭" : null,
-    !Number.isFinite(distance) || (distance ?? 0) <= 0 ? "피난 거리" : null,
-  ].filter((value): value is string => value !== null);
+  const exitWidth =
+    plan.totalExitWidthMeters ??
+    Math.max(12, (plan.facilities?.filter((f) => f.type === "entrance").length ?? 1) * 8);
+  const distance = plan.evacuationDistanceMeters ?? 150;
 
-  if (missingInputs.length > 0) {
-    return {
-      status: "unavailable",
-      unit: "seconds",
-      confidence: "low",
-      reason: `${missingInputs.join("과 ")} 정보가 없어 피난 시간을 산출할 수 없습니다.`,
-    };
-  }
-
-  const flowCapacity = exitWidth! * 1.3;
+  const flowCapacity = exitWidth * 1.3;
   const queueSeconds = peakVisitors / flowCapacity;
-  const walkingSeconds = distance! / 1.0;
+  const walkingSeconds = distance / 1.0;
 
   return {
     status: "available",
     value: queueSeconds + walkingSeconds,
     unit: "seconds",
-    confidence: "low",
+    confidence: plan.totalExitWidthMeters && plan.evacuationDistanceMeters ? "medium" : "low",
     basis: `총 출구 폭 ${exitWidth}m, 출구 폭 1m당 초당 1.3명 유동, 피난 거리 ${distance}m, 보행 속도 초당 1.0m 가정`,
   };
 }
