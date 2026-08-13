@@ -31,7 +31,11 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 async function request(
   path: string,
   fetchImpl: typeof fetch,
-  options: { apiKey?: string; logger?: { warn: ReturnType<typeof vi.fn> } } = {},
+  options: {
+    apiKey?: string;
+    logger?: { warn: ReturnType<typeof vi.fn> };
+    timeoutMs?: number;
+  } = {},
 ) {
   const app = express();
   app.use(
@@ -40,6 +44,7 @@ async function request(
       fetchImpl,
       apiKey: options.apiKey,
       logger: options.logger,
+      timeoutMs: options.timeoutMs,
     }),
   );
   const server = app.listen(0);
@@ -243,6 +248,29 @@ describe("city park server proxy", () => {
 
     expect(response.status).toBe(502);
     expect(body.error.code).toBe("CITY_PARK_UPSTREAM_ERROR");
+  });
+
+  it("aborts a stalled upstream request and returns an opaque upstream error", async () => {
+    const fetchMock = vi.fn((_url: URL, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          reject(new DOMException(`Timed out with ${SERVER_KEY}`, "AbortError"));
+        });
+      }),
+    );
+    const logger = { warn: vi.fn() };
+
+    const { response, body } = await request(
+      "/api/city-parks?query=park",
+      fetchMock as unknown as typeof fetch,
+      { apiKey: SERVER_KEY, logger, timeoutMs: 10 },
+    );
+
+    expect(response.status).toBe(502);
+    expect(body.error.code).toBe("CITY_PARK_UPSTREAM_ERROR");
+    expect((fetchMock.mock.calls[0][1] as RequestInit).signal?.aborted).toBe(true);
+    expect(JSON.stringify(body)).not.toContain(SERVER_KEY);
+    expect(JSON.stringify(logger.warn.mock.calls)).not.toContain(SERVER_KEY);
   });
 
   it("returns an invalid-response error for malformed upstream JSON", async () => {

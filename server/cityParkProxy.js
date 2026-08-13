@@ -5,6 +5,7 @@ const CITY_PARK_API_URL =
 const MAX_QUERY_LENGTH = 80;
 const MAX_PAGE_NO = 100;
 const MAX_ROWS = 100;
+const DEFAULT_TIMEOUT_MS = 10_000;
 
 function errorResponse(response, status, code, message) {
   return response.status(status).json({ error: { code, message } });
@@ -95,6 +96,7 @@ export function createCityParkProxyRouter(options = {}) {
   const router = Router();
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const logger = options.logger;
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   router.get("/", async (request, response) => {
     const apiKey = options.apiKey ?? process.env.CITY_PARK_API_KEY ?? "";
@@ -121,8 +123,11 @@ export function createCityParkProxyRouter(options = {}) {
     url.searchParams.set("pageNo", String(boundedPageNo));
     url.searchParams.set("numOfRows", String(boundedRows));
 
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
+
     try {
-      const upstreamResponse = await fetchImpl(url);
+      const upstreamResponse = await fetchImpl(url, { signal: abortController.signal });
       if (!upstreamResponse.ok) {
         logger?.warn("City park upstream request failed", {
           event: "CITY_PARK_UPSTREAM_ERROR",
@@ -175,6 +180,8 @@ export function createCityParkProxyRouter(options = {}) {
         "CITY_PARK_UPSTREAM_ERROR",
         "City park upstream request failed.",
       );
+    } finally {
+      clearTimeout(timeoutId);
     }
   });
 
