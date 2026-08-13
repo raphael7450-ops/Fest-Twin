@@ -13,10 +13,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 
+function getVWorldApiKey() {
+  if (process.env.VWORLD_API_KEY?.trim()) return process.env.VWORLD_API_KEY.trim();
+  const envPath = path.join(PROJECT_ROOT, ".env.local");
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, "utf-8");
+    const match = content.match(/^VWORLD_API_KEY=(.*)$/m) || content.match(/^VITE_VWORLD_API_KEY=(.*)$/m);
+    if (match && match[1].trim()) return match[1].trim();
+  }
+  return "2BEE395D-834A-3F75-BC64-CAC185A7A442";
+}
+
 const REMOTE_USER = "cwuser";
 const REMOTE_HOST = "100.104.94.112";
 const REMOTE_PASS = process.env.REMOTE_PASS || "ckddnjsl";
-const VWORLD_API_KEY = process.env.VWORLD_API_KEY;
+const VWORLD_API_KEY = getVWorldApiKey();
 const TAR_FILE = "fest-twin-demo.tar";
 const PLINK = "C:\\Program Files (x86)\\PuTTY\\plink.exe";
 const PSCP = "C:\\Program Files (x86)\\PuTTY\\pscp.exe";
