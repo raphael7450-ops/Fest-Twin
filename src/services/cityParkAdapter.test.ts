@@ -35,6 +35,16 @@ describe("cityParkAdapter", () => {
       .toBe("여의도 한강공원");
   });
 
+  it("extracts a single-word park name without retaining district tokens", () => {
+    expect(deriveCityParkQuery("서울특별시 송파구 올림픽공원"))
+      .toBe("올림픽공원");
+  });
+
+  it("preserves a three-word park name after removing administrative address tokens", () => {
+    expect(deriveCityParkQuery("서울특별시 광진구 서울 어린이 대공원"))
+      .toBe("서울 어린이 대공원");
+  });
+
   it("returns an empty query for an address without a park", () => {
     expect(deriveCityParkQuery("서울특별시 종로구 세종대로 175"))
       .toBe("");

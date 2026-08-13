@@ -28,7 +28,25 @@ interface RankedCandidate {
 
 const MAX_CANDIDATES = 10;
 const EARTH_RADIUS_KILOMETERS = 6371;
-const ADDRESS_SUFFIX = /(?:\s+(?:일대|일원|부근|주변|내))(?=$|[\s,])/;
+const ADMINISTRATIVE_REGIONS = new Set([
+  "서울특별시",
+  "부산광역시",
+  "대구광역시",
+  "인천광역시",
+  "광주광역시",
+  "대전광역시",
+  "울산광역시",
+  "세종특별자치시",
+  "경기도",
+  "강원특별자치도",
+  "충청북도",
+  "충청남도",
+  "전북특별자치도",
+  "전라남도",
+  "경상북도",
+  "경상남도",
+  "제주특별자치도",
+]);
 
 function createApiUrl(path: string) {
   if (typeof window !== "undefined" && window.location?.origin && window.location.origin !== "null") {
@@ -195,6 +213,34 @@ function candidateIdentity(candidate: CityParkResponseItem): string {
   ].join("|");
 }
 
+function isAdministrativeToken(token: string): boolean {
+  return ADMINISTRATIVE_REGIONS.has(token) || /^[가-힣]+(?:시|군|구|읍|면|동|리)$/u.test(token);
+}
+
+function isRoadToken(token: string): boolean {
+  return /^[가-힣0-9]+(?:대로|로|길)$/u.test(token);
+}
+
+function isAddressNumber(token: string): boolean {
+  return /^\d+(?:-\d+)?$/u.test(token);
+}
+
+function removeLeadingAddressTokens(words: string[]): string[] {
+  let index = 0;
+  while (index < words.length) {
+    if (isAdministrativeToken(words[index]) || isAddressNumber(words[index])) {
+      index += 1;
+      continue;
+    }
+    if (isRoadToken(words[index]) && isAddressNumber(words[index + 1] ?? "")) {
+      index += 2;
+      continue;
+    }
+    break;
+  }
+  return words.slice(index);
+}
+
 export function deriveCityParkQuery(venueAddress: string): string {
   const normalized = normalizeDisplayText(venueAddress);
   if (!normalized) return "";
@@ -205,8 +251,8 @@ export function deriveCityParkQuery(venueAddress: string): string {
 
   const beforePark = firstParkSegment.slice(0, parkIndex).trim();
   const words = beforePark.split(/\s+/).filter(Boolean);
-  const parkName = [...words.slice(-2), "공원"].join(" ").replace(/\s+공원$/u, "공원");
-  return parkName.replace(ADDRESS_SUFFIX, "").trim();
+  const parkNameWords = removeLeadingAddressTokens(words);
+  return parkNameWords.length > 0 ? `${parkNameWords.join(" ")}공원` : "";
 }
 
 export function rankCityParkCandidates(items: unknown[], input: CityParkLookupInput): CityParkCandidate[] {
