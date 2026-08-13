@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { FESTIVAL_PRESETS, type FestivalPreset } from "../data/festivalPresets";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { resolveFestivalCoordinatesByKeyword } from "../services/tourApiAdapter";
 
 interface FestivalSearchModalProps {
   isOpen: boolean;
@@ -100,6 +101,8 @@ export function FestivalSearchModal({
   const [query, setQuery] = useState("");
   const [apiPresets, setApiPresets] = useState<FestivalPreset[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [resolvingPresetId, setResolvingPresetId] = useState<string | null>(null);
+  const coordinateRequestRef = useRef<AbortController | null>(null);
   const today = useMemo(() => formatLocalDate(), []);
 
   useEffect(() => {
@@ -176,6 +179,73 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
 
   useBodyScrollLock(isOpen);
 
+  useEffect(
+    () => () => {
+      coordinateRequestRef.current?.abort();
+    },
+    [],
+  );
+
+  const closeModal = () => {
+    coordinateRequestRef.current?.abort();
+    coordinateRequestRef.current = null;
+    setResolvingPresetId(null);
+    onClose();
+  };
+
+  const selectPreset = async (preset: FestivalPreset) => {
+    if (preset.plan.venueCoordinates) {
+      onSelectPreset(preset);
+      closeModal();
+      return;
+    }
+
+    const controller = new AbortController();
+    coordinateRequestRef.current?.abort();
+    coordinateRequestRef.current = controller;
+    setResolvingPresetId(preset.id);
+
+    try {
+      const match = await resolveFestivalCoordinatesByKeyword(
+        { title: preset.name, region: preset.region },
+        { signal: controller.signal },
+      );
+      if (controller.signal.aborted) return;
+
+      const enrichedPreset = match
+        ? {
+            ...preset,
+            plan: {
+              ...preset.plan,
+              venueCoordinates: {
+                longitude: Number(match.mapX),
+                latitude: Number(match.mapY),
+                source: "tourapi" as const,
+              },
+            },
+            basis: {
+              ...preset.basis,
+              mapX: match.mapX,
+              mapY: match.mapY,
+              sourceName: `${preset.basis.sourceName} + TourAPI 좌표`,
+            },
+          }
+        : preset;
+
+      onSelectPreset(enrichedPreset);
+      closeModal();
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      onSelectPreset(preset);
+      closeModal();
+    } finally {
+      if (coordinateRequestRef.current === controller) {
+        coordinateRequestRef.current = null;
+        setResolvingPresetId(null);
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -184,7 +254,7 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
         aria-label="축제 검색 창 닫기"
         className="candidate-drawer-backdrop"
         type="button"
-        onClick={onClose}
+        onClick={closeModal}
       />
       <div
         aria-label="전체 축제 실시간 검색"
@@ -198,7 +268,7 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
             <p className="eyebrow">ALL FESTIVAL DATABASE (5,700+)</p>
             <h2 style={{ fontSize: "1.25rem", margin: 0 }}>전체 축제 실시간 검색</h2>
           </div>
-          <button className="text-button" type="button" onClick={onClose}>
+          <button className="text-button" type="button" onClick={closeModal}>
             닫기
           </button>
         </div>
@@ -291,14 +361,14 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
                     className="secondary-button"
                     type="button"
                     data-testid="apply-preset-btn"
+                    disabled={resolvingPresetId !== null}
                     style={{ alignSelf: "center", flexShrink: 0, whiteSpace: "nowrap" }}
                     onClick={(e) => {
                       e.preventDefault();
-                      onSelectPreset(preset);
-                      onClose();
+                      void selectPreset(preset);
                     }}
                   >
-                    이 축제로 기획 적용
+                    {resolvingPresetId === preset.id ? "위치 확인 중" : "이 축제로 기획 적용"}
                   </button>
                 </article>
               );

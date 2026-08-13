@@ -27,6 +27,14 @@ interface TourApiOptions {
   today?: string;
 }
 
+export interface FestivalCoordinateMatch {
+  contentId: string;
+  title: string;
+  address: string;
+  mapX: string;
+  mapY: string;
+}
+
 export interface TourApiAreaCode {
   code: string;
   name: string;
@@ -100,6 +108,7 @@ interface RegionalFestivalApiRecord {
 type TourApiOperation =
   | "area-code"
   | "festivals"
+  | "keyword"
   | "detail"
   | "detail-intro"
   | "nearby";
@@ -991,6 +1000,70 @@ async function fetchTourApiItems(
   }
 
   return normalizeItems(operation, await response.json());
+}
+
+function buildFestivalKeyword(value: string) {
+  return value
+    .normalize("NFKC")
+    .replace(/\b20\d{2}년?\s*/gi, "")
+    .replace(/제\s*\d+\s*회\s*/gi, "")
+    .replace(/\d+\s*회\s*/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeFestivalLookupTitle(value: string) {
+  return buildFestivalKeyword(value)
+    .replace(/[^0-9a-z가-힣]/gi, "")
+    .toLowerCase();
+}
+
+function hasValidKoreanCoordinates(item: TourApiItem) {
+  const longitude = Number(item.mapx);
+  const latitude = Number(item.mapy);
+  return (
+    Number.isFinite(longitude) &&
+    Number.isFinite(latitude) &&
+    longitude >= 124 &&
+    longitude <= 132 &&
+    latitude >= 33 &&
+    latitude <= 39
+  );
+}
+
+export async function resolveFestivalCoordinatesByKeyword(
+  festival: { title: string; region: string },
+  options: TourApiOptions = {},
+): Promise<FestivalCoordinateMatch | null> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const requestedTitle = normalizeFestivalLookupTitle(festival.title);
+  const items = await fetchTourApiItems(
+    "keyword",
+    {
+      numOfRows: 10,
+      pageNo: 1,
+      arrange: "A",
+      keyword: buildFestivalKeyword(festival.title),
+      contentTypeId: 15,
+    },
+    fetchImpl,
+    options.signal,
+  );
+
+  const matched = items
+    .filter(hasValidKoreanCoordinates)
+    .filter((item) => normalizeFestivalLookupTitle(item.title ?? "") === requestedTitle)
+    .find((item) => (item.addr1 ?? "").includes(festival.region));
+
+  if (!matched?.contentid || !matched.title || !matched.addr1) return null;
+
+  return {
+    contentId: String(matched.contentid),
+    title: matched.title,
+    address: matched.addr1,
+    mapX: String(matched.mapx),
+    mapY: String(matched.mapy),
+  };
 }
 
 function contentTypeLabel(contentTypeId: string | number) {

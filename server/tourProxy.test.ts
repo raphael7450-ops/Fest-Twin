@@ -134,6 +134,47 @@ describe("TourAPI server proxy", () => {
     expect(upstreamUrl.searchParams.has("introYN")).toBe(false);
   });
 
+  it("forwards a festival keyword search with server-managed authentication", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(
+        tourApiPayload([
+          {
+            contentid: "3073454",
+            title: "서울라이트 광화문",
+            addr1: "서울특별시 종로구 세종로 1-68",
+            mapx: "126.9767821434",
+            mapy: "37.5716786179",
+          },
+        ]),
+      ),
+    );
+
+    const { response, body } = await request(
+      "/api/tour/keyword?keyword=%EC%84%9C%EC%9A%B8%EB%9D%BC%EC%9D%B4%ED%8A%B8%20%EA%B4%91%ED%99%94%EB%AC%B8&contentTypeId=15&numOfRows=10&pageNo=1&arrange=A",
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(response.status).toBe(200);
+    expect(JSON.stringify(body)).not.toContain("server-key+/=");
+    const upstreamUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(upstreamUrl.pathname.endsWith("/searchKeyword2")).toBe(true);
+    expect(upstreamUrl.searchParams.get("keyword")).toBe("서울라이트 광화문");
+    expect(upstreamUrl.searchParams.get("contentTypeId")).toBe("15");
+  });
+
+  it("rejects an empty festival keyword without an upstream request", async () => {
+    const fetchMock = vi.fn();
+
+    const { response, body } = await request(
+      "/api/tour/keyword?keyword=%20%20&contentTypeId=15",
+      fetchMock as unknown as typeof fetch,
+    );
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("INVALID_QUERY");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["whitespace", "/api/tour/nearby?mapX=%20%20%20&mapY=37.52&radius=5000"],
     ["Infinity", "/api/tour/nearby?mapX=126.92&mapY=Infinity&radius=5000"],

@@ -28,6 +28,10 @@ const endpointConfig = {
       "eventEndDate",
     ]),
   },
+  keyword: {
+    operation: "searchKeyword2",
+    allowedParams: new Set(["numOfRows", "pageNo", "arrange", "keyword", "contentTypeId"]),
+  },
   detail: {
     operation: "detailCommon2",
     allowedParams: new Set(["contentId"]),
@@ -63,6 +67,13 @@ function validateQuery(endpoint, query) {
   const config = endpointConfig[endpoint];
   if (!config) {
     return { ok: false, message: "Unsupported TourAPI proxy endpoint." };
+  }
+
+  if (
+    endpoint === "keyword" &&
+    (typeof query.keyword !== "string" || query.keyword.trim().length === 0)
+  ) {
+    return { ok: false, message: "TourAPI festival keyword is required." };
   }
 
   for (const key of Object.keys(query)) {
