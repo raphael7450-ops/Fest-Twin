@@ -4,7 +4,7 @@
  * 수정 : 2026-07-24. REST API 연동, share_token 공유 링크 복사 지원 및 하이브리드 동기화 구현
  */
 
-import type { FestivalPlan, SelectedFestivalBasis } from "../domain/types";
+import type { FestivalPlan, SelectedFestivalBasis, VenueAreaProvenance } from "../domain/types";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 
 const STORAGE_KEY = "fest-twin-scenarios";
@@ -44,6 +44,59 @@ function normalizeVenueCoordinates(value: unknown): FestivalPlan["venueCoordinat
   return { latitude, longitude, source };
 }
 
+function normalizeBoundedString(value: unknown, maxLength = 200) {
+  return typeof value === "string" && value.trim().length > 0 && value.trim().length <= maxLength
+    ? value.trim()
+    : undefined;
+}
+
+function isIsoDate(value: string) {
+  return /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z)?$/.test(value) && !Number.isNaN(Date.parse(value));
+}
+
+function normalizeVenueAreaProvenance(value: unknown): VenueAreaProvenance | undefined {
+  if (!value || typeof value !== "object") return undefined;
+
+  const raw = value as Record<string, unknown>;
+  if (raw.origin !== "user-input" && raw.origin !== "public-data" && raw.origin !== "user-adjusted") {
+    return undefined;
+  }
+
+  const stringFields = ["sourceRecordId", "sourceParkName", "managementOrganization"] as const;
+  const normalizedStrings = Object.fromEntries(
+    stringFields.map((field) => [field, raw[field] === undefined ? undefined : normalizeBoundedString(raw[field])]),
+  );
+  if (stringFields.some((field) => raw[field] !== undefined && normalizedStrings[field] === undefined)) return undefined;
+
+  const sourceDataset = raw.sourceDataset === undefined ? undefined : normalizeBoundedString(raw.sourceDataset);
+  if (raw.sourceDataset !== undefined && sourceDataset === undefined) return undefined;
+
+  const referenceAreaSquareMeters =
+    raw.referenceAreaSquareMeters === undefined
+      ? undefined
+      : normalizePositiveNumber(raw.referenceAreaSquareMeters);
+  if (raw.referenceAreaSquareMeters !== undefined && referenceAreaSquareMeters === undefined) return undefined;
+
+  const referenceDate = raw.referenceDate === undefined ? undefined : normalizeBoundedString(raw.referenceDate, 40);
+  const appliedAt = raw.appliedAt === undefined ? undefined : normalizeBoundedString(raw.appliedAt, 40);
+  if (
+    (raw.referenceDate !== undefined && (!referenceDate || !isIsoDate(referenceDate))) ||
+    (raw.appliedAt !== undefined && (!appliedAt || !isIsoDate(appliedAt)))
+  ) {
+    return undefined;
+  }
+
+  const normalized: VenueAreaProvenance = { origin: raw.origin };
+  if (sourceDataset) normalized.sourceDataset = sourceDataset;
+  for (const field of stringFields) {
+    if (normalizedStrings[field]) normalized[field] = normalizedStrings[field];
+  }
+  if (referenceAreaSquareMeters !== undefined) normalized.referenceAreaSquareMeters = referenceAreaSquareMeters;
+  if (referenceDate) normalized.referenceDate = referenceDate;
+  if (appliedAt) normalized.appliedAt = appliedAt;
+  return normalized;
+}
+
 export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
   if (!rawPlan || typeof rawPlan !== "object") {
     return { ...sampleFestivalPlan };
@@ -54,6 +107,7 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
     venueAddress: rawPlan.venueAddress ?? sampleFestivalPlan.venueAddress,
     venueCoordinates: normalizeVenueCoordinates(rawPlan.venueCoordinates),
     venueAreaSquareMeters: normalizePositiveNumber(rawPlan.venueAreaSquareMeters),
+    venueAreaProvenance: normalizeVenueAreaProvenance(rawPlan.venueAreaProvenance),
     totalExitWidthMeters: normalizePositiveNumber(rawPlan.totalExitWidthMeters),
     evacuationDistanceMeters: normalizePositiveNumber(rawPlan.evacuationDistanceMeters),
     startDate: rawPlan.startDate ?? sampleFestivalPlan.startDate,
@@ -173,9 +227,10 @@ export async function saveServerScenario(
   selectedFestivalBasisOrTitle?: SelectedFestivalBasis | null | string,
   title?: string,
 ): Promise<SavedScenario> {
+  const normalizedPlan = normalizeFestivalPlan(plan);
   const selectedFestivalBasis =
     typeof selectedFestivalBasisOrTitle === "string" ? undefined : selectedFestivalBasisOrTitle;
-  const localSaved = saveScenario(plan, selectedHour, selectedFestivalBasis);
+  const localSaved = saveScenario(normalizedPlan, selectedHour, selectedFestivalBasis);
   const scenarioTitle =
     (typeof selectedFestivalBasisOrTitle === "string" ? selectedFestivalBasisOrTitle : title) ??
     localSaved.name;
@@ -186,11 +241,11 @@ export async function saveServerScenario(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: scenarioTitle,
-        description: `${plan.region} ${plan.venueAddress}`,
-        parameters: { plan, selectedHour, selectedFestivalBasis },
+        description: `${normalizedPlan.region} ${normalizedPlan.venueAddress}`,
+        parameters: { plan: normalizedPlan, selectedHour, selectedFestivalBasis },
         results_summary: {
-          targetVisitors: plan.expectedCapacity,
-          budgetKrw: plan.totalBudgetMillionKrw * 1000000,
+          targetVisitors: normalizedPlan.expectedCapacity,
+          budgetKrw: normalizedPlan.totalBudgetMillionKrw * 1000000,
         },
       }),
     });
@@ -202,7 +257,7 @@ export async function saveServerScenario(
         name: created.title,
         savedAt: created.created_at,
         selectedHour,
-        plan,
+        plan: normalizedPlan,
         shareToken: created.share_token,
         selectedFestivalBasis: created.parameters?.selectedFestivalBasis ?? selectedFestivalBasis ?? undefined,
       };
@@ -256,13 +311,14 @@ export function saveScenario(
   selectedHour: number,
   selectedFestivalBasis?: SelectedFestivalBasis | null,
 ): SavedScenario {
+  const normalizedPlan = normalizeFestivalPlan(plan);
   const savedAt = new Date().toISOString();
   const scenario: SavedScenario = {
     id: `${Date.now()}-${plan.name}`,
     name: `${plan.name} / ${plan.totalBudgetMillionKrw}백만원 / ${plan.expectedCapacity.toLocaleString("ko-KR")}명`,
     savedAt,
     selectedHour,
-    plan,
+    plan: normalizedPlan,
     selectedFestivalBasis: selectedFestivalBasis ?? undefined,
   };
   const scenarios = [scenario, ...readRawScenarios()].slice(0, 10);

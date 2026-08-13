@@ -76,12 +76,15 @@ export function applyFestivalCandidateToPlan(
     latitude <= 90
       ? { longitude, latitude, source: "tourapi" as const }
       : undefined;
+  const venueIdentityChanged = candidate.address !== currentPlan.venueAddress;
 
   return {
     ...currentPlan,
     name: candidate.title,
     venueAddress: candidate.address,
     venueCoordinates,
+    venueAreaSquareMeters: venueIdentityChanged ? undefined : currentPlan.venueAreaSquareMeters,
+    venueAreaProvenance: venueIdentityChanged ? undefined : currentPlan.venueAreaProvenance,
     startDate: candidate.startDate || currentPlan.startDate,
     endDate: candidate.endDate || currentPlan.endDate,
     keywords: Array.from(new Set([candidate.title, ...currentPlan.keywords])).slice(0, 6),

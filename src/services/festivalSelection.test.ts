@@ -120,6 +120,51 @@ describe("festivalSelection", () => {
     }
   });
 
+  it("clears stale venue area and provenance when selecting a different venue", () => {
+    const planWithArea = {
+      ...sampleFestivalPlan,
+      venueAreaSquareMeters: 1800,
+      venueAreaProvenance: {
+        origin: "public-data" as const,
+        sourceDataset: "전국도시공원정보표준데이터",
+        sourceRecordId: "PARK-001",
+        sourceParkName: "여의도공원",
+        referenceAreaSquareMeters: 229539,
+        referenceDate: "2026-01-01",
+        appliedAt: "2026-08-13T12:00:00.000Z",
+      },
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(planWithArea, candidate);
+
+    expect(nextPlan.venueAreaSquareMeters).toBeUndefined();
+    expect(nextPlan.venueAreaProvenance).toBeUndefined();
+  });
+
+  it("retains venue area and provenance when the selected venue address is unchanged", () => {
+    const planWithArea = {
+      ...sampleFestivalPlan,
+      venueAreaSquareMeters: 1800,
+      venueAreaProvenance: {
+        origin: "public-data" as const,
+        sourceDataset: "전국도시공원정보표준데이터",
+        sourceRecordId: "PARK-001",
+        sourceParkName: "여의도공원",
+        referenceAreaSquareMeters: 229539,
+        referenceDate: "2026-01-01",
+        appliedAt: "2026-08-13T12:00:00.000Z",
+      },
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(planWithArea, {
+      ...candidate,
+      address: sampleFestivalPlan.venueAddress,
+    });
+
+    expect(nextPlan.venueAreaSquareMeters).toBe(1800);
+    expect(nextPlan.venueAreaProvenance).toEqual(planWithArea.venueAreaProvenance);
+  });
+
   it("prefills budget and expected capacity from the best matching festival backdata", () => {
     const seoulLightCandidate: FestivalCandidate = {
       id: "4000001",

@@ -62,12 +62,24 @@ export interface VenueCoordinates {
   source: "tourapi" | "verified" | "user-input";
 }
 
+export interface VenueAreaProvenance {
+  origin: "user-input" | "public-data" | "user-adjusted";
+  sourceDataset?: string;
+  sourceRecordId?: string;
+  sourceParkName?: string;
+  referenceAreaSquareMeters?: number;
+  managementOrganization?: string;
+  referenceDate?: string;
+  appliedAt?: string;
+}
+
 export interface FestivalPlan {
   name: string;
   region: string;
   venueAddress: string;
   venueCoordinates?: VenueCoordinates;
   venueAreaSquareMeters?: number;
+  venueAreaProvenance?: VenueAreaProvenance;
   totalExitWidthMeters?: number;
   evacuationDistanceMeters?: number;
   startDate: string;
