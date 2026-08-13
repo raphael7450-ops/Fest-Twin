@@ -401,7 +401,7 @@ git commit -m "feat: apply public park area references"
 - Modify: `src/services/metricEvidence.ts`
 - Modify: `src/services/metricEvidence.test.ts`
 - Modify: `src/utils/csvExport.ts`
-- Create: `src/utils/csvExport.test.ts`
+- Modify: `tests/csvExport.test.ts`
 - Modify: `src/components/B2gPrintReport.tsx`
 - Modify: `src/components/B2gPrintReport.test.tsx`
 
@@ -424,7 +424,7 @@ Verify that manual plans still display `사용자 입력`, adjusted values displ
 
 - [ ] **Step 2: Run reporting tests and confirm failure**
 
-Run: `npm test -- src/services/metricEvidence.test.ts src/utils/csvExport.test.ts src/components/B2gPrintReport.test.tsx`
+Run: `npm test -- src/services/metricEvidence.test.ts tests/csvExport.test.ts src/components/B2gPrintReport.test.tsx`
 
 Expected: FAIL because reports still hard-code `사용자 입력` or omit provenance.
 
@@ -436,14 +436,14 @@ CSV and print/PDF output must include the applied numeric area, provenance label
 
 - [ ] **Step 4: Run reporting and safety tests**
 
-Run: `npm test -- src/services/metricEvidence.test.ts src/utils/csvExport.test.ts src/components/B2gPrintReport.test.tsx src/services/safetyDecisionMetrics.test.ts`
+Run: `npm test -- src/services/metricEvidence.test.ts tests/csvExport.test.ts src/components/B2gPrintReport.test.tsx src/services/safetyDecisionMetrics.test.ts`
 
 Expected: PASS and density remains unavailable whenever `venueAreaSquareMeters` is absent.
 
 - [ ] **Step 5: Commit reporting provenance**
 
 ```bash
-git add src/services/metricEvidence.ts src/services/metricEvidence.test.ts src/utils/csvExport.ts src/utils/csvExport.test.ts src/components/B2gPrintReport.tsx src/components/B2gPrintReport.test.tsx
+git add src/services/metricEvidence.ts src/services/metricEvidence.test.ts src/utils/csvExport.ts tests/csvExport.test.ts src/components/B2gPrintReport.tsx src/components/B2gPrintReport.test.tsx
 git commit -m "feat: report venue area provenance"
 ```
 
@@ -475,7 +475,7 @@ Expected: `.env.local` is ignored and no committed file contains a real assignme
 Run:
 
 ```bash
-npm test -- server/cityParkProxy.test.ts src/services/cityParkAdapter.test.ts src/services/scenarioStorage.test.ts src/services/festivalSelection.test.ts src/services/venueAreaEvidence.test.ts src/components/VenueAreaReference.test.tsx src/components/PlanForm.test.tsx src/services/metricEvidence.test.ts src/utils/csvExport.test.ts src/components/B2gPrintReport.test.tsx src/services/safetyDecisionMetrics.test.ts src/App.test.tsx
+npm test -- server/cityParkProxy.test.ts src/services/cityParkAdapter.test.ts src/services/scenarioStorage.test.ts src/services/festivalSelection.test.ts src/services/venueAreaEvidence.test.ts src/components/VenueAreaReference.test.tsx src/components/PlanForm.test.tsx src/services/metricEvidence.test.ts tests/csvExport.test.ts src/components/B2gPrintReport.test.tsx src/services/safetyDecisionMetrics.test.ts src/App.test.tsx
 ```
 
 Expected: PASS.
