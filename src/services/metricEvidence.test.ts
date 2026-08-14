@@ -93,6 +93,25 @@ describe("metricEvidence", () => {
     expect(JSON.stringify(evidence["peak-density"].sourceDetails)).toContain("사용자 입력");
   });
 
+  it("does not expose public-data evidence for a missing area with stale provenance", () => {
+    const plan = {
+      ...sampleFestivalPlan,
+      venueAreaSquareMeters: undefined,
+      venueAreaProvenance: publicDataProvenance,
+    };
+    const evidence = createEvidenceForPlan(plan);
+    const areaDetail = evidence["peak-density"].sourceDetails.find(
+      (detail) => detail.sourceId === "venue-area-reference",
+    );
+
+    expect(areaDetail).toMatchObject({
+      sourceType: "user-input",
+      sourceName: "축제 기획안 입력값",
+      statusLabel: "사용자 입력",
+    });
+    expect(JSON.stringify(areaDetail)).not.toContain("전국도시공원정보표준데이터 참고값 적용");
+  });
+
   it("keeps success potential evidence separate from capacity pressure evidence", () => {
     const plan = { ...sampleFestivalPlan, expectedCapacity: 120_000 };
     const forecast = {

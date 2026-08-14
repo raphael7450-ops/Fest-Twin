@@ -50,4 +50,12 @@ describe("describeVenueArea", () => {
     expect(description.sourceParkName).toBe("여의도공원");
     expect(description.referenceDate).toBe("2026-01-01");
   });
+
+  it("does not describe public data as applied when the area is missing", () => {
+    const description = describeVenueArea(
+      planWith({ venueAreaSquareMeters: undefined, venueAreaProvenance: publicDataProvenance }),
+    );
+
+    expect(description.label).toBe("사용자 입력");
+  });
 });

@@ -213,7 +213,13 @@ function venueAreaSourceDetails(plan: FestivalPlan): MetricEvidence["sourceDetai
   const hasVenueArea =
     Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0;
   const sourceType: "public-data" | "user-input" =
-    provenance?.origin === "public-data" ? "public-data" : "user-input";
+    hasVenueArea && provenance?.origin === "public-data" ? "public-data" : "user-input";
+  const sourceName =
+    hasVenueArea &&
+    (provenance?.origin === "public-data" || provenance?.origin === "user-adjusted") &&
+    provenance.sourceDataset
+      ? provenance.sourceDataset
+      : "축제 기획안 입력값";
   const calculationInputs: EvidenceField[] = [
     {
       label: "적용 행사장 면적",
@@ -244,7 +250,7 @@ function venueAreaSourceDetails(plan: FestivalPlan): MetricEvidence["sourceDetai
   return [
     {
       sourceId: "venue-area-reference",
-      sourceName: provenance?.sourceDataset ?? "축제 기획안 입력값",
+      sourceName,
       sourceType,
       statusLabel: description.label,
       calculationInputs,

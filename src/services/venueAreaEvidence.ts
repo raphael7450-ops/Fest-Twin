@@ -10,8 +10,12 @@ export function describeVenueArea(plan: FestivalPlan): {
   referenceDate?: string;
 } {
   const provenance = plan.venueAreaProvenance;
+  const hasAppliedArea =
+    Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0;
   const label =
-    provenance?.origin === "public-data"
+    !hasAppliedArea
+      ? "사용자 입력"
+      : provenance?.origin === "public-data"
       ? "전국도시공원정보표준데이터 참고값 적용"
       : provenance?.origin === "user-adjusted"
         ? "공공데이터 참고 후 사용자 조정"
