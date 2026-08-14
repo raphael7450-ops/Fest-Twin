@@ -109,6 +109,21 @@ describe("city park server proxy", () => {
     });
   });
 
+  it("normalizes the top-level body wrapper returned by the live data API", () => {
+    expect(
+      normalizeCityParkPayload({
+        header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
+        body: {
+          items: { item: [cityParkRecord()] },
+          totalCount: "1",
+        },
+      }),
+    ).toMatchObject({
+      items: [{ id: "PARK-001", areaSquareMeters: 229539 }],
+      totalCount: 1,
+    });
+  });
+
   it("normalizes scalar upstream items", () => {
     expect(
       normalizeCityParkPayload({

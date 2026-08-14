@@ -40,7 +40,7 @@ function extractPayloadItems(payload) {
     throw new TypeError("City park payload must be an object or array.");
   }
 
-  const body = payload.response?.body ?? payload;
+  const body = payload.response?.body ?? payload.body ?? payload;
   if (!body || typeof body !== "object") {
     throw new TypeError("City park payload body is invalid.");
   }
