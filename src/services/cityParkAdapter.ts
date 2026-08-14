@@ -189,7 +189,10 @@ function scoreCandidate(candidate: CityParkResponseItem, input: CityParkLookupIn
   }
 
   const inputRegionTokens = regionTokens(input.region);
-  const regionMatches = inputRegionTokens.some((token) => candidateComparableAddress.includes(token));
+  const candidateRegionToken = normalizeComparableText(
+    (candidate.roadAddress ?? candidate.lotAddress ?? "").split(/\s+/, 1)[0],
+  );
+  const regionMatches = inputRegionTokens.includes(candidateRegionToken);
   if (regionMatches) {
     matchScore += 100;
   }

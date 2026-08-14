@@ -136,6 +136,28 @@ describe("cityParkAdapter", () => {
     expect(result).toEqual([]);
   });
 
+  it("does not treat a region name inside a road name as the administrative region", () => {
+    const result = rankCityParkCandidates(
+      [
+        park({
+          id: "road-name-false-positive",
+          name: "여의도공원",
+          roadAddress: "경기도 고양시 서울로 1",
+          lotAddress: "경기도 고양시 덕양구 1",
+          latitude: undefined,
+          longitude: undefined,
+        }),
+      ],
+      {
+        venueName: "여의도공원 행사",
+        venueAddress: "서울특별시 영등포구 여의공원로 68 여의도공원",
+        region: "서울",
+      },
+    );
+
+    expect(result).toEqual([]);
+  });
+
   it("uses Haversine distance as a deterministic tie breaker", () => {
     const result = rankCityParkCandidates(
       [
