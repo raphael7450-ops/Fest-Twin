@@ -69,4 +69,42 @@ describe("PlanForm", () => {
       }),
     );
   });
+
+  it("clears a stale area when the venue address changes", () => {
+    const handlePlanChange = vi.fn();
+    const planWithArea: FestivalPlan = {
+      ...plan,
+      venueAreaSquareMeters: 229539,
+      venueAreaProvenance: {
+        origin: "public-data",
+        sourceDataset: "전국도시공원정보표준데이터",
+        sourceRecordId: "PARK-001",
+        sourceParkName: "여의도공원",
+        referenceAreaSquareMeters: 229539,
+      },
+    };
+    render(
+      <PlanForm
+        plan={planWithArea}
+        onPlanChange={handlePlanChange}
+        areaCodes={[{ code: "1", name: "Seoul" }]}
+        isAreaLoading={false}
+        isCandidateLoading={false}
+        candidateCount={0}
+        onOpenCandidates={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByDisplayValue(plan.venueAddress), {
+      target: { value: "새 행사장 주소" },
+    });
+
+    expect(handlePlanChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        venueAddress: "새 행사장 주소",
+        venueAreaSquareMeters: undefined,
+        venueAreaProvenance: undefined,
+      }),
+    );
+  });
 });

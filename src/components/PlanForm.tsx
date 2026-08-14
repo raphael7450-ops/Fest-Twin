@@ -1,5 +1,6 @@
 import type { FestivalPlan } from "../domain/types";
 import type { TourApiAreaCode } from "../services/tourApiAdapter";
+import { VenueAreaReference } from "./VenueAreaReference";
 
 interface PlanFormProps {
   plan: FestivalPlan;
@@ -130,10 +131,17 @@ export function PlanForm({
           <input
             value={plan.venueAddress}
             onChange={(event) =>
-              onPlanChange({ ...plan, venueAddress: event.target.value })
+              onPlanChange({
+                ...plan,
+                venueAddress: event.target.value,
+                venueAreaSquareMeters: undefined,
+                venueAreaProvenance: undefined,
+              })
             }
           />
         </label>
+
+        <VenueAreaReference plan={plan} onPlanChange={onPlanChange} />
 
         <label>
           총 예산(백만원)

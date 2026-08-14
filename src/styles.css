@@ -879,6 +879,104 @@ h3 {
   gap: 12px;
 }
 
+.venue-area-reference {
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.venue-area-reference__heading {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.venue-area-reference__heading h3,
+.venue-area-reference__heading p {
+  margin-bottom: 0;
+}
+
+.venue-area-reference__heading p,
+.venue-area-reference__warning,
+.venue-area-reference__candidate-summary span {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.venue-area-reference__status {
+  color: var(--color-primary);
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 850;
+  text-align: right;
+}
+
+.venue-area-reference__candidate {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.venue-area-reference__candidate-summary {
+  display: grid;
+  gap: 3px;
+}
+
+.venue-area-reference__candidate-summary strong {
+  color: var(--color-primary-strong);
+  font-size: 14px;
+}
+
+.venue-area-reference__metadata {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.venue-area-reference__metadata div {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.venue-area-reference__metadata dt,
+.venue-area-reference__metadata dd {
+  font-size: 12px;
+  margin: 0;
+}
+
+.venue-area-reference__metadata dt {
+  color: var(--color-muted);
+}
+
+.venue-area-reference__metadata dd {
+  color: var(--color-text);
+  font-weight: 750;
+  text-align: right;
+}
+
+.venue-area-reference__apply,
+.venue-area-reference__retry {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.venue-area-reference__warning {
+  background: #fffaf0;
+  border-left: 3px solid var(--color-amber);
+  margin: 0;
+  padding: 8px 10px;
+}
+
 .tourapi-example-note {
   background: rgba(46, 191, 165, 0.1);
   border: 1px solid rgba(46, 191, 165, 0.25);
@@ -1961,6 +2059,19 @@ a:focus-visible {
   .right-column {
     grid-column: auto;
     position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .venue-area-reference__heading,
+  .venue-area-reference__metadata div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .venue-area-reference__status,
+  .venue-area-reference__metadata dd {
+    text-align: left;
   }
 }
 
