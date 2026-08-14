@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FestivalPlan } from "../domain/types";
 import type { CityParkCandidate } from "../services/cityParkAdapter";
+import { OPERATING_BOUNDARY_WARNING } from "../services/venueAreaEvidence";
 import { VenueAreaReference } from "./VenueAreaReference";
 
 const { lookupCityParkCandidatesMock } = vi.hoisted(() => ({
@@ -83,6 +84,12 @@ describe("VenueAreaReference", () => {
         }),
       }),
     );
+  });
+
+  it("uses the canonical operating-boundary warning", async () => {
+    render(<VenueAreaReference plan={plan} onPlanChange={vi.fn()} />);
+
+    expect(await screen.findByText(OPERATING_BOUNDARY_WARNING)).toBeInTheDocument();
   });
 
   it("lets the operator choose an alternative before applying it", async () => {

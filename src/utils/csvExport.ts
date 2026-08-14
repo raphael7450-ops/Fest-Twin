@@ -5,6 +5,7 @@
  */
 
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
+import { describeVenueArea } from "../services/venueAreaEvidence";
 import { formatDurationSecondsKorean } from "./duration";
 
 export interface CsvReportInput {
@@ -88,6 +89,31 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   const roiMultiplier = `${metrics.economic.roiMultiplier.toFixed(1)}배`;
   const avgSpend = metrics.economic.averageSpendPerVisitorKrw;
   const totalEconomicEffect = metrics.economic.expectedLocalSpendingKrw;
+  const venueAreaDescription = describeVenueArea(plan);
+  const hasVenueArea =
+    Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0;
+  const venueAreaValue = hasVenueArea
+    ? `${plan.venueAreaSquareMeters!.toLocaleString("ko-KR")}m² (${venueAreaDescription.label})`
+    : `산출 불가 (${venueAreaDescription.label})`;
+  const venueAreaProvenance = plan.venueAreaProvenance;
+  const venueAreaAudit = [
+    venueAreaValue,
+    venueAreaProvenance?.sourceDataset
+      ? `참고 출처: ${venueAreaProvenance.sourceDataset}`
+      : undefined,
+    venueAreaDescription.sourceParkName
+      ? `참고 공원: ${venueAreaDescription.sourceParkName}`
+      : undefined,
+    venueAreaDescription.referenceDate
+      ? `자료 기준일: ${venueAreaDescription.referenceDate}`
+      : undefined,
+    venueAreaProvenance?.referenceAreaSquareMeters !== undefined
+      ? `공원 전체면적 참고값: ${venueAreaProvenance.referenceAreaSquareMeters.toLocaleString("ko-KR")}m²`
+      : undefined,
+    `검증: ${venueAreaDescription.note}`,
+  ]
+    .filter((value): value is string => value !== undefined)
+    .join(" / ");
 
   const safetyScore = report.scores.find(
     (s) => s.label.includes("위험") || s.label.includes("안전"),
@@ -192,9 +218,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
     formatCsvRow([
       "Step 1 (베이스라인)",
       "행사장 면적",
-      Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0
-        ? `${plan.venueAreaSquareMeters!.toLocaleString("ko-KR")}m² (사용자 입력)`
-        : "산출 불가: 행사장 면적 미입력",
+      venueAreaAudit,
     ]),
   );
   rows.push(

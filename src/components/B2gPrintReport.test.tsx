@@ -10,6 +10,60 @@ import { B2gPrintReport } from "./B2gPrintReport";
 afterEach(cleanup);
 
 describe("B2gPrintReport", () => {
+  it("prints venue area provenance and the operating-boundary warning", () => {
+    const snapshot = createTestAnalysisSnapshot();
+    render(
+      <B2gPrintReport
+        snapshot={{
+          ...snapshot,
+          plan: {
+            ...snapshot.plan,
+            venueAreaSquareMeters: 229539,
+            venueAreaProvenance: {
+              origin: "public-data",
+              sourceDataset: "전국도시공원정보표준데이터",
+              sourceRecordId: "PARK-001",
+              sourceParkName: "여의도공원",
+              referenceAreaSquareMeters: 229539,
+              referenceDate: "2026-01-01",
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("229,539m²")).toBeInTheDocument();
+    expect(screen.getByText("전국도시공원정보표준데이터 참고값 적용")).toBeInTheDocument();
+    expect(screen.getByText("여의도공원")).toBeInTheDocument();
+    expect(screen.getByText("2026-01-01")).toBeInTheDocument();
+    expect(
+      screen.getByText((content) => content.includes("실제 행사 운영구역 검증 필요")),
+    ).toBeInTheDocument();
+  });
+
+  it("prints manual and missing venue area states", () => {
+    const snapshot = createTestAnalysisSnapshot();
+    const { rerender } = render(
+      <B2gPrintReport
+        snapshot={{
+          ...snapshot,
+          plan: { ...snapshot.plan, venueAreaSquareMeters: 4000, venueAreaProvenance: { origin: "user-input" } },
+        }}
+      />,
+    );
+    expect(screen.getByText("사용자 입력")).toBeInTheDocument();
+
+    rerender(
+      <B2gPrintReport
+        snapshot={{
+          ...snapshot,
+          plan: { ...snapshot.plan, venueAreaSquareMeters: undefined, venueAreaProvenance: undefined },
+        }}
+      />,
+    );
+    expect(screen.getByText("산출 불가")).toBeInTheDocument();
+  });
+
   it("renders B2G document header and snapshot identity", () => {
     const snapshot = createTestAnalysisSnapshot();
     render(<B2gPrintReport snapshot={snapshot} />);

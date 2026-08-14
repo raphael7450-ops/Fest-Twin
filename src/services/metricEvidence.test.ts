@@ -35,7 +35,64 @@ const selectedFestivalBasis: SelectedFestivalBasis = {
   sourceName: "TourAPI selected festival candidate",
 };
 
+const publicDataProvenance = {
+  origin: "public-data" as const,
+  sourceDataset: "전국도시공원정보표준데이터" as const,
+  sourceRecordId: "PARK-001",
+  sourceParkName: "여의도공원",
+  referenceAreaSquareMeters: 229539,
+  managementOrganization: "서울특별시",
+  referenceDate: "2026-01-01",
+  appliedAt: "2026-08-13T12:00:00.000Z",
+};
+
+function createEvidenceForPlan(plan: typeof sampleFestivalPlan) {
+  const forecast = createForecast(plan, sampleTourismContext, sampleTrendContext);
+  const simulation = createSimulation(plan, forecast, forecast.peakHour);
+
+  return createMetricEvidenceSet(
+    plan,
+    forecast,
+    simulation,
+    sampleTourismContext,
+    sampleTrendContext,
+  );
+}
+
 describe("metricEvidence", () => {
+  it.each([
+    ["public data", { venueAreaSquareMeters: 229539, venueAreaProvenance: publicDataProvenance }, "전국도시공원정보표준데이터 참고값 적용", "public-data"],
+    ["manual input", { venueAreaSquareMeters: 4000, venueAreaProvenance: { origin: "user-input" as const } }, "사용자 입력", "user-input"],
+    ["adjusted public data", { venueAreaSquareMeters: 12000, venueAreaProvenance: { ...publicDataProvenance, origin: "user-adjusted" as const } }, "공공데이터 참고 후 사용자 조정", "user-input"],
+  ] as const)("records venue area provenance for %s", (_name, area, label, sourceType) => {
+    const evidence = createEvidenceForPlan({ ...sampleFestivalPlan, ...area });
+    const areaDetail = evidence["peak-density"].sourceDetails.find(
+      (detail) => detail.sourceId === "venue-area-reference",
+    );
+
+    expect(areaDetail).toMatchObject({
+      sourceType,
+      statusLabel: label,
+      calculationInputs: expect.arrayContaining([
+        expect.objectContaining({ label: "적용 행사장 면적" }),
+      ]),
+    });
+    expect(JSON.stringify(areaDetail)).toContain(label);
+    expect(JSON.stringify(areaDetail)).toContain("실제 행사 운영구역 검증 필요");
+    if (sourceType === "public-data" || label === "공공데이터 참고 후 사용자 조정") {
+      expect(JSON.stringify(areaDetail)).toContain("여의도공원");
+      expect(JSON.stringify(areaDetail)).toContain("2026-01-01");
+    }
+  });
+
+  it("keeps density unavailable and reports missing venue area", () => {
+    const plan = { ...sampleFestivalPlan, venueAreaSquareMeters: undefined, venueAreaProvenance: undefined };
+    const evidence = createEvidenceForPlan(plan);
+
+    expect(evidence["peak-density"].summary).toContain("산출 불가");
+    expect(JSON.stringify(evidence["peak-density"].sourceDetails)).toContain("사용자 입력");
+  });
+
   it("keeps success potential evidence separate from capacity pressure evidence", () => {
     const plan = { ...sampleFestivalPlan, expectedCapacity: 120_000 };
     const forecast = {

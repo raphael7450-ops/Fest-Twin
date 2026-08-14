@@ -1,4 +1,5 @@
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
+import { describeVenueArea } from "../services/venueAreaEvidence";
 import { formatDurationSecondsKorean } from "../utils/duration";
 
 interface B2gPrintReportProps {
@@ -39,6 +40,12 @@ export function B2gPrintReport({
     report.scores[0]?.level ??
     "medium";
   const datasetEntries = Object.entries(datasets);
+  const venueAreaDescription = describeVenueArea(plan);
+  const hasVenueArea =
+    Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0;
+  const venueAreaText = hasVenueArea
+    ? `${plan.venueAreaSquareMeters!.toLocaleString("ko-KR")}m²`
+    : "산출 불가";
 
   return (
     <div
@@ -158,6 +165,15 @@ export function B2gPrintReport({
               <p>행정안전부 안전 관리 매뉴얼 수용 한계 검토</p>
               <ul>
                 <li>물리 밀도: {densityText}</li>
+                <li>행사장 면적: <strong>{venueAreaText}</strong></li>
+                <li>면적 근거: <span>{venueAreaDescription.label}</span></li>
+                {venueAreaDescription.sourceParkName && (
+                  <li>참고 공원: <span>{venueAreaDescription.sourceParkName}</span></li>
+                )}
+                {venueAreaDescription.referenceDate && (
+                  <li>자료 기준일: <span>{venueAreaDescription.referenceDate}</span></li>
+                )}
+                <li>{venueAreaDescription.note}</li>
                 <li>안전 인력 권고: {safety.staffing.recommended}명</li>
                 <li>대피 시간: {evacuationText}</li>
               </ul>

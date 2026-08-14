@@ -5,6 +5,7 @@ import {
   lookupCityParkCandidates,
   type CityParkCandidate,
 } from "../services/cityParkAdapter";
+import { OPERATING_BOUNDARY_WARNING } from "../services/venueAreaEvidence";
 
 interface VenueAreaReferenceProps {
   plan: FestivalPlan;
@@ -12,8 +13,6 @@ interface VenueAreaReferenceProps {
 }
 
 const sourceDataset = "전국도시공원정보표준데이터" as const;
-const operatingBoundaryWarning =
-  "공원 전체면적은 행사 운영 경계가 아니므로 보행로, 수면, 식재, 구조물, 제한구역 및 비행사 구역을 현장 또는 도면으로 확인해야 합니다.";
 
 function isAbortError(error: unknown): boolean {
   return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
@@ -209,7 +208,7 @@ export function VenueAreaReference({ plan, onPlanChange }: VenueAreaReferencePro
         </div>
       )}
 
-      <p className="venue-area-reference__warning">{operatingBoundaryWarning}</p>
+      <p className="venue-area-reference__warning">{OPERATING_BOUNDARY_WARNING}</p>
     </section>
   );
 }

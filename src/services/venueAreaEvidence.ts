@@ -1,7 +1,7 @@
 import type { FestivalPlan } from "../domain/types";
 
-const operatingBoundaryNote =
-  "공원 전체면적은 실제 행사 운영 경계가 아니므로 현장 확인 또는 도면 검토가 필요합니다.";
+export const OPERATING_BOUNDARY_WARNING =
+  "공원 전체면적은 행사 운영 경계가 아니므로 보행로, 수면, 식재, 구조물, 제한구역 및 비행사 구역을 현장 또는 도면으로 확인해야 합니다. 실제 행사 운영구역 검증 필요";
 
 export function describeVenueArea(plan: FestivalPlan): {
   label: string;
@@ -19,7 +19,7 @@ export function describeVenueArea(plan: FestivalPlan): {
 
   return {
     label,
-    note: operatingBoundaryNote,
+    note: OPERATING_BOUNDARY_WARNING,
     sourceParkName: provenance?.sourceParkName,
     referenceDate: provenance?.referenceDate,
   };

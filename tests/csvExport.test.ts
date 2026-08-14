@@ -11,6 +11,60 @@ import {
 } from "../src/utils/csvExport";
 
 describe("src/utils/csvExport - B2G CSV Report Generator", () => {
+  it("exports public park area provenance and the operating-boundary warning", () => {
+    const snapshot = createTestAnalysisSnapshot();
+    const csv = buildCsvReportContent({
+      snapshot: {
+        ...snapshot,
+        plan: {
+          ...snapshot.plan,
+          venueAreaSquareMeters: 229539,
+          venueAreaProvenance: {
+            origin: "public-data",
+            sourceDataset: "전국도시공원정보표준데이터",
+            sourceRecordId: "PARK-001",
+            sourceParkName: "여의도공원",
+            referenceAreaSquareMeters: 229539,
+            referenceDate: "2026-01-01",
+          },
+        },
+      },
+    });
+
+    expect(csv).toContain("229,539m²");
+    expect(csv).toContain("전국도시공원정보표준데이터 참고값 적용");
+    expect(csv).toContain("여의도공원");
+    expect(csv).toContain("2026-01-01");
+    expect(csv).toContain("실제 행사 운영구역 검증 필요");
+  });
+
+  it.each([
+    ["manual", { origin: "user-input" as const }, "사용자 입력"],
+    ["adjusted", { origin: "user-adjusted" as const, sourceParkName: "여의도공원", referenceDate: "2026-01-01" }, "공공데이터 참고 후 사용자 조정"],
+  ] as const)("keeps %s venue area labels", (_name, venueAreaProvenance, label) => {
+    const snapshot = createTestAnalysisSnapshot();
+    const csv = buildCsvReportContent({
+      snapshot: {
+        ...snapshot,
+        plan: { ...snapshot.plan, venueAreaSquareMeters: 4000, venueAreaProvenance },
+      },
+    });
+
+    expect(csv).toContain(label);
+  });
+
+  it("keeps missing venue area unavailable", () => {
+    const snapshot = createTestAnalysisSnapshot();
+    const csv = buildCsvReportContent({
+      snapshot: {
+        ...snapshot,
+        plan: { ...snapshot.plan, venueAreaSquareMeters: undefined, venueAreaProvenance: undefined },
+      },
+    });
+
+    expect(csv).toContain("산출 불가");
+  });
+
   it("prepends UTF-8 BOM (\\uFEFF) to prevent Korean character corruption in Windows Excel", () => {
     const csv = buildCsvReportContent({ snapshot: createTestAnalysisSnapshot() });
 

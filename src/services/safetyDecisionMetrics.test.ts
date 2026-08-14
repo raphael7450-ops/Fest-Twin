@@ -93,7 +93,12 @@ describe("createSafetyDecisionProfiles", () => {
 
   it("marks physical density and evacuation unavailable without venue geometry", () => {
     const summary = createSafetyDecisionProfiles(
-      sampleFestivalPlan,
+      {
+        ...sampleFestivalPlan,
+        venueAreaSquareMeters: undefined,
+        totalExitWidthMeters: undefined,
+        evacuationDistanceMeters: undefined,
+      },
       forecast,
       simulation,
     ).summary;
@@ -145,6 +150,7 @@ describe("createSafetyDecisionProfiles", () => {
       {
         ...sampleFestivalPlan,
         totalExitWidthMeters: 5,
+        evacuationDistanceMeters: undefined,
       },
       forecast,
       simulation,

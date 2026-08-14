@@ -29,6 +29,7 @@ import {
   type LogisticsMetrics,
 } from "./impactMetrics";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
+import { describeVenueArea } from "./venueAreaEvidence";
 
 function weatherSourceDetails(weather?: WeatherContext): MetricEvidence["sourceDetails"] {
   return [
@@ -202,6 +203,52 @@ function userInputDetails(
       sourceType: "user-input",
       statusLabel: "사용자 입력 기준",
       calculationInputs,
+    },
+  ];
+}
+
+function venueAreaSourceDetails(plan: FestivalPlan): MetricEvidence["sourceDetails"] {
+  const description = describeVenueArea(plan);
+  const provenance = plan.venueAreaProvenance;
+  const hasVenueArea =
+    Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0;
+  const sourceType: "public-data" | "user-input" =
+    provenance?.origin === "public-data" ? "public-data" : "user-input";
+  const calculationInputs: EvidenceField[] = [
+    {
+      label: "적용 행사장 면적",
+      value: hasVenueArea
+        ? `${plan.venueAreaSquareMeters!.toLocaleString("ko-KR")}m²`
+        : "산출 불가",
+    },
+    { label: "적용 근거", value: description.label },
+    {
+      label: "참고 출처",
+      value: provenance?.sourceDataset ?? "축제 기획안 입력값",
+    },
+  ];
+
+  if (description.sourceParkName) {
+    calculationInputs.push({ label: "참고 공원", value: description.sourceParkName });
+  }
+  if (description.referenceDate) {
+    calculationInputs.push({ label: "자료 기준일", value: description.referenceDate });
+  }
+  if (provenance?.referenceAreaSquareMeters !== undefined) {
+    calculationInputs.push({
+      label: "공원 전체면적 참고값",
+      value: `${provenance.referenceAreaSquareMeters.toLocaleString("ko-KR")}m²`,
+    });
+  }
+
+  return [
+    {
+      sourceId: "venue-area-reference",
+      sourceName: provenance?.sourceDataset ?? "축제 기획안 입력값",
+      sourceType,
+      statusLabel: description.label,
+      calculationInputs,
+      note: description.note,
     },
   ];
 }
@@ -616,6 +663,8 @@ export function createMetricEvidenceSet(
     { label: "격자 크기", value: `${plan.gridWidth} × ${plan.gridHeight}` },
     { label: "시설 수", value: `${plan.facilities.length}곳` },
   ]);
+  const venueAreaDetails = venueAreaSourceDetails(plan);
+  const venueAreaDescription = describeVenueArea(plan);
   const budgetUserInputs = userInputDetails("user-budget-inputs", [
     {
       label: "총 예산",
@@ -805,21 +854,21 @@ export function createMetricEvidenceSet(
       title: "최고 밀집 위험도",
       summary:
         summary.peakDensity.status === "available"
-          ? `피크 방문객과 입력된 행사장 면적으로 물리 밀도 ${summary.peakDensity.value.toFixed(2)}명/m²를 산출했습니다.`
+          ? `피크 방문객과 ${venueAreaDescription.label} 행사장 면적으로 물리 밀도 ${summary.peakDensity.value.toFixed(2)}명/m²를 산출했습니다.`
           : `물리 밀도 산출 불가: ${summary.peakDensity.reason}`,
       dataSources: [
         "시간대별 예상 방문객",
-        "사용자 입력 행사장 면적",
+        `행사장 면적 (${venueAreaDescription.label})`,
       ],
-      formulaSummary: "물리 밀도 = 피크 방문객 / 입력된 행사장 면적",
+      formulaSummary: "물리 밀도 = 피크 방문객 / 적용된 행사장 면적",
       assumptions: [
-        "피크 방문객이 입력된 행사장 면적에 고르게 분포한다고 가정합니다.",
+        "피크 방문객이 적용된 행사장 면적에 고르게 분포한다고 가정합니다.",
         "행사장 면적은 현장 도면과 실측으로 별도 검증해야 합니다.",
       ],
       confidence: safety.peakDensity.confidence,
       confidenceLabel: confidenceLabel(safety.peakDensity.confidence),
       limitations,
-      sourceDetails: [...layoutUserInputs, ...peakDensityDetails],
+      sourceDetails: [...venueAreaDetails, ...layoutUserInputs, ...peakDensityDetails],
       contributors: [
         { label: "피크 시간", value: `${simulation.hour}:00`, effect: "neutral" },
         {
