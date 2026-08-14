@@ -166,9 +166,8 @@ describe("App selected festival basis", () => {
     );
     fireEvent.click(selectButtons[1]);
 
-    const numberInputs = screen.getAllByRole("spinbutton") as HTMLInputElement[];
-    expect(numberInputs[0]).toHaveValue(4321);
-    expect(numberInputs[1]).toHaveValue(20000);
+    expect(screen.getByDisplayValue("4321")).toHaveValue(4321);
+    expect(screen.getByDisplayValue("20000")).toHaveValue(20000);
   });
 
   it("refreshes trend, traffic, and spending contexts from the selected candidate plan", async () => {
