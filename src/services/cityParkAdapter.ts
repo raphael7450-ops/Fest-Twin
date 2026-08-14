@@ -24,6 +24,7 @@ type CityParkResponseItem = Omit<CityParkCandidate, "matchScore">;
 interface RankedCandidate {
   candidate: CityParkCandidate;
   distanceKilometers: number;
+  isPlausible: boolean;
 }
 
 const MAX_CANDIDATES = 10;
@@ -170,19 +171,26 @@ function haversineDistanceKilometers(
 
 function scoreCandidate(candidate: CityParkResponseItem, input: CityParkLookupInput): RankedCandidate {
   const venueName = normalizeComparableText(input.venueName);
-  const venueAddress = normalizeComparableText(input.venueAddress);
+  const parkQuery = normalizeComparableText(deriveCityParkQuery(input.venueAddress));
   const candidateName = normalizeComparableText(candidate.name);
   const candidateAddress = [candidate.roadAddress, candidate.lotAddress].filter(Boolean).join(" ");
   const candidateComparableAddress = normalizeComparableText(candidateAddress);
   const inputCoordinates = validCoordinates(input.coordinates);
   const candidateCoordinates = validCoordinates({ latitude: candidate.latitude, longitude: candidate.longitude });
 
+  const nameMatches =
+    candidateName.length >= 3 &&
+    (venueName.includes(candidateName) ||
+      parkQuery.includes(candidateName) ||
+      candidateName.includes(parkQuery));
   let matchScore = 0;
-  if (candidateName.length >= 3 && (venueName.includes(candidateName) || venueAddress.includes(candidateName))) {
+  if (nameMatches) {
     matchScore += 1000;
   }
 
-  if (regionTokens(input.region).some((token) => candidateComparableAddress.includes(token))) {
+  const inputRegionTokens = regionTokens(input.region);
+  const regionMatches = inputRegionTokens.some((token) => candidateComparableAddress.includes(token));
+  if (regionMatches) {
     matchScore += 100;
   }
 
@@ -201,6 +209,10 @@ function scoreCandidate(candidate: CityParkResponseItem, input: CityParkLookupIn
   return {
     candidate: { ...candidate, matchScore },
     distanceKilometers,
+    isPlausible:
+      distanceKilometers <= 20 ||
+      (nameMatches && (inputRegionTokens.length === 0 || regionMatches)) ||
+      (regionMatches && overlapCount > 0),
   };
 }
 
@@ -246,13 +258,9 @@ export function deriveCityParkQuery(venueAddress: string): string {
   if (!normalized) return "";
 
   const firstParkSegment = normalized.split(/(?:\s+(?:및|와|과)\s*|[,/])/u, 1)[0];
-  const parkIndex = firstParkSegment.indexOf("공원");
-  if (parkIndex < 0) return "";
-
-  const beforePark = firstParkSegment.slice(0, parkIndex).trim();
-  const words = beforePark.split(/\s+/).filter(Boolean);
-  const parkNameWords = removeLeadingAddressTokens(words);
-  return parkNameWords.length > 0 ? `${parkNameWords.join(" ")}공원` : "";
+  const words = removeLeadingAddressTokens(firstParkSegment.split(/\s+/).filter(Boolean));
+  const parkNameEndIndex = words.findIndex((word) => word.endsWith("공원"));
+  return parkNameEndIndex >= 0 ? words.slice(0, parkNameEndIndex + 1).join(" ") : "";
 }
 
 export function rankCityParkCandidates(items: unknown[], input: CityParkLookupInput): CityParkCandidate[] {
@@ -260,6 +268,7 @@ export function rankCityParkCandidates(items: unknown[], input: CityParkLookupIn
     .map(parseCandidate)
     .filter((candidate): candidate is CityParkResponseItem => Boolean(candidate))
     .map((candidate) => scoreCandidate(candidate, input))
+    .filter(({ isPlausible }) => isPlausible)
     .sort((left, right) => {
       const scoreDifference = right.candidate.matchScore - left.candidate.matchScore;
       if (scoreDifference !== 0) return scoreDifference;
