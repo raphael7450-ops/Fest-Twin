@@ -119,13 +119,17 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
   if (!rawPlan || typeof rawPlan !== "object") {
     return { ...sampleFestivalPlan };
   }
+  const venueAreaSquareMeters = normalizePositiveNumber(rawPlan.venueAreaSquareMeters);
+  const venueAreaProvenance = venueAreaSquareMeters
+    ? normalizeVenueAreaProvenance(rawPlan.venueAreaProvenance)
+    : undefined;
   return {
     name: rawPlan.name ?? rawPlan.title ?? sampleFestivalPlan.name,
     region: rawPlan.region ?? sampleFestivalPlan.region,
     venueAddress: rawPlan.venueAddress ?? sampleFestivalPlan.venueAddress,
     venueCoordinates: normalizeVenueCoordinates(rawPlan.venueCoordinates),
-    venueAreaSquareMeters: normalizePositiveNumber(rawPlan.venueAreaSquareMeters),
-    venueAreaProvenance: normalizeVenueAreaProvenance(rawPlan.venueAreaProvenance),
+    venueAreaSquareMeters,
+    venueAreaProvenance,
     totalExitWidthMeters: normalizePositiveNumber(rawPlan.totalExitWidthMeters),
     evacuationDistanceMeters: normalizePositiveNumber(rawPlan.evacuationDistanceMeters),
     startDate: rawPlan.startDate ?? sampleFestivalPlan.startDate,

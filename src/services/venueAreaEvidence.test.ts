@@ -57,5 +57,7 @@ describe("describeVenueArea", () => {
     );
 
     expect(description.label).toBe("사용자 입력");
+    expect(description.sourceParkName).toBeUndefined();
+    expect(description.referenceDate).toBeUndefined();
   });
 });

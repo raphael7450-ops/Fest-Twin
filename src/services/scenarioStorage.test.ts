@@ -104,6 +104,17 @@ describe("scenarioStorage", () => {
     expect(plan.venueAreaProvenance).toEqual(venueAreaProvenance);
   });
 
+  it("discards venue area provenance when no applied area exists", () => {
+    const plan = normalizeFestivalPlan({
+      ...sampleFestivalPlan,
+      venueAreaSquareMeters: undefined,
+      venueAreaProvenance,
+    });
+
+    expect(plan.venueAreaSquareMeters).toBeUndefined();
+    expect(plan.venueAreaProvenance).toBeUndefined();
+  });
+
   it("discards malformed venue area provenance", () => {
     const plan = normalizeFestivalPlan({
       ...sampleFestivalPlan,

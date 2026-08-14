@@ -180,9 +180,9 @@ function scoreCandidate(candidate: CityParkResponseItem, input: CityParkLookupIn
 
   const nameMatches =
     candidateName.length >= 3 &&
-    (venueName.includes(candidateName) ||
-      parkQuery.includes(candidateName) ||
-      candidateName.includes(parkQuery));
+    ((venueName.length >= 3 && venueName.includes(candidateName)) ||
+      (parkQuery.length >= 3 &&
+        (parkQuery.includes(candidateName) || candidateName.includes(parkQuery))));
   let matchScore = 0;
   if (nameMatches) {
     matchScore += 1000;
@@ -195,7 +195,11 @@ function scoreCandidate(candidate: CityParkResponseItem, input: CityParkLookupIn
   }
 
   const venueAddressTokens = addressTokens(input.venueAddress);
-  const overlapCount = [...addressTokens(candidateAddress)].filter((token) => venueAddressTokens.has(token)).length;
+  const overlappingTokens = [...addressTokens(candidateAddress)].filter((token) => venueAddressTokens.has(token));
+  const overlapCount = overlappingTokens.length;
+  const meaningfulOverlapCount = overlappingTokens.filter(
+    (token) => !inputRegionTokens.includes(normalizeComparableText(token)),
+  ).length;
   matchScore += overlapCount * 10;
 
   const distanceKilometers =
@@ -210,9 +214,9 @@ function scoreCandidate(candidate: CityParkResponseItem, input: CityParkLookupIn
     candidate: { ...candidate, matchScore },
     distanceKilometers,
     isPlausible:
-      distanceKilometers <= 20 ||
       (nameMatches && (inputRegionTokens.length === 0 || regionMatches)) ||
-      (regionMatches && overlapCount > 0),
+      (distanceKilometers <= 20 && (inputRegionTokens.length === 0 || regionMatches)) ||
+      (regionMatches && meaningfulOverlapCount > 0),
   };
 }
 

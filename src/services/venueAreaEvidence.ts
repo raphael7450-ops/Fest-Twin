@@ -24,7 +24,7 @@ export function describeVenueArea(plan: FestivalPlan): {
   return {
     label,
     note: OPERATING_BOUNDARY_WARNING,
-    sourceParkName: provenance?.sourceParkName,
-    referenceDate: provenance?.referenceDate,
+    sourceParkName: hasAppliedArea ? provenance?.sourceParkName : undefined,
+    referenceDate: hasAppliedArea ? provenance?.referenceDate : undefined,
   };
 }

@@ -95,7 +95,7 @@ export function buildCsvReportContent(input: CsvReportInput): string {
   const venueAreaValue = hasVenueArea
     ? `${plan.venueAreaSquareMeters!.toLocaleString("ko-KR")}m² (${venueAreaDescription.label})`
     : `산출 불가 (${venueAreaDescription.label})`;
-  const venueAreaProvenance = plan.venueAreaProvenance;
+  const venueAreaProvenance = hasVenueArea ? plan.venueAreaProvenance : undefined;
   const venueAreaAudit = [
     venueAreaValue,
     venueAreaProvenance?.sourceDataset

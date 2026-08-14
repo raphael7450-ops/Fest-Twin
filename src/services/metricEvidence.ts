@@ -209,9 +209,9 @@ function userInputDetails(
 
 function venueAreaSourceDetails(plan: FestivalPlan): MetricEvidence["sourceDetails"] {
   const description = describeVenueArea(plan);
-  const provenance = plan.venueAreaProvenance;
   const hasVenueArea =
     Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0;
+  const provenance = hasVenueArea ? plan.venueAreaProvenance : undefined;
   const sourceType: "public-data" | "user-input" =
     hasVenueArea && provenance?.origin === "public-data" ? "public-data" : "user-input";
   const sourceName =

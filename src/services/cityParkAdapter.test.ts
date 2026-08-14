@@ -88,7 +88,7 @@ describe("cityParkAdapter", () => {
     );
 
     expect(result.slice(0, 2).map((candidate) => candidate.id)).toEqual(["lot", "road"]);
-    expect(result[1].matchScore).toBeGreaterThan(result[2].matchScore);
+    expect(result).toHaveLength(2);
   });
 
   it("drops a weak candidate from a different region", () => {
@@ -108,6 +108,28 @@ describe("cityParkAdapter", () => {
         venueAddress: "서울특별시 영등포구 여의공원로 68 여의도공원",
         region: "서울",
         coordinates: { latitude: 37.5268, longitude: 126.922 },
+      },
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("drops an unrelated candidate that only shares the selected region", () => {
+    const result = rankCityParkCandidates(
+      [
+        park({
+          id: "same-region-unrelated",
+          name: "무관공원",
+          roadAddress: "서울특별시 강남구 테헤란로 1",
+          lotAddress: "서울특별시 강남구 역삼동 1",
+          latitude: undefined,
+          longitude: undefined,
+        }),
+      ],
+      {
+        venueName: "서울세계불꽃축제",
+        venueAddress: "서울특별시 영등포구 여의공원로 68 여의도공원",
+        region: "서울",
       },
     );
 
@@ -176,7 +198,7 @@ describe("cityParkAdapter", () => {
   it("limits ranked candidates to ten results", () => {
     const result = rankCityParkCandidates(
       Array.from({ length: 12 }, (_, index) => park({ id: `park-${index}`, name: `서울공원${index}` })),
-      { venueName: "", venueAddress: "서울특별시", region: "서울" },
+      { venueName: "", venueAddress: "서울특별시 영등포구", region: "서울" },
     );
 
     expect(result).toHaveLength(10);
