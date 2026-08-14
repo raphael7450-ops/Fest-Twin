@@ -218,8 +218,10 @@ function scoreCandidate(candidate: CityParkResponseItem, input: CityParkLookupIn
     distanceKilometers,
     isPlausible:
       (nameMatches && (inputRegionTokens.length === 0 || regionMatches)) ||
-      (distanceKilometers <= 20 && (inputRegionTokens.length === 0 || regionMatches)) ||
-      (regionMatches && meaningfulOverlapCount > 0),
+      (distanceKilometers <= 1 &&
+        meaningfulOverlapCount > 0 &&
+        (inputRegionTokens.length === 0 || regionMatches)) ||
+      (regionMatches && meaningfulOverlapCount >= 2),
   };
 }
 

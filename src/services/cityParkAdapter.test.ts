@@ -70,7 +70,7 @@ describe("cityParkAdapter", () => {
     );
 
     expect(result[0]).toMatchObject({ id: "target", name: "여의도 한강공원" });
-    expect(result[0].matchScore).toBeGreaterThan(result[1].matchScore);
+    expect(result).toHaveLength(1);
   });
 
   it("recognizes abbreviated Korean regions and road or lot address overlap", () => {
@@ -136,6 +136,28 @@ describe("cityParkAdapter", () => {
     expect(result).toEqual([]);
   });
 
+  it("drops an unrelated candidate that only shares the same district", () => {
+    const result = rankCityParkCandidates(
+      [
+        park({
+          id: "same-district-unrelated",
+          name: "무관공원",
+          roadAddress: "서울특별시 영등포구 다른로 1",
+          lotAddress: "서울특별시 영등포구 다른동 1",
+          latitude: undefined,
+          longitude: undefined,
+        }),
+      ],
+      {
+        venueName: "서울세계불꽃축제",
+        venueAddress: "서울특별시 영등포구 여의공원로 68 여의도공원",
+        region: "서울",
+      },
+    );
+
+    expect(result).toEqual([]);
+  });
+
   it("does not treat a region name inside a road name as the administrative region", () => {
     const result = rankCityParkCandidates(
       [
@@ -172,7 +194,7 @@ describe("cityParkAdapter", () => {
       ],
       {
         venueName: "행사",
-        venueAddress: "서울특별시 영등포구",
+        venueAddress: "서울특별시 영등포구 동일공원",
         region: "서울",
         coordinates: { latitude: 37.528, longitude: 126.934 },
       },
@@ -219,8 +241,14 @@ describe("cityParkAdapter", () => {
 
   it("limits ranked candidates to ten results", () => {
     const result = rankCityParkCandidates(
-      Array.from({ length: 12 }, (_, index) => park({ id: `park-${index}`, name: `서울공원${index}` })),
-      { venueName: "", venueAddress: "서울특별시 영등포구", region: "서울" },
+      Array.from({ length: 12 }, (_, index) =>
+        park({
+          id: `park-${index}`,
+          name: `서울공원${index}`,
+          lotAddress: `서울특별시 영등포구 여의동 ${index}`,
+        }),
+      ),
+      { venueName: "", venueAddress: "서울특별시 영등포구 여의동", region: "서울" },
     );
 
     expect(result).toHaveLength(10);
