@@ -1,5 +1,6 @@
 import type { MetricEvidenceId } from "../domain/types";
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
+import { selectDwellProfile, summarizeVisitorFlow } from "../services/visitorOccupancy";
 import { CsvExportButton } from "./CsvExportButton";
 import { EvidenceButton } from "./EvidenceButton";
 import { InfrastructureCapacityPanel } from "./InfrastructureCapacityPanel";
@@ -57,6 +58,9 @@ export function ReportView({
       ? report.findings
       : ["피크 시간대 혼잡과 병목 후보를 중심으로 현장 안전계획을 검토합니다."];
 
+  const dwellProfile = forecast.dwellProfile ?? selectDwellProfile(plan);
+  const flowSummary = summarizeVisitorFlow(forecast);
+
   return (
     <section className="panel report-panel" aria-label="공공검토 보고서">
       <div className="panel-heading report-heading">
@@ -106,10 +110,20 @@ export function ReportView({
         <p className="muted">{report.governmentReviewNote}</p>
         <div className="report-kpi-strip">
           <article>
-            <span>예상 방문객</span>
+            <span>일일 고유 방문객</span>
             <strong data-testid="report-expected-visitors">
               {forecast.expectedVisitors.toLocaleString("ko-KR")}명
             </strong>
+          </article>
+          <article>
+            <span>체류 프로필</span>
+            <strong>{dwellProfile.label}</strong>
+            <small>평균 체류 {dwellProfile.averageMinutes}분</small>
+          </article>
+          <article>
+            <span>동시 체류 피크</span>
+            <strong>{flowSummary.peakOccupancy.toLocaleString("ko-KR")}명</strong>
+            <small>{flowSummary.peakOccupancyHour}:00 피크</small>
           </article>
           <article>
             <span>피크 시간</span>

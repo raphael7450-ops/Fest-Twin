@@ -135,6 +135,9 @@ describe("src/utils/csvExport - B2G CSV Report Generator", () => {
     expect(csv).toContain("Step 3 (상권/경제 보정)");
     expect(csv).toContain("Step 4 (최종 산출 연산식)");
     expect(csv).toContain("한국관광공사 TourAPI 4.0");
+    expect(csv).toContain("체류 프로필 / 평균 체류시간");
+    expect(csv).toContain("최대 동시 체류인원");
+    expect(csv).toContain("최대 시간대 이탈 인원");
     expect(csv).toContain(`AUDIT-HASH-SHA256-${snapshot.analysisId}`);
     expect(csv).toContain("개인정보 미수집 (0건 준수)");
   });

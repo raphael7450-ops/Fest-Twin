@@ -6,6 +6,7 @@
 
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
 import { describeVenueArea } from "../services/venueAreaEvidence";
+import { selectDwellProfile, summarizeVisitorFlow } from "../services/visitorOccupancy";
 import { formatDurationSecondsKorean } from "./duration";
 
 export interface CsvReportInput {
@@ -180,7 +181,28 @@ export function buildCsvReportContent(input: CsvReportInput): string {
       ]),
     );
   }
+  const dwellProfile = forecast.dwellProfile ?? selectDwellProfile(plan);
+  const flowSummary = summarizeVisitorFlow(forecast);
+
   rows.push(formatCsvRow(["피크 시간대", `${forecast.peakHour}:00`]));
+  rows.push(
+    formatCsvRow([
+      "체류 프로필 / 평균 체류시간",
+      `${dwellProfile.label} (${dwellProfile.sourceName}) / ${dwellProfile.averageMinutes}분`,
+    ]),
+  );
+  rows.push(
+    formatCsvRow([
+      "최대 동시 체류인원",
+      `${flowSummary.peakOccupancy.toLocaleString("ko-KR")}명 (${flowSummary.peakOccupancyHour}:00 피크)`,
+    ]),
+  );
+  rows.push(
+    formatCsvRow([
+      "최대 시간대 이탈 인원",
+      `${flowSummary.peakDepartures.toLocaleString("ko-KR")}명 (${flowSummary.peakDepartureHour}:00 피크)`,
+    ]),
+  );
   rows.push(
     formatCsvRow([
       "성공 예측 점수",

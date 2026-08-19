@@ -30,7 +30,7 @@ import {
 } from "./impactMetrics";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 import { describeVenueArea } from "./venueAreaEvidence";
-import { occupancySeries } from "./visitorOccupancy";
+import { occupancySeries, selectDwellProfile, summarizeVisitorFlow } from "./visitorOccupancy";
 
 function weatherSourceDetails(weather?: WeatherContext): MetricEvidence["sourceDetails"] {
   return [
@@ -478,8 +478,36 @@ function selectedSafetyLogisticsBasisDetails(
               value: `${plan.expectedCapacity.toLocaleString("ko-KR")}명`,
             },
             {
-              label: "예상 방문객",
+              label: "일일 고유 방문객",
               value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+            },
+            {
+              label: "시간대 신규 유입",
+              value: `${summarizeVisitorFlow(forecast).peakArrivals.toLocaleString("ko-KR")}명 (${summarizeVisitorFlow(forecast).peakArrivalHour}:00 피크)`,
+            },
+            {
+              label: "최대 동시 체류인원",
+              value: `${summarizeVisitorFlow(forecast).peakOccupancy.toLocaleString("ko-KR")}명 (${summarizeVisitorFlow(forecast).peakOccupancyHour}:00 피크)`,
+            },
+            {
+              label: "평균 체류시간",
+              value: `${(forecast.dwellProfile ?? selectDwellProfile(plan)).averageMinutes}분`,
+            },
+            {
+              label: "체류 프로필",
+              value: `${(forecast.dwellProfile ?? selectDwellProfile(plan)).label} (${(forecast.dwellProfile ?? selectDwellProfile(plan)).sourceName})`,
+            },
+            {
+              label: "최대 시간대 이탈",
+              value: `${summarizeVisitorFlow(forecast).peakDepartures.toLocaleString("ko-KR")}명 (${summarizeVisitorFlow(forecast).peakDepartureHour}:00 피크)`,
+            },
+            {
+              label: "주차 수용 대수",
+              value: plan.parkingCapacityVehicles !== undefined ? `${plan.parkingCapacityVehicles.toLocaleString("ko-KR")}대` : "기획 입력 필요",
+            },
+            {
+              label: "화장실 변기 수",
+              value: plan.restroomFixtureCount !== undefined ? `${plan.restroomFixtureCount.toLocaleString("ko-KR")}칸` : "기획 입력 필요",
             },
             { label: "피크 시간", value: `${peakHour}:00` },
             {
@@ -1063,15 +1091,15 @@ export function createMetricEvidenceSet(
     "parking-occupancy": {
       metricId: "parking-occupancy",
       title: "주차 수용 차오름 비율",
-      summary: `피크 방문객의 차량 유입을 가정해 주차 수용률 ${logistics.parkingOccupancyRate}%를 산출했습니다.`,
+      summary: `최대 동시 체류인원의 차량 유입을 가정해 주차 수용률 ${logistics.parkingOccupancyRate}%를 산출했습니다.`,
       dataSources: [
         "피크 시간대 예상 방문객",
         "행사장 수용 인원",
         "고위험 격자 수",
       ],
       formulaSummary:
-        "주차 차오름 = 피크 방문객의 차량 유입 추정치 / 행사장 가정 주차 수용량",
-      assumptions: ["피크 방문객의 18%가 차량으로 유입된다고 가정합니다."],
+        "주차 차오름 = 최대 동시 체류인원의 차량 유입 추정치 / 행사장 가정 주차 수용량",
+      assumptions: ["최대 동시 체류인원의 18%가 차량으로 유입된다고 가정합니다."],
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       limitations,
@@ -1188,13 +1216,13 @@ export function createMetricEvidenceSet(
     "restroom-capacity": {
       metricId: "restroom-capacity",
       title: "[모델 1] 임시 화장실 수용 한계 및 대기시간 근거",
-      summary: `행정안전부 지침(피크시간 250명당 1칸) 기준 화장실 수용량 및 부족 시 회전율 지연 대기시간을 산출했습니다.`,
+      summary: `행정안전부 지침(동시 체류 피크 250명당 1칸) 기준 화장실 수용량 및 부족 시 회전율 지연 대기시간을 산출했습니다.`,
       dataSources: [
         "행정안전부·문화체육관광부 지역축제 안전관리 매뉴얼",
         "환경부 공중화장실 설치 및 관리 기준",
       ],
       formulaSummary:
-        "필요 화장실 수 = 피크시간대 방문객 / 250명, 예상 대기시간 = 기본 3분 + (부족칸수 × 0.9분 지연)",
+        "필요 화장실 수 = 최대 동시 체류인원 / 250명, 예상 대기시간 = 기본 3분 + (부족칸수 × 0.9분 지연)",
       calculationSteps: [
         {
           stepNumber: 1,

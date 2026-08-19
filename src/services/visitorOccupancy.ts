@@ -329,3 +329,40 @@ export function occupancySeries(
 ): Array<{ hour: number; visitors: number }> {
   return forecast.occupancyByHour ?? forecast.visitorsByHour;
 }
+
+export function summarizeVisitorFlow(forecast: ForecastResult): {
+  peakArrivals: number;
+  peakArrivalHour: number;
+  peakOccupancy: number;
+  peakOccupancyHour: number;
+  peakDepartures: number;
+  peakDepartureHour: number;
+} {
+  const arrivals = forecast.arrivalsByHour ?? forecast.visitorsByHour;
+  const occupancy = forecast.occupancyByHour ?? forecast.visitorsByHour;
+  const departures = forecast.departuresByHour ?? [];
+
+  const findPeak = (series: Array<{ hour: number; visitors: number }>) => {
+    if (!series || series.length === 0) {
+      return { peak: 0, hour: forecast.peakHour ?? 0 };
+    }
+    return series.reduce(
+      (best, item) =>
+        item.visitors > best.peak ? { peak: item.visitors, hour: item.hour } : best,
+      { peak: series[0].visitors, hour: series[0].hour },
+    );
+  };
+
+  const peakArr = findPeak(arrivals);
+  const peakOcc = findPeak(occupancy);
+  const peakDep = findPeak(departures);
+
+  return {
+    peakArrivals: peakArr.peak,
+    peakArrivalHour: peakArr.hour,
+    peakOccupancy: peakOcc.peak,
+    peakOccupancyHour: peakOcc.hour,
+    peakDepartures: peakDep.peak,
+    peakDepartureHour: peakDep.hour,
+  };
+}

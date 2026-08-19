@@ -627,4 +627,36 @@ describe("metricEvidence", () => {
       ]),
     );
   });
+
+  it("includes dwell and flow metrics in safety and infrastructure evidence", () => {
+    const evidence = createEvidenceForPlan({
+      ...sampleFestivalPlan,
+      name: "서울 불꽃축제",
+      keywords: ["불꽃"],
+      parkingCapacityVehicles: 1500,
+      restroomFixtureCount: 80,
+    });
+
+    const safetyBasis = evidence["safety-staff"].sourceDetails.find(
+      (detail) => detail.sourceId === "selected-safety-logistics-basis",
+    );
+    const jsonStr = JSON.stringify(safetyBasis);
+
+    expect(jsonStr).toContain("일일 고유 방문객");
+    expect(jsonStr).toContain("시간대 신규 유입");
+    expect(jsonStr).toContain("최대 동시 체류인원");
+    expect(jsonStr).toContain("평균 체류시간");
+    expect(jsonStr).toContain("체류 프로필");
+    expect(jsonStr).toContain("최대 시간대 이탈");
+    expect(jsonStr).toContain("주차 수용 대수");
+    expect(jsonStr).toContain("화장실 변기 수");
+  });
+
+  it("uses concurrent occupancy wording in parking and restroom evidence", () => {
+    const evidence = createEvidenceForPlan(sampleFestivalPlan);
+
+    expect(evidence["parking-occupancy"].formulaSummary).toContain("최대 동시 체류인원");
+    expect(evidence["parking-occupancy"].assumptions[0]).toContain("최대 동시 체류인원");
+    expect(evidence["restroom-capacity"].summary).toContain("동시 체류");
+  });
 });
