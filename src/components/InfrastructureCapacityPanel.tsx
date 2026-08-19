@@ -79,35 +79,96 @@ export function InfrastructureCapacityPanel({
           <div className="capacity-card-header">
             <span>주차 수용 및 만차 시점</span>
             <div className="card-header-actions">
-              <em className={`kpi-badge ${parkingRate !== undefined && parkingRate >= 80 ? "kpi-badge-high" : "kpi-badge-medium"}`}>
-                {parkingRate === undefined ? "입력 필요" : `점유율 ${parkingRate}%`}
-              </em>
+              {capacity.parkingStatus === "input-required" ? (
+                <em className="kpi-badge kpi-badge-medium">기획 입력 필요</em>
+              ) : (
+                <em className={`kpi-badge ${parkingRate !== undefined && parkingRate >= 80 ? "kpi-badge-high" : "kpi-badge-medium"}`}>
+                  {parkingRate !== undefined ? `점유율 ${Math.round(parkingRate)}%` : "계산 중"}
+                </em>
+              )}
               {onOpenEvidence && (
                 <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
               )}
             </div>
           </div>
-          <strong>{capacity.parkingFillTime}</strong>
-          <small className="metric-trend">
-            유입 추정 {capacity.estimatedVehicles.toLocaleString("ko-KR")}대 / 확보 수용 {capacity.providedParkingCapacity?.toLocaleString("ko-KR") ?? "입력 필요"}대
-          </small>
+          {capacity.parkingStatus === "input-required" ? (
+            <>
+              <strong>주차 수용 대수 미입력</strong>
+              <small className="metric-trend">
+                권장 주차면: {capacity.recommendedParkingCapacity.toLocaleString("ko-KR")}대
+                (동시 체류인원 기준 차량 추정)
+              </small>
+            </>
+          ) : (
+            <>
+              <strong>{capacity.parkingFillTime}</strong>
+              <small className="metric-trend">
+                유입 추정 {capacity.estimatedVehicles.toLocaleString("ko-KR")}대 / 확보 수용{" "}
+                {capacity.providedParkingCapacity?.toLocaleString("ko-KR") ?? "입력 필요"}대
+              </small>
+            </>
+          )}
         </article>
 
         <article className="capacity-card">
           <div className="capacity-card-header">
             <span>임시 화장실 수용 한계</span>
             <div className="card-header-actions">
-              <em className={`kpi-badge ${restroomDeficit !== undefined && restroomDeficit > 0 ? "kpi-badge-high" : "kpi-badge-low"}`}>
-                {restroomDeficit === undefined ? "입력 필요" : restroomDeficit > 0 ? `부족 ${restroomDeficit}칸` : "적정"}
-              </em>
+              {capacity.restroomStatus === "input-required" ? (
+                <em className="kpi-badge kpi-badge-medium">기획 입력 필요</em>
+              ) : (
+                <em className={`kpi-badge ${restroomDeficit !== undefined && restroomDeficit > 0 ? "kpi-badge-high" : "kpi-badge-low"}`}>
+                  {restroomDeficit === undefined ? "입력 필요" : restroomDeficit > 0 ? `부족 ${restroomDeficit}칸` : "적정"}
+                </em>
+              )}
               {onOpenEvidence && (
                 <EvidenceButton onClick={() => onOpenEvidence("restroom-capacity")} />
               )}
             </div>
           </div>
-          <strong>{capacity.estimatedRestroomWaitMinutes === undefined ? "대기 시간 입력 필요" : `대기 약 ${capacity.estimatedRestroomWaitMinutes}분 예상`}</strong>
+          {capacity.restroomStatus === "input-required" ? (
+            <>
+              <strong>화장실 변기 수 미입력</strong>
+              <small className="metric-trend">
+                권장 화장실: {capacity.recommendedRestroomCount.toLocaleString("ko-KR")}칸
+                (동시 체류인원 250명당 1칸 가이드)
+              </small>
+            </>
+          ) : (
+            <>
+              <strong>
+                {capacity.estimatedRestroomWaitMinutes === undefined
+                  ? "대기 시간 입력 필요"
+                  : `대기 약 ${capacity.estimatedRestroomWaitMinutes}분 예상`}
+              </strong>
+              <small className="metric-trend">
+                필요 {capacity.requiredRestroomCount}칸 / 확보{" "}
+                {capacity.providedRestroomCount?.toLocaleString("ko-KR") ?? "입력 필요"}칸
+                (피크 250명당 1칸 가이드)
+              </small>
+            </>
+          )}
+        </article>
+
+        <article className="capacity-card">
+          <div className="capacity-card-header">
+            <span>최대 이탈 시간대</span>
+            <div className="card-header-actions">
+              <em className="kpi-badge kpi-badge-medium">
+                {capacity.peakDepartureHour}:00
+              </em>
+              {onOpenEvidence && (
+                <EvidenceButton onClick={() => onOpenEvidence("infrastructure-capacity")} />
+              )}
+            </div>
+          </div>
+          <strong>
+            {capacity.peakDepartures > 0
+              ? `${capacity.peakDepartures.toLocaleString("ko-KR")}명 이탈 집중`
+              : "이탈 데이터 없음"}
+          </strong>
           <small className="metric-trend">
-            필요 {capacity.requiredRestroomCount}칸 / 확보 {capacity.providedRestroomCount?.toLocaleString("ko-KR") ?? "입력 필요"}칸 (피크 250명당 1칸 가이드)
+            동시 체류인원 기반 이탈 추정 — 종료 시각 교통 혼잡 대비
           </small>
         </article>
 
