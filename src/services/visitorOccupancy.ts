@@ -150,6 +150,7 @@ function classifyProfile(text: string): DwellProfileKind {
 
 function interpolate(values: number[], position: number) {
   if (position <= 0) return values[0] ?? 0;
+  if (position >= values.length) return 0;
   if (position >= values.length - 1) return values[values.length - 1] ?? 0;
 
   const lowerIndex = Math.floor(position);
@@ -263,7 +264,10 @@ export function buildVisitorFlow(
 
   const firstHour = cohorts[0].hour;
   const lastArrivalHour = cohorts[cohorts.length - 1].hour;
-  const naturalEndHour = lastArrivalHour + Math.max(profile.retentionRates.length - 1, 0);
+  const lastRetention = profile.retentionRates.at(-1) ?? 0;
+  const retentionEndOffset = Math.max(profile.retentionRates.length - 1, 0) +
+    (lastRetention > 0 ? 1 : 0);
+  const naturalEndHour = lastArrivalHour + retentionEndOffset;
   const safeAnchorEndHour =
     typeof anchorEndHour === "number" && Number.isFinite(anchorEndHour)
       ? Math.round(anchorEndHour)

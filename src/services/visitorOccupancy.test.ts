@@ -109,6 +109,26 @@ describe("visitor occupancy dwell profiles", () => {
     expect(longPeak).toBeGreaterThan(shortPeak);
   });
 
+  it("releases all daytime-general visitors after the final retention sample", () => {
+    const profile = selectDwellProfile({
+      ...sampleFestivalPlan,
+      name: "일반 축제",
+      keywords: ["문화"],
+      programs: [
+        { id: "program", name: "일반 프로그램", startHour: 10, endHour: 12, expectedDraw: 50 },
+      ],
+    });
+    const profileWithImplicitTerminalZero = {
+      ...profile,
+      retentionRates: profile.retentionRates.slice(0, -1),
+    };
+    const flow = buildVisitorFlow([{ hour: 10, visitors: 100 }], profileWithImplicitTerminalZero);
+
+    expect(profile.kind).toBe("daytime-general");
+    expect(flow.at(-1)?.occupancy).toBe(0);
+    expect(flow.reduce((total, point) => total + point.departures, 0)).toBe(100);
+  });
+
   it("retains fireworks visitors until the anchor and releases them after it", () => {
     const arrivals = [18, 19, 20, 21].map((hour) => ({ hour, visitors: 1_000 }));
     const profile = selectDwellProfile({
