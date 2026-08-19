@@ -47,6 +47,36 @@ export interface ProgramItem {
   expectedDraw: number;
 }
 
+export type DwellProfileKind =
+  | "fireworks-performance"
+  | "food-experience"
+  | "night-exhibition"
+  | "street-parade"
+  | "daytime-general";
+
+export interface DwellProfile {
+  kind: DwellProfileKind;
+  label: string;
+  averageMinutes: number;
+  sourceType:
+    | "festival-observed"
+    | "place-benchmark"
+    | "similar-festival"
+    | "type-default"
+    | "user-adjusted";
+  sourceName: string;
+  confidence: "high" | "medium" | "low";
+  retentionRates: number[];
+}
+
+export interface HourlyVisitorFlow {
+  hour: number;
+  arrivals: number;
+  occupancy: number;
+  departures: number;
+  cumulativeArrivals: number;
+}
+
 export interface VenueFacility {
   id: string;
   type: FacilityType;
@@ -90,6 +120,9 @@ export interface FestivalPlan {
   safetyBudgetMillionKrw: number;
   targetGroups: VisitorGroup[];
   keywords: string[];
+  averageDwellMinutes?: number;
+  parkingCapacityVehicles?: number;
+  restroomFixtureCount?: number;
   expectedCapacity: number;
   gridWidth: number;
   gridHeight: number;
@@ -262,6 +295,7 @@ export interface ForecastReason {
 export interface ForecastResult {
   expectedVisitors: number;
   visitorsByHour: Array<{ hour: number; visitors: number }>;
+  occupancyByHour?: Array<{ hour: number; visitors: number }>;
   peakHour: number;
   successScore: number;
   confidence: RiskLevel;
