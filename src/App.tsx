@@ -38,6 +38,7 @@ import {
   createSelectedFestivalBasis,
 } from "./services/festivalSelection";
 import { createLogisticsMetrics } from "./services/impactMetrics";
+import { selectDwellProfile } from "./services/visitorOccupancy";
 import {
   getFestivalCandidates,
   getTourApiAreaCodes,
@@ -500,6 +501,7 @@ export function App() {
                       selectedCandidateTitle={selectedCandidate?.title}
                       onOpenCandidates={() => setIsCandidatePanelOpen(true)}
                       onOpenSearchModal={() => setIsSearchModalOpen(true)}
+                      dwellProfile={committed.forecast.dwellProfile ?? selectDwellProfile(plan, planningDemandBackdata)}
                     />
                   </aside>
                   <section className="main-column">

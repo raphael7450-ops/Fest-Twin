@@ -123,6 +123,16 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
   const venueAreaProvenance = venueAreaSquareMeters
     ? normalizeVenueAreaProvenance(rawPlan.venueAreaProvenance)
     : undefined;
+
+  const rawDwell = rawPlan.averageDwellMinutes;
+  const averageDwellMinutes =
+    typeof rawDwell === "number" &&
+    Number.isFinite(rawDwell) &&
+    rawDwell >= 30 &&
+    rawDwell <= 720
+      ? rawDwell
+      : undefined;
+
   return {
     name: rawPlan.name ?? rawPlan.title ?? sampleFestivalPlan.name,
     region: rawPlan.region ?? sampleFestivalPlan.region,
@@ -160,6 +170,9 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
       Array.isArray(rawPlan.keywords) && rawPlan.keywords.length > 0
         ? rawPlan.keywords
         : sampleFestivalPlan.keywords,
+    averageDwellMinutes,
+    parkingCapacityVehicles: normalizePositiveNumber(rawPlan.parkingCapacityVehicles),
+    restroomFixtureCount: normalizePositiveNumber(rawPlan.restroomFixtureCount),
     expectedCapacity:
       typeof rawPlan.expectedCapacity === "number"
         ? rawPlan.expectedCapacity
@@ -180,6 +193,7 @@ export function normalizeFestivalPlan(rawPlan: any): FestivalPlan {
         : sampleFestivalPlan.facilities,
   };
 }
+
 
 function readRawScenarios(): SavedScenario[] {
   const raw = localStorage.getItem(STORAGE_KEY);

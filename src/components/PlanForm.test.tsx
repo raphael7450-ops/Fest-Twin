@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { FestivalPlan } from "../domain/types";
+import type { DwellProfile, FestivalPlan } from "../domain/types";
 import { PlanForm } from "./PlanForm";
 
 const plan: FestivalPlan = {
@@ -22,6 +22,16 @@ const plan: FestivalPlan = {
   facilities: [],
 };
 
+const sampleDwellProfile: DwellProfile = {
+  kind: "daytime-general",
+  label: "주간 종합형",
+  averageMinutes: 150,
+  sourceType: "type-default",
+  sourceName: "축제 유형별 기본 체류 프로필",
+  confidence: "low",
+  retentionRates: [1, 0.82, 0.55, 0.25, 0.07, 0],
+};
+
 describe("PlanForm", () => {
   afterEach(() => {
     cleanup();
@@ -37,6 +47,7 @@ describe("PlanForm", () => {
         isCandidateLoading={false}
         candidateCount={0}
         onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
       />,
     );
 
@@ -55,6 +66,7 @@ describe("PlanForm", () => {
         isCandidateLoading={false}
         candidateCount={0}
         onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
       />,
     );
 
@@ -92,6 +104,7 @@ describe("PlanForm", () => {
         isCandidateLoading={false}
         candidateCount={0}
         onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
       />,
     );
 
@@ -104,6 +117,104 @@ describe("PlanForm", () => {
         venueAddress: "새 행사장 주소",
         venueAreaSquareMeters: undefined,
         venueAreaProvenance: undefined,
+      }),
+    );
+  });
+
+  it("shows the automatic dwell profile label", () => {
+    render(
+      <PlanForm
+        plan={plan}
+        onPlanChange={vi.fn()}
+        areaCodes={[]}
+        isAreaLoading={false}
+        isCandidateLoading={false}
+        candidateCount={0}
+        onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
+      />,
+    );
+
+    expect(screen.getByText("주간 종합형")).toBeInTheDocument();
+  });
+
+  it("emits averageDwellMinutes when the user enters a dwell override", () => {
+    const handlePlanChange = vi.fn();
+    render(
+      <PlanForm
+        plan={plan}
+        onPlanChange={handlePlanChange}
+        areaCodes={[]}
+        isAreaLoading={false}
+        isCandidateLoading={false}
+        candidateCount={0}
+        onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
+      />,
+    );
+
+    const dwellInput = screen.getByLabelText("평균 체류시간 (분)");
+    fireEvent.change(dwellInput, { target: { value: "360" } });
+
+    expect(handlePlanChange).toHaveBeenCalledWith(
+      expect.objectContaining({ averageDwellMinutes: 360 }),
+    );
+  });
+
+  it("emits parkingCapacityVehicles and restroomFixtureCount when filled in", () => {
+    const handlePlanChange = vi.fn();
+    render(
+      <PlanForm
+        plan={plan}
+        onPlanChange={handlePlanChange}
+        areaCodes={[]}
+        isAreaLoading={false}
+        isCandidateLoading={false}
+        candidateCount={0}
+        onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("주차 수용 차량 수"), { target: { value: "1500" } });
+    expect(handlePlanChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ parkingCapacityVehicles: 1500 }),
+    );
+
+    fireEvent.change(screen.getByLabelText("화장실 변기 수"), { target: { value: "80" } });
+    expect(handlePlanChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ restroomFixtureCount: 80 }),
+    );
+  });
+
+  it("emits undefined fields when the user clicks the restore button", () => {
+    const handlePlanChange = vi.fn();
+    const planWithOverrides: FestivalPlan = {
+      ...plan,
+      averageDwellMinutes: 360,
+      parkingCapacityVehicles: 1500,
+      restroomFixtureCount: 80,
+    };
+    render(
+      <PlanForm
+        plan={planWithOverrides}
+        onPlanChange={handlePlanChange}
+        areaCodes={[]}
+        isAreaLoading={false}
+        isCandidateLoading={false}
+        candidateCount={0}
+        onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "자동값 복원" }));
+
+    expect(handlePlanChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        averageDwellMinutes: undefined,
+        parkingCapacityVehicles: undefined,
+        restroomFixtureCount: undefined,
       }),
     );
   });

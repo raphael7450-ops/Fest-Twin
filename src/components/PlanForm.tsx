@@ -1,4 +1,4 @@
-import type { FestivalPlan } from "../domain/types";
+import type { DwellProfile, FestivalPlan } from "../domain/types";
 import type { TourApiAreaCode } from "../services/tourApiAdapter";
 import { VenueAreaReference } from "./VenueAreaReference";
 
@@ -12,6 +12,7 @@ interface PlanFormProps {
   selectedCandidateTitle?: string;
   onOpenCandidates: () => void;
   onOpenSearchModal?: () => void;
+  dwellProfile: DwellProfile;
 }
 
 export function PlanForm({
@@ -24,6 +25,7 @@ export function PlanForm({
   selectedCandidateTitle,
   onOpenCandidates,
   onOpenSearchModal,
+  dwellProfile,
 }: PlanFormProps) {
   const regionOptions = areaCodes.some((area) => area.name === plan.region)
     ? areaCodes
@@ -34,6 +36,11 @@ export function PlanForm({
     : candidateCount > 0
       ? `TourAPI 후보 ${candidateCount}건`
       : "조회된 후보 없음";
+
+  const hasOverrides =
+    plan.averageDwellMinutes !== undefined ||
+    plan.parkingCapacityVehicles !== undefined ||
+    plan.restroomFixtureCount !== undefined;
 
   return (
     <section className="panel">
@@ -167,6 +174,94 @@ export function PlanForm({
             onChange={(event) =>
               onPlanChange({ ...plan, expectedCapacity: Number(event.target.value) })
             }
+          />
+        </label>
+      </div>
+
+      <div className="panel-heading" style={{ marginTop: "16px" }}>
+        <h3>체류·시설 가정</h3>
+      </div>
+      <div className="form-grid">
+        <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <span>체류 프로필:</span>
+          <strong>{dwellProfile.label}</strong>
+          <span style={{ fontSize: "0.85em", color: "var(--text-secondary, #888)" }}>
+            ({dwellProfile.sourceName})
+          </span>
+          {hasOverrides && (
+            <button
+              type="button"
+              className="secondary-button"
+              aria-label="자동값 복원"
+              onClick={() =>
+                onPlanChange({
+                  ...plan,
+                  averageDwellMinutes: undefined,
+                  parkingCapacityVehicles: undefined,
+                  restroomFixtureCount: undefined,
+                })
+              }
+            >
+              자동값 복원
+            </button>
+          )}
+        </div>
+
+        <label htmlFor="plan-dwell-minutes">
+          평균 체류시간 (분)
+          <input
+            id="plan-dwell-minutes"
+            type="number"
+            min={30}
+            max={720}
+            step={30}
+            value={plan.averageDwellMinutes ?? ""}
+            placeholder={String(dwellProfile.averageMinutes)}
+            onChange={(event) => {
+              const raw = event.target.value;
+              onPlanChange({
+                ...plan,
+                averageDwellMinutes: raw === "" ? undefined : Number(raw),
+              });
+            }}
+          />
+        </label>
+
+        <label htmlFor="plan-parking-capacity">
+          주차 수용 차량 수
+          <input
+            id="plan-parking-capacity"
+            type="number"
+            min={1}
+            step={1}
+            value={plan.parkingCapacityVehicles ?? ""}
+            placeholder="미입력 시 기획 입력 필요"
+            onChange={(event) => {
+              const raw = event.target.value;
+              onPlanChange({
+                ...plan,
+                parkingCapacityVehicles: raw === "" ? undefined : Number(raw),
+              });
+            }}
+          />
+        </label>
+
+        <label htmlFor="plan-restroom-count">
+          화장실 변기 수
+          <input
+            id="plan-restroom-count"
+            type="number"
+            min={1}
+            step={1}
+            value={plan.restroomFixtureCount ?? ""}
+            placeholder="미입력 시 기획 입력 필요"
+            onChange={(event) => {
+              const raw = event.target.value;
+              onPlanChange({
+                ...plan,
+                restroomFixtureCount: raw === "" ? undefined : Number(raw),
+              });
+            }}
           />
         </label>
       </div>

@@ -168,6 +168,36 @@ describe("scenarioStorage", () => {
     expect(plan.venueAreaProvenance).toBeUndefined();
   });
 
+  it("normalizes positive dwell and facility inputs", () => {
+    const plan = normalizeFestivalPlan({
+      ...sampleFestivalPlan,
+      averageDwellMinutes: 360,
+      parkingCapacityVehicles: 1500,
+      restroomFixtureCount: 80,
+    });
+    expect(plan).toMatchObject({
+      averageDwellMinutes: 360,
+      parkingCapacityVehicles: 1500,
+      restroomFixtureCount: 80,
+    });
+  });
+
+  it("rejects out-of-range or invalid dwell minutes", () => {
+    const over = normalizeFestivalPlan({ ...sampleFestivalPlan, averageDwellMinutes: 900 });
+    const under = normalizeFestivalPlan({ ...sampleFestivalPlan, averageDwellMinutes: 10 });
+    const negative = normalizeFestivalPlan({ ...sampleFestivalPlan, averageDwellMinutes: -60 });
+    expect(over.averageDwellMinutes).toBeUndefined();
+    expect(under.averageDwellMinutes).toBeUndefined();
+    expect(negative.averageDwellMinutes).toBeUndefined();
+  });
+
+  it("rejects non-positive or invalid facility counts", () => {
+    const zeroPark = normalizeFestivalPlan({ ...sampleFestivalPlan, parkingCapacityVehicles: 0 });
+    const zeroRest = normalizeFestivalPlan({ ...sampleFestivalPlan, restroomFixtureCount: -1 });
+    expect(zeroPark.parkingCapacityVehicles).toBeUndefined();
+    expect(zeroRest.restroomFixtureCount).toBeUndefined();
+  });
+
   it("loads a legacy saved scenario with an area but no provenance", () => {
     localStorage.setItem(
       "fest-twin-scenarios",

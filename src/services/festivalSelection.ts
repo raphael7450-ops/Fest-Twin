@@ -96,8 +96,12 @@ export function applyFestivalCandidateToPlan(
       !options.preserveExpectedCapacity && recommendation?.expectedCapacity
         ? recommendation.expectedCapacity
         : currentPlan.expectedCapacity,
+    averageDwellMinutes: undefined,
+    parkingCapacityVehicles: undefined,
+    restroomFixtureCount: undefined,
     ...planningPatch,
   };
+
 }
 
 function createFestivalTypePlanningPatch(

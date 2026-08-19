@@ -324,4 +324,20 @@ describe("festivalSelection", () => {
     expect(nextPlan.totalBudgetMillionKrw).toBe(777);
     expect(nextPlan.expectedCapacity).toBe(8888);
   });
+
+  it("clears dwell and facility overrides when selecting a festival", () => {
+    const planWithOverrides = {
+      ...sampleFestivalPlan,
+      averageDwellMinutes: 360,
+      parkingCapacityVehicles: 1500,
+      restroomFixtureCount: 80,
+    };
+
+    const nextPlan = applyFestivalCandidateToPlan(planWithOverrides, candidate);
+
+    expect(nextPlan.averageDwellMinutes).toBeUndefined();
+    expect(nextPlan.parkingCapacityVehicles).toBeUndefined();
+    expect(nextPlan.restroomFixtureCount).toBeUndefined();
+  });
 });
+
