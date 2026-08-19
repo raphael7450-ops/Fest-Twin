@@ -277,6 +277,11 @@ export interface DayTypeProfile {
   peakHour: number;
   peakVisitors: number;
   visitorsByHour: Array<{ hour: number; visitors: number }>;
+  arrivalsByHour?: Array<{ hour: number; visitors: number }>;
+  occupancyByHour?: Array<{ hour: number; visitors: number }>;
+  departuresByHour?: Array<{ hour: number; visitors: number }>;
+  cumulativeArrivalsByHour?: Array<{ hour: number; visitors: number }>;
+  dwellProfile?: DwellProfile;
   dayRatio: number;
 }
 
@@ -295,7 +300,11 @@ export interface ForecastReason {
 export interface ForecastResult {
   expectedVisitors: number;
   visitorsByHour: Array<{ hour: number; visitors: number }>;
+  arrivalsByHour?: Array<{ hour: number; visitors: number }>;
   occupancyByHour?: Array<{ hour: number; visitors: number }>;
+  departuresByHour?: Array<{ hour: number; visitors: number }>;
+  cumulativeArrivalsByHour?: Array<{ hour: number; visitors: number }>;
+  dwellProfile?: DwellProfile;
   peakHour: number;
   successScore: number;
   confidence: RiskLevel;

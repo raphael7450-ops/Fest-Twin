@@ -7,6 +7,7 @@ import type {
   TourismContext,
   TrendContext,
 } from "../domain/types";
+import { buildVisitorFlow, selectDwellProfile } from "./visitorOccupancy";
 
 export function calculateDayTypeCounts(
   startDateStr?: string,
@@ -304,6 +305,57 @@ function createFestivalTimePattern(plan: FestivalPlan, demandBackdata?: DemandBa
   };
 }
 
+function allocateHourlyArrivals(
+  operatingHours: number[],
+  hourWeights: number[],
+  expectedVisitors: number,
+) {
+  const totalWeight = Math.max(hourWeights.reduce((sum, weight) => sum + weight, 0), 1);
+  const allocations = operatingHours.map((hour, index) => ({
+    hour,
+    weight: hourWeights[index] ?? 0,
+    visitors: Math.floor((expectedVisitors * (hourWeights[index] ?? 0)) / totalWeight),
+  }));
+  const allocatedVisitors = allocations.reduce((sum, allocation) => sum + allocation.visitors, 0);
+  const residualVisitors = Math.max(0, expectedVisitors - allocatedVisitors);
+  const priority = [...allocations].sort(
+    (left, right) => right.weight - left.weight || left.hour - right.hour,
+  );
+
+  for (let index = 0; index < residualVisitors; index += 1) {
+    const allocation = priority[index % priority.length];
+    if (allocation) allocation.visitors += 1;
+  }
+
+  return allocations.map(({ hour, visitors }) => ({ hour, visitors }));
+}
+
+function highestDrawProgramEndHour(plan: FestivalPlan) {
+  const anchorProgram = plan.programs.reduce<FestivalPlan["programs"][number] | undefined>(
+    (highestDrawProgram, program) => {
+      if (!highestDrawProgram) return program;
+      if (program.expectedDraw > highestDrawProgram.expectedDraw) return program;
+      if (
+        program.expectedDraw === highestDrawProgram.expectedDraw &&
+        program.endHour > highestDrawProgram.endHour
+      ) {
+        return program;
+      }
+      return highestDrawProgram;
+    },
+    undefined,
+  );
+
+  return anchorProgram?.endHour;
+}
+
+function visitorSeries(
+  flow: ReturnType<typeof buildVisitorFlow>,
+  measure: "arrivals" | "occupancy" | "departures" | "cumulativeArrivals",
+) {
+  return flow.map((point) => ({ hour: point.hour, visitors: point[measure] }));
+}
+
 import type { WeatherContext } from "./weatherAdapter";
 
 export function createForecast(
@@ -364,12 +416,15 @@ export function createForecast(
 
     return Math.max(0.7, 0.8 + programDraw / 180) * typePatternBoost * flowMultiplier;
   });
-  const totalWeight = Math.max(hourWeights.reduce((sum, weight) => sum + weight, 0), 1);
-  const visitorsByHour = operatingHours.map((hour, index) => ({
-    hour,
-    visitors: Math.round((expectedVisitors * hourWeights[index]) / totalWeight),
-  }));
-  const peak = visitorsByHour.reduce((max, item) =>
+  const dwellProfile = selectDwellProfile(plan, demandBackdata);
+  const anchorEndHour = highestDrawProgramEndHour(plan);
+  const arrivalsByHour = allocateHourlyArrivals(operatingHours, hourWeights, expectedVisitors);
+  const flow = buildVisitorFlow(arrivalsByHour, dwellProfile, anchorEndHour);
+  const occupancyByHour = visitorSeries(flow, "occupancy");
+  const departuresByHour = visitorSeries(flow, "departures");
+  const cumulativeArrivalsByHour = visitorSeries(flow, "cumulativeArrivals");
+  const visitorsByHour = occupancyByHour;
+  const peak = occupancyByHour.reduce((max, item) =>
     item.visitors > max.visitors ? item : max,
   );
   const successScore = Math.round(
@@ -404,20 +459,30 @@ export function createForecast(
   }
 
   const weekdayExpectedVisitors = Math.round(expectedVisitors * weekdayRatio);
-  const weekdayVisitorsByHour = visitorsByHour.map((item) => ({
-    hour: item.hour,
-    visitors: Math.round(item.visitors * weekdayRatio),
-  }));
-  const weekdayPeak = weekdayVisitorsByHour.reduce((max, item) =>
+  const weekdayArrivalsByHour = allocateHourlyArrivals(
+    operatingHours,
+    hourWeights,
+    weekdayExpectedVisitors,
+  );
+  const weekdayFlow = buildVisitorFlow(weekdayArrivalsByHour, dwellProfile, anchorEndHour);
+  const weekdayOccupancyByHour = visitorSeries(weekdayFlow, "occupancy");
+  const weekdayDeparturesByHour = visitorSeries(weekdayFlow, "departures");
+  const weekdayCumulativeArrivalsByHour = visitorSeries(weekdayFlow, "cumulativeArrivals");
+  const weekdayPeak = weekdayOccupancyByHour.reduce((max, item) =>
     item.visitors > max.visitors ? item : max,
   );
 
   const weekendExpectedVisitors = Math.round(expectedVisitors * weekendRatio);
-  const weekendVisitorsByHour = visitorsByHour.map((item) => ({
-    hour: item.hour,
-    visitors: Math.round(item.visitors * weekendRatio),
-  }));
-  const weekendPeak = weekendVisitorsByHour.reduce((max, item) =>
+  const weekendArrivalsByHour = allocateHourlyArrivals(
+    operatingHours,
+    hourWeights,
+    weekendExpectedVisitors,
+  );
+  const weekendFlow = buildVisitorFlow(weekendArrivalsByHour, dwellProfile, anchorEndHour);
+  const weekendOccupancyByHour = visitorSeries(weekendFlow, "occupancy");
+  const weekendDeparturesByHour = visitorSeries(weekendFlow, "departures");
+  const weekendCumulativeArrivalsByHour = visitorSeries(weekendFlow, "cumulativeArrivals");
+  const weekendPeak = weekendOccupancyByHour.reduce((max, item) =>
     item.visitors > max.visitors ? item : max,
   );
 
@@ -429,6 +494,11 @@ export function createForecast(
       peakHour: peak.hour,
       peakVisitors: peak.visitors,
       visitorsByHour,
+      arrivalsByHour,
+      occupancyByHour,
+      departuresByHour,
+      cumulativeArrivalsByHour,
+      dwellProfile,
       dayRatio: 1.0,
     },
     weekday: {
@@ -437,7 +507,12 @@ export function createForecast(
       expectedDailyVisitors: weekdayExpectedVisitors,
       peakHour: weekdayPeak.hour,
       peakVisitors: weekdayPeak.visitors,
-      visitorsByHour: weekdayVisitorsByHour,
+      visitorsByHour: weekdayOccupancyByHour,
+      arrivalsByHour: weekdayArrivalsByHour,
+      occupancyByHour: weekdayOccupancyByHour,
+      departuresByHour: weekdayDeparturesByHour,
+      cumulativeArrivalsByHour: weekdayCumulativeArrivalsByHour,
+      dwellProfile,
       dayRatio: Number(weekdayRatio.toFixed(2)),
     },
     weekend: {
@@ -446,7 +521,12 @@ export function createForecast(
       expectedDailyVisitors: weekendExpectedVisitors,
       peakHour: weekendPeak.hour,
       peakVisitors: weekendPeak.visitors,
-      visitorsByHour: weekendVisitorsByHour,
+      visitorsByHour: weekendOccupancyByHour,
+      arrivalsByHour: weekendArrivalsByHour,
+      occupancyByHour: weekendOccupancyByHour,
+      departuresByHour: weekendDeparturesByHour,
+      cumulativeArrivalsByHour: weekendCumulativeArrivalsByHour,
+      dwellProfile,
       dayRatio: Number(weekendRatio.toFixed(2)),
     },
   };
@@ -454,6 +534,11 @@ export function createForecast(
   return {
     expectedVisitors,
     visitorsByHour,
+    arrivalsByHour,
+    occupancyByHour,
+    departuresByHour,
+    cumulativeArrivalsByHour,
+    dwellProfile,
     peakHour: peak.hour,
     successScore,
     confidence: confidenceFromEvidence(tourism, trends),

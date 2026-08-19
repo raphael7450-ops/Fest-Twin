@@ -110,7 +110,7 @@ describe("createForecast", () => {
       sampleTrendContext,
       foodBackdata,
     );
-    const visitorsAt = new Map(forecast.visitorsByHour.map((item) => [item.hour, item.visitors]));
+    const visitorsAt = new Map(forecast.arrivalsByHour!.map((item) => [item.hour, item.visitors]));
 
     expect(visitorsAt.get(12)).toBeGreaterThan(visitorsAt.get(16)!);
     expect(visitorsAt.get(18)).toBeGreaterThan(visitorsAt.get(16)!);
@@ -292,6 +292,40 @@ describe("createForecast", () => {
     expect(weekend.expectedDailyVisitors).toBeGreaterThan(weekday.expectedDailyVisitors);
     expect(forecast.dayTypeCounts?.weekdayDays).toBeGreaterThan(0);
     expect(forecast.dayTypeCounts?.weekendDays).toBeGreaterThan(0);
+  });
+
+  it("separates daily arrivals from concurrent occupancy", () => {
+    const forecast = createForecast(
+      sampleFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+
+    expect(forecast.arrivalsByHour!.reduce((total, point) => total + point.visitors, 0)).toBe(
+      forecast.expectedVisitors,
+    );
+    expect(forecast.occupancyByHour).toEqual(forecast.visitorsByHour);
+    const peakPoint = forecast.occupancyByHour!.reduce((peak, point) =>
+      point.visitors > peak.visitors ? point : peak,
+    );
+    expect(forecast.peakHour).toBe(peakPoint.hour);
+    expect(Math.max(...forecast.occupancyByHour!.map((point) => point.visitors))).toBeGreaterThan(
+      Math.max(...forecast.arrivalsByHour!.map((point) => point.visitors)),
+    );
+  });
+
+  it("applies the same dwell model to weekday and weekend profiles", () => {
+    const { weekday, weekend } = createForecast(
+      sampleFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+    ).dayTypeProfiles!;
+
+    expect(weekday.arrivalsByHour!.reduce((total, point) => total + point.visitors, 0)).toBe(
+      weekday.expectedDailyVisitors,
+    );
+    expect(weekend.peakVisitors).toBeGreaterThan(weekday.peakVisitors);
+    expect(weekend.dwellProfile!.kind).toBe(weekday.dwellProfile!.kind);
   });
 
   it("keeps long pre-peak hourly demand bands from repeating the same visitor count", () => {
