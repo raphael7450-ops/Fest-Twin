@@ -30,6 +30,7 @@ import {
 } from "./impactMetrics";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 import { describeVenueArea } from "./venueAreaEvidence";
+import { occupancySeries } from "./visitorOccupancy";
 
 function weatherSourceDetails(weather?: WeatherContext): MetricEvidence["sourceDetails"] {
   return [
@@ -618,13 +619,17 @@ export function createMetricEvidenceSet(
   const transitDetails = tagoTransitSourceDetails();
   const commercialDetails = commercialDensitySourceDetails();
   const emergencyDetails = emergencyFacilitySourceDetails();
+  const peakOccupancy = Math.max(
+    ...occupancySeries(forecast).map((item) => item.visitors),
+    0,
+  );
   const safetyLogisticsBasisDetails = selectedSafetyLogisticsBasisDetails(
     plan,
     forecast,
     simulation,
     safety,
     logistics,
-    Math.max(...forecast.visitorsByHour.map((item) => item.visitors), 0),
+    peakOccupancy,
     traffic,
     selectedFestivalBasis,
   );
@@ -636,10 +641,7 @@ export function createMetricEvidenceSet(
   const nearbyTourismDetails = tourismDetails.filter(
     (detail) => detail.sourceId.includes("nearby") || detail.sourceId === "sample-nearby-spots",
   );
-  const peakVisitors = Math.max(
-    ...forecast.visitorsByHour.map((item) => item.visitors),
-    0,
-  );
+  const peakVisitors = peakOccupancy;
   const criticalCells = simulation.cells.filter((cell) => cell.level === "critical").length;
   const highRiskCells = simulation.cells.filter(
     (cell) => cell.level === "high" || cell.level === "critical",

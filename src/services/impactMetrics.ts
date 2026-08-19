@@ -16,6 +16,7 @@ import type {
   TrafficContext,
 } from "../domain/types";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
+import { occupancySeries } from "./visitorOccupancy";
 
 // Metric contracts kept separate so opportunity and load are not conflated.
 
@@ -225,7 +226,7 @@ export function createLogisticsMetrics(
   traffic?: TrafficContext,
 ): LogisticsMetrics {
   const peakVisitors = Math.max(
-    ...forecast.visitorsByHour.map((item) =>
+    ...occupancySeries(forecast).map((item) =>
       Number.isFinite(item.visitors) ? item.visitors : 0,
     ),
     0,

@@ -20,6 +20,8 @@ export function InfrastructureCapacityPanel({
   const currentProfile = profiles?.[selectedDayType];
 
   const capacity = calculateInfrastructureCapacityForecast(plan, forecast, currentProfile);
+  const parkingRate = capacity.parkingPeakOccupancyRate;
+  const restroomDeficit = capacity.restroomDeficitCount;
 
   const dayTypeCounts = forecast.dayTypeCounts ?? {
     totalDays: 3,
@@ -77,8 +79,8 @@ export function InfrastructureCapacityPanel({
           <div className="capacity-card-header">
             <span>주차 수용 및 만차 시점</span>
             <div className="card-header-actions">
-              <em className={`kpi-badge ${capacity.parkingPeakOccupancyRate >= 80 ? "kpi-badge-high" : "kpi-badge-medium"}`}>
-                점유율 {capacity.parkingPeakOccupancyRate}%
+              <em className={`kpi-badge ${parkingRate !== undefined && parkingRate >= 80 ? "kpi-badge-high" : "kpi-badge-medium"}`}>
+                {parkingRate === undefined ? "입력 필요" : `점유율 ${parkingRate}%`}
               </em>
               {onOpenEvidence && (
                 <EvidenceButton onClick={() => onOpenEvidence("parking-occupancy")} />
@@ -87,7 +89,7 @@ export function InfrastructureCapacityPanel({
           </div>
           <strong>{capacity.parkingFillTime}</strong>
           <small className="metric-trend">
-            유입 추정 {capacity.estimatedVehicles.toLocaleString("ko-KR")}대 / 확보 수용 {capacity.providedParkingCapacity.toLocaleString("ko-KR")}대
+            유입 추정 {capacity.estimatedVehicles.toLocaleString("ko-KR")}대 / 확보 수용 {capacity.providedParkingCapacity?.toLocaleString("ko-KR") ?? "입력 필요"}대
           </small>
         </article>
 
@@ -95,17 +97,17 @@ export function InfrastructureCapacityPanel({
           <div className="capacity-card-header">
             <span>임시 화장실 수용 한계</span>
             <div className="card-header-actions">
-              <em className={`kpi-badge ${capacity.restroomDeficitCount > 0 ? "kpi-badge-high" : "kpi-badge-low"}`}>
-                {capacity.restroomDeficitCount > 0 ? `부족 ${capacity.restroomDeficitCount}칸` : "적정"}
+              <em className={`kpi-badge ${restroomDeficit !== undefined && restroomDeficit > 0 ? "kpi-badge-high" : "kpi-badge-low"}`}>
+                {restroomDeficit === undefined ? "입력 필요" : restroomDeficit > 0 ? `부족 ${restroomDeficit}칸` : "적정"}
               </em>
               {onOpenEvidence && (
                 <EvidenceButton onClick={() => onOpenEvidence("restroom-capacity")} />
               )}
             </div>
           </div>
-          <strong>대기 약 {capacity.estimatedRestroomWaitMinutes}분 예상</strong>
+          <strong>{capacity.estimatedRestroomWaitMinutes === undefined ? "대기 시간 입력 필요" : `대기 약 ${capacity.estimatedRestroomWaitMinutes}분 예상`}</strong>
           <small className="metric-trend">
-            필요 {capacity.requiredRestroomCount}칸 / 확보 {capacity.providedRestroomCount}칸 (피크 250명당 1칸 가이드)
+            필요 {capacity.requiredRestroomCount}칸 / 확보 {capacity.providedRestroomCount?.toLocaleString("ko-KR") ?? "입력 필요"}칸 (피크 250명당 1칸 가이드)
           </small>
         </article>
 

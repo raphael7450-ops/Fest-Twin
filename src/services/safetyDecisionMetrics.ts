@@ -9,12 +9,24 @@ import type {
   StaffingRange,
   TrafficContext,
 } from "../domain/types";
+import { occupancySeries } from "./visitorOccupancy";
 
 const STAFFING_BASIS =
   "피크 방문객, 병목 후보, 상대 혼잡 점수를 사용한 사전 배치 범위";
 
 function clampScore(value: number) {
   return Math.min(Math.max(Number.isFinite(value) ? value : 0, 0), 100);
+}
+
+function peakOccupancy(
+  forecast: Pick<ForecastResult, "visitorsByHour" | "occupancyByHour">,
+) {
+  return Math.max(
+    ...occupancySeries(forecast).map((item) =>
+      Number.isFinite(item.visitors) ? item.visitors : 0,
+    ),
+    0,
+  );
 }
 
 function staffingRange(
@@ -194,18 +206,16 @@ export function createSafetyDecisionProfiles(
   simulation: SimulationResult,
   _traffic?: TrafficContext,
 ): SafetyDecisionProfiles {
-  const fallbackPeakVisitors = Math.max(
-    ...forecast.visitorsByHour.map((item) =>
-      Number.isFinite(item.visitors) ? item.visitors : 0,
-    ),
-    0,
-  );
-  const summaryPeakVisitors =
-    forecast.dayTypeProfiles?.summary.peakVisitors ?? fallbackPeakVisitors;
-  const weekdayPeakVisitors =
-    forecast.dayTypeProfiles?.weekday.peakVisitors ?? summaryPeakVisitors;
-  const weekendPeakVisitors =
-    forecast.dayTypeProfiles?.weekend.peakVisitors ?? summaryPeakVisitors;
+  const fallbackPeakVisitors = peakOccupancy(forecast);
+  const summaryPeakVisitors = forecast.dayTypeProfiles?.summary
+    ? peakOccupancy(forecast.dayTypeProfiles.summary)
+    : fallbackPeakVisitors;
+  const weekdayPeakVisitors = forecast.dayTypeProfiles?.weekday
+    ? peakOccupancy(forecast.dayTypeProfiles.weekday)
+    : summaryPeakVisitors;
+  const weekendPeakVisitors = forecast.dayTypeProfiles?.weekend
+    ? peakOccupancy(forecast.dayTypeProfiles.weekend)
+    : summaryPeakVisitors;
 
   return {
     summary: createMetrics(plan, simulation, summaryPeakVisitors),

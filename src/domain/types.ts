@@ -463,14 +463,20 @@ export interface MetricEvidence {
 }
 
 export interface InfrastructureCapacityForecast {
+  parkingStatus: "available" | "input-required";
   parkingFillTime: string;
-  parkingPeakOccupancyRate: number;
+  parkingPeakOccupancyRate?: number;
   estimatedVehicles: number;
-  providedParkingCapacity: number;
+  providedParkingCapacity?: number;
+  recommendedParkingCapacity: number;
+  restroomStatus: "available" | "input-required";
   requiredRestroomCount: number;
-  providedRestroomCount: number;
-  restroomDeficitCount: number;
-  estimatedRestroomWaitMinutes: number;
+  providedRestroomCount?: number;
+  recommendedRestroomCount: number;
+  restroomDeficitCount?: number;
+  estimatedRestroomWaitMinutes?: number;
+  peakDepartureHour: number;
+  peakDepartures: number;
   totalWasteTons: number;
   generalWasteTons: number;
   recyclableWasteTons: number;

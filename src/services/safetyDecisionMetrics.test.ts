@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import type { ForecastResult, SimulationResult } from "../domain/types";
 import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
+import { createSimulation } from "./simulation";
 
 const forecast: ForecastResult = {
   expectedVisitors: 36000,
@@ -209,5 +210,53 @@ describe("createSafetyDecisionProfiles", () => {
     expect(profiles.weekend.staffing.recommended).toBeGreaterThan(
       profiles.summary.staffing.recommended,
     );
+  });
+
+  it("uses concurrent occupancy for peak density and staffing", () => {
+    const arrivalsByHour = [
+      { hour: 18, visitors: 4000 },
+      { hour: 20, visitors: 2000 },
+    ];
+    const arrivalOnlyForecast: ForecastResult = {
+      expectedVisitors: 6000,
+      visitorsByHour: arrivalsByHour,
+      peakHour: 18,
+      successScore: 84,
+      confidence: "medium",
+      reasons: [],
+    };
+    const dwellForecast: ForecastResult = {
+      ...arrivalOnlyForecast,
+      occupancyByHour: [
+        { hour: 18, visitors: 4000 },
+        { hour: 20, visitors: 6000 },
+      ],
+      peakHour: 20,
+    };
+    const plan = { ...sampleFestivalPlan, venueAreaSquareMeters: 4000 };
+    const arrivalOnlyMetrics = createSafetyDecisionProfiles(
+      plan,
+      arrivalOnlyForecast,
+      createSimulation(plan, arrivalOnlyForecast, 18),
+    ).summary;
+    const dwellMetrics = createSafetyDecisionProfiles(
+      plan,
+      dwellForecast,
+      createSimulation(plan, dwellForecast, 20),
+    ).summary;
+
+    expect(dwellMetrics.staffing.recommended).toBeGreaterThan(
+      arrivalOnlyMetrics.staffing.recommended,
+    );
+    expect(dwellMetrics.peakDensity.status).toBe("available");
+    expect(arrivalOnlyMetrics.peakDensity.status).toBe("available");
+    if (
+      dwellMetrics.peakDensity.status === "available" &&
+      arrivalOnlyMetrics.peakDensity.status === "available"
+    ) {
+      expect(dwellMetrics.peakDensity.value).toBeGreaterThan(
+        arrivalOnlyMetrics.peakDensity.value,
+      );
+    }
   });
 });

@@ -16,6 +16,7 @@ import type {
 } from "../domain/types";
 // 수치 범주 제한 클램프 헬퍼 함수 불러오기
 import { clamp } from "./forecast";
+import { occupancySeries } from "./visitorOccupancy";
 
 const MAX_RELATIVE_DENSITY_SCORE = 100;
 
@@ -40,8 +41,9 @@ export function createSimulation(
   forecast: ForecastResult,
   hour: number,
 ): SimulationResult {
-  const selectedHour = forecast.visitorsByHour.find((item) => item.hour === hour);
-  const visitors = Math.max(selectedHour?.visitors ?? forecast.visitorsByHour[0]?.visitors ?? 0, 0);
+  const occupancyByHour = occupancySeries(forecast);
+  const selectedHour = occupancyByHour.find((item) => item.hour === hour);
+  const visitors = Math.max(selectedHour?.visitors ?? occupancyByHour[0]?.visitors ?? 0, 0);
   const expectedCapacity = Math.max(
     Number.isFinite(plan.expectedCapacity) ? plan.expectedCapacity : 0,
     1,
