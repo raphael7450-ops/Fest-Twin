@@ -739,8 +739,17 @@ h3 {
 .kpi-title-row {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   justify-content: space-between;
+  min-width: 0;
+}
+
+.kpi-title-row > span {
+  flex: 1 1 8rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .kpi-badge,
@@ -751,6 +760,39 @@ h3 {
   font-style: normal;
   font-weight: 900;
   padding: 5px 9px;
+}
+
+.badge {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 850;
+  justify-content: center;
+  line-height: 1.25;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.badge-info,
+.badge-primary {
+  background: #e8f0ff;
+  border-color: #bfd0ff;
+  color: #1e3a8a;
+}
+
+.badge-warning {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.badge-success {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #047857;
 }
 
 .kpi-badge-high,
@@ -1674,7 +1716,7 @@ a:focus-visible {
 
 .capacity-header .evidence-button {
   min-width: 0;
-  white-space: normal;
+  white-space: nowrap;
   word-break: keep-all;
 }
 
@@ -1988,13 +2030,18 @@ a:focus-visible {
 }
 
 @media (max-width: 1120px) {
-  .workspace-grid {
-    grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  .workspace-grid,
+  .workspace-grid--dashboard,
+  .workspace-grid--2col,
+  .workspace-grid--3col {
+    grid-template-columns: minmax(0, 1fr);
   }
 
+  .left-column,
+  .main-column,
   .right-column {
     position: static;
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 }
 
@@ -2228,6 +2275,13 @@ a:focus-visible {
   display: inline-flex;
   align-items: flex-start;
   gap: 0.45rem;
+  min-width: 0;
+}
+
+.kpi-actions {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .metric-inline-heading {
@@ -2236,6 +2290,7 @@ a:focus-visible {
 }
 
 .metric-inline-heading span {
+  min-width: 0;
   word-break: keep-all;
   overflow-wrap: break-word;
   line-height: 1.35;
@@ -2483,10 +2538,19 @@ a:focus-visible {
 
 .report-evidence-card-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.4rem;
   gap: 0.5rem;
+  min-width: 0;
+}
+
+.report-evidence-card-header > span {
+  flex: 1 1 6rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .report-evidence-grid span {
@@ -2697,16 +2761,24 @@ a:focus-visible {
 }
 
 .capacity-card-header {
+  align-content: flex-start;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
+  min-width: 0;
 }
 
 .capacity-card-header span {
+  flex: 1 1 8rem;
   font-size: 0.85rem;
   font-weight: 700;
   color: #475569;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .capacity-card strong {
@@ -2790,7 +2862,23 @@ a:focus-visible {
 .table-heading-with-action {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
+}
+
+.panel-actions-inline,
+.card-header-actions {
+  flex: 0 1 auto;
+  justify-content: flex-end;
+}
+
+.safety-card-header > span,
+.table-heading-with-action > h3 {
+  flex: 1 1 8rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .safety-card-header,
@@ -3355,7 +3443,7 @@ a:focus-visible {
   }
 
   .summary-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* --- Safety grid --- */
@@ -3544,6 +3632,10 @@ a:focus-visible {
   .report-kpi-strip,
   .summary-kpi-grid {
     grid-template-columns: 1fr;
+  }
+
+  .capacity-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* --- Selected festival basis: single column --- */
