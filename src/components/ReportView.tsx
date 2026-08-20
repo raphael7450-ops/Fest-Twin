@@ -119,11 +119,17 @@ export function ReportView({
             <span>체류 프로필</span>
             <strong>{dwellProfile.label}</strong>
             <small>평균 체류 {dwellProfile.averageMinutes}분</small>
+            <small>출처: {dwellProfile.sourceName}</small>
           </article>
           <article>
             <span>동시 체류 피크</span>
             <strong>{flowSummary.peakOccupancy.toLocaleString("ko-KR")}명</strong>
             <small>{flowSummary.peakOccupancyHour}:00 피크</small>
+          </article>
+          <article>
+            <span>피크 이탈</span>
+            <strong>{flowSummary.peakDepartures.toLocaleString("ko-KR")}명</strong>
+            <small>{flowSummary.peakDepartureHour}:00 피크</small>
           </article>
           <article>
             <span>피크 시간</span>

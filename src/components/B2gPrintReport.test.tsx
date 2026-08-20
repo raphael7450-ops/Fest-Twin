@@ -10,6 +10,35 @@ import { B2gPrintReport } from "./B2gPrintReport";
 afterEach(cleanup);
 
 describe("B2gPrintReport", () => {
+  it("prints dwell-aware flow evidence from the forecast", () => {
+    const baseSnapshot = createTestAnalysisSnapshot();
+    const snapshot = {
+      ...baseSnapshot,
+      forecast: {
+        ...baseSnapshot.forecast,
+        dwellProfile: {
+          kind: "night-exhibition" as const,
+          label: "검증용 체류 프로필",
+          averageMinutes: 195,
+          sourceType: "similar-festival" as const,
+          sourceName: "검증 체류 데이터",
+          confidence: "medium" as const,
+          retentionRates: [1, 0.8, 0.4, 0],
+        },
+        occupancyByHour: [{ hour: 20, visitors: 2500 }],
+        departuresByHour: [{ hour: 22, visitors: 1800 }],
+      },
+    };
+
+    render(<B2gPrintReport snapshot={snapshot} />);
+
+    expect(screen.getByText("체류 프로필: 검증용 체류 프로필")).toBeInTheDocument();
+    expect(screen.getByText("출처: 검증 체류 데이터")).toBeInTheDocument();
+    expect(screen.getByText("평균 체류: 195분")).toBeInTheDocument();
+    expect(screen.getByText("동시 체류 피크: 2,500명 (20:00)")).toBeInTheDocument();
+    expect(screen.getByText("피크 이탈: 1,800명 (22:00)")).toBeInTheDocument();
+  });
+
   it("prints venue area provenance and the operating-boundary warning", () => {
     const snapshot = createTestAnalysisSnapshot();
     render(

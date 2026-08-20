@@ -20,6 +20,38 @@ afterEach(() => {
 });
 
 describe("ReportView", () => {
+  it("renders dwell-aware flow evidence from the forecast", () => {
+    const baseSnapshot = createTestAnalysisSnapshot();
+    const snapshot = {
+      ...baseSnapshot,
+      forecast: {
+        ...baseSnapshot.forecast,
+        dwellProfile: {
+          kind: "night-exhibition" as const,
+          label: "검증용 체류 프로필",
+          averageMinutes: 195,
+          sourceType: "similar-festival" as const,
+          sourceName: "검증 체류 데이터",
+          confidence: "medium" as const,
+          retentionRates: [1, 0.8, 0.4, 0],
+        },
+        occupancyByHour: [{ hour: 20, visitors: 2500 }],
+        departuresByHour: [{ hour: 22, visitors: 1800 }],
+      },
+    };
+
+    render(<ReportView snapshot={snapshot} onOpenEvidence={vi.fn()} />);
+
+    expect(screen.getByText("검증용 체류 프로필")).toBeInTheDocument();
+    expect(screen.getByText("출처: 검증 체류 데이터")).toBeInTheDocument();
+    expect(screen.getByText("평균 체류 195분")).toBeInTheDocument();
+    expect(screen.getByText("2,500명")).toBeInTheDocument();
+    expect(screen.getByText("20:00 피크")).toBeInTheDocument();
+    expect(screen.getByText("피크 이탈")).toBeInTheDocument();
+    expect(screen.getByText("1,800명")).toBeInTheDocument();
+    expect(screen.getByText("22:00 피크")).toBeInTheDocument();
+  });
+
   it("prints the planning report for public review", () => {
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => undefined);
     renderReportView();

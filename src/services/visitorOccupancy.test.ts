@@ -4,7 +4,9 @@ import {
   buildVisitorFlow,
   occupancySeries,
   selectDwellProfile,
+  summarizeVisitorFlow,
 } from "./visitorOccupancy";
+import type { ForecastResult } from "../domain/types";
 
 describe("visitor occupancy dwell profiles", () => {
   it("classifies fireworks plans as long-dwell performance profiles", () => {
@@ -151,5 +153,29 @@ describe("visitor occupancy dwell profiles", () => {
 
     expect(occupancySeries({ visitorsByHour: visitors, occupancyByHour: occupancy })).toBe(occupancy);
     expect(occupancySeries({ visitorsByHour: visitors })).toBe(visitors);
+  });
+
+  it("summarizes visitor flow peaks across arrivals, occupancy, and departures", () => {
+    const forecast: ForecastResult = {
+      expectedVisitors: 1000,
+      peakHour: 20,
+      confidence: "medium",
+      successScore: 0,
+      reasons: [],
+      visitorsByHour: [{ hour: 18, visitors: 100 }, { hour: 20, visitors: 300 }],
+      arrivalsByHour: [{ hour: 18, visitors: 200 }, { hour: 20, visitors: 100 }],
+      occupancyByHour: [{ hour: 18, visitors: 200 }, { hour: 20, visitors: 500 }],
+      departuresByHour: [{ hour: 18, visitors: 50 }, { hour: 22, visitors: 400 }],
+    };
+
+    const summary = summarizeVisitorFlow(forecast);
+    expect(summary).toEqual({
+      peakArrivals: 200,
+      peakArrivalHour: 18,
+      peakOccupancy: 500,
+      peakOccupancyHour: 20,
+      peakDepartures: 400,
+      peakDepartureHour: 22,
+    });
   });
 });

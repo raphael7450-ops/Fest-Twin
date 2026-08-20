@@ -68,18 +68,23 @@ describe("Festival State & Reactive Data Switch Tests (tests/festivalSwitch.test
 
   it("maintains 1:1 consistency between forecast/simulation and metric evidence drawer metrics", () => {
     const weather = getFallbackWeatherContext();
+    const unavailableDensityPlan = {
+      ...sejongPreset.plan,
+      venueAreaSquareMeters: undefined,
+      venueAreaProvenance: undefined,
+    };
 
     const forecastB = createForecast(
-      sejongPreset.plan,
+      unavailableDensityPlan,
       sampleTourismContext,
       sampleTrendContext,
       undefined,
       weather,
     );
-    const simulationB = createSimulation(sejongPreset.plan, forecastB, forecastB.peakHour);
+    const simulationB = createSimulation(unavailableDensityPlan, forecastB, forecastB.peakHour);
 
     const evidenceSetB = createMetricEvidenceSet(
-      sejongPreset.plan,
+      unavailableDensityPlan,
       forecastB,
       simulationB,
       sampleTourismContext,

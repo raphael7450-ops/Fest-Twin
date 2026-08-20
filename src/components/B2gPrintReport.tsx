@@ -1,5 +1,6 @@
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
 import { describeVenueArea } from "../services/venueAreaEvidence";
+import { selectDwellProfile, summarizeVisitorFlow } from "../services/visitorOccupancy";
 import { formatDurationSecondsKorean } from "../utils/duration";
 
 interface B2gPrintReportProps {
@@ -46,6 +47,8 @@ export function B2gPrintReport({
   const venueAreaText = hasVenueArea
     ? `${plan.venueAreaSquareMeters!.toLocaleString("ko-KR")}m²`
     : "산출 불가";
+  const dwellProfile = forecast.dwellProfile ?? selectDwellProfile(plan);
+  const flowSummary = summarizeVisitorFlow(forecast);
 
   return (
     <div
@@ -158,6 +161,11 @@ export function B2gPrintReport({
                 <li>예상 방문객: {expectedVisitors.toLocaleString("ko-KR")}명</li>
                 <li>흥행 가능성 점수: {successPotential.score}점</li>
                 <li>예측 신뢰도: {forecast.confidence}</li>
+                <li>체류 프로필: {dwellProfile.label}</li>
+                <li>출처: {dwellProfile.sourceName}</li>
+                <li>평균 체류: {dwellProfile.averageMinutes}분</li>
+                <li>동시 체류 피크: {flowSummary.peakOccupancy.toLocaleString("ko-KR")}명 ({flowSummary.peakOccupancyHour}:00)</li>
+                <li>피크 이탈: {flowSummary.peakDepartures.toLocaleString("ko-KR")}명 ({flowSummary.peakDepartureHour}:00)</li>
               </ul>
             </div>
             <div className="b2g-breakdown-step">

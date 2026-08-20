@@ -45,6 +45,8 @@ describe("Data Reliability & Evidence Auditor sanity checks", () => {
       gridWidth: 0,
       gridHeight: 0,
       expectedCapacity: 0,
+      venueAreaSquareMeters: undefined,
+      venueAreaProvenance: undefined,
     };
     const forecast: ForecastResult = {
       expectedVisitors: 1_000_000,
