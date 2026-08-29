@@ -18,6 +18,7 @@ import { createTransitProxyRouter } from "./transitProxy.js";
 import { createCommercialProxyRouter } from "./commercialProxy.js";
 import { createEmergencyProxyRouter } from "./emergencyProxy.js";
 import { createCityParkProxyRouter } from "./cityParkProxy.js";
+import { createVWorldProxyRouter } from "./vworldProxy.js";
 import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
 import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
@@ -188,6 +189,7 @@ export function createApp(options = {}) {
   app.use("/api/commercial", openApiRateLimiter);
   app.use("/api/emergency", openApiRateLimiter);
   app.use("/api/city-parks", openApiRateLimiter);
+  app.use("/api/vworld", openApiRateLimiter);
 
   app.use(
     "/api/tour",
@@ -259,6 +261,14 @@ export function createApp(options = {}) {
     createCityParkProxyRouter({
       fetchImpl: options.fetchImpl,
       apiKey: options.cityParkApiKey,
+      logger: log,
+    }),
+  );
+  app.use(
+    "/api/vworld",
+    createVWorldProxyRouter({
+      fetchImpl: options.fetchImpl,
+      apiKey: options.vworldApiKey,
       logger: log,
     }),
   );

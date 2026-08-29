@@ -3,6 +3,7 @@ import { FESTIVAL_PRESETS, type FestivalPreset } from "../data/festivalPresets";
 import type { FestivalPlan } from "../domain/types";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { resolveFestivalCoordinatesByKeyword } from "../services/tourApiAdapter";
+import { resolveVenueCoordinatesByVWorld } from "../services/vworldAdapter";
 
 interface FestivalSearchModalProps {
   isOpen: boolean;
@@ -214,10 +215,20 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
     setResolvingPresetId(preset.id);
 
     try {
-      const match = await resolveFestivalCoordinatesByKeyword(
+      const tourApiMatch = await resolveFestivalCoordinatesByKeyword(
         { title: preset.name, region: preset.region },
         { signal: controller.signal },
-      );
+      ).catch(() => null);
+      const match =
+        tourApiMatch ??
+        (await resolveVenueCoordinatesByVWorld(
+          {
+            title: preset.name,
+            address: preset.plan.venueAddress,
+            region: preset.region,
+          },
+          { signal: controller.signal },
+        ).catch(() => null));
       if (controller.signal.aborted) return;
 
       const enrichedPreset = match
@@ -228,14 +239,14 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
               venueCoordinates: {
                 longitude: Number(match.mapX),
                 latitude: Number(match.mapY),
-                source: "tourapi" as const,
+                source: tourApiMatch ? ("tourapi" as const) : ("vworld" as const),
               },
             },
             basis: {
               ...preset.basis,
               mapX: match.mapX,
               mapY: match.mapY,
-              sourceName: `${preset.basis.sourceName} + TourAPI 좌표`,
+              sourceName: `${preset.basis.sourceName} + ${tourApiMatch ? "TourAPI" : "VWorld"} 좌표`,
             },
           }
         : preset;

@@ -15,6 +15,7 @@ const {
   getSpendingContextMock,
   getTrendContextMock,
   getDemandBackdataContextFromApiMock,
+  resolveVenueCoordinatesByVWorldMock,
 } = vi.hoisted(() => ({
   getTourismContextMock: vi.fn(),
   getTourApiAreaCodesMock: vi.fn(),
@@ -23,6 +24,7 @@ const {
   getSpendingContextMock: vi.fn(),
   getTrendContextMock: vi.fn(),
   getDemandBackdataContextFromApiMock: vi.fn(),
+  resolveVenueCoordinatesByVWorldMock: vi.fn(),
 }));
 
 vi.mock("./services/tourApiAdapter", async (importOriginal) => ({
@@ -52,6 +54,10 @@ vi.mock("./services/demandBackdataAdapter", async (importOriginal) => ({
   getDemandBackdataContextFromApi: getDemandBackdataContextFromApiMock,
 }));
 
+vi.mock("./services/vworldAdapter", () => ({
+  resolveVenueCoordinatesByVWorld: resolveVenueCoordinatesByVWorldMock,
+}));
+
 import { App } from "./App";
 
 const openDashboardSection = (label: string) => {
@@ -71,11 +77,13 @@ describe("App", () => {
     getSpendingContextMock.mockReset();
     getTrendContextMock.mockReset();
     getDemandBackdataContextFromApiMock.mockReset();
+    resolveVenueCoordinatesByVWorldMock.mockReset();
     getTourismContextMock.mockResolvedValue(sampleTourismContext);
     getTrafficContextMock.mockResolvedValue(sampleTrafficContext);
     getSpendingContextMock.mockResolvedValue(sampleSpendingContext);
     getTrendContextMock.mockResolvedValue(sampleTrendContext);
     getDemandBackdataContextFromApiMock.mockResolvedValue(sampleDemandBackdataContext);
+    resolveVenueCoordinatesByVWorldMock.mockResolvedValue(null);
     getTourApiAreaCodesMock.mockResolvedValue([
       { code: "1", name: "서울" },
       { code: "1-legacy", name: "서울시" },
@@ -238,6 +246,49 @@ describe("App", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("uses VWorld coordinates for a selected regional DB candidate without TourAPI coordinates", async () => {
+    getFestivalCandidatesMock.mockResolvedValue([
+      {
+        id: "mcst-daejeon-market-2026",
+        title: "제4회 중앙시장 주말축제 야시장 동구夜놀자",
+        address: "대전 동구 중앙시장 화월통 일원",
+        startDate: "2026-08-07",
+        endDate: "2026-10-31",
+        searchScope: "regional-supplement",
+      },
+    ]);
+    resolveVenueCoordinatesByVWorldMock.mockResolvedValue({
+      title: "대전 중앙시장",
+      address: "대전광역시 동구 대전로779번길 8",
+      mapX: "127.43286719691503",
+      mapY: "36.32957497803072",
+    });
+
+    render(<App />);
+    await settleInitialAnalysis();
+    openDashboardSection("기획");
+
+    fireEvent.change(screen.getByLabelText("개최 지역"), { target: { value: "대전" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("TourAPI 후보 1건")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 축제 선택" }));
+
+    await waitFor(() => {
+      expect(resolveVenueCoordinatesByVWorldMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "제4회 중앙시장 주말축제 야시장 동구夜놀자",
+          address: "대전 동구 중앙시장 화월통 일원",
+          region: "대전",
+        }),
+      );
+      expect(screen.getByText(/좌표 기준: 127.43286719691503, 36.32957497803072/)).toBeInTheDocument();
+    });
   });
 
   it("keeps the region selector usable while live area codes are still loading", async () => {

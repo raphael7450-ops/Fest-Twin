@@ -46,6 +46,7 @@ import {
   type FestivalCandidate,
   type TourApiAreaCode,
 } from "./services/tourApiAdapter";
+import { resolveVenueCoordinatesByVWorld } from "./services/vworldAdapter";
 
 type DashboardSection = "overview" | "planning" | "forecast" | "operations" | "evidence" | "report";
 
@@ -317,10 +318,21 @@ export function App() {
       return;
     }
 
-    resolveFestivalCoordinatesByKeyword({
-      title: candidate.title,
-      region: plan.region,
-    })
+    Promise.resolve()
+      .then(async () => {
+        const tourApiMatch = await resolveFestivalCoordinatesByKeyword({
+          title: candidate.title,
+          region: plan.region,
+        }).catch(() => null);
+        if (tourApiMatch) return { ...tourApiMatch, coordinateSource: "tourapi" as const };
+
+        const vworldMatch = await resolveVenueCoordinatesByVWorld({
+          title: candidate.title,
+          address: candidate.address,
+          region: plan.region,
+        }).catch(() => null);
+        return vworldMatch ? { ...vworldMatch, coordinateSource: "vworld" as const } : null;
+      })
       .then((match) => {
         applySelectedCandidate(
           match
@@ -328,6 +340,7 @@ export function App() {
                 ...candidate,
                 mapX: match.mapX,
                 mapY: match.mapY,
+                coordinateSource: match.coordinateSource,
                 address:
                   candidate.address && candidate.address !== "주소 정보 미기재"
                     ? candidate.address

@@ -89,7 +89,7 @@ export interface VenueFacility {
 export interface VenueCoordinates {
   latitude: number;
   longitude: number;
-  source: "tourapi" | "verified" | "user-input";
+  source: "tourapi" | "vworld" | "verified" | "user-input";
 }
 
 export interface VenueAreaProvenance {

@@ -74,7 +74,7 @@ export function applyFestivalCandidateToPlan(
     Number.isFinite(latitude) &&
     latitude >= -90 &&
     latitude <= 90
-      ? { longitude, latitude, source: "tourapi" as const }
+      ? { longitude, latitude, source: candidate.coordinateSource ?? "tourapi" }
       : undefined;
   const venueIdentityChanged = candidate.address !== currentPlan.venueAddress;
 

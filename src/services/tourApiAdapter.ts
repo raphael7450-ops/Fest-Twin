@@ -48,6 +48,7 @@ export interface FestivalCandidate {
   endDate: string;
   mapX?: string;
   mapY?: string;
+  coordinateSource?: "tourapi" | "vworld";
   imageUrl?: string;
   organizer?: string;
   budgetMillionKrw?: number;
