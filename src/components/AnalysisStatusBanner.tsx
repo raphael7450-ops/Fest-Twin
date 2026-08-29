@@ -4,6 +4,7 @@ export interface AnalysisStatusBannerProps {
   phase: "loading" | "refreshing" | "ready" | "error";
   snapshot?: FestivalAnalysisSnapshot;
   pendingFestivalTitle?: string;
+  activityMessage?: string;
   errorMessages: string[];
 }
 
@@ -48,16 +49,30 @@ export function AnalysisStatusBanner({
   phase,
   snapshot,
   pendingFestivalTitle,
+  activityMessage,
   errorMessages,
 }: AnalysisStatusBannerProps) {
   let message;
 
-  if (phase === "loading") {
-    message = <p>분석 자료를 준비하고 있습니다.</p>;
+  if (activityMessage) {
+    message = (
+      <p>
+        <span className="analysis-status-banner__spinner" aria-hidden="true" />
+        {activityMessage}
+      </p>
+    );
+  } else if (phase === "loading") {
+    message = (
+      <p>
+        <span className="analysis-status-banner__spinner" aria-hidden="true" />
+        초기 분석 데이터를 불러오는 중입니다.
+      </p>
+    );
   } else if (phase === "refreshing" && snapshot) {
     const displayTitle = snapshot.selectedFestivalBasis?.title ?? snapshot.plan.name;
     message = (
       <p>
+        <span className="analysis-status-banner__spinner" aria-hidden="true" />
         현재 결과는 {displayTitle}의 이전 분석입니다. {pendingFestivalTitle ?? "새 축제"} 분석을
         새로고침하고 있습니다. <SnapshotIdentity snapshot={snapshot} />
       </p>
@@ -94,7 +109,7 @@ export function AnalysisStatusBanner({
 
   return (
     <section
-      className={`analysis-status-banner analysis-status-banner--${phase}${phase === "refreshing" ? " analysis-refresh-status" : ""}`}
+      className={`analysis-status-banner analysis-status-banner--${phase}${phase === "refreshing" || activityMessage ? " analysis-refresh-status" : ""}`}
       role={phase === "error" ? "alert" : "status"}
     >
       <div className="analysis-status-banner__message">{message}</div>

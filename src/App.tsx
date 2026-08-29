@@ -107,6 +107,10 @@ export function App() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [presetBasis, setPresetBasis] = useState<SelectedFestivalBasis | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
+  const [applyingCandidate, setApplyingCandidate] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const selectedFestivalBasis = useMemo(
     () => (selectedCandidate ? createSelectedFestivalBasis(selectedCandidate) : presetBasis),
     [selectedCandidate, presetBasis],
@@ -313,8 +317,11 @@ export function App() {
   };
 
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
+    setApplyingCandidate({ id: candidate.id, title: candidate.title });
+
     if (candidate.mapX && candidate.mapY) {
       applySelectedCandidate(candidate);
+      setApplyingCandidate(null);
       return;
     }
 
@@ -351,6 +358,9 @@ export function App() {
       })
       .catch(() => {
         applySelectedCandidate(candidate);
+      })
+      .finally(() => {
+        setApplyingCandidate(null);
       });
   };
 
@@ -381,6 +391,11 @@ export function App() {
               phase={analysis.phase}
               snapshot={analysis.snapshot}
               pendingFestivalTitle={analysis.pendingFestivalTitle}
+              activityMessage={
+                applyingCandidate
+                  ? `선택한 축제 데이터를 반영 중입니다. (${applyingCandidate.title})`
+                  : undefined
+              }
               errorMessages={analysis.errorMessages}
             />
           </div>
@@ -434,6 +449,11 @@ export function App() {
             phase={analysis.phase}
             snapshot={committed}
             pendingFestivalTitle={analysis.pendingFestivalTitle}
+            activityMessage={
+              applyingCandidate
+                ? `선택한 축제 데이터를 반영 중입니다. (${applyingCandidate.title})`
+                : undefined
+            }
             errorMessages={analysis.errorMessages}
           />
           <OperationalScoreHeader
@@ -641,6 +661,7 @@ export function App() {
         isLoading={isCandidateLoading}
         errorMessage={candidateState.errorMessage}
         selectedCandidateId={selectedCandidate?.id}
+        applyingCandidateId={applyingCandidate?.id}
         onClose={() => setIsCandidatePanelOpen(false)}
         onSelectCandidate={handleSelectCandidate}
       />

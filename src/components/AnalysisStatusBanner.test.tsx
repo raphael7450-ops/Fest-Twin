@@ -12,7 +12,7 @@ describe("AnalysisStatusBanner", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "분석 자료를 준비하고 있습니다.",
+      "초기 분석 데이터를 불러오는 중입니다.",
     );
   });
 

@@ -1763,6 +1763,28 @@ a:focus-visible {
   margin: 0;
 }
 
+.analysis-status-banner__message p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analysis-status-banner__spinner {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 2px solid rgba(37, 99, 235, 0.25);
+  border-top-color: #2563eb;
+  border-radius: 999px;
+  animation: analysis-status-spin 0.8s linear infinite;
+}
+
+@keyframes analysis-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .analysis-status-banner__identity {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   overflow-wrap: anywhere;

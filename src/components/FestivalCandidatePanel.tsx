@@ -9,6 +9,7 @@ interface FestivalCandidatePanelProps {
   isLoading: boolean;
   errorMessage?: string;
   selectedCandidateId?: string;
+  applyingCandidateId?: string | null;
   onClose: () => void;
   onSelectCandidate: (candidate: FestivalCandidate) => void;
 }
@@ -33,6 +34,7 @@ export function FestivalCandidatePanel({
   isLoading,
   errorMessage,
   selectedCandidateId,
+  applyingCandidateId,
   onClose,
   onSelectCandidate,
 }: FestivalCandidatePanelProps) {
@@ -89,6 +91,7 @@ export function FestivalCandidatePanel({
           <div className="candidate-list">
             {sortFestivalCandidatesByDateAsc(candidates).map((candidate) => {
               const isSelected = selectedCandidateId === candidate.id;
+              const isApplying = applyingCandidateId === candidate.id;
 
               const imgUrl = getRepresentativeFestivalImage({
                 title: candidate.title,
@@ -113,10 +116,11 @@ export function FestivalCandidatePanel({
                   </div>
                   <button
                     className="secondary-button"
+                    disabled={isApplying}
                     type="button"
                     onClick={() => onSelectCandidate(candidate)}
                   >
-                    이 축제 선택
+                    {isApplying ? "적용 중" : "이 축제 선택"}
                   </button>
                 </article>
               );

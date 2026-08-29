@@ -291,6 +291,63 @@ describe("App", () => {
     });
   });
 
+  it("shows an applying status while a selected candidate is being enriched", async () => {
+    let resolveCoordinates: (value: {
+      title: string;
+      address: string;
+      mapX: string;
+      mapY: string;
+    }) => void = () => {};
+    const coordinatePromise = new Promise<{
+      title: string;
+      address: string;
+      mapX: string;
+      mapY: string;
+    }>((resolve) => {
+      resolveCoordinates = resolve;
+    });
+    getFestivalCandidatesMock.mockResolvedValue([
+      {
+        id: "mcst-daejeon-market-2026",
+        title: "제4회 중앙시장 주말축제 야시장 동구夜놀자",
+        address: "대전 동구 중앙시장 화월통 일원",
+        startDate: "2026-08-07",
+        endDate: "2026-10-31",
+        searchScope: "regional-supplement",
+      },
+    ]);
+    resolveVenueCoordinatesByVWorldMock.mockReturnValue(coordinatePromise);
+
+    render(<App />);
+    await settleInitialAnalysis();
+    openDashboardSection("기획");
+
+    fireEvent.change(screen.getByLabelText("개최 지역"), { target: { value: "대전" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("TourAPI 후보 1건")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 축제 선택" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "선택한 축제 데이터를 반영 중입니다.",
+    );
+    expect(screen.getByRole("button", { name: "적용 중" })).toBeDisabled();
+
+    resolveCoordinates({
+      title: "대전 중앙시장",
+      address: "대전광역시 동구 대전로779번길 8",
+      mapX: "127.43286719691503",
+      mapY: "36.32957497803072",
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("선택한 축제 데이터를 반영 중입니다.")).not.toBeInTheDocument();
+    });
+  });
+
   it("keeps the region selector usable while live area codes are still loading", async () => {
     getTourApiAreaCodesMock.mockReturnValue(new Promise(() => {}));
 
