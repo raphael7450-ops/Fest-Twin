@@ -721,8 +721,16 @@ function planRangeDays(plan: FestivalPlan) {
   return Math.floor((end - start) / 86400000) + 1;
 }
 
+function festivalItemOverlapsPlanRange(item: TourApiItem, plan: FestivalPlan) {
+  return dateOverlapDays(item.eventstartdate, item.eventenddate, plan.startDate, plan.endDate) > 0;
+}
+
 function shouldFetchRegionalSupplement(plan: FestivalPlan, festivalItems: TourApiItem[]) {
-  return festivalItems.length === 0 || planRangeDays(plan) >= 30;
+  return (
+    festivalItems.length === 0 ||
+    planRangeDays(plan) >= 30 ||
+    !festivalItems.some((item) => festivalItemOverlapsPlanRange(item, plan))
+  );
 }
 
 function normalizeFestivalTitleKey(value: string | number | undefined) {
@@ -1500,7 +1508,7 @@ export async function getFestivalCandidates(
           startDate: formatTourApiDateForInput(item.eventstartdate),
           endDate: formatTourApiDateForInput(item.eventenddate),
         }) &&
-        dateOverlapDays(item.eventstartdate, item.eventenddate, plan.startDate, plan.endDate) > 0,
+        festivalItemOverlapsPlanRange(item, plan),
     ),
     plan,
   ).slice(0, MAX_FESTIVAL_CANDIDATES);

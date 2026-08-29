@@ -468,6 +468,77 @@ describe("TourAPI candidate regional DB supplement", () => {
     );
   });
 
+  it("fetches regional DB records when TourAPI annual results miss the selected period", async () => {
+    let festivalCallCount = 0;
+    const regionalUrls: URL[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "3", name: "대전" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        festivalCallCount += 1;
+        if (festivalCallCount === 1) return jsonResponse(tourApiPayload([], 0));
+
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "tourapi-daejeon-midnight",
+              title: "제4회 2026 대전 0시 축제",
+              eventstartdate: "20260807",
+              eventenddate: "20260817",
+              addr1: "대전 중앙로",
+            },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        regionalUrls.push(url);
+        return jsonResponse({
+          count: 1,
+          records: [
+            {
+              id: "mcst-daejeon-night-heritage-2026",
+              year: 2026,
+              name: "대전 중구 국가유산 야행",
+              region: "대전",
+              localGovernment: "중구",
+              type: "전통역사",
+              venue: "대전 중구 원도심 일원",
+              startDate: "2026-09-04",
+              endDate: "2026-09-06",
+              visitors: 120000,
+              sourceName: "문화체육관광부_지역축제 정보",
+            },
+          ],
+        });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "대전 축제",
+        region: "대전",
+        startDate: "2026-09-04",
+        endDate: "2026-09-30",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-29" },
+    );
+
+    expect(regionalUrls).toHaveLength(1);
+    expect(regionalUrls[0].searchParams.get("region")).toBe("대전");
+    expect(candidates.map((candidate) => candidate.id)).toContain(
+      "mcst-daejeon-night-heritage-2026",
+    );
+  });
+
   it("sorts festival candidates by startDate in ascending order (asc)", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input), "http://localhost");

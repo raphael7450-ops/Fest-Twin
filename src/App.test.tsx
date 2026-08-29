@@ -81,6 +81,7 @@ describe("App", () => {
       { code: "1-legacy", name: "서울시" },
       { code: "1-full", name: "서울특별시" },
       { code: "6", name: "부산" },
+      { code: "3", name: "대전" },
     ]);
     getFestivalCandidatesMock.mockResolvedValue([
       {
@@ -189,6 +190,51 @@ describe("App", () => {
 
       expect(screen.queryByRole("dialog", { name: "TourAPI 축제 후보" })).not.toBeInTheDocument();
       expect(screen.getByDisplayValue("2026 서울세계불꽃축제")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("shows refreshed Daejeon candidates after the planning region and dates change", async () => {
+    vi.useFakeTimers();
+    getFestivalCandidatesMock.mockImplementation(async (plan) =>
+      plan.region === "대전" &&
+      plan.startDate === "2026-09-04" &&
+      plan.endDate === "2026-09-30"
+        ? [
+            {
+              id: "mcst-daejeon-night-heritage-2026",
+              title: "대전 중구 국가유산 야행",
+              address: "대전 중구 원도심 일원",
+              startDate: "2026-09-04",
+              endDate: "2026-09-06",
+              searchScope: "regional-supplement",
+            },
+          ]
+        : [],
+    );
+
+    try {
+      render(<App />);
+      await settleInitialAnalysis();
+      openDashboardSection("기획");
+
+      fireEvent.change(screen.getByLabelText("개최 지역"), { target: { value: "대전" } });
+      fireEvent.change(screen.getByLabelText("시작일"), { target: { value: "2026-09-04" } });
+      fireEvent.change(screen.getByLabelText("종료일"), { target: { value: "2026-09-30" } });
+
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+        await Promise.resolve();
+      });
+
+      expect(screen.getByText("TourAPI 후보 1건")).toBeInTheDocument();
+      expect(screen.getByText("선택된 후보 없음")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+
+      expect(screen.getByRole("dialog", { name: "TourAPI 축제 후보" })).toBeInTheDocument();
+      expect(screen.getByText("대전 중구 국가유산 야행")).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

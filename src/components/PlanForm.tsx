@@ -119,7 +119,7 @@ export function PlanForm({
 
         <div className="candidate-lookup-card">
           <span>{isAreaLoading ? "지역 코드 조회 중" : candidateStatus}</span>
-          <strong>{selectedCandidateTitle ?? plan.name}</strong>
+          <strong>{selectedCandidateTitle ?? "선택된 후보 없음"}</strong>
           <button className="secondary-button" type="button" onClick={onOpenCandidates}>
             TourAPI 후보 보기
           </button>

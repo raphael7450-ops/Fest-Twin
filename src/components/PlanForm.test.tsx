@@ -55,6 +55,23 @@ describe("PlanForm", () => {
     expect(regionSelect.value).toBe("Gangwon-do");
   });
 
+  it("does not show a stale plan name as the selected TourAPI candidate", () => {
+    render(
+      <PlanForm
+        plan={{ ...plan, name: "2026 서울세계불꽃축제" }}
+        onPlanChange={vi.fn()}
+        areaCodes={[{ code: "3", name: "대전" }]}
+        isAreaLoading={false}
+        isCandidateLoading={false}
+        candidateCount={0}
+        onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
+      />,
+    );
+
+    expect(screen.getByText("선택된 후보 없음")).toBeInTheDocument();
+  });
+
   it("emits changed plan values when the current region option is selected", () => {
     const handlePlanChange = vi.fn();
     render(

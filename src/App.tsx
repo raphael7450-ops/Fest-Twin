@@ -523,13 +523,14 @@ export function App() {
                           nextPlan.endDate !== plan.endDate
                         ) {
                           setSelectedCandidate(null);
+                          setPresetBasis(null);
                         }
                       }}
                       areaCodes={areaCodes}
                       isAreaLoading={isAreaLoading}
                       isCandidateLoading={isCandidateLoading}
                       candidateCount={candidates.length}
-                      selectedCandidateTitle={selectedCandidate?.title}
+                      selectedCandidateTitle={selectedCandidate?.title ?? presetBasis?.title}
                       onOpenCandidates={() => setIsCandidatePanelOpen(true)}
                       onOpenSearchModal={() => setIsSearchModalOpen(true)}
                       dwellProfile={committed.forecast.dwellProfile ?? selectDwellProfile(plan, planningDemandBackdata)}
