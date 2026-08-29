@@ -42,6 +42,7 @@ import { selectDwellProfile } from "./services/visitorOccupancy";
 import {
   getFestivalCandidates,
   getTourApiAreaCodes,
+  resolveFestivalCoordinatesByKeyword,
   type FestivalCandidate,
   type TourApiAreaCode,
 } from "./services/tourApiAdapter";
@@ -299,7 +300,7 @@ export function App() {
     [committed],
   );
 
-  const handleSelectCandidate = (candidate: FestivalCandidate) => {
+  const applySelectedCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
     setPresetBasis(null);
     setPlan((currentPlan) =>
@@ -308,6 +309,36 @@ export function App() {
       }),
     );
     setIsCandidatePanelOpen(false);
+  };
+
+  const handleSelectCandidate = (candidate: FestivalCandidate) => {
+    if (candidate.mapX && candidate.mapY) {
+      applySelectedCandidate(candidate);
+      return;
+    }
+
+    resolveFestivalCoordinatesByKeyword({
+      title: candidate.title,
+      region: plan.region,
+    })
+      .then((match) => {
+        applySelectedCandidate(
+          match
+            ? {
+                ...candidate,
+                mapX: match.mapX,
+                mapY: match.mapY,
+                address:
+                  candidate.address && candidate.address !== "주소 정보 미기재"
+                    ? candidate.address
+                    : match.address,
+              }
+            : candidate,
+        );
+      })
+      .catch(() => {
+        applySelectedCandidate(candidate);
+      });
   };
 
   const handleSelectPreset = (preset: FestivalPreset) => {
@@ -601,6 +632,7 @@ export function App() {
       />
       <FestivalSearchModal
         isOpen={isSearchModalOpen}
+        plan={plan}
         onClose={() => setIsSearchModalOpen(false)}
         onSelectPreset={handleSelectPreset}
       />

@@ -209,6 +209,58 @@ describe("TourAPI candidate regional DB supplement", () => {
     expect(candidates.map((candidate) => candidate.id)).toEqual(["ongoing"]);
   });
 
+  it("keeps historical candidates when the selected planning range is already in the past", async () => {
+    const regionalUrls: URL[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "34", name: "충청남도" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        return jsonResponse(tourApiPayload([], 0));
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        regionalUrls.push(url);
+        return jsonResponse({
+          count: 1,
+          records: [
+            {
+              id: "mcst-seocheon-2025",
+              year: 2025,
+              name: "동백꽃 주꾸미 축제",
+              region: "충청남도",
+              localGovernment: "서천군",
+              venue: "서면 마량진항",
+              startDate: "2025-03-16",
+              endDate: "2025-03-30",
+              visitors: 220000,
+            },
+          ],
+        });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "충남 봄축제 기획",
+        region: "충청남도",
+        startDate: "2025-03-27",
+        endDate: "2025-03-30",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-29" },
+    );
+
+    expect(regionalUrls[0].searchParams.has("minEndDate")).toBe(false);
+    expect(candidates.map((candidate) => candidate.id)).toContain("mcst-seocheon-2025");
+  });
+
   it("does not show inactive planning festivals even when TourAPI returns them", async () => {
     let festivalCallCount = 0;
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {

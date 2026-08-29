@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { FESTIVAL_PRESETS, type FestivalPreset } from "../data/festivalPresets";
+import type { FestivalPlan } from "../domain/types";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { resolveFestivalCoordinatesByKeyword } from "../services/tourApiAdapter";
 
 interface FestivalSearchModalProps {
   isOpen: boolean;
+  plan?: FestivalPlan;
   onClose: () => void;
   onSelectPreset: (preset: FestivalPreset) => void;
 }
@@ -95,6 +97,7 @@ function isOngoingOrUpcomingFestival(preset: FestivalPreset, today: string) {
 
 export function FestivalSearchModal({
   isOpen,
+  plan,
   onClose,
   onSelectPreset,
 }: FestivalSearchModalProps) {
@@ -113,8 +116,13 @@ export function FestivalSearchModal({
 
     const params = new URLSearchParams({
       limit: query.trim() ? "30" : "20",
-      minEndDate: today,
     });
+    if (!plan?.endDate || plan.endDate >= today) {
+      params.set("minEndDate", today);
+    }
+    if (plan?.region) params.set("region", plan.region);
+    if (plan?.startDate) params.set("startDate", plan.startDate);
+    if (plan?.endDate) params.set("endDate", plan.endDate);
     if (query.trim()) params.set("q", query.trim());
     const url = `/api/regional-festivals?${params.toString()}`;
 
@@ -138,7 +146,7 @@ export function FestivalSearchModal({
     return () => {
       controller.abort();
     };
-  }, [query, isOpen, today]);
+  }, [query, isOpen, today, plan?.region, plan?.startDate, plan?.endDate]);
 
 function getNormalizedBaseName(name: string): string {
   return name

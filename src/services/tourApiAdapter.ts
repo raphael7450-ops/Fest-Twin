@@ -602,6 +602,10 @@ function festivalItemEndsOnOrAfter(item: TourApiItem, minEndDate: string) {
   return Boolean(endDate && endDate >= minEndDate);
 }
 
+function shouldRestrictEndedFestivalCandidates(plan: FestivalPlan, today: string) {
+  return !plan.endDate || plan.endDate >= today;
+}
+
 function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
   return [...items].sort((left, right) => {
     const overlapDifference =
@@ -814,7 +818,7 @@ function buildRegionalFestivalSupplementUrl(
   params.set("region", plan.region);
   params.set("startDate", plan.startDate);
   params.set("endDate", plan.endDate);
-  params.set("minEndDate", minEndDate);
+  if (minEndDate) params.set("minEndDate", minEndDate);
   params.set("keywords", options.includeKeywords ? plan.keywords.join(",") : "");
   params.set("limit", String(MAX_FESTIVAL_CANDIDATES));
   return `/api/regional-festivals?${params.toString()}`;
@@ -1052,8 +1056,15 @@ export async function resolveFestivalCoordinatesByKeyword(
 
   const matched = items
     .filter(hasValidKoreanCoordinates)
-    .filter((item) => normalizeFestivalLookupTitle(item.title ?? "") === requestedTitle)
-    .find((item) => (item.addr1 ?? "").includes(festival.region));
+    .filter((item) => {
+      const itemTitle = normalizeFestivalLookupTitle(item.title ?? "");
+      return (
+        itemTitle === requestedTitle ||
+        itemTitle.includes(requestedTitle) ||
+        requestedTitle.includes(itemTitle)
+      );
+    })
+    .find((item) => regionMatches(festival.region, item.addr1 ?? ""));
 
   if (!matched?.contentid || !matched.title || !matched.addr1) return null;
 
@@ -1440,6 +1451,7 @@ export async function getFestivalCandidates(
 ): Promise<FestivalCandidate[]> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const today = options.today ?? formatLocalDate();
+  const candidateMinEndDate = shouldRestrictEndedFestivalCandidates(plan, today) ? today : "";
   const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
 
   if (!areaCode) return [];
@@ -1468,7 +1480,7 @@ export async function getFestivalCandidates(
     ? await fetchRegionalSupplementFestivalItems(
         plan,
         fetchImpl,
-        today,
+        candidateMinEndDate,
         { includeKeywords: festivalItems.length === 0 && planRangeDays(plan) < 30 },
         options.signal,
       )
@@ -1480,7 +1492,7 @@ export async function getFestivalCandidates(
     mergedFestivalItems.filter(
       (item) =>
         (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
-        festivalItemEndsOnOrAfter(item, today) &&
+        (!candidateMinEndDate || festivalItemEndsOnOrAfter(item, candidateMinEndDate)) &&
         isFestivalAvailableForPlanning({
           title: item.title,
           region: item.addr1,

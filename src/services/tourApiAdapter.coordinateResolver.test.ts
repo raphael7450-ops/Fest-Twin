@@ -89,6 +89,35 @@ describe("TourAPI festival coordinate resolver", () => {
     expect(result).toBeNull();
   });
 
+  it("accepts a normalized title containment match in the requested region", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(
+        tourApiPayload([
+          {
+            contentid: "seocheon-webfoot",
+            title: "서천 동백꽃주꾸미 축제",
+            addr1: "충청남도 서천군 서면 마량진항",
+            mapx: "126.5067",
+            mapy: "36.1282",
+          },
+        ]),
+      ),
+    );
+
+    const result = await resolveFestivalCoordinatesByKeyword(
+      { title: "동백꽃 주꾸미 축제", region: "충청남도" },
+      { fetchImpl: fetchMock as unknown as typeof fetch },
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        contentId: "seocheon-webfoot",
+        mapX: "126.5067",
+        mapY: "36.1282",
+      }),
+    );
+  });
+
   it("returns null when an exact title belongs to a different region", async () => {
     const fetchMock = vi.fn(async () =>
       jsonResponse(
