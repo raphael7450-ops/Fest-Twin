@@ -11,7 +11,7 @@ interface PlanFormProps {
   candidateCount: number;
   selectedCandidateTitle?: string;
   onOpenCandidates: () => void;
-  onOpenSearchModal?: () => void;
+  onOpenOverview?: () => void;
   dwellProfile: DwellProfile;
 }
 
@@ -24,7 +24,7 @@ export function PlanForm({
   candidateCount,
   selectedCandidateTitle,
   onOpenCandidates,
-  onOpenSearchModal,
+  onOpenOverview,
   dwellProfile,
 }: PlanFormProps) {
   const regionOptions = areaCodes.some((area) => area.name === plan.region)
@@ -53,20 +53,9 @@ export function PlanForm({
         <div>
           <strong>TourAPI 지역 기반 후보 조회</strong>
           <span>
-            지역과 기간을 먼저 선택하거나, 전체 축제를 실시간 검색하여 기획안에 불러옵니다.
+            지역과 기간을 선택해 올해 말까지 예정된 축제를 불러옵니다.
           </span>
         </div>
-        {onOpenSearchModal && (
-          <button
-            type="button"
-            className="secondary-button"
-            style={{ whiteSpace: "nowrap", flexShrink: 0 }}
-            onClick={onOpenSearchModal}
-            aria-label="전체 축제 검색"
-          >
-            전체 축제 검색
-          </button>
-        )}
       </div>
 
       <div className="form-grid">
@@ -149,6 +138,22 @@ export function PlanForm({
         </label>
 
         <VenueAreaReference plan={plan} onPlanChange={onPlanChange} />
+
+        {selectedCandidateTitle && (
+          <div className="candidate-confirmation-card">
+            <strong>행사장 면적을 확인한 뒤 요약으로 이동하세요.</strong>
+            <span>
+              {plan.venueAreaSquareMeters
+                ? `${plan.venueAreaSquareMeters.toLocaleString("ko-KR")}m² 기준으로 분석합니다.`
+                : "면적이 없으면 행사 운영 면적을 입력해야 혼잡도와 안전 지표가 안정적으로 계산됩니다."}
+            </span>
+            {onOpenOverview && (
+              <button className="secondary-button" type="button" onClick={onOpenOverview}>
+                요약으로 이동
+              </button>
+            )}
+          </div>
+        )}
 
         <label>
           총 예산(백만원)

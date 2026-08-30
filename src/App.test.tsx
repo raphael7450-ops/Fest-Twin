@@ -200,8 +200,10 @@ describe("App", () => {
       fireEvent.click(screen.getByRole("button", { name: "이 축제 선택" }));
 
       expect(screen.queryByRole("dialog", { name: "TourAPI 축제 후보" })).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "대시보드 섹션: 요약" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "대시보드 섹션: 기획" })).toHaveAttribute("aria-pressed", "true");
       expect(screen.getAllByText(/2026 서울세계불꽃축제/).length).toBeGreaterThan(0);
+      expect(screen.getByText("행사장 면적을 확인한 뒤 요약으로 이동하세요.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "요약으로 이동" })).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

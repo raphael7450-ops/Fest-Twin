@@ -603,8 +603,13 @@ function festivalItemEndsOnOrAfter(item: TourApiItem, minEndDate: string) {
   return Boolean(endDate && endDate >= minEndDate);
 }
 
-function shouldRestrictEndedFestivalCandidates(plan: FestivalPlan, today: string) {
-  return !plan.endDate || plan.endDate >= today;
+function festivalItemEndsOnOrBefore(item: TourApiItem, maxEndDate: string) {
+  const endDate = formatTourApiDateForInput(item.eventenddate) || formatTourApiDateForInput(item.eventstartdate);
+  return Boolean(endDate && endDate <= maxEndDate);
+}
+
+function candidateYearEnd(today: string) {
+  return `${today.slice(0, 4)}-12-31`;
 }
 
 function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
@@ -1460,7 +1465,8 @@ export async function getFestivalCandidates(
 ): Promise<FestivalCandidate[]> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const today = options.today ?? formatLocalDate();
-  const candidateMinEndDate = shouldRestrictEndedFestivalCandidates(plan, today) ? today : "";
+  const candidateMinEndDate = today;
+  const candidateMaxEndDate = candidateYearEnd(today);
   const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
 
   if (!areaCode) return [];
@@ -1502,6 +1508,7 @@ export async function getFestivalCandidates(
       (item) =>
         (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
         (!candidateMinEndDate || festivalItemEndsOnOrAfter(item, candidateMinEndDate)) &&
+        festivalItemEndsOnOrBefore(item, candidateMaxEndDate) &&
         isFestivalAvailableForPlanning({
           title: item.title,
           region: item.addr1,

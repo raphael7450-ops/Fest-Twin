@@ -209,7 +209,82 @@ describe("TourAPI candidate regional DB supplement", () => {
     expect(candidates.map((candidate) => candidate.id)).toEqual(["ongoing"]);
   });
 
-  it("keeps historical candidates when the selected planning range is already in the past", async () => {
+  it("does not show future candidate festivals after the end of the current year", async () => {
+    let festivalCallCount = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "1", name: "Seoul" }]));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        festivalCallCount += 1;
+        if (festivalCallCount === 1) return jsonResponse(tourApiPayload([], 0));
+
+        return jsonResponse(
+          tourApiPayload([
+            {
+              contentid: "december",
+              title: "Seoul December Festival",
+              eventstartdate: "20261212",
+              eventenddate: "20261220",
+              addr1: "Seoul",
+            },
+            {
+              contentid: "next-year",
+              title: "Seoul New Year Festival",
+              eventstartdate: "20270102",
+              eventenddate: "20270105",
+              addr1: "Seoul",
+            },
+            {
+              contentid: "cross-year",
+              title: "Seoul Countdown Festival",
+              eventstartdate: "20261230",
+              eventenddate: "20270101",
+              addr1: "Seoul",
+            },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({
+          count: 1,
+          records: [
+            {
+              id: "mcst-next-year",
+              year: 2027,
+              name: "Next Year Regional Festival",
+              region: "Seoul",
+              venue: "Seoul Plaza",
+              startDate: "2027-01-10",
+              endDate: "2027-01-12",
+            },
+          ],
+        });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        name: "Seoul winter planning",
+        region: "Seoul",
+        startDate: "2026-12-01",
+        endDate: "2027-01-31",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-30" },
+    );
+
+    expect(candidates.map((candidate) => candidate.id)).toEqual(["december"]);
+  });
+
+  it("does not show historical candidates when the selected planning range is already in the past", async () => {
     const regionalUrls: URL[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input), "http://localhost");
@@ -257,8 +332,8 @@ describe("TourAPI candidate regional DB supplement", () => {
       { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-29" },
     );
 
-    expect(regionalUrls[0].searchParams.has("minEndDate")).toBe(false);
-    expect(candidates.map((candidate) => candidate.id)).toContain("mcst-seocheon-2025");
+    expect(regionalUrls[0].searchParams.get("minEndDate")).toBe("2026-08-29");
+    expect(candidates.map((candidate) => candidate.id)).not.toContain("mcst-seocheon-2025");
   });
 
   it("does not show inactive planning festivals even when TourAPI returns them", async () => {

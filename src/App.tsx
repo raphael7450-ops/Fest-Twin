@@ -10,7 +10,6 @@ import { AnalysisStatusBanner } from "./components/AnalysisStatusBanner";
 import { B2gPrintReport } from "./components/B2gPrintReport";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
-import { FestivalSearchModal } from "./components/FestivalSearchModal";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
 import { Heatmap } from "./components/Heatmap";
@@ -27,7 +26,6 @@ import { ScenarioControls } from "./components/ScenarioControls";
 import { SelectedFestivalCard } from "./components/SelectedFestivalCard";
 import { SummaryKpiCards } from "./components/SummaryKpiCards";
 import { VenueMapPanel } from "./components/VenueMapPanel";
-import type { FestivalPreset } from "./data/festivalPresets";
 import { loadScenarios, normalizeFestivalPlan } from "./services/scenarioStorage";
 import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import type { MetricEvidenceId, SelectedFestivalBasis } from "./domain/types";
@@ -104,7 +102,6 @@ export function App() {
   const [areaCodes, setAreaCodes] = useState<TourApiAreaCode[]>(DEFAULT_AREA_CODES);
   const [isAreaLoading, setIsAreaLoading] = useState(true);
   const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [presetBasis, setPresetBasis] = useState<SelectedFestivalBasis | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
   const [applyingCandidate, setApplyingCandidate] = useState<{
@@ -314,7 +311,6 @@ export function App() {
       }),
     );
     setIsCandidatePanelOpen(false);
-    setActiveDashboardSection("overview");
   };
 
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
@@ -363,13 +359,6 @@ export function App() {
       .finally(() => {
         setApplyingCandidate(null);
       });
-  };
-
-  const handleSelectPreset = (preset: FestivalPreset) => {
-    setPlan(preset.plan);
-    setSelectedCandidate(null);
-    setPresetBasis(preset.basis);
-    setActiveDashboardSection("overview");
   };
 
   const [activeDashboardSection, setActiveDashboardSection] =
@@ -573,7 +562,7 @@ export function App() {
                       candidateCount={candidates.length}
                       selectedCandidateTitle={selectedCandidate?.title ?? presetBasis?.title}
                       onOpenCandidates={() => setIsCandidatePanelOpen(true)}
-                      onOpenSearchModal={() => setIsSearchModalOpen(true)}
+                      onOpenOverview={() => setActiveDashboardSection("overview")}
                       dwellProfile={committed.forecast.dwellProfile ?? selectDwellProfile(plan, planningDemandBackdata)}
                     />
                   </aside>
@@ -672,12 +661,6 @@ export function App() {
         applyingCandidateId={applyingCandidate?.id}
         onClose={() => setIsCandidatePanelOpen(false)}
         onSelectCandidate={handleSelectCandidate}
-      />
-      <FestivalSearchModal
-        isOpen={isSearchModalOpen}
-        plan={plan}
-        onClose={() => setIsSearchModalOpen(false)}
-        onSelectPreset={handleSelectPreset}
       />
       <MetricEvidenceDrawer
         evidence={selectedEvidenceId ? metricEvidence[selectedEvidenceId] : undefined}

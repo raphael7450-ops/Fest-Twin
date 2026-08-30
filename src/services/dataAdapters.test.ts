@@ -254,7 +254,7 @@ describe("public data adapters", () => {
 
     const candidates = await getFestivalCandidates(sampleFestivalPlan, {
       fetchImpl: candidateFetchMock as unknown as typeof fetch,
-      today: "2025-12-01",
+      today: "2026-08-30",
     });
 
     expect(candidates).toMatchObject([
@@ -302,7 +302,7 @@ describe("public data adapters", () => {
 
     const candidates = await getFestivalCandidates(sampleFestivalPlan, {
       fetchImpl: fetchImpl as unknown as typeof fetch,
-      today: "2025-12-01",
+      today: "2026-08-30",
     });
 
     const sourceDetails = candidates[0].sourceDetails ?? [];

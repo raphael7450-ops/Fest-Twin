@@ -1835,6 +1835,26 @@ a:focus-visible {
   color: #475569;
 }
 
+.candidate-confirmation-card {
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid #99f6e4;
+  border-left: 4px solid var(--color-teal);
+  background: #ecfdf5;
+  color: #0f3f3d;
+  font-size: 0.86rem;
+}
+
+.candidate-confirmation-card span {
+  color: #475569;
+}
+
+.candidate-confirmation-card .secondary-button {
+  justify-self: start;
+}
+
 .report-analysis-metadata {
   margin: 0 0 16px;
   padding: 12px 16px;

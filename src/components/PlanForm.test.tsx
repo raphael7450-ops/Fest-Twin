@@ -72,6 +72,25 @@ describe("PlanForm", () => {
     expect(screen.getByText("선택된 후보 없음")).toBeInTheDocument();
   });
 
+  it("uses the TourAPI candidate drawer as the only festival search entry point", () => {
+    render(
+      <PlanForm
+        plan={plan}
+        onPlanChange={vi.fn()}
+        areaCodes={[{ code: "1", name: "Seoul" }]}
+        isAreaLoading={false}
+        isCandidateLoading={false}
+        candidateCount={2}
+        onOpenCandidates={vi.fn()}
+        dwellProfile={sampleDwellProfile}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "전체 축제 검색" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "TourAPI 후보 보기" })).toBeInTheDocument();
+    expect(screen.getByText("지역과 기간을 선택해 올해 말까지 예정된 축제를 불러옵니다.")).toBeInTheDocument();
+  });
+
   it("emits changed plan values when the current region option is selected", () => {
     const handlePlanChange = vi.fn();
     render(
