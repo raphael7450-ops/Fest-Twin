@@ -166,6 +166,7 @@ describe("App selected festival basis", () => {
     );
     fireEvent.click(selectButtons[1]);
 
+    openDashboardSection("기획");
     expect(screen.getByDisplayValue("4321")).toHaveValue(4321);
     expect(screen.getByDisplayValue("20000")).toHaveValue(20000);
   });
@@ -226,6 +227,7 @@ describe("App selected festival basis", () => {
       expect.any(Object),
     );
 
+    openDashboardSection("기획");
     fireEvent.click(screen.getByRole("button", { name: /TourAPI/ }));
     fireEvent.click(selectButtons()[1]);
 
@@ -300,6 +302,7 @@ describe("App selected festival basis", () => {
     fireEvent.click(selectButton!);
     await act(async () => Promise.resolve());
 
+    openDashboardSection("기획");
     expect(screen.getByDisplayValue("Gangnam Media Winter Festa")).toBeInTheDocument();
     expect(view.container.querySelector(".analysis-refresh-status")).toHaveTextContent(
       "Gangnam Media Winter Festa",

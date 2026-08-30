@@ -314,6 +314,7 @@ export function App() {
       }),
     );
     setIsCandidatePanelOpen(false);
+    setActiveDashboardSection("overview");
   };
 
   const handleSelectCandidate = (candidate: FestivalCandidate) => {
@@ -368,10 +369,11 @@ export function App() {
     setPlan(preset.plan);
     setSelectedCandidate(null);
     setPresetBasis(preset.basis);
+    setActiveDashboardSection("overview");
   };
 
   const [activeDashboardSection, setActiveDashboardSection] =
-    useState<DashboardSection>("overview");
+    useState<DashboardSection>("planning");
   const railItems = [
     { label: "요약", section: "overview", icon: Home },
     { label: "기획", section: "planning", icon: BriefcaseBusiness },
@@ -456,6 +458,12 @@ export function App() {
             }
             errorMessages={analysis.errorMessages}
           />
+          {!analysisSelectedFestivalBasis ? (
+            <section className="festival-start-guide" role="status">
+              <strong>먼저 지역과 기간을 선택해 축제를 불러오세요.</strong>
+              <span>후보를 선택하면 요약 대시보드와 예측, 현장 진단이 선택 축제 기준으로 갱신됩니다.</span>
+            </section>
+          ) : null}
           <OperationalScoreHeader
             plan={analysisPlan}
             forecast={forecast}

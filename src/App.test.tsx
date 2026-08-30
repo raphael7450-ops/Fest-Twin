@@ -119,7 +119,8 @@ describe("App", () => {
     expect(screen.getByText("페스트트윈(Fest-Twin)")).toBeInTheDocument();
     expect(screen.getByText("공공 검토 대시보드")).toBeInTheDocument();
     expect(screen.getByText("실데이터 우선")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "대시보드 섹션: 요약" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 기획" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("먼저 지역과 기간을 선택해 축제를 불러오세요.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대시보드 섹션: 기획" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대시보드 섹션: 예측" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대시보드 섹션: 현장" })).toBeInTheDocument();
@@ -129,6 +130,8 @@ describe("App", () => {
     expect(screen.getAllByText("최고 밀집 위험도").length).toBeGreaterThan(0);
     expect(screen.getByText("예산 효율성 점수")).toBeInTheDocument();
     expect(screen.getByText("지역 상권 유출 연계도")).toBeInTheDocument();
+    openDashboardSection("요약");
+    expect(screen.getByRole("button", { name: "대시보드 섹션: 요약" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByLabelText("핵심 진단 지표")).toBeInTheDocument();
     expect(screen.queryByText("정부 지침 반영 현황")).not.toBeInTheDocument();
     expect(screen.queryByText("제출 데모 검증 현황")).not.toBeInTheDocument();
@@ -197,7 +200,8 @@ describe("App", () => {
       fireEvent.click(screen.getByRole("button", { name: "이 축제 선택" }));
 
       expect(screen.queryByRole("dialog", { name: "TourAPI 축제 후보" })).not.toBeInTheDocument();
-      expect(screen.getByDisplayValue("2026 서울세계불꽃축제")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "대시보드 섹션: 요약" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getAllByText(/2026 서울세계불꽃축제/).length).toBeGreaterThan(0);
     } finally {
       vi.useRealTimers();
     }
@@ -331,7 +335,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
     fireEvent.click(screen.getByRole("button", { name: "이 축제 선택" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent(
+    expect(document.querySelector(".analysis-refresh-status")).toHaveTextContent(
       "선택한 축제 데이터를 반영 중입니다.",
     );
     expect(screen.getByRole("button", { name: "적용 중" })).toBeDisabled();
@@ -450,6 +454,7 @@ describe("App", () => {
   it("shows KTDB access traffic risk in the safety logistics panel and evidence drawer", async () => {
     render(<App />);
     await settleInitialAnalysis();
+    openDashboardSection("현장");
 
     expect(await screen.findByText("접근 교통 위험도")).toBeInTheDocument();
 
