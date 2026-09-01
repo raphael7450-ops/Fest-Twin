@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getRepresentativeFestivalImage } from "./festivalImageProvider";
+import {
+  createNeutralPlaceholderSvg,
+  getRepresentativeFestivalImage,
+} from "./festivalImageProvider";
 
 describe("festivalImageProvider", () => {
-  it("preserves existing image URL if provided", () => {
+  it("preserves existing official image URL if provided", () => {
     const existing = "https://example.com/custom.jpg";
     const result = getRepresentativeFestivalImage({
       title: "테스트 축제",
@@ -11,73 +14,48 @@ describe("festivalImageProvider", () => {
     expect(result).toBe(existing);
   });
 
-  it("supplies representative image for Daejeon 0 O'clock festival", () => {
+  it("returns neutral SVG placeholder data URL when official image is absent", () => {
     const result = getRepresentativeFestivalImage({
-      title: "대전 0시 축제",
-      region: "대전",
+      title: "서울국제정원박람회",
+      region: "서울",
     });
-    expect(result).toBeTruthy();
-    expect(result.length).toBeGreaterThan(0);
+    expect(result.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(true);
+    const decoded = decodeURIComponent(result);
+    expect(decoded).includes("공식 이미지 준비 중");
+    expect(decoded).includes("서울국제정원박람회");
+    expect(decoded).includes("[서울]");
   });
 
-  it("supplies representative image for Sejong festival", () => {
-    const result = getRepresentativeFestivalImage({
-      title: "세종 축제 (호수공원)",
-      region: "세종",
-    });
-    expect(result).toBeTruthy();
-    expect(result.length).toBeGreaterThan(0);
-  });
-
-  it("supplies representative image for Heritage Night festival", () => {
+  it("extracts region from address when region is not explicitly provided", () => {
     const result = getRepresentativeFestivalImage({
       title: "지역 문화재 야행",
       address: "전라북도 전주시 한옥마을",
     });
-    expect(result).toBeTruthy();
-    expect(result.length).toBeGreaterThan(0);
+    expect(result.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(true);
+    const decoded = decodeURIComponent(result);
+    expect(decoded).includes("[전라북도]");
   });
 
-  it("returns fallback representative image for unknown titles without existing image", () => {
-    const result = getRepresentativeFestivalImage({
-      title: "임의 미상 축제",
-    });
-    expect(result).toBeTruthy();
-    expect(result.length).toBeGreaterThan(0);
-  });
-
-  it("assigns stable but distinct fallback images to candidates without official images", () => {
-    const first = getRepresentativeFestivalImage({
-      title: "서울 가을 문화축제",
-      region: "서울",
-      candidateKey: "candidate-101",
-    });
-    const repeated = getRepresentativeFestivalImage({
-      title: "서울 가을 문화축제",
-      region: "서울",
-      candidateKey: "candidate-101",
-    });
-    const second = getRepresentativeFestivalImage({
-      title: "서울 시민 예술제",
-      region: "서울",
-      candidateKey: "candidate-202",
-    });
-
-    expect(repeated).toBe(first);
-    expect(second).not.toBe(first);
-  });
-
-  it("avoids fallback images already used by another candidate", () => {
-    const first = getRepresentativeFestivalImage({
+  it("returns identical SVG placeholder data URL before and after candidate selection", () => {
+    const beforeSelect = getRepresentativeFestivalImage({
       title: "서울국제정원박람회",
-      candidateKey: "garden-festival",
-    });
-    const second = getRepresentativeFestivalImage({
-      title: "서울국제정원박람회",
-      candidateKey: "garden-festival",
-      excludedImageUrls: new Set([first]),
+      address: "서울특별시 광화문광장",
     });
 
-    expect(second).not.toBe(first);
+    const afterSelect = getRepresentativeFestivalImage({
+      title: "서울국제정원박람회",
+      address: "서울특별시 광화문광장",
+      existingImageUrl: beforeSelect,
+    });
+
+    expect(afterSelect).toBe(beforeSelect);
   });
+
+  it("creates neutral SVG placeholder with helper function", () => {
+    const svgUrl = createNeutralPlaceholderSvg("대전 0시 축제", "대전");
+    expect(svgUrl.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(true);
+    expect(decodeURIComponent(svgUrl)).includes("대전 0시 축제");
+  });
+
 });
+
