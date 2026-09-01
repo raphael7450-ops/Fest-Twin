@@ -95,6 +95,7 @@ export function getRepresentativeFestivalImage(params: {
   address?: string;
   existingImageUrl?: string;
   candidateKey?: string;
+  excludedImageUrls?: ReadonlySet<string>;
 }): string {
   if (params.existingImageUrl && params.existingImageUrl.trim().length > 0) {
     return params.existingImageUrl;
@@ -109,7 +110,7 @@ export function getRepresentativeFestivalImage(params: {
       const normalizedKeyword = keyword.toLowerCase();
       return !regionKeywordSet.has(normalizedKeyword) && combinedText.includes(normalizedKeyword);
     });
-    if (hasKeywordMatch) {
+    if (hasKeywordMatch && !params.excludedImageUrls?.has(mapping.imageUrl)) {
       return mapping.imageUrl;
     }
   }
@@ -117,7 +118,14 @@ export function getRepresentativeFestivalImage(params: {
   // 2차: 공식 이미지가 없는 후보는 같은 지역에서도 후보별로 다른 로컬 이미지를 안정적으로 배정
   if (LOCAL_FALLBACK_IMAGES.length > 0) {
     const seed = `${params.candidateKey ?? ""}|${params.title ?? ""}|${params.region ?? ""}|${params.address ?? ""}`;
-    return LOCAL_FALLBACK_IMAGES[stableImageIndex(seed, LOCAL_FALLBACK_IMAGES.length)];
+    const startIndex = stableImageIndex(seed, LOCAL_FALLBACK_IMAGES.length);
+
+    for (let offset = 0; offset < LOCAL_FALLBACK_IMAGES.length; offset += 1) {
+      const imageUrl = LOCAL_FALLBACK_IMAGES[(startIndex + offset) % LOCAL_FALLBACK_IMAGES.length];
+      if (!params.excludedImageUrls?.has(imageUrl)) return imageUrl;
+    }
+
+    return LOCAL_FALLBACK_IMAGES[startIndex];
   }
 
   return DEFAULT_FALLBACK_IMAGE;

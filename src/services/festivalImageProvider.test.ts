@@ -66,4 +66,18 @@ describe("festivalImageProvider", () => {
     expect(repeated).toBe(first);
     expect(second).not.toBe(first);
   });
+
+  it("avoids fallback images already used by another candidate", () => {
+    const first = getRepresentativeFestivalImage({
+      title: "서울국제정원박람회",
+      candidateKey: "garden-festival",
+    });
+    const second = getRepresentativeFestivalImage({
+      title: "서울국제정원박람회",
+      candidateKey: "garden-festival",
+      excludedImageUrls: new Set([first]),
+    });
+
+    expect(second).not.toBe(first);
+  });
 });

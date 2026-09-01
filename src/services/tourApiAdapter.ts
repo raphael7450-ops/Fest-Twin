@@ -1303,6 +1303,7 @@ function mapFestivalCandidate(
   item: TourApiItem,
   searchScope: FestivalSearchScope,
   sourceDetails: MetricEvidenceSourceDetail[],
+  excludedImageUrls?: ReadonlySet<string>,
 ): FestivalCandidate | undefined {
   if (!isValidContentItem(item)) return undefined;
   const operatingTimeText =
@@ -1337,6 +1338,7 @@ function mapFestivalCandidate(
       address,
       existingImageUrl: item.firstimage ?? undefined,
       candidateKey: String(item.contentid ?? item.code ?? item.title ?? ""),
+      excludedImageUrls,
     }),
     organizer,
     budgetMillionKrw: hasFiniteNumber(item.budgetMillionKrw)
@@ -1579,17 +1581,26 @@ export async function getFestivalCandidates(
     supplementalItems.map((item) => normalizeFestivalTitleKey(item.title)),
   );
 
+  const usedFallbackImageUrls = new Set<string>();
+
   return detailItems
-    .map((item) =>
-      mapFestivalCandidate(
+    .map((item) => {
+      const candidate = mapFestivalCandidate(
         item,
         supplementalContentIds.has(String(item.contentid ?? "")) ||
           supplementalTitleKeys.has(normalizeFestivalTitleKey(item.title))
           ? "regional-supplement"
           : festivalSearchScope,
         sourceDetails,
-      ),
-    )
+        usedFallbackImageUrls,
+      );
+
+      if (!item.firstimage && candidate?.imageUrl) {
+        usedFallbackImageUrls.add(candidate.imageUrl);
+      }
+
+      return candidate;
+    })
     .filter((item): item is FestivalCandidate => Boolean(item))
     .sort((a, b) => (a.startDate || "").localeCompare(b.startDate || ""));
 }
