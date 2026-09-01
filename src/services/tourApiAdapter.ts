@@ -1336,6 +1336,7 @@ function mapFestivalCandidate(
       title: item.title,
       address,
       existingImageUrl: item.firstimage ?? undefined,
+      candidateKey: String(item.contentid ?? item.code ?? item.title ?? ""),
     }),
     organizer,
     budgetMillionKrw: hasFiniteNumber(item.budgetMillionKrw)

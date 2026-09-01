@@ -71,6 +71,21 @@ const REGIONAL_FESTIVAL_IMAGES: FestivalImageMapping[] = [
 
 const DEFAULT_FALLBACK_IMAGE = "https://images.unsplash.com/photo-1508997449629-303059a039c0?auto=format&fit=crop&w=800&q=80";
 
+const LOCAL_FALLBACK_IMAGES = REGIONAL_FESTIVAL_IMAGES
+  .map((mapping) => mapping.imageUrl)
+  .filter((imageUrl) => imageUrl.startsWith("/"));
+
+function stableImageIndex(seed: string, imageCount: number) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return Math.abs(hash) % imageCount;
+}
+
 /**
  * 축제 명칭, 지역, 주소, 키워드를 분석하여 이미지 미기재 항목에 대표 이미지를 자동 공급합니다.
  */
@@ -79,6 +94,7 @@ export function getRepresentativeFestivalImage(params: {
   region?: string;
   address?: string;
   existingImageUrl?: string;
+  candidateKey?: string;
 }): string {
   if (params.existingImageUrl && params.existingImageUrl.trim().length > 0) {
     return params.existingImageUrl;
@@ -86,20 +102,22 @@ export function getRepresentativeFestivalImage(params: {
 
   const combinedText = `${params.title ?? ""} ${params.region ?? ""} ${params.address ?? ""}`.toLowerCase();
 
-  // 1차: 명칭 및 축제 특화 키워드 매칭
+  // 1차: 넓은 지역명을 제외한 축제 고유 키워드 매칭
   for (const mapping of REGIONAL_FESTIVAL_IMAGES) {
-    const hasKeywordMatch = mapping.keywords.some((kw) => combinedText.includes(kw.toLowerCase()));
+    const regionKeywordSet = new Set(mapping.regionKeywords.map((keyword) => keyword.toLowerCase()));
+    const hasKeywordMatch = mapping.keywords.some((keyword) => {
+      const normalizedKeyword = keyword.toLowerCase();
+      return !regionKeywordSet.has(normalizedKeyword) && combinedText.includes(normalizedKeyword);
+    });
     if (hasKeywordMatch) {
       return mapping.imageUrl;
     }
   }
 
-  // 2차: 지역명 매칭
-  for (const mapping of REGIONAL_FESTIVAL_IMAGES) {
-    const hasRegionMatch = mapping.regionKeywords.some((rk) => combinedText.includes(rk.toLowerCase()));
-    if (hasRegionMatch) {
-      return mapping.imageUrl;
-    }
+  // 2차: 공식 이미지가 없는 후보는 같은 지역에서도 후보별로 다른 로컬 이미지를 안정적으로 배정
+  if (LOCAL_FALLBACK_IMAGES.length > 0) {
+    const seed = `${params.candidateKey ?? ""}|${params.title ?? ""}|${params.region ?? ""}|${params.address ?? ""}`;
+    return LOCAL_FALLBACK_IMAGES[stableImageIndex(seed, LOCAL_FALLBACK_IMAGES.length)];
   }
 
   return DEFAULT_FALLBACK_IMAGE;

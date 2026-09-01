@@ -45,4 +45,25 @@ describe("festivalImageProvider", () => {
     expect(result).toBeTruthy();
     expect(result.length).toBeGreaterThan(0);
   });
+
+  it("assigns stable but distinct fallback images to candidates without official images", () => {
+    const first = getRepresentativeFestivalImage({
+      title: "서울 가을 문화축제",
+      region: "서울",
+      candidateKey: "candidate-101",
+    });
+    const repeated = getRepresentativeFestivalImage({
+      title: "서울 가을 문화축제",
+      region: "서울",
+      candidateKey: "candidate-101",
+    });
+    const second = getRepresentativeFestivalImage({
+      title: "서울 시민 예술제",
+      region: "서울",
+      candidateKey: "candidate-202",
+    });
+
+    expect(repeated).toBe(first);
+    expect(second).not.toBe(first);
+  });
 });

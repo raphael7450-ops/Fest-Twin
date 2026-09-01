@@ -8,8 +8,58 @@
       content="페스트트윈은 지자체 축제 기획안을 데이터 기반으로 사전 진단하는 B2G SaaS입니다."
     />
     <title>페스트트윈(Fest-Twin)</title>
+    <style>
+      html:not(.app-ready) #root {
+        visibility: hidden;
+      }
+
+      .app-boot-loader {
+        align-items: center;
+        background: #f4f7fa;
+        color: #17324d;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        inset: 0;
+        justify-content: center;
+        position: fixed;
+        z-index: 9999;
+      }
+
+      .app-boot-spinner {
+        animation: app-boot-spin 0.85s linear infinite;
+        border: 5px solid #d4dde6;
+        border-radius: 50%;
+        border-top-color: #24878e;
+        height: 44px;
+        width: 44px;
+      }
+
+      .app-boot-loader strong {
+        font-family: Arial, "Noto Sans KR", sans-serif;
+        font-size: 16px;
+        letter-spacing: 0;
+      }
+
+      @keyframes app-boot-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .app-boot-spinner { animation-duration: 1.8s; }
+      }
+    </style>
   </head>
   <body>
+    <div
+      aria-live="polite"
+      class="app-boot-loader"
+      id="app-boot-loader"
+      role="status"
+    >
+      <span aria-hidden="true" class="app-boot-spinner"></span>
+      <strong>Fest-Twin을 불러오는 중입니다</strong>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
