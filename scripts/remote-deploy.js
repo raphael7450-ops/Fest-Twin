@@ -24,10 +24,12 @@ function getVWorldApiKey() {
   return "2BEE395D-834A-3F75-BC64-CAC185A7A442";
 }
 
-const REMOTE_USER = "cwuser";
-const REMOTE_HOST = "100.104.94.112";
+const REMOTE_USER = process.env.REMOTE_USER || "cwuser";
+const REMOTE_HOST = process.env.REMOTE_HOST || "100.104.94.112";
+const FALLBACK_HOST = "cwserver.tail97dbc3.ts.net";
 const REMOTE_PASS = process.env.REMOTE_PASS || "ckddnjsl";
 const VWORLD_API_KEY = getVWorldApiKey();
+
 function findPuTTYExecutable(name) {
   const candidatePaths = [
     `C:\\Program Files\\PuTTY\\${name}`,
@@ -69,11 +71,22 @@ async function main() {
     run(`git archive -o "${TAR_FILE}" HEAD`);
 
     // 2. pscp로 원격 서버 업로드
-    console.log(`\n[2/4] 원격 서버(${REMOTE_USER}@${REMOTE_HOST})에 아카이브 업로드...`);
-    run(`"${PSCP}" -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${REMOTE_HOST}:/home/${REMOTE_USER}/`);
+    let activeHost = REMOTE_HOST;
+    console.log(`\n[2/4] 원격 서버(${REMOTE_USER}@${activeHost})에 아카이브 업로드...`);
+    try {
+      run(`"${PSCP}" -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${activeHost}:/home/${REMOTE_USER}/`);
+    } catch (uploadErr) {
+      if (activeHost !== FALLBACK_HOST) {
+        console.log(`[INFO] ${activeHost} 연결 실패. 대체 호스트(${FALLBACK_HOST})로 재시도합니다...`);
+        activeHost = FALLBACK_HOST;
+        run(`"${PSCP}" -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${activeHost}:/home/${REMOTE_USER}/`);
+      } else {
+        throw uploadErr;
+      }
+    }
 
     // 3. 원격 서버에서 Docker 이미지 빌드 및 컨테이너 재배포 실행
-    console.log("\n[3/4] 원격 서버에서 Docker 이미지 빌드 및 재배포 수행...");
+    console.log(`\n[3/4] 원격 서버(${activeHost})에서 Docker 이미지 빌드 및 재배포 수행...`);
     const remoteCommands = [
       "set -e",
       "staging_dir=$HOME/fest-twin-demo.staging",
@@ -95,7 +108,8 @@ async function main() {
       "echo '==> 원격 Docker 재배포 완료!'",
     ].join(" && ");
 
-    run(`"${PLINK}" -batch -pw ${REMOTE_PASS} ${REMOTE_USER}@${REMOTE_HOST} "${remoteCommands}"`);
+    run(`"${PLINK}" -batch -pw ${REMOTE_PASS} ${REMOTE_USER}@${activeHost} "${remoteCommands}"`);
+
 
     // 4. 배포 헬스체크 수행
     console.log("\n[4/4] 원격 서버 헬스체크 수행...");
