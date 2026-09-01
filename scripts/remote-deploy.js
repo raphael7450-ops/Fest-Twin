@@ -28,9 +28,23 @@ const REMOTE_USER = "cwuser";
 const REMOTE_HOST = "100.104.94.112";
 const REMOTE_PASS = process.env.REMOTE_PASS || "ckddnjsl";
 const VWORLD_API_KEY = getVWorldApiKey();
+function findPuTTYExecutable(name) {
+  const candidatePaths = [
+    `C:\\Program Files\\PuTTY\\${name}`,
+    `C:\\Program Files (x86)\\PuTTY\\${name}`,
+    name,
+  ];
+  for (const candidatePath of candidatePaths) {
+    if (fs.existsSync(candidatePath)) return candidatePath;
+  }
+  return name;
+}
+
+const PLINK = findPuTTYExecutable("plink.exe");
+const PSCP = findPuTTYExecutable("pscp.exe");
 const TAR_FILE = "fest-twin-demo.tar";
-const PLINK = "C:\\Program Files (x86)\\PuTTY\\plink.exe";
-const PSCP = "C:\\Program Files (x86)\\PuTTY\\pscp.exe";
+
+
 
 function run(cmd, opts = {}) {
   return execSync(cmd, { stdio: "inherit", cwd: PROJECT_ROOT, ...opts });
