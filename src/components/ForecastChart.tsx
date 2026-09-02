@@ -1,13 +1,24 @@
 import { useState } from "react";
-import type { DayType, ForecastResult } from "../domain/types";
+import type { DayType, ForecastResult, MetricEvidenceId } from "../domain/types";
+import { EvidenceButton } from "./EvidenceButton";
 
 type FlowMode = "occupancy" | "arrivals";
 
 interface ForecastChartProps {
   forecast: ForecastResult;
+  selectedHour?: number;
+  onSelectHour?: (hour: number) => void;
+  capacityLimit?: number;
+  onOpenEvidence?: (metricId: MetricEvidenceId) => void;
 }
 
-export function ForecastChart({ forecast }: ForecastChartProps) {
+export function ForecastChart({
+  forecast,
+  selectedHour,
+  onSelectHour,
+  capacityLimit,
+  onOpenEvidence,
+}: ForecastChartProps) {
   const [selectedDayType, setSelectedDayType] = useState<DayType>("summary");
   const [flowMode, setFlowMode] = useState<FlowMode>("occupancy");
 
@@ -38,7 +49,13 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
   return (
     <section className="panel forecast-chart-panel">
       <div className="panel-heading">
-        <h2>시간대별 수요 예측</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <h2>시간대별 수요 및 체류 예측</h2>
+          <span className="source-tag">문체부·관광공사 모델</span>
+          {onOpenEvidence && (
+            <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
+          )}
+        </div>
         <span>예측 신뢰도 {forecast.confidence}</span>
       </div>
 
@@ -132,25 +149,55 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
             {Math.round(currentProfile.dayRatio * 100)}%
           </strong>
         </div>
+        {typeof capacityLimit === "number" && capacityLimit > 0 && (
+          <div className="day-type-metric-item">
+            <span className="metric-label">수용 한계 기준</span>
+            <strong className="metric-value">
+              {capacityLimit.toLocaleString("ko-KR")}명
+            </strong>
+          </div>
+        )}
       </div>
 
-      <div className="bar-chart">
-        {visitorsByHour.map((item) => (
-          <div className="bar-row" key={item.hour}>
-            <span>{item.hour}:00</span>
-            <div className="bar-track" aria-hidden="true">
-              <div
-                className="bar-fill"
-                style={{ width: `${(item.visitors / maxVisitors) * 100}%` }}
-              />
+      <div className="bar-chart" role="region" aria-label="시간대별 수요 차트">
+        {visitorsByHour.map((item) => {
+          const isSelected = selectedHour === item.hour;
+          const isOverCapacity =
+            typeof capacityLimit === "number" &&
+            capacityLimit > 0 &&
+            item.visitors > capacityLimit;
+
+          return (
+            <div
+              className={`bar-row ${isSelected ? "bar-row--selected" : ""} ${isOverCapacity ? "bar-row--warning" : ""}`}
+              key={item.hour}
+              role={onSelectHour ? "button" : undefined}
+              tabIndex={onSelectHour ? 0 : undefined}
+              onClick={() => onSelectHour?.(item.hour)}
+              onKeyDown={(e) => {
+                if (onSelectHour && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  onSelectHour(item.hour);
+                }
+              }}
+              aria-label={`${item.hour}시 ${item.visitors.toLocaleString("ko-KR")}명 ${isSelected ? "(선택됨)" : ""}`}
+            >
+              <span>{item.hour}:00</span>
+              <div className="bar-track" aria-hidden="true">
+                <div
+                  className="bar-fill"
+                  style={{ width: `${(item.visitors / maxVisitors) * 100}%` }}
+                />
+              </div>
+              <strong>{item.visitors.toLocaleString("ko-KR")}</strong>
             </div>
-            <strong>{item.visitors.toLocaleString("ko-KR")}</strong>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <p className="forecast-method-note">
-        지역축제 백데이터의 유형별 시간대 패턴과 평일/주말 보정 계수, 프로그램 시간표를 결합한 사전 시뮬레이션입니다.
+        지역축제 백데이터의 유형별 시간대 패턴과 평일/주말 보정 계수, 프로그램 시간표를 결합한 사전 시뮬레이션입니다. 시간대를 클릭하면 우측 혼잡도 지도와 연동됩니다.
       </p>
     </section>
   );
 }
+

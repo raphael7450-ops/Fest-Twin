@@ -1,17 +1,65 @@
-import type { FestivalPlan, SimulationResult } from "../domain/types";
+import type { FestivalPlan, MetricEvidenceId, SimulationResult } from "../domain/types";
+import { EvidenceButton } from "./EvidenceButton";
 
 interface HeatmapProps {
   plan: FestivalPlan;
   simulation: SimulationResult;
+  onOpenEvidence?: (metricId: MetricEvidenceId) => void;
+  onSelectHour?: (hour: number) => void;
 }
 
-export function Heatmap({ plan, simulation }: HeatmapProps) {
+export function Heatmap({
+  plan,
+  simulation,
+  onOpenEvidence,
+  onSelectHour,
+}: HeatmapProps) {
+  const maxScore = Math.max(0, ...simulation.cells.map((c) => c.relativeDensityScore));
+
   return (
-    <section className="panel">
+    <section className="panel heatmap-panel">
       <div className="panel-heading">
-        <h2>혼잡도 시뮬레이션</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <h2>공간 혼잡도 및 밀도 시뮬레이션</h2>
+          <span className="source-tag">공간 격자 감쇠 모델</span>
+          {onOpenEvidence && (
+            <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
+          )}
+        </div>
         <span>{simulation.hour}:00 기준</span>
       </div>
+
+      {onSelectHour && (
+        <div className="heatmap-time-slider-row">
+          <label htmlFor="heatmap-hour-slider">시뮬레이션 시간대 선택:</label>
+          <input
+            id="heatmap-hour-slider"
+            type="range"
+            min={10}
+            max={22}
+            value={simulation.hour}
+            onChange={(e) => onSelectHour(Number(e.target.value))}
+            aria-label="시뮬레이션 시간대 변경"
+          />
+          <strong>{simulation.hour}:00</strong>
+        </div>
+      )}
+
+      <div className="heatmap-summary-strip">
+        <div className="summary-item">
+          <span className="label">격자 크기</span>
+          <strong className="val">{plan.gridWidth} × {plan.gridHeight}</strong>
+        </div>
+        <div className="summary-item">
+          <span className="label">혼잡도 점수</span>
+          <strong className="val">{simulation.congestionScore}점 (피크 상대점수 {maxScore})</strong>
+        </div>
+        <div className="summary-item">
+          <span className="label">병목 지점</span>
+          <strong className="val">{simulation.bottlenecks.length}개소</strong>
+        </div>
+      </div>
+
       <div
         className="heatmap"
         role="grid"
@@ -27,6 +75,7 @@ export function Heatmap({ plan, simulation }: HeatmapProps) {
           />
         ))}
       </div>
+
       <ul className="evidence-list heatmap-bottleneck-list" aria-label="병목 후보 설명">
         {simulation.bottlenecks.map((item) => (
           <li key={item.id}>
@@ -37,3 +86,4 @@ export function Heatmap({ plan, simulation }: HeatmapProps) {
     </section>
   );
 }
+

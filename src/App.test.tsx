@@ -135,7 +135,7 @@ describe("App", () => {
     expect(screen.getByLabelText("핵심 진단 지표")).toBeInTheDocument();
     expect(screen.queryByText("정부 지침 반영 현황")).not.toBeInTheDocument();
     expect(screen.queryByText("제출 데모 검증 현황")).not.toBeInTheDocument();
-    expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
+    expect(screen.getByText(/시간대별 수요/)).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
     expect(screen.getAllByText("서울특별시 영등포구 여의도동 여의도 한강공원 및 이촌 한강공원 일대").length).toBeGreaterThan(0);
     expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
@@ -159,8 +159,8 @@ describe("App", () => {
 
     openDashboardSection("예측");
     expect(screen.getByText("진단 시간대")).toBeInTheDocument();
-    expect(screen.getByText("시간대별 수요 예측")).toBeInTheDocument();
-    expect(screen.getByText("혼잡도 시뮬레이션")).toBeInTheDocument();
+    expect(screen.getByText(/시간대별 수요/)).toBeInTheDocument();
+    expect(screen.getByText(/혼잡도.*시뮬레이션/)).toBeInTheDocument();
 
     openDashboardSection("현장");
     expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();

@@ -49,6 +49,29 @@ describe("Heatmap", () => {
     expect(screen.getAllByLabelText(/상대 혼잡 점수 80/)).toHaveLength(96);
     expect(screen.queryByLabelText(/명\/m²/)).not.toBeInTheDocument();
   });
+
+  it("supports time slider interaction and evidence button", () => {
+    const handleSelectHour = vi.fn();
+    const handleOpenEvidence = vi.fn();
+
+    render(
+      <Heatmap
+        plan={sampleFestivalPlan}
+        simulation={simulation}
+        onSelectHour={handleSelectHour}
+        onOpenEvidence={handleOpenEvidence}
+      />,
+    );
+
+    const slider = screen.getByRole("slider", { name: "시뮬레이션 시간대 변경" });
+    expect(slider).toBeInTheDocument();
+    fireEvent.change(slider, { target: { value: "18" } });
+    expect(handleSelectHour).toHaveBeenCalledWith(18);
+
+    const evidenceBtn = screen.getByRole("button", { name: /근거 보기/ });
+    fireEvent.click(evidenceBtn);
+    expect(handleOpenEvidence).toHaveBeenCalledWith("peak-density");
+  });
 });
 
 const densityUnavailableReason = "행사장 면적 정보가 없어 물리 밀도를 산출할 수 없습니다.";

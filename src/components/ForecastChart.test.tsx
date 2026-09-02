@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, within, cleanup } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { afterEach } from "vitest";
 import { ForecastChart } from "./ForecastChart";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
@@ -19,7 +19,7 @@ describe("ForecastChart", () => {
 
     const { unmount } = render(<ForecastChart forecast={forecast} />);
 
-    expect(screen.getByRole("heading", { name: /시간대별 수요 예측/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /시간대별 수요 및 체류 예측/ })).toBeInTheDocument();
 
     const summaryTab = screen.getByRole("tab", { name: /전체 요약/ });
     const weekdayTab = screen.getByRole("tab", { name: /평일 평균/ });
@@ -108,8 +108,42 @@ describe("ForecastChart", () => {
 
     const { unmount } = render(<ForecastChart forecast={forecastWithoutOccupancy} />);
 
-    expect(screen.getByRole("heading", { name: /시간대별 수요 예측/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /시간대별 수요 및 체류 예측/ })).toBeInTheDocument();
+
+    unmount();
+  });
+
+  it("calls onSelectHour when a time row is clicked and opens evidence", () => {
+    const forecast = createForecast(
+      sampleFestivalPlan,
+      sampleTourismContext,
+      sampleTrendContext,
+    );
+    const handleSelectHour = vi.fn();
+    const handleOpenEvidence = vi.fn();
+
+    const { unmount } = render(
+      <ForecastChart
+        forecast={forecast}
+        selectedHour={20}
+        onSelectHour={handleSelectHour}
+        capacityLimit={30000}
+        onOpenEvidence={handleOpenEvidence}
+      />,
+    );
+
+    const hourButton = screen.getByRole("button", { name: /20시/ });
+    expect(hourButton).toBeInTheDocument();
+    expect(hourButton).toHaveClass("bar-row--selected");
+
+    fireEvent.click(hourButton);
+    expect(handleSelectHour).toHaveBeenCalledWith(20);
+
+    const evidenceBtn = screen.getByRole("button", { name: /근거 보기/ });
+    fireEvent.click(evidenceBtn);
+    expect(handleOpenEvidence).toHaveBeenCalledWith("demand-index");
 
     unmount();
   });
 });
+

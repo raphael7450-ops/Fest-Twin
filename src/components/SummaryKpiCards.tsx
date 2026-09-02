@@ -49,7 +49,10 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
     <section className="summary-grid summary-kpi-grid" aria-label="핵심 진단 지표">
       <article className="metric-card metric-card--primary">
         <div className="kpi-title-row">
-          <span>흥행 가능성 점수</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span>흥행 가능성 점수</span>
+            <span className="source-tag">TourAPI·문체부</span>
+          </div>
           <div className="kpi-actions">
             <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
             <em className={`kpi-badge kpi-badge-${successTone}`}>
@@ -68,7 +71,10 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
 
       <article className="metric-card metric-card--danger">
         <div className="kpi-title-row">
-          <span>최고 밀집 위험도</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span>최고 밀집 위험도</span>
+            <span className="source-tag">VWorld·감쇠격자</span>
+          </div>
           <div className="kpi-actions">
             <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
             <em className={`risk-badge risk-badge-${densityTone}`}>
@@ -90,7 +96,10 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
 
       <article className="metric-card metric-card--warning">
         <div className="kpi-title-row">
-          <span>예산 효율성 점수</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span>예산 효율성 점수</span>
+            <span className="source-tag">예산·관광백데이터</span>
+          </div>
           <EvidenceButton onClick={() => onOpenEvidence("budget-efficiency")} />
         </div>
         <strong>{formatKrw(metrics.budgetEfficiency.costPerVisitorKrw)}</strong>
@@ -99,7 +108,10 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
 
       <article className="metric-card metric-card--success">
         <div className="kpi-title-row">
-          <span>지역 상권 유출 연계도</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span>지역 상권 유출 연계도</span>
+            <span className="source-tag">관광소비·상권</span>
+          </div>
           <EvidenceButton onClick={() => onOpenEvidence("commercial-spillover")} />
         </div>
         <strong>{metrics.spillover.nearbyInflowRate}%</strong>

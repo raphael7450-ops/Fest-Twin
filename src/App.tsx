@@ -518,7 +518,19 @@ export function App() {
               <section className="dashboard-section-panel dashboard-section-panel--overview active">
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
-                    <ForecastChart forecast={forecast} />
+                    <ForecastChart
+                      forecast={forecast}
+                      selectedHour={committed.selectedHour}
+                      onSelectHour={setSelectedHour}
+                      capacityLimit={analysisPlan.expectedCapacity}
+                      onOpenEvidence={setSelectedEvidenceId}
+                    />
+                    <Heatmap
+                      plan={analysisPlan}
+                      simulation={simulation}
+                      onSelectHour={setSelectedHour}
+                      onOpenEvidence={setSelectedEvidenceId}
+                    />
                     <VenueMapPanel
                       key={`overview-map-${analysisPlan.name}-${analysisPlan.venueCoordinates?.latitude}-${analysisPlan.venueCoordinates?.longitude}`}
                       plan={analysisPlan}
@@ -595,8 +607,19 @@ export function App() {
                       selectedHour={committed.selectedHour}
                       onSelectedHourChange={setSelectedHour}
                     />
-                    <ForecastChart forecast={forecast} />
-                    <Heatmap plan={analysisPlan} simulation={simulation} />
+                    <ForecastChart
+                      forecast={forecast}
+                      selectedHour={committed.selectedHour}
+                      onSelectHour={setSelectedHour}
+                      capacityLimit={analysisPlan.expectedCapacity}
+                      onOpenEvidence={setSelectedEvidenceId}
+                    />
+                    <Heatmap
+                      plan={analysisPlan}
+                      simulation={simulation}
+                      onSelectHour={setSelectedHour}
+                      onOpenEvidence={setSelectedEvidenceId}
+                    />
                     <InfrastructureCapacityPanel plan={analysisPlan} forecast={forecast} onOpenEvidence={setSelectedEvidenceId} />
                   </div>
                 </div>
