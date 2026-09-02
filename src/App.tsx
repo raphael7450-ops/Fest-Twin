@@ -10,6 +10,8 @@ import { AnalysisStatusBanner } from "./components/AnalysisStatusBanner";
 import { B2gPrintReport } from "./components/B2gPrintReport";
 import { DataBasisPanel } from "./components/DataBasisPanel";
 import { FestivalCandidatePanel } from "./components/FestivalCandidatePanel";
+import { FestivalSearchModal } from "./components/FestivalSearchModal";
+import type { FestivalPreset } from "./data/festivalPresets";
 import { ForecastChart } from "./components/ForecastChart";
 import { GovernmentHeader } from "./components/GovernmentHeader";
 import { Heatmap } from "./components/Heatmap";
@@ -102,12 +104,20 @@ export function App() {
   const [areaCodes, setAreaCodes] = useState<TourApiAreaCode[]>(DEFAULT_AREA_CODES);
   const [isAreaLoading, setIsAreaLoading] = useState(true);
   const [isCandidatePanelOpen, setIsCandidatePanelOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [presetBasis, setPresetBasis] = useState<SelectedFestivalBasis | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<FestivalCandidate | null>(null);
   const [applyingCandidate, setApplyingCandidate] = useState<{
     id: string;
     title: string;
   } | null>(null);
+
+  const handleSelectPreset = (preset: FestivalPreset) => {
+    setPlan(preset.plan);
+    setPresetBasis(preset.basis);
+    setSelectedCandidate(null);
+    setIsSearchModalOpen(false);
+  };
   const selectedFestivalBasis = useMemo(
     () => (selectedCandidate ? createSelectedFestivalBasis(selectedCandidate) : presetBasis),
     [selectedCandidate, presetBasis],
@@ -435,7 +445,7 @@ export function App() {
             </nav>
           </aside>
           <div className="dashboard-content">
-            <GovernmentHeader />
+            <GovernmentHeader onOpenFestivalSearch={() => setIsSearchModalOpen(true)} />
           <AnalysisStatusBanner
             phase={analysis.phase}
             snapshot={committed}
@@ -684,6 +694,12 @@ export function App() {
         applyingCandidateId={applyingCandidate?.id}
         onClose={() => setIsCandidatePanelOpen(false)}
         onSelectCandidate={handleSelectCandidate}
+      />
+      <FestivalSearchModal
+        isOpen={isSearchModalOpen}
+        plan={analysisPlan}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelectPreset={handleSelectPreset}
       />
       <MetricEvidenceDrawer
         evidence={selectedEvidenceId ? metricEvidence[selectedEvidenceId] : undefined}

@@ -1,4 +1,8 @@
-export function GovernmentHeader() {
+interface GovernmentHeaderProps {
+  onOpenFestivalSearch?: () => void;
+}
+
+export function GovernmentHeader({ onOpenFestivalSearch }: GovernmentHeaderProps) {
   return (
     <header className="government-header">
       <div className="government-header__brand">
@@ -15,6 +19,28 @@ export function GovernmentHeader() {
       <div className="government-header__meta" aria-label="데모 검토 상태">
         <span className="status-pill">공공 검토 대시보드</span>
         <span>실데이터 우선</span>
+
+        {onOpenFestivalSearch && (
+          <button
+            className="text-button"
+            type="button"
+            onClick={onOpenFestivalSearch}
+            style={{
+              padding: "6px 14px",
+              background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+              color: "#ffffff",
+              borderRadius: "6px",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(37, 99, 235, 0.3)",
+            }}
+            aria-label="전국 축제 검색 및 변경"
+          >
+            축제 검색/변경
+          </button>
+        )}
 
         <button
           className="print-button b2g-pdf-button"
