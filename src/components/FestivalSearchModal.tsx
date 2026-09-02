@@ -117,13 +117,9 @@ export function FestivalSearchModal({
 
     const params = new URLSearchParams({
       limit: query.trim() ? "30" : "20",
+      minEndDate: today,
     });
-    if (!plan?.endDate || plan.endDate >= today) {
-      params.set("minEndDate", today);
-    }
     if (plan?.region) params.set("region", plan.region);
-    if (plan?.startDate) params.set("startDate", plan.startDate);
-    if (plan?.endDate) params.set("endDate", plan.endDate);
     if (query.trim()) params.set("q", query.trim());
     const url = `/api/regional-festivals?${params.toString()}`;
 
@@ -132,7 +128,9 @@ export function FestivalSearchModal({
       .then((data) => {
         if (!controller.signal.aborted) {
           if (Array.isArray(data?.records)) {
-            const presets = data.records.map(dbRecordToPreset);
+            const presets = data.records
+              .map(dbRecordToPreset)
+              .filter((preset: FestivalPreset) => isOngoingOrUpcomingFestival(preset, today));
             setApiPresets(presets);
           }
           setIsLoading(false);
@@ -147,7 +145,7 @@ export function FestivalSearchModal({
     return () => {
       controller.abort();
     };
-  }, [query, isOpen, today, plan?.region, plan?.startDate, plan?.endDate]);
+  }, [query, isOpen, today, plan?.region]);
 
 function getNormalizedBaseName(name: string): string {
   return name
