@@ -45,22 +45,36 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
           ? "주의"
           : "정상";
 
+  const spilloverTone =
+    metrics.spillover.nearbyInflowRate >= 40
+      ? "high"
+      : metrics.spillover.nearbyInflowRate >= 20
+        ? "medium"
+        : "low";
+  const spilloverLabel =
+    metrics.spillover.nearbyInflowRate >= 40
+      ? "상권 우수"
+      : metrics.spillover.nearbyInflowRate >= 20
+        ? "상권 보통"
+        : "상권 취약";
+
   return (
     <section className="summary-grid summary-kpi-grid" aria-label="핵심 진단 지표">
+      {/* 1. 흥행 가능성 점수 */}
       <article className="metric-card metric-card--primary">
-        <div className="kpi-title-row">
-          <div className="kpi-title-group">
-            <span className="kpi-title-label">흥행 가능성 점수</span>
-            <span className="source-tag">TourAPI·문체부</span>
-          </div>
-          <div className="kpi-actions">
+        <div className="kpi-card-header">
+          <span className="kpi-title-label">흥행 가능성 점수</span>
+          <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
+        </div>
+        <div className="kpi-meta-row">
+          <span className="source-tag">TourAPI·문체부</span>
+          <div className="kpi-badges-group">
             <em className={`kpi-badge kpi-badge-${successTone}`}>
               {metrics.successPotential.grade}
             </em>
             <em className={`kpi-badge kpi-badge-${capacityTone}`}>
               {capacityLabel}
             </em>
-            <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
           </div>
         </div>
         <div className="kpi-body">
@@ -71,17 +85,18 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
         </div>
       </article>
 
+      {/* 2. 최고 밀집 위험도 */}
       <article className="metric-card metric-card--danger">
-        <div className="kpi-title-row">
-          <div className="kpi-title-group">
-            <span className="kpi-title-label">최고 밀집 위험도</span>
-            <span className="source-tag">VWorld·감쇠격자</span>
-          </div>
-          <div className="kpi-actions">
+        <div className="kpi-card-header">
+          <span className="kpi-title-label">최고 밀집 위험도</span>
+          <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
+        </div>
+        <div className="kpi-meta-row">
+          <span className="source-tag">VWorld·감쇠격자</span>
+          <div className="kpi-badges-group">
             <em className={`risk-badge risk-badge-${densityTone}`}>
               {densityLabel}
             </em>
-            <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
           </div>
         </div>
         <div className="kpi-body">
@@ -98,14 +113,16 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
         </div>
       </article>
 
+      {/* 3. 예산 효율성 점수 */}
       <article className="metric-card metric-card--warning">
-        <div className="kpi-title-row">
-          <div className="kpi-title-group">
-            <span className="kpi-title-label">예산 효율성 점수</span>
-            <span className="source-tag">예산·관광백데이터</span>
-          </div>
-          <div className="kpi-actions">
-            <EvidenceButton onClick={() => onOpenEvidence("budget-efficiency")} />
+        <div className="kpi-card-header">
+          <span className="kpi-title-label">예산 효율성 점수</span>
+          <EvidenceButton onClick={() => onOpenEvidence("budget-efficiency")} />
+        </div>
+        <div className="kpi-meta-row">
+          <span className="source-tag">예산·관광백데이터</span>
+          <div className="kpi-badges-group">
+            <em className="kpi-badge kpi-badge-high">우수 수준</em>
           </div>
         </div>
         <div className="kpi-body">
@@ -114,14 +131,16 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
         </div>
       </article>
 
+      {/* 4. 지역 상권 유출 연계도 */}
       <article className="metric-card metric-card--success">
-        <div className="kpi-title-row">
-          <div className="kpi-title-group">
-            <span className="kpi-title-label">지역 상권 유출 연계도</span>
-            <span className="source-tag">관광소비·상권</span>
-          </div>
-          <div className="kpi-actions">
-            <EvidenceButton onClick={() => onOpenEvidence("commercial-spillover")} />
+        <div className="kpi-card-header">
+          <span className="kpi-title-label">지역 상권 유출 연계도</span>
+          <EvidenceButton onClick={() => onOpenEvidence("commercial-spillover")} />
+        </div>
+        <div className="kpi-meta-row">
+          <span className="source-tag">관광소비·상권</span>
+          <div className="kpi-badges-group">
+            <em className={`kpi-badge kpi-badge-${spilloverTone}`}>{spilloverLabel}</em>
           </div>
         </div>
         <div className="kpi-body">

@@ -4595,49 +4595,19 @@ a:focus-visible {
   color: #0f172a;
 }
 
-/* KPI Title Row & Actions Layout */
-.kpi-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.kpi-title-group {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-width: 0;
-}
-
-.kpi-title-label {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #334155;
-  white-space: nowrap;
-}
-
-.kpi-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
+/* KPI Card Uniform 4-Zone Structure */
 .summary-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .metric-card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 124px;
+  min-height: 154px;
   padding: 16px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -4667,18 +4637,64 @@ a:focus-visible {
   border-top: 3px solid #10b981;
 }
 
+/* Zone 1: Card Header (Title on Left, Evidence Button on Right) */
+.kpi-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  margin-bottom: 6px;
+}
+
+.kpi-title-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+/* Zone 2: Meta Row (Source tag on Left, Status Badges on Right) */
+.kpi-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  margin-bottom: 12px;
+}
+
+.kpi-badges-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Zone 3 & 4: Body (Large Value & Footer Description) */
 .kpi-body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: flex-end;
+  flex: 1;
   margin-top: auto;
 }
 
 .kpi-value {
-  font-size: 1.45rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: #0f172a;
-  line-height: 1.2;
+  line-height: 1.15;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.metric-trend {
+  display: block;
+  font-size: 0.76rem;
+  color: #64748b;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .source-tag {
