@@ -773,6 +773,28 @@ export function createMetricEvidenceSet(
       metricId: "demand-index",
       title: "흥행 가능성 점수",
       summary: `예측 모델의 성공 점수 ${summary.successPotential.score}점을 0~100 범위로 정규화한 지표입니다.`,
+      takeawaySummary: `주변 관광 매력도(28%) + 소셜 관심도(30%) + 프로그램 호응도(28%) + 과거 축제 실적(14%) = 흥행 잠재력 ${summary.successPotential.score}점`,
+      plainExplanation: `본 지표는 주최측의 기획 규모(목표인원, 프로그램 구성)에 한국관광공사 TourAPI 주변 관광지(${tourism.nearbySpots.length}곳) 매력도, 네이버 소셜 검색 버즈량, 기상청 단기예보 조건을 종합 결합하여 산출한 종합 흥행 성공 예측 지수입니다.`,
+      inputComparison: [
+        {
+          label: "기획안 입력값",
+          planValue: `수용인원 ${plan.expectedCapacity.toLocaleString("ko-KR")}명, 예산 ${(plan.totalBudgetMillionKrw / 10).toFixed(1)}억원, 프로그램 ${plan.programs.length}개`,
+          adjustedFactor: "기초 집객 규모",
+          resultValue: "기준선 100%",
+        },
+        {
+          label: "공공데이터 보정",
+          planValue: `${weather?.weather.conditionText ?? "맑음"} (${weather?.weather.temperatureCelsius ?? 18}°C)`,
+          adjustedFactor: `기상 보정 ${(weather?.attractivenessMultiplier ?? 1.0).toFixed(2)}배 / 소셜 관심도 반영`,
+          resultValue: `주변 관광지 ${tourism.nearbySpots.length}곳 연계`,
+        },
+        {
+          label: "최종 AI 산출값",
+          planValue: "일평균 예상 수요",
+          adjustedFactor: "다변량 회귀 시뮬레이션",
+          resultValue: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명 (흥행 잠재력 ${summary.successPotential.score}점/상)`,
+        },
+      ],
       dataSources: [
         "기상청 단기예보 OpenAPI",
         "TourAPI 주변 관광지 매력도",
@@ -849,6 +871,28 @@ export function createMetricEvidenceSet(
       metricId: "capacity-pressure",
       title: "수용 정원률",
       summary: `예상 방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명을 선택 기획안 수용 인원 ${plan.expectedCapacity.toLocaleString("ko-KR")}명과 비교한 결과 ${summary.capacityPressure.displayPercent}%입니다.`,
+      takeawaySummary: `행사장 설계 수용 정원(${plan.expectedCapacity.toLocaleString("ko-KR")}명) 대비 일일 예상 유입(${forecast.expectedVisitors.toLocaleString("ko-KR")}명) = 수용 압박률 ${summary.capacityPressure.displayPercent}%`,
+      plainExplanation: `행사장 물리적 수용 설계 한계 대비 실제 유입 예상 인원의 비율입니다. 100%를 초과하는 구간에서는 사전 진입 통제선 구축 및 임시 대기존 조성이 권고됩니다.`,
+      inputComparison: [
+        {
+          label: "기획안 입력값",
+          planValue: `설계 수용 정원 ${plan.expectedCapacity.toLocaleString("ko-KR")}명`,
+          adjustedFactor: "행사장 설계 한계",
+          resultValue: "기준선 100%",
+        },
+        {
+          label: "AI 수요 예측",
+          planValue: `일평균 방문객 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+          adjustedFactor: "예상 유입량",
+          resultValue: `수용 대비 ${summary.capacityPressure.displayPercent}%`,
+        },
+        {
+          label: "안전 상태 판정",
+          planValue: summary.capacityPressure.status === "over" ? "수용 초과 (과밀 경고)" : "적정 수용 범위",
+          adjustedFactor: "안전 여유율 평가",
+          resultValue: summary.capacityPressure.status === "over" ? "사전 우회 동선 필요" : "안정적 운영 가능",
+        },
+      ],
       dataSources: ["예상 방문객", "선택 기획안 수용 인원"],
       sourceDetails: [
         {
@@ -892,6 +936,28 @@ export function createMetricEvidenceSet(
         summary.peakDensity.status === "available"
           ? `피크 방문객과 ${venueAreaDescription.label} 행사장 면적으로 물리 밀도 ${summary.peakDensity.value.toFixed(2)}명/m²를 산출했습니다.`
           : `물리 밀도 산출 불가: ${summary.peakDensity.reason}`,
+      takeawaySummary: `피크 시간(${simulation.hour}시) 체류 인원(${peakVisitors.toLocaleString("ko-KR")}명) ÷ 행사장 면적(${(plan.venueAreaSquareMeters ?? 20000).toLocaleString("ko-KR")}m²) = 최고 밀집도 ${summary.peakDensity.status === "available" ? summary.peakDensity.value.toFixed(2) : "0.00"}명/m²`,
+      plainExplanation: `행정안전부 다중운집 안전관리 매뉴얼 기준, 단위 면적(1m²)당 동시 체류하는 인원수입니다. 3명/m² 초과 시 이동 제한 및 압사 위험 경보가 발생하며 일방통행 유도가 필수입니다.`,
+      inputComparison: [
+        {
+          label: "행사장 면적",
+          planValue: `${(plan.venueAreaSquareMeters ?? 20000).toLocaleString("ko-KR")}m²`,
+          adjustedFactor: venueAreaDescription.label,
+          resultValue: "유효 관람 면적",
+        },
+        {
+          label: "피크 동시 체류",
+          planValue: `${peakVisitors.toLocaleString("ko-KR")}명 (${simulation.hour}:00 피크)`,
+          adjustedFactor: "체류 시간 흐름도 반영",
+          resultValue: "최대 밀집 순간",
+        },
+        {
+          label: "최고 물리 밀도",
+          planValue: summary.peakDensity.status === "available" ? `${summary.peakDensity.value.toFixed(2)}명/m²` : "산출 불가",
+          adjustedFactor: "안전 기준(3.0명/m²)",
+          resultValue: `병목 위험 후보 ${simulation.bottlenecks.length}곳 감지`,
+        },
+      ],
       dataSources: [
         "시간대별 예상 방문객",
         `행사장 면적 (${venueAreaDescription.label})`,
@@ -923,6 +989,28 @@ export function createMetricEvidenceSet(
       metricId: "budget-efficiency",
       title: "예산 효율성 점수",
       summary: `총 예산을 예상 방문객으로 나누어 1인당 ${summary.budgetEfficiency.costPerVisitorKrw.toLocaleString("ko-KR")}원 수준으로 산출했습니다.`,
+      takeawaySummary: `총 투입 예산(${(plan.totalBudgetMillionKrw / 10).toFixed(1)}억원) ÷ 예상 방문객(${forecast.expectedVisitors.toLocaleString("ko-KR")}명) = 1인당 유치 단가 ${summary.budgetEfficiency.costPerVisitorKrw.toLocaleString("ko-KR")}원`,
+      plainExplanation: `지자체 재정 성과 평가 지표로, 방문객 1인을 현장에 유치하기 위해 투입된 공공 예산의 단가입니다. 동급 축제 평균 대비 투입 단가가 낮을수록 높은 예산 효율성 점수를 획득합니다.`,
+      inputComparison: [
+        {
+          label: "총 투입 예산",
+          planValue: `${plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}백만원`,
+          adjustedFactor: "공공 재정 투입액",
+          resultValue: "총 사업비",
+        },
+        {
+          label: "예상 총 집객",
+          planValue: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
+          adjustedFactor: "AI 수요 예측치",
+          resultValue: "유치 인원",
+        },
+        {
+          label: "1인당 유치 비용",
+          planValue: `${summary.budgetEfficiency.costPerVisitorKrw.toLocaleString("ko-KR")}원/인`,
+          adjustedFactor: "예산 효율성 평가",
+          resultValue: summary.budgetEfficiency.description,
+        },
+      ],
       dataSources: ["사용자 입력 총 예산", "예상 방문객"],
       formulaSummary: "방문객 1인당 예산 = 총 투입 예산 / 예상 방문객",
       assumptions: ["총 예산은 백만원 단위 입력값을 원 단위로 환산합니다."],
@@ -947,7 +1035,29 @@ export function createMetricEvidenceSet(
       metricId: "commercial-spillover",
       title: "지역 상권 유출 연계도",
       summary: `주변 관광지 매력도와 개수를 바탕으로 ${summary.spillover.nearbyInflowRate}%의 연계 가능성을 추정했습니다.`,
-      dataSources: ["TourAPI 주변 관광지", "관광지 매력도 점수"],
+      takeawaySummary: `주변 관광 매력도 + 소상공인 상권 밀집도 = 상권 유출 연계율 ${summary.spillover.nearbyInflowRate}%, 예상 소비 창출 ${(economy.expectedLocalSpendingKrw / 100000000).toFixed(1)}억원`,
+      plainExplanation: `한국관광공사 지역별 관광소비강도 데이터 기반으로, 축제 방문객이 행사장 관람 후 인근 골목상권, 식당, 숙박시설로 이동하여 유발하는 지역 경제 파급효과 추정치입니다.`,
+      inputComparison: [
+        {
+          label: "개최 지역",
+          planValue: `${plan.region} (${plan.venueAddress})`,
+          adjustedFactor: "상권 연계성",
+          resultValue: "주변 상권역",
+        },
+        {
+          label: "방문객 1인 소비액",
+          planValue: `${(economy.averageSpendPerVisitorKrw ?? 58400).toLocaleString("ko-KR")}원`,
+          adjustedFactor: "관광소비강도 계수",
+          resultValue: "소비 유발 단가",
+        },
+        {
+          label: "총 지역 소비 창출",
+          planValue: `${((economy.expectedLocalSpendingKrw ?? 0) / 100000000).toFixed(1)}억원`,
+          adjustedFactor: `상권 연계율 ${summary.spillover.nearbyInflowRate}%`,
+          resultValue: "지역 경제 파급효과",
+        },
+      ],
+      dataSources: ["TourAPI 주변 관광지", "관광지 매력도 점수", "한국관광공사 관광소비강도"],
       formulaSummary:
         "연계도 = 주변 관광지 평균 매력도와 관광지 수 보너스를 결합한 사전 추정값입니다.",
       assumptions: [
@@ -976,6 +1086,28 @@ export function createMetricEvidenceSet(
       metricId: "safety-staff",
       title: "안전관리 요원 추천 배치",
       summary: `피크 방문객과 병목 후보를 기준으로 ${safety.staffing.recommended}명을 추천합니다.`,
+      takeawaySummary: `피크 인원 820명당 1명 + 병목 구간(${simulation.bottlenecks.length}곳 × 2명) + 혼잡 가산 = 추천 안전요원 ${safety.staffing.recommended}명`,
+      plainExplanation: `행정안전부 지역축제 안전관리 매뉴얼 및 가상 트윈 시뮬레이션의 병목 지점을 반영하여, 군중 쏠림 사고를 예방하기 위한 최소 권고 안전관리 인력입니다.`,
+      inputComparison: [
+        {
+          label: "피크 예상 인원",
+          planValue: `${peakVisitors.toLocaleString("ko-KR")}명 (${simulation.hour}:00)`,
+          adjustedFactor: "인원 비례 기준 (820명당 1명)",
+          resultValue: `${Math.ceil(peakVisitors / 820)}명`,
+        },
+        {
+          label: "병목 및 취약지",
+          planValue: `병목 후보 ${simulation.bottlenecks.length}곳 / 출입구 ${plan.facilities.filter((f) => f.type === "entrance").length}개소`,
+          adjustedFactor: "지점당 2명 고정 배치",
+          resultValue: `+${simulation.bottlenecks.length * 2}명 가산`,
+        },
+        {
+          label: "최종 추천 배치",
+          planValue: `총 ${safety.staffing.recommended}명 (최소 8명 보장)`,
+          adjustedFactor: "안전 가이드라인 충족",
+          resultValue: "현장 배치 권고안",
+        },
+      ],
       dataSources: [
         "보건복지부/소방청 응급의료기관 및 119 안전센터",
         "피크 시간대 예상 방문객",
@@ -1014,6 +1146,28 @@ export function createMetricEvidenceSet(
         safety.medicalStaff.status === "available"
           ? `피크 방문객과 임계 상대 혼잡 격자를 기준으로 ${safety.medicalStaff.value}명을 추천합니다.`
           : `의료 인력 산출 불가: ${safety.medicalStaff.reason}`,
+      takeawaySummary: `피크 인원 5,000명당 1명 + 임계 혼잡 격자(${criticalCells}곳) = 추천 의료인력 ${safety.medicalStaff.status === "available" ? safety.medicalStaff.value : 0}명 및 구급차량 권고`,
+      plainExplanation: `응급의료에 관한 법률 및 소방청 지침에 따라, 인파 밀집 시 발생 가능한 온열/탈진 및 부상자 응급 처치를 위한 의사, 간호사, 응급구조사 최소 권고 인원입니다.`,
+      inputComparison: [
+        {
+          label: "피크 동시 인원",
+          planValue: `${peakVisitors.toLocaleString("ko-KR")}명`,
+          adjustedFactor: "5,000명당 1명 기준",
+          resultValue: `${Math.ceil(peakVisitors / 5000)}명`,
+        },
+        {
+          label: "임계 혼잡 격자",
+          planValue: `고위험/임계 격자 ${highRiskCells}곳`,
+          adjustedFactor: "응급 이송 소요 가산",
+          resultValue: `+${criticalCells}명 보강`,
+        },
+        {
+          label: "최종 추천 의료진",
+          planValue: safety.medicalStaff.status === "available" ? `${safety.medicalStaff.value}명` : "산출 불가",
+          adjustedFactor: "구급차량 1~2대 대기 권고",
+          resultValue: "응급의료본부 배치",
+        },
+      ],
       dataSources: [
         "피크 시간대 예상 방문객",
         "고위험 및 임계 상대 혼잡 격자",

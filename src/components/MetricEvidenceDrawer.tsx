@@ -61,6 +61,90 @@ export function MetricEvidenceDrawer({
           </button>
         </div>
 
+        {evidence.takeawaySummary && (
+          <div
+            className="evidence-takeaway-card"
+            style={{
+              background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+              border: "1px solid #38bdf8",
+              borderRadius: "8px",
+              padding: "14px 16px",
+              marginBottom: "16px",
+              boxShadow: "0 4px 12px rgba(56, 189, 248, 0.15)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "0.74rem", fontWeight: 700, letterSpacing: "0.5px", color: "#38bdf8", textTransform: "uppercase" }}>
+                3초 핵심 요약 (Key Takeaway)
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600, color: "#f8fafc", lineHeight: 1.5 }}>
+              {safeEvidenceText(evidence.takeawaySummary)}
+            </p>
+          </div>
+        )}
+
+        {evidence.plainExplanation && (
+          <div
+            className="evidence-plain-explanation"
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #cbd5e1",
+              borderLeft: "4px solid #2563eb",
+              borderRadius: "4px 8px 8px 4px",
+              padding: "12px 14px",
+              marginBottom: "16px",
+            }}
+          >
+            <strong style={{ display: "block", fontSize: "0.82rem", color: "#1e293b", marginBottom: "4px" }}>
+              행정 보고용 직관 해설 (Plain Language)
+            </strong>
+            <p style={{ margin: 0, fontSize: "0.88rem", color: "#334155", lineHeight: 1.5 }}>
+              {safeEvidenceText(evidence.plainExplanation)}
+            </p>
+          </div>
+        )}
+
+        {evidence.inputComparison && evidence.inputComparison.length > 0 && (
+          <div className="evidence-section">
+            <h3>투입값 vs 보정치 vs 최종 산출 (Input to Output)</h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: "10px",
+                marginBottom: "16px",
+              }}
+            >
+              {evidence.inputComparison.map((comp, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "12px",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "4px" }}>
+                    {comp.label}
+                  </span>
+                  <div style={{ fontSize: "0.85rem", color: "#0f172a", marginBottom: "4px" }}>
+                    {comp.planValue}
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "#2563eb", background: "#eff6ff", padding: "2px 6px", borderRadius: "4px", display: "inline-block", marginBottom: "4px" }}>
+                    {comp.adjustedFactor}
+                  </div>
+                  <div style={{ fontSize: "0.84rem", fontWeight: 600, color: "#059669" }}>
+                    {comp.resultValue}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="evidence-summary">{evidence.summary}</p>
 
         <div className="evidence-section">

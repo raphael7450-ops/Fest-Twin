@@ -451,6 +451,14 @@ export interface MetricEvidence {
   metricId: MetricEvidenceId;
   title: string;
   summary: string;
+  takeawaySummary?: string;
+  plainExplanation?: string;
+  inputComparison?: {
+    label: string;
+    planValue: string;
+    adjustedFactor: string;
+    resultValue: string;
+  }[];
   dataSources: string[];
   sourceDetails: MetricEvidenceSourceDetail[];
   formulaSummary: string;
