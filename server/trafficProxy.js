@@ -57,7 +57,7 @@ function isScalar(value) {
 }
 
 function isSafeLinkId(value) {
-  return typeof value === "string" && /^\d{7}$/.test(value);
+  return typeof value === "string" && /^\d{7,10}$/.test(value);
 }
 
 function isSafeZoneId(value) {

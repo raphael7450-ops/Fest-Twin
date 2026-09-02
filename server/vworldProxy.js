@@ -19,13 +19,16 @@ function errorResponse(response, status, code, message) {
 function validateSearchQuery(query) {
   const text = typeof query.query === "string" ? query.query.trim() : "";
   const type = typeof query.type === "string" ? query.type.toUpperCase() : "ADDRESS";
-  const category = typeof query.category === "string" ? query.category.toUpperCase() : "";
+  let category = typeof query.category === "string" ? query.category.toUpperCase() : "";
 
   if (text.length < 2 || text.length > 120) {
     return { ok: false, message: "VWorld search query must be between 2 and 120 characters." };
   }
   if (!allowedTypes.has(type)) {
     return { ok: false, message: "Unsupported VWorld search type." };
+  }
+  if (type === "ADDRESS" && !category) {
+    category = "ROAD";
   }
   if (category && !allowedCategories.has(category)) {
     return { ok: false, message: "Unsupported VWorld address category." };
