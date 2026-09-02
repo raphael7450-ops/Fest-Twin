@@ -458,10 +458,32 @@ export function createForecast(
     }
   }
 
+  const weekdayHourWeights = operatingHours.map((hour, index) => {
+    const baseWeight = hourWeights[index] ?? 1.0;
+    // 평일: 주간 시간대(10~16시) 유입 완만, 퇴근 직후(17~20시) 유입 급증
+    if (hour < 16) {
+      return baseWeight * 0.62;
+    } else if (hour >= 17 && hour <= 20) {
+      return baseWeight * 1.48;
+    }
+    return baseWeight * 1.05;
+  });
+
+  const weekendHourWeights = operatingHours.map((hour, index) => {
+    const baseWeight = hourWeights[index] ?? 1.0;
+    // 주말: 축제 시작(10~12시)부터 가족/나들이객 높은 유입 지속, 오후(13~18시) 전일 고른 유입 유지
+    if (hour <= 12) {
+      return baseWeight * 1.38;
+    } else if (hour >= 13 && hour <= 17) {
+      return baseWeight * 1.28;
+    }
+    return baseWeight * 1.12;
+  });
+
   const weekdayExpectedVisitors = Math.round(expectedVisitors * weekdayRatio);
   const weekdayArrivalsByHour = allocateHourlyArrivals(
     operatingHours,
-    hourWeights,
+    weekdayHourWeights,
     weekdayExpectedVisitors,
   );
   const weekdayFlow = buildVisitorFlow(weekdayArrivalsByHour, dwellProfile, anchorEndHour);
@@ -475,7 +497,7 @@ export function createForecast(
   const weekendExpectedVisitors = Math.round(expectedVisitors * weekendRatio);
   const weekendArrivalsByHour = allocateHourlyArrivals(
     operatingHours,
-    hourWeights,
+    weekendHourWeights,
     weekendExpectedVisitors,
   );
   const weekendFlow = buildVisitorFlow(weekendArrivalsByHour, dwellProfile, anchorEndHour);
