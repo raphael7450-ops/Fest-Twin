@@ -49,14 +49,16 @@ export function ForecastChart({
   return (
     <section className="panel forecast-chart-panel">
       <div className="panel-heading">
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="panel-heading-title">
           <h2>시간대별 수요 및 체류 예측</h2>
           <span className="source-tag">문체부·관광공사 모델</span>
+        </div>
+        <div className="panel-heading-actions">
+          <span className="confidence-pill">예측 신뢰도 {forecast.confidence}</span>
           {onOpenEvidence && (
             <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
           )}
         </div>
-        <span>예측 신뢰도 {forecast.confidence}</span>
       </div>
 
       <div className="day-type-tab-group" role="tablist" aria-label="수요 예측 구분">

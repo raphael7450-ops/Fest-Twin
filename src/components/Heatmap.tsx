@@ -19,14 +19,16 @@ export function Heatmap({
   return (
     <section className="panel heatmap-panel">
       <div className="panel-heading">
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="panel-heading-title">
           <h2>공간 혼잡도 및 밀도 시뮬레이션</h2>
           <span className="source-tag">공간 격자 감쇠 모델</span>
+        </div>
+        <div className="panel-heading-actions">
+          <span className="confidence-pill">{simulation.hour}:00 기준</span>
           {onOpenEvidence && (
             <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
           )}
         </div>
-        <span>{simulation.hour}:00 기준</span>
       </div>
 
       {onSelectHour && (
