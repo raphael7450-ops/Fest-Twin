@@ -153,17 +153,44 @@ export function DataBasisPanel({
       </ul>
 
       <div className="data-status-summary">
-        <h3>데이터 상태 요약</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <h3 style={{ margin: 0 }}>데이터 상태 요약</h3>
+          <span style={{ fontSize: "0.78rem", color: "#10b981", background: "#ecfdf5", padding: "2px 8px", borderRadius: "12px", border: "1px solid #a7f3d0" }}>
+            게이트웨이 정상 가동 중
+          </span>
+        </div>
         <dl className="data-status-grid">
-          {statusRows.map((row) => (
-            <div key={row.label}>
-              <dt>{row.label}</dt>
-              <dd>
-                <strong>{row.status}</strong>
-                <span>{row.basis}</span>
-              </dd>
-            </div>
-          ))}
+          {statusRows.map((row) => {
+            const isLive = row.status === "실조회";
+            const isNormalized = row.status === "파일 정규화";
+            const badgeBg = isLive ? "#ecfdf5" : isNormalized ? "#eff6ff" : "#fef3c7";
+            const badgeColor = isLive ? "#065f46" : isNormalized ? "#1e40af" : "#92400e";
+            const badgeBorder = isLive ? "#a7f3d0" : isNormalized ? "#bfdbfe" : "#fde68a";
+
+            return (
+              <div key={row.label} style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <dt style={{ fontWeight: "600", fontSize: "0.85rem" }}>{row.label}</dt>
+                  <span
+                    style={{
+                      fontSize: "0.72rem",
+                      fontWeight: "600",
+                      padding: "1px 6px",
+                      borderRadius: "4px",
+                      backgroundColor: badgeBg,
+                      color: badgeColor,
+                      border: `1px solid ${badgeBorder}`,
+                    }}
+                  >
+                    {row.status}
+                  </span>
+                </div>
+                <dd style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>
+                  <span>{row.basis}</span>
+                </dd>
+              </div>
+            );
+          })}
         </dl>
       </div>
 

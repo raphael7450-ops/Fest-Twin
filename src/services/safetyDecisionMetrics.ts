@@ -11,6 +11,53 @@ import type {
 } from "../domain/types";
 import { occupancySeries } from "./visitorOccupancy";
 
+export type DensityRiskStage = "normal" | "caution" | "warning" | "critical";
+
+export interface DensityRiskInfo {
+  stage: DensityRiskStage;
+  label: string;
+  color: string;
+  description: string;
+  recommendedAction: string;
+}
+
+export function getDensityRiskStage(densityPeoplePerSqm: number): DensityRiskInfo {
+  if (densityPeoplePerSqm >= 5.0) {
+    return {
+      stage: "critical",
+      label: "심각 (위험군중 압사 위험)",
+      color: "#ef4444",
+      description: "군중 밀집도 5.0명/㎡ 이상으로 즉각적인 유입 통제 및 비상 피난 유도가 필요합니다.",
+      recommendedAction: "진입로 일방통행 강제 전환, 비상 개방구 전면 개방, 안전요원 긴급 분산 배치",
+    };
+  }
+  if (densityPeoplePerSqm >= 3.0) {
+    return {
+      stage: "warning",
+      label: "경계 (고밀집 주의)",
+      color: "#f97316",
+      description: "군중 밀집도 3.0~5.0명/㎡ 구간으로 통행 속도 급감 및 병목 체증이 발생합니다.",
+      recommendedAction: "우회 동선 안내, 주요 출입구 유입 속도 조절, 구역별 안전 펜스 배치",
+    };
+  }
+  if (densityPeoplePerSqm >= 1.5) {
+    return {
+      stage: "caution",
+      label: "주의 (밀집 형성)",
+      color: "#f59e0b",
+      description: "군중 밀집도 1.5~3.0명/㎡ 구간으로 보행 자유도가 다소 저하됩니다.",
+      recommendedAction: "현장 안내 방송 강화, 순찰 인력 전진 배치",
+    };
+  }
+  return {
+    stage: "normal",
+    label: "정상 (쾌적/안전)",
+    color: "#10b981",
+    description: "군중 밀집도 1.5명/㎡ 미만으로 원활한 보행 및 관람이 유지됩니다.",
+    recommendedAction: "기본 안전 동선 유지 및 모니터링",
+  };
+}
+
 const STAFFING_BASIS =
   "피크 방문객, 병목 후보, 상대 혼잡 점수를 사용한 사전 배치 범위";
 

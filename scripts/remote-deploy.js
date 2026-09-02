@@ -26,7 +26,7 @@ function getVWorldApiKey() {
 
 const REMOTE_USER = process.env.REMOTE_USER || "cwuser";
 const REMOTE_HOST = process.env.REMOTE_HOST || "100.104.94.112";
-const FALLBACK_HOST = "cwserver.tail97dbc3.ts.net";
+const FALLBACK_HOST = "192.168.55.223";
 const REMOTE_PASS = process.env.REMOTE_PASS || "ckddnjsl";
 const VWORLD_API_KEY = getVWorldApiKey();
 
@@ -46,11 +46,23 @@ const PLINK = findPuTTYExecutable("plink.exe");
 const PSCP = findPuTTYExecutable("pscp.exe");
 const TAR_FILE = "fest-twin-demo.tar";
 
-
-
 function run(cmd, opts = {}) {
   return execSync(cmd, { stdio: "inherit", cwd: PROJECT_ROOT, ...opts });
 }
+
+function ensureHostKeyCached(host) {
+  try {
+    const pipeCmd = `echo y | "${PLINK}" -pw ${REMOTE_PASS} ${REMOTE_USER}@${host} "echo host-key-ok"`;
+    execSync(`cmd.exe /c "${pipeCmd}"`, {
+      stdio: "ignore",
+      cwd: PROJECT_ROOT,
+      timeout: 10000,
+    });
+  } catch {
+    // ignore
+  }
+}
+
 
 async function main() {
   if (!VWORLD_API_KEY) {
@@ -60,7 +72,7 @@ async function main() {
   }
 
   console.log("======================================================");
-  console.log("[INFO] 원격지(100.104.94.112) Docker 자동 재배포 시작");
+  console.log("[INFO] 원격지 Docker 자동 재배포 시작");
   console.log("======================================================");
 
   const tarPath = path.join(PROJECT_ROOT, TAR_FILE);
@@ -70,16 +82,18 @@ async function main() {
     console.log("\n[1/4] Git HEAD 타르 아카이브 생성...");
     run(`git archive -o "${TAR_FILE}" HEAD`);
 
+    const hostkeyArg = '-hostkey "SHA256:K5gufOW8QFCKpg6mMOE73Z2aC78mbPQbrQ616TTAo70"';
+
     // 2. pscp로 원격 서버 업로드
     let activeHost = REMOTE_HOST;
     console.log(`\n[2/4] 원격 서버(${REMOTE_USER}@${activeHost})에 아카이브 업로드...`);
     try {
-      run(`"${PSCP}" -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${activeHost}:/home/${REMOTE_USER}/`);
+      run(`"${PSCP}" ${hostkeyArg} -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${activeHost}:/home/${REMOTE_USER}/`);
     } catch (uploadErr) {
       if (activeHost !== FALLBACK_HOST) {
-        console.log(`[INFO] ${activeHost} 연결 실패. 대체 호스트(${FALLBACK_HOST})로 재시도합니다...`);
+        console.log(`[INFO] ${activeHost} 연결 실패. 로컬 LAN 호스트(${FALLBACK_HOST})로 재시도합니다...`);
         activeHost = FALLBACK_HOST;
-        run(`"${PSCP}" -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${activeHost}:/home/${REMOTE_USER}/`);
+        run(`"${PSCP}" ${hostkeyArg} -batch -pw ${REMOTE_PASS} "${TAR_FILE}" ${REMOTE_USER}@${activeHost}:/home/${REMOTE_USER}/`);
       } else {
         throw uploadErr;
       }
@@ -108,7 +122,8 @@ async function main() {
       "echo '==> 원격 Docker 재배포 완료!'",
     ].join(" && ");
 
-    run(`"${PLINK}" -batch -pw ${REMOTE_PASS} ${REMOTE_USER}@${activeHost} "${remoteCommands}"`);
+    run(`"${PLINK}" ${hostkeyArg} -batch -pw ${REMOTE_PASS} ${REMOTE_USER}@${activeHost} "${remoteCommands}"`);
+
 
 
     // 4. 배포 헬스체크 수행

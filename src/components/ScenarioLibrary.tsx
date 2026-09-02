@@ -19,6 +19,7 @@ import {
   saveServerScenario,
   type SavedScenario,
 } from "../services/scenarioStorage";
+import { ScenarioComparisonModal } from "./ScenarioComparisonModal";
 
 // ScenarioLibrary 입력 프로퍼티(Props) 명세
 interface ScenarioLibraryProps {
@@ -180,101 +181,16 @@ export function ScenarioLibrary({
       )}
 
       {isCompareOpen && scenarioA && scenarioB && (
-        <div
-          className="scenario-compare-modal"
-          style={{
-            marginTop: "16px",
-            padding: "16px",
-            background: "#0f172a",
-            color: "#f8fafc",
-            borderRadius: "8px",
-            border: "1px solid #334155",
+        <ScenarioComparisonModal
+          scenarioA={scenarioA}
+          scenarioB={scenarioB}
+          isOpen={isCompareOpen}
+          onClose={() => setIsCompareOpen(false)}
+          onApplyScenario={(scenario) => {
+            onLoadScenario(scenario);
+            setIsCompareOpen(false);
           }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", alignItems: "center" }}>
-            <h3 style={{ margin: 0, fontSize: "1.1rem" }}>시나리오 A/B 병렬 대조 비교</h3>
-            <button
-              className="text-button"
-              type="button"
-              onClick={() => setIsCompareOpen(false)}
-              style={{ color: "#cbd5e1" }}
-            >
-              비교 닫기
-            </button>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 120px 1fr",
-              gap: "12px",
-              background: "#1e293b",
-              padding: "12px",
-              borderRadius: "6px",
-              fontSize: "0.88rem",
-            }}
-          >
-            <div style={{ borderRight: "1px solid #334155", paddingRight: "8px" }}>
-              <div style={{ fontWeight: "700", color: "#38bdf8", marginBottom: "4px" }}>A안: {scenarioA.name}</div>
-              <div>지역: {scenarioA.plan.region}</div>
-              <div>수용 인원: {scenarioA.plan.expectedCapacity.toLocaleString("ko-KR")}명</div>
-              <div>총 예산: {scenarioA.plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}백만원</div>
-              <div>시설 수: {scenarioA.plan.facilities.length}개소</div>
-              <button
-                className="secondary-button compact-btn"
-                type="button"
-                style={{ marginTop: "8px", width: "100%" }}
-                onClick={() => {
-                  onLoadScenario(scenarioA);
-                  setIsCompareOpen(false);
-                }}
-              >
-                A안 적용
-              </button>
-            </div>
-
-            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center", gap: "6px" }}>
-              <div style={{ fontWeight: "700", color: "#cbd5e1" }}>차이값 (Diff)</div>
-              <div>
-                수용인원:{" "}
-                {(scenarioA.plan.expectedCapacity - scenarioB.plan.expectedCapacity > 0 ? "+" : "") +
-                  (scenarioA.plan.expectedCapacity - scenarioB.plan.expectedCapacity).toLocaleString("ko-KR")}
-                명
-              </div>
-              <div>
-                예산:{" "}
-                {(scenarioA.plan.totalBudgetMillionKrw - scenarioB.plan.totalBudgetMillionKrw > 0 ? "+" : "") +
-                  (scenarioA.plan.totalBudgetMillionKrw - scenarioB.plan.totalBudgetMillionKrw).toLocaleString("ko-KR")}
-                백만원
-              </div>
-              <div>
-                시설:{" "}
-                {(scenarioA.plan.facilities.length - scenarioB.plan.facilities.length > 0 ? "+" : "") +
-                  (scenarioA.plan.facilities.length - scenarioB.plan.facilities.length)}
-                개소
-              </div>
-            </div>
-
-            <div style={{ borderLeft: "1px solid #334155", paddingLeft: "8px" }}>
-              <div style={{ fontWeight: "700", color: "#818cf8", marginBottom: "4px" }}>B안: {scenarioB.name}</div>
-              <div>지역: {scenarioB.plan.region}</div>
-              <div>수용 인원: {scenarioB.plan.expectedCapacity.toLocaleString("ko-KR")}명</div>
-              <div>총 예산: {scenarioB.plan.totalBudgetMillionKrw.toLocaleString("ko-KR")}백만원</div>
-              <div>시설 수: {scenarioB.plan.facilities.length}개소</div>
-              <button
-                className="secondary-button compact-btn"
-                type="button"
-                style={{ marginTop: "8px", width: "100%" }}
-                onClick={() => {
-                  onLoadScenario(scenarioB);
-                  setIsCompareOpen(false);
-                }}
-              >
-                B안 적용
-              </button>
-            </div>
-          </div>
-        </div>
+        />
       )}
 
       {scenarios.length === 0 ? (
