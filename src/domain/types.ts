@@ -322,6 +322,7 @@ export interface HeatmapCell {
   y: number;
   relativeDensityScore: number;
   level: RiskLevel;
+  densityPerSqm?: number;
 }
 
 export interface Bottleneck {
@@ -338,6 +339,9 @@ export interface SimulationResult {
   cells: HeatmapCell[];
   bottlenecks: Bottleneck[];
   congestionScore: number;
+  maxDensityPerSqm?: number;
+  averageDensityPerSqm?: number;
+  cellAreaSquareMeters?: number;
 }
 
 export interface RiskScore {

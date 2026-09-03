@@ -51,4 +51,18 @@ describe("createSimulation", () => {
 
     expect(atOccupancyPeak.congestionScore).toBeGreaterThan(atArrivalPeak.congestionScore);
   });
+
+  it("calculates physical crowd density based on real venue area", () => {
+    const largePlan = { ...sampleFestivalPlan, venueAreaSquareMeters: 60000 };
+    const smallPlan = { ...sampleFestivalPlan, venueAreaSquareMeters: 10000 };
+
+    const largeSim = createSimulation(largePlan, dwellForecast, 20);
+    const smallSim = createSimulation(smallPlan, dwellForecast, 20);
+
+    expect(largeSim.maxDensityPerSqm).toBeDefined();
+    expect(smallSim.maxDensityPerSqm).toBeDefined();
+    // 면적이 좁을수록 군중 밀도(명/m²)가 비례하여 훨씬 높아져야 함
+    expect(smallSim.maxDensityPerSqm!).toBeGreaterThan(largeSim.maxDensityPerSqm!);
+    expect(smallSim.cellAreaSquareMeters).toBeLessThan(largeSim.cellAreaSquareMeters!);
+  });
 });
