@@ -4,6 +4,7 @@ import type { FestivalPlan } from "../domain/types";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { resolveFestivalCoordinatesByKeyword } from "../services/tourApiAdapter";
 import { resolveVenueCoordinatesByVWorld } from "../services/vworldAdapter";
+import { lookupCityParkCandidates } from "../services/cityParkAdapter";
 
 interface FestivalSearchModalProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
     name: record.name,
     tagline: `${record.localGovernment || record.region} ${record.venue || "행사장"} 축제`,
     description: `${record.region} ${record.localGovernment || ""} ${record.venue || ""}에서 개최되는 축제 (예산 ${budget.toLocaleString()}백만원, 예상 방문객 ${visitors.toLocaleString()}명)`,
-    areaSqm: Math.max(20000, Math.min(100000, Math.round(visitors * 0.5))),
+    areaSqm: 0,
     totalBudgetMillionKrw: budget,
     targetVisitors: visitors,
     region: record.region,
@@ -103,11 +104,19 @@ export function FestivalSearchModal({
   onSelectPreset,
 }: FestivalSearchModalProps) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [apiPresets, setApiPresets] = useState<FestivalPreset[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [resolvingPresetId, setResolvingPresetId] = useState<string | null>(null);
   const coordinateRequestRef = useRef<AbortController | null>(null);
   const today = useMemo(() => formatLocalDate(), []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,11 +125,11 @@ export function FestivalSearchModal({
     setIsLoading(true);
 
     const params = new URLSearchParams({
-      limit: query.trim() ? "30" : "20",
+      limit: debouncedQuery.trim() ? "30" : "20",
       minEndDate: today,
     });
     if (plan?.region) params.set("region", plan.region);
-    if (query.trim()) params.set("q", query.trim());
+    if (debouncedQuery.trim()) params.set("q", debouncedQuery.trim());
     const url = `/api/regional-festivals?${params.toString()}`;
 
     fetch(url, { signal: controller.signal })
@@ -145,23 +154,23 @@ export function FestivalSearchModal({
     return () => {
       controller.abort();
     };
-  }, [query, isOpen, today, plan?.region]);
+  }, [debouncedQuery, isOpen, today, plan?.region]);
 
-function getNormalizedBaseName(name: string): string {
-  return name
-    .replace(/\b20\d{2}년?\s*/gi, "")
-    .replace(/제\s*\d+\s*회\s*/gi, "")
-    .replace(/\d+\s*회\s*/gi, "")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-}
+  function getNormalizedBaseName(name: string): string {
+    return name
+      .replace(/\b20\d{2}년?\s*/gi, "")
+      .replace(/제\s*\d+\s*회\s*/gi, "")
+      .replace(/\d+\s*회\s*/gi, "")
+      .replace(/\s+/g, "")
+      .toLowerCase();
+  }
 
-function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
-  const titleKey = getNormalizedBaseName(`${preset.name} ${preset.basis.title}`);
-  const regionKey = getNormalizedBaseName(preset.region);
+  function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
+    const titleKey = getNormalizedBaseName(`${preset.name} ${preset.basis.title}`);
+    const regionKey = getNormalizedBaseName(preset.region);
 
-  return titleKey.includes("대전0시축제") && regionKey.includes("대전");
-}
+    return titleKey.includes("대전0시축제") && regionKey.includes("대전");
+  }
 
   const combinedPresets = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -229,25 +238,64 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
         ).catch(() => null));
       if (controller.signal.aborted) return;
 
-      const enrichedPreset = match
+      let matchedParkArea: number | undefined;
+      let matchedParkName: string | undefined;
+      if (match?.mapX && match?.mapY) {
+        const parkCandidates = await lookupCityParkCandidates(
+          {
+            venueName: preset.name,
+            venueAddress: preset.plan.venueAddress,
+            region: preset.region,
+            coordinates: {
+              latitude: Number(match.mapY),
+              longitude: Number(match.mapX),
+            },
+          },
+          { signal: controller.signal },
+        ).catch(() => []);
+        if (parkCandidates.length > 0 && parkCandidates[0].areaSquareMeters > 0) {
+          matchedParkArea = parkCandidates[0].areaSquareMeters;
+          matchedParkName = parkCandidates[0].name;
+        }
+      }
+
+      const coordinates = match
         ? {
-            ...preset,
-            plan: {
-              ...preset.plan,
-              venueCoordinates: {
-                longitude: Number(match.mapX),
-                latitude: Number(match.mapY),
-                source: tourApiMatch ? ("tourapi" as const) : ("vworld" as const),
-              },
-            },
-            basis: {
-              ...preset.basis,
-              mapX: match.mapX,
-              mapY: match.mapY,
-              sourceName: `${preset.basis.sourceName} + ${tourApiMatch ? "TourAPI" : "VWorld"} 좌표`,
-            },
+            longitude: Number(match.mapX),
+            latitude: Number(match.mapY),
+            source: tourApiMatch ? ("tourapi" as const) : ("vworld" as const),
           }
-        : preset;
+        : preset.plan.venueCoordinates;
+
+      const venueAreaSquareMeters = matchedParkArea ?? preset.plan.venueAreaSquareMeters;
+      const venueAreaProvenance = matchedParkArea
+        ? {
+            origin: "public-data" as const,
+            sourceDataset: "전국도시공원정보표준데이터" as const,
+            sourceParkName: matchedParkName,
+            referenceAreaSquareMeters: matchedParkArea,
+            appliedAt: new Date().toISOString(),
+          }
+        : preset.plan.venueAreaProvenance;
+
+      const enrichedPreset: FestivalPreset = {
+        ...preset,
+        areaSqm: venueAreaSquareMeters ?? preset.areaSqm,
+        plan: {
+          ...preset.plan,
+          venueCoordinates: coordinates,
+          venueAreaSquareMeters,
+          venueAreaProvenance,
+        },
+        basis: {
+          ...preset.basis,
+          mapX: match ? match.mapX : preset.basis.mapX,
+          mapY: match ? match.mapY : preset.basis.mapY,
+          sourceName: match
+            ? `${preset.basis.sourceName} + ${tourApiMatch ? "TourAPI" : "VWorld"} 좌표`
+            : preset.basis.sourceName,
+        },
+      };
 
       onSelectPreset(enrichedPreset);
       closeModal();
@@ -340,6 +388,7 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
             </div>
           ) : (
             combinedPresets.map((preset) => {
+              const displayArea = preset.plan.venueAreaSquareMeters || preset.areaSqm;
               return (
                 <article
                   key={preset.id}
@@ -369,8 +418,14 @@ function isInactivePlanningFestivalPreset(preset: FestivalPreset) {
                     <p style={{ margin: "0 0 6px 0", fontSize: "0.82rem", color: "#475569" }}>
                       {preset.tagline}
                     </p>
-                    <div style={{ fontSize: "0.78rem", color: "#64748b" }}>
-                      목표 방문객: {(preset.targetVisitors / 10000).toLocaleString()}만 명 | 예산: {(preset.totalBudgetMillionKrw / 10).toLocaleString()}억 원
+                    <div style={{ fontSize: "0.78rem", color: "#64748b", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      <span>목표 방문객: {(preset.targetVisitors / 10000).toLocaleString()}만 명</span>
+                      <span>|</span>
+                      <span>예산: {(preset.totalBudgetMillionKrw / 10).toLocaleString()}억 원</span>
+                      <span>|</span>
+                      <span>
+                        면적: {displayArea > 0 ? `${displayArea.toLocaleString()}m²` : "VWorld 실측 권장"}
+                      </span>
                     </div>
                   </div>
 

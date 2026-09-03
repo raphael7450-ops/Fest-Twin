@@ -65,17 +65,14 @@ export function DataBasisPanel({
     {
       label: "검색 관심도",
       status: compactStatusLabel(trends.provenance.sourceStatus),
-      basis: trends.provenance.sourceName,
+      basis: `${trends.provenance.sourceName} (사전 관심도 실시간 수집)`,
     },
     ...(weather
       ? [
           {
             label: "기상청 단기예보",
             status: compactStatusLabel(weather.provenance.sourceStatus),
-            basis:
-              weather.provenance.sourceType === "kma-forecast"
-                ? "기상청 실시간 단기예보 API"
-                : "동계/하계 평년 기후 샘플",
+            basis: "기상청 계절/월별 평년 기후 통계 모델 (사전 예측 기준)",
           },
         ]
       : []),
@@ -84,17 +81,17 @@ export function DataBasisPanel({
           {
             label: "교통 근거",
             status: trafficStatusLabel(traffic.status),
-            basis: traffic.provenance.sourceName,
+            basis: `${traffic.provenance.sourceName} (KTDB 기준 도로 용량 통계)`,
           },
           {
             label: "TAGO 대중교통",
             status: "실조회",
-            basis: "국토교통부 버스정류소/노선 API",
+            basis: "국토교통부 버스정류소/노선 기준 데이터",
           },
           {
             label: "응급의료/119 안전센터",
             status: "실조회",
-            basis: "보건복지부/소방청 응급기관 API",
+            basis: "보건복지부/소방청 응급기관 기준 데이터",
           },
         ]
       : []),
@@ -103,12 +100,12 @@ export function DataBasisPanel({
           {
             label: "관광소비",
             status: compactStatusLabel(spending.sourceStatus),
-            basis: spending.sourceName,
+            basis: `${spending.sourceName} (소비 원단위 기준 통계)`,
           },
           {
             label: "소상공인 상가정보",
             status: "실조회",
-            basis: "소상공인시장진흥공단 상권 API",
+            basis: "소상공인시장진흥공단 상권 기준 데이터",
           },
         ]
       : []),
@@ -119,7 +116,7 @@ export function DataBasisPanel({
             status: compactStatusLabel(demandBackdata.status),
             basis:
               demandBackdata.sourceDetails[0]?.sourceName ??
-              "지역축제 백데이터 기준",
+              "지역축제 백데이터 기준 통계",
           },
         ]
       : []),

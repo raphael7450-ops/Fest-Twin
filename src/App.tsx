@@ -544,6 +544,7 @@ export function App() {
                     <VenueMapPanel
                       key={`overview-map-${analysisPlan.name}-${analysisPlan.venueCoordinates?.latitude}-${analysisPlan.venueCoordinates?.longitude}`}
                       plan={analysisPlan}
+                      onPlanChange={setPlan}
                     />
                   </div>
                   <aside className="right-column">
@@ -592,6 +593,7 @@ export function App() {
                     <VenueMapPanel
                       key={`planning-map-${plan.name}-${plan.venueCoordinates?.latitude}-${plan.venueCoordinates?.longitude}`}
                       plan={plan}
+                      onPlanChange={setPlan}
                     />
                     <ScenarioLibrary
                       plan={plan}

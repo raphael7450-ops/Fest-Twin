@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
@@ -7,11 +7,14 @@ import VectorSource from "ol/source/Vector";
 import XYZ from "ol/source/XYZ";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
+import Polygon from "ol/geom/Polygon";
 import Style from "ol/style/Style";
 import IconStyle from "ol/style/Icon";
 import Fill from "ol/style/Fill";
 import Stroke from "ol/style/Stroke";
 import Text from "ol/style/Text";
+import Draw from "ol/interaction/Draw";
+import { getArea } from "ol/sphere";
 import { fromLonLat } from "ol/proj";
 import "ol/ol.css";
 import type { FestivalPlan } from "../domain/types";
@@ -23,6 +26,7 @@ type MapStatus = "missing-key" | "loading" | "ready" | "failed";
 
 interface VenueMapPanelProps {
   plan: FestivalPlan;
+  onPlanChange?: (plan: FestivalPlan) => void;
 }
 
 export function buildVWorldTileUrl(apiKey: string): string {
@@ -73,13 +77,104 @@ function buildMarkerStyle(label: string): Style {
   });
 }
 
-export function VenueMapPanel({ plan }: VenueMapPanelProps) {
+const polygonStyle = new Style({
+  fill: new Fill({
+    color: "rgba(59, 130, 246, 0.25)",
+  }),
+  stroke: new Stroke({
+    color: "#2563eb",
+    width: 2.5,
+  }),
+});
+
+export function VenueMapPanel({ plan, onPlanChange }: VenueMapPanelProps) {
   const mapStageRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<Map | null>(null);
+  const vectorSourceRef = useRef<VectorSource | null>(null);
+  const drawInteractionRef = useRef<Draw | null>(null);
+  const polygonFeatureRef = useRef<Feature | null>(null);
+
   const [status, setStatus] = useState<MapStatus>(vworldApiKey ? "loading" : "missing-key");
   const [failReason, setFailReason] = useState<string>("");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [measuredArea, setMeasuredArea] = useState<number | null>(null);
+  const [appliedNotice, setAppliedNotice] = useState<string | null>(null);
+
   const coordinates = plan.venueCoordinates;
   const notes = buildVenueOperationalNotes(plan);
+
+  const stopDrawing = useCallback(() => {
+    if (mapInstanceRef.current && drawInteractionRef.current) {
+      mapInstanceRef.current.removeInteraction(drawInteractionRef.current);
+      drawInteractionRef.current = null;
+    }
+    setIsDrawing(false);
+  }, []);
+
+  const startDrawing = useCallback(() => {
+    const map = mapInstanceRef.current;
+    const source = vectorSourceRef.current;
+    if (!map || !source) return;
+
+    if (drawInteractionRef.current) {
+      map.removeInteraction(drawInteractionRef.current);
+    }
+
+    if (polygonFeatureRef.current) {
+      source.removeFeature(polygonFeatureRef.current);
+      polygonFeatureRef.current = null;
+    }
+    setMeasuredArea(null);
+    setAppliedNotice(null);
+
+    const draw = new Draw({
+      source,
+      type: "Polygon",
+    });
+
+    draw.on("drawend", (event) => {
+      const feature = event.feature;
+      feature.setStyle(polygonStyle);
+      polygonFeatureRef.current = feature;
+      const geom = feature.getGeometry();
+      if (geom instanceof Polygon) {
+        const area = Math.round(getArea(geom));
+        setMeasuredArea(area);
+      }
+      setTimeout(() => {
+        stopDrawing();
+      }, 50);
+    });
+
+    map.addInteraction(draw);
+    drawInteractionRef.current = draw;
+    setIsDrawing(true);
+  }, [stopDrawing]);
+
+  const handleApplyMeasuredArea = () => {
+    if (measuredArea === null || !onPlanChange) return;
+    onPlanChange({
+      ...plan,
+      venueAreaSquareMeters: measuredArea,
+      venueAreaProvenance: {
+        origin: "user-adjusted",
+        sourceDataset: "VWorld 지도 실측 폴리곤",
+        referenceAreaSquareMeters: measuredArea,
+        appliedAt: new Date().toISOString(),
+      },
+    });
+    setAppliedNotice(`실측 면적 ${measuredArea.toLocaleString()}m²이 기획안에 적용되었습니다.`);
+  };
+
+  const handleClearPolygon = () => {
+    stopDrawing();
+    if (polygonFeatureRef.current && vectorSourceRef.current) {
+      vectorSourceRef.current.removeFeature(polygonFeatureRef.current);
+      polygonFeatureRef.current = null;
+    }
+    setMeasuredArea(null);
+    setAppliedNotice(null);
+  };
 
   useEffect(() => {
     if (!coordinates || !vworldApiKey || !mapStageRef.current) return;
@@ -104,21 +199,14 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
         view.setCenter(position);
         view.setZoom(15);
 
-        const layers = map.getLayers().getArray();
-        const vectorLayer = layers.find((l) => l instanceof VectorLayer) as
-          | VectorLayer<VectorSource>
-          | undefined;
-        if (vectorLayer) {
-          const source = vectorLayer.getSource();
-          if (source) {
-            source.clear();
-            const newMarker = new Feature({
-              geometry: new Point(position),
-              name: plan.name,
-            });
-            newMarker.setStyle(buildMarkerStyle(plan.name));
-            source.addFeature(newMarker);
-          }
+        if (vectorSourceRef.current) {
+          vectorSourceRef.current.clear();
+          const newMarker = new Feature({
+            geometry: new Point(position),
+            name: plan.name,
+          });
+          newMarker.setStyle(buildMarkerStyle(plan.name));
+          vectorSourceRef.current.addFeature(newMarker);
         }
         setStatus("ready");
         map.updateSize();
@@ -151,8 +239,11 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
       });
       marker.setStyle(buildMarkerStyle(plan.name));
 
+      const vectorSource = new VectorSource({ features: [marker] });
+      vectorSourceRef.current = vectorSource;
+
       const markerLayer = new VectorLayer({
-        source: new VectorSource({ features: [marker] }),
+        source: vectorSource,
       });
 
       const mapEl = mapStageRef.current;
@@ -201,12 +292,79 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
           ? "VWorld 지도 로드 중..."
           : "VWorld 지도 API 키 미설정";
 
+  const currentArea = plan.venueAreaSquareMeters;
+
   return (
     <section className="panel venue-map-shell">
-      <div className="panel-heading">
-        <h2>실제 행사장 지도</h2>
-        <span>TourAPI 좌표 + VWorld 2D 지도 API</span>
+      <div className="panel-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2>실제 행사장 지도</h2>
+          <span>VWorld 2D 지도 + 공간 다각형 면적(m²) 측정 도구</span>
+        </div>
+        {onPlanChange ? (
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {!isDrawing ? (
+              <button
+                type="button"
+                onClick={startDrawing}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.85rem", padding: "6px 12px", background: "#3b82f6", color: "#ffffff", border: "none", borderRadius: "6px", cursor: "pointer" }}
+              >
+                행사 구역 실측 시작
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={stopDrawing}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.85rem", padding: "6px 12px", background: "#ef4444", color: "#ffffff", border: "none", borderRadius: "6px", cursor: "pointer" }}
+              >
+                실측 취소
+              </button>
+            )}
+            {measuredArea !== null && (
+              <button
+                type="button"
+                onClick={handleClearPolygon}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.85rem", padding: "6px 10px", background: "#6b7280", color: "#ffffff", border: "none", borderRadius: "6px", cursor: "pointer" }}
+              >
+                초기화
+              </button>
+            )}
+          </div>
+        ) : null}
       </div>
+
+      {isDrawing && (
+        <div style={{ background: "#dbeafe", border: "1px solid #93c5fd", padding: "8px 14px", borderRadius: "6px", marginBottom: "8px", fontSize: "0.85rem", color: "#1e40af" }}>
+          지도 위를 마우스로 클릭하여 행사 통제 구역(펜스 내부, 도로 등) 다각형 경계를 그리세요. 마지막 지점을 더블클릭하면 실측이 완료됩니다.
+        </div>
+      )}
+
+      {measuredArea !== null && (
+        <div style={{ background: "#ecfdf5", border: "1px solid #6ee7b7", padding: "10px 14px", borderRadius: "6px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ color: "#065f46", fontSize: "0.9rem", fontWeight: 600 }}>
+            실측된 행사장 면적: {measuredArea.toLocaleString()} m²
+          </span>
+          {onPlanChange && (
+            <button
+              type="button"
+              onClick={handleApplyMeasuredArea}
+              style={{ background: "#059669", color: "#ffffff", border: "none", padding: "5px 12px", borderRadius: "5px", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600 }}
+            >
+              기획안에 반영하기
+            </button>
+          )}
+        </div>
+      )}
+
+      {appliedNotice && (
+        <div style={{ background: "#f0fdf4", border: "1px solid #86efac", padding: "8px 14px", borderRadius: "6px", marginBottom: "8px", color: "#15803d", fontSize: "0.85rem" }}>
+          {appliedNotice}
+        </div>
+      )}
+
       <div className="venue-map-canvas" style={{ position: "relative", width: "100%", height: "380px", borderRadius: "12px", overflow: "hidden", background: "#f1f5f9" }}>
         {coordinates ? (
           <>
@@ -223,11 +381,20 @@ export function VenueMapPanel({ plan }: VenueMapPanelProps) {
           </div>
         )}
       </div>
-      <div className="venue-map-meta">
+      <div className="venue-map-meta" style={{ marginTop: "10px", display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
         <strong>{plan.name}</strong>
         <span>{plan.venueAddress}</span>
+        {currentArea ? (
+          <span style={{ color: "#2563eb", fontWeight: 600 }}>
+            현재 등록 면적: {currentArea.toLocaleString()} m² ({plan.venueAreaProvenance?.sourceDataset || "기준 면적"})
+          </span>
+        ) : (
+          <span style={{ color: "#d97706", fontWeight: 500 }}>
+            현재 면적: 미입력 (위 실측 도구로 산출 권장)
+          </span>
+        )}
         {coordinates ? (
-          <span>
+          <span style={{ color: "#6b7280", fontSize: "0.8rem" }}>
             좌표 기준: {coordinates.longitude}, {coordinates.latitude}
           </span>
         ) : null}
