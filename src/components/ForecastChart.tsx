@@ -130,25 +130,27 @@ export function ForecastChart({
 
       <div className="day-type-metric-summary">
         <div className="day-type-metric-item">
-          <span className="metric-label">일평균 예상 방문객</span>
+          <span className="metric-label">피크 동시 체류 (안전 기준)</span>
           <strong className="metric-value">
-            {currentProfile.expectedDailyVisitors.toLocaleString("ko-KR")}명
+            {currentProfile.peakVisitors.toLocaleString("ko-KR")}명
           </strong>
         </div>
         <div className="day-type-metric-item">
           <span className="metric-label">피크 시간대</span>
           <strong className="metric-value">{currentProfile.peakHour}:00</strong>
         </div>
+        {selectedHour !== undefined && (
+          <div className="day-type-metric-item">
+            <span className="metric-label">선택 시간 체류 ({selectedHour}:00)</span>
+            <strong className="metric-value" style={{ color: "#2563eb" }}>
+              {(visitorsByHour.find((v) => v.hour === selectedHour)?.visitors ?? 0).toLocaleString("ko-KR")}명
+            </strong>
+          </div>
+        )}
         <div className="day-type-metric-item">
-          <span className="metric-label">피크 방문객 수</span>
+          <span className="metric-label">일평균 총 유입 (경제 참고)</span>
           <strong className="metric-value">
-            {currentProfile.peakVisitors.toLocaleString("ko-KR")}명
-          </strong>
-        </div>
-        <div className="day-type-metric-item">
-          <span className="metric-label">평균 대비 비율</span>
-          <strong className="metric-value">
-            {Math.round(currentProfile.dayRatio * 100)}%
+            {currentProfile.expectedDailyVisitors.toLocaleString("ko-KR")}명
           </strong>
         </div>
         {typeof capacityLimit === "number" && capacityLimit > 0 && (

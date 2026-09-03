@@ -68,13 +68,13 @@ export function OperationalScoreHeader({
         <strong data-testid="dashboard-expected-visitors">
           {formatNumber(forecast.expectedVisitors)}명
         </strong>
-        <small>{forecast.peakHour}:00 피크 기준</small>
+        <small>축제 총 누적 (경제·행정 기준)</small>
       </div>
 
       <div className="ops-score-card">
         <span className="ops-card-label">피크 혼잡</span>
         <strong>{formatNumber(peakVisitors)}명</strong>
-        <small>{report.scores[0]?.label ?? "혼잡 위험"} 점검</small>
+        <small>{forecast.peakHour}:00 최대 동시 체류 (안전 기준)</small>
       </div>
 
       <div className="ops-score-card">

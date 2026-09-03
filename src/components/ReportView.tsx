@@ -152,7 +152,7 @@ export function ReportView({
       <section className="report-section" aria-labelledby="report-safety-heading">
         <div className="report-section-heading">
           <div className="report-section-title">
-            <span>현장 운영</span>
+            <span>현장 운영 (동시 체류 인원 기준)</span>
             <h3 id="report-safety-heading">혼잡·안전 진단</h3>
           </div>
           <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
@@ -183,7 +183,7 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-budget-heading">
         <div className="report-section-heading">
-          <span>ROI 검토</span>
+          <span>ROI 검토 (총 누적 관람객 기준)</span>
           <h3 id="report-budget-heading">예산·경제 효과</h3>
         </div>
         <div className="report-budget-note">
