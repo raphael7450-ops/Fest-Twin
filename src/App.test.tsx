@@ -137,7 +137,7 @@ describe("App", () => {
     expect(screen.queryByText("제출 데모 검증 현황")).not.toBeInTheDocument();
     expect(screen.getByText(/시간대별 수요/)).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
-    expect(screen.getAllByText("서울특별시 영등포구 여의도동 여의도 한강공원 및 이촌 한강공원 일대").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원").length).toBeGreaterThan(0);
     expect(screen.getByText("안전 및 물류 수용성")).toBeInTheDocument();
     expect(screen.getAllByText("안전관리 요원 추천 배치").length).toBeGreaterThan(0);
     expect(screen.getAllByText("의료/구급 인력 추천 배치").length).toBeGreaterThan(0);
@@ -145,7 +145,7 @@ describe("App", () => {
 
     openDashboardSection("기획");
     expect(screen.getByRole("button", { name: "대시보드 섹션: 기획" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByDisplayValue("2026 서울세계불꽃축제")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("2026 서울 윈터페스타 & 빛초롱축제")).toBeInTheDocument();
     expect(screen.getByText("축제 기획안 입력")).toBeInTheDocument();
     expect(screen.getByText("지역 우선 조회")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 지역 기반 후보 조회")).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe("App", () => {
     expect(screen.getByLabelText("종료일")).toBeInTheDocument();
     expect(screen.getByText("TourAPI 후보 보기")).toBeInTheDocument();
     expect(screen.getByText("실제 행사장 지도")).toBeInTheDocument();
-    expect(screen.getAllByText("서울특별시 영등포구 여의도동 여의도 한강공원 및 이촌 한강공원 일대").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원").length).toBeGreaterThan(0);
     expect(screen.queryByText("진단 시간대")).not.toBeInTheDocument();
 
     openDashboardSection("예측");

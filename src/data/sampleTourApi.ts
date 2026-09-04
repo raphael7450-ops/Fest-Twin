@@ -2,12 +2,12 @@ import type { TourismContext } from "../domain/types";
 
 export const sampleTourismContext: TourismContext = {
   provenance: {
-    sourceName: "TourAPI 형태·서울시/한화 공식 행사 정보 기반 샘플",
+    sourceName: "TourAPI 형태·서울시/서울관광재단 공식 행사 정보 기반 샘플",
     sourceType: "public-data",
     basisText:
-      "2026년 서울세계불꽃축제의 여의도 및 이촌 한강공원 개최 정보를 첫 화면 예측 근거로 사용합니다.",
+      "2026년 서울 윈터페스타 & 빛초롱축제의 광화문광장 및 청계광장 개최 정보를 첫 화면 예측 근거로 사용합니다.",
     fallbackText:
-      "실제 API 키가 없거나 호출에 실패하면 서울세계불꽃축제 형태의 샘플 데이터를 사용합니다.",
+      "실제 API 키가 없거나 호출에 실패하면 서울 윈터페스타 & 빛초롱축제 형태의 샘플 데이터를 사용합니다.",
     collectedPersonalData: false,
   },
   sourceDetails: [
@@ -17,10 +17,10 @@ export const sampleTourismContext: TourismContext = {
       sourceType: "sample",
       statusLabel: "샘플 보완 데이터",
       records: [
-        { label: "여의도 한강공원", fields: [{ label: "매력도 점수", value: "96점" }] },
-        { label: "이촌 한강공원", fields: [{ label: "매력도 점수", value: "88점" }] },
-        { label: "여의도공원", fields: [{ label: "매력도 점수", value: "82점" }] },
-        { label: "IFC몰·더현대 서울", fields: [{ label: "매력도 점수", value: "80점" }] },
+        { label: "경복궁", fields: [{ label: "매력도 점수", value: "96점" }] },
+        { label: "청계천", fields: [{ label: "매력도 점수", value: "94점" }] },
+        { label: "세종문화회관", fields: [{ label: "매력도 점수", value: "90점" }] },
+        { label: "인사동 문화의 거리", fields: [{ label: "매력도 점수", value: "86점" }] },
       ],
       note: "TourAPI 주변 관광지 조회를 사용할 수 없을 때 계산에 사용하는 비개인 샘플입니다.",
     },
@@ -31,24 +31,24 @@ export const sampleTourismContext: TourismContext = {
       statusLabel: "샘플 보완 데이터",
       records: [
         {
-          label: "서울세계불꽃축제",
+          label: "서울 윈터페스타 & 빛초롱축제",
           fields: [
             { label: "추정 방문객", value: "1,000,000명" },
             { label: "주제 유사도", value: "0.98" },
           ],
         },
         {
-          label: "부산불꽃축제",
+          label: "DDP 서울라이트 겨울축제",
           fields: [
-            { label: "추정 방문객", value: "1,000,000명" },
-            { label: "주제 유사도", value: "0.88" },
+            { label: "추정 방문객", value: "600,000명" },
+            { label: "주제 유사도", value: "0.85" },
           ],
         },
         {
-          label: "한강 드론·라이트 쇼",
+          label: "부산 크리스마스트리문화축제",
           fields: [
-            { label: "추정 방문객", value: "300,000명" },
-            { label: "주제 유사도", value: "0.72" },
+            { label: "추정 방문객", value: "500,000명" },
+            { label: "주제 유사도", value: "0.78" },
           ],
         },
       ],
@@ -56,14 +56,14 @@ export const sampleTourismContext: TourismContext = {
     },
   ],
   nearbySpots: [
-    { id: "t1", name: "여의도 한강공원", category: "관광지", distanceKm: 0.1, appealScore: 96 },
-    { id: "t2", name: "이촌 한강공원", category: "관광지", distanceKm: 1.4, appealScore: 88 },
-    { id: "t3", name: "여의도공원", category: "공원", distanceKm: 0.9, appealScore: 82 },
-    { id: "t4", name: "IFC몰·더현대 서울", category: "쇼핑", distanceKm: 1.1, appealScore: 80 },
+    { id: "t1", name: "경복궁", category: "문화재", distanceKm: 0.3, appealScore: 96 },
+    { id: "t2", name: "청계천", category: "수변공간", distanceKm: 0.1, appealScore: 94 },
+    { id: "t3", name: "세종문화회관", category: "공연장", distanceKm: 0.1, appealScore: 90 },
+    { id: "t4", name: "인사동 문화의 거리", category: "관광지", distanceKm: 0.8, appealScore: 86 },
   ],
   similarFestivals: [
-    { id: "seoul-fireworks-2026", name: "서울세계불꽃축제", region: "서울 영등포구", visitors: 1000000, themeOverlap: 0.98 },
-    { id: "busan-fireworks", name: "부산불꽃축제", region: "부산 수영구", visitors: 1000000, themeOverlap: 0.88 },
-    { id: "hangang-light-show", name: "한강 드론·라이트 쇼", region: "서울 한강공원", visitors: 300000, themeOverlap: 0.72 },
+    { id: "seoul-winter-festa-2026", name: "서울 윈터페스타 & 빛초롱축제", region: "서울 종로구", visitors: 1000000, themeOverlap: 0.98 },
+    { id: "ddp-seoul-light", name: "DDP 서울라이트 겨울축제", region: "서울 중구", visitors: 600000, themeOverlap: 0.85 },
+    { id: "busan-christmas-tree", name: "부산 크리스마스트리문화축제", region: "부산 중구", visitors: 500000, themeOverlap: 0.78 },
   ],
 };

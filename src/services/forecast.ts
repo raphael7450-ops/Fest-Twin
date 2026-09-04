@@ -401,6 +401,9 @@ export function createForecast(
     (0.8 + programScore / 400) *
     budgetScale *
     entranceFactor;
+  const regionalPotentialDemand = Math.round(
+    similarDemand > 0 ? similarDemand : Math.max(baseDemand, safeExpectedCapacity),
+  );
   const expectedVisitors = Math.round(
     clamp(baseDemand, 5000, Math.max(5000, safeExpectedCapacity * 1.45)),
   );
@@ -555,6 +558,7 @@ export function createForecast(
 
   return {
     expectedVisitors,
+    regionalPotentialDemand,
     visitorsByHour,
     arrivalsByHour,
     occupancyByHour,

@@ -287,8 +287,8 @@ describe("App selected festival basis", () => {
     const view = render(<App />);
     await act(async () => Promise.resolve());
     const initialAnalysis = view.container.querySelector(".ops-context-card");
-    expect(initialAnalysis).toHaveTextContent("2026 서울세계불꽃축제");
-    expect(initialAnalysis).toHaveTextContent("2026-09-04 ~ 2026-09-05");
+    expect(initialAnalysis).toHaveTextContent("2026 서울 윈터페스타 & 빛초롱축제");
+    expect(initialAnalysis).toHaveTextContent("2026-12-18 ~ 2026-12-31");
 
     openDashboardSection("기획");
     await act(async () => {
@@ -308,10 +308,10 @@ describe("App selected festival basis", () => {
       "Gangnam Media Winter Festa",
     );
     expect(view.container.querySelector(".ops-context-card")).toHaveTextContent(
-      "2026 서울세계불꽃축제",
+      "2026 서울 윈터페스타 & 빛초롱축제",
     );
     expect(view.container.querySelector(".ops-context-card")).toHaveTextContent(
-      "2026-09-04 ~ 2026-09-05",
+      "2026-12-18 ~ 2026-12-31",
     );
     expect(view.container.querySelector(".ops-context-card")).not.toHaveTextContent(
       "Gangnam Media Winter Festa",

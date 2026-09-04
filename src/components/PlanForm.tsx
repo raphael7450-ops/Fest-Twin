@@ -171,7 +171,7 @@ export function PlanForm({
         </label>
 
         <label>
-          예상 수용 인원
+          행사장 동시 수용 정원 (통제 구역)
           <input
             min="1"
             type="number"
@@ -180,6 +180,9 @@ export function PlanForm({
               onPlanChange({ ...plan, expectedCapacity: Number(event.target.value) })
             }
           />
+          <small style={{ fontSize: "0.75rem", color: "var(--text-secondary, #64748b)", display: "block", marginTop: "2px" }}>
+            행사장 펜스 통제 구역 내 안전 정원 (광역 인파 대비 현장 관리 규모)
+          </small>
         </label>
       </div>
 

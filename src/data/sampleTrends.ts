@@ -11,10 +11,10 @@ export const sampleTrendContext: TrendContext = {
     collectedPersonalData: false,
   },
   signals: [
-    { keyword: "서울세계불꽃축제", interestScore: 98, sentimentScore: 82, mentions: 92000 },
-    { keyword: "여의도불꽃축제", interestScore: 96, sentimentScore: 80, mentions: 87000 },
-    { keyword: "한강축제", interestScore: 89, sentimentScore: 78, mentions: 54000 },
-    { keyword: "불꽃놀이", interestScore: 94, sentimentScore: 81, mentions: 76000 },
-    { keyword: "여의도한강공원", interestScore: 84, sentimentScore: 75, mentions: 43000 },
+    { keyword: "서울빛초롱", interestScore: 98, sentimentScore: 84, mentions: 95000 },
+    { keyword: "광화문광장", interestScore: 96, sentimentScore: 82, mentions: 88000 },
+    { keyword: "윈터페스타", interestScore: 92, sentimentScore: 80, mentions: 78000 },
+    { keyword: "청계천등불", interestScore: 88, sentimentScore: 79, mentions: 56000 },
+    { keyword: "미디어파사드", interestScore: 86, sentimentScore: 81, mentions: 49000 },
   ],
 };

@@ -20,8 +20,13 @@ export function SummaryCards({ forecast, simulation, report }: SummaryCardsProps
   return (
     <section className="summary-grid" aria-label="핵심 진단 지표">
       <article className="metric-card metric-card--primary">
-        <span>예상 방문객</span>
+        <span>예상 방문객 (행사장 유입)</span>
         <strong>{forecast.expectedVisitors.toLocaleString("ko-KR")}명</strong>
+        {forecast.regionalPotentialDemand ? (
+          <small className="metric-trend" style={{ fontSize: "0.78rem", opacity: 0.9 }}>
+            광역 잠재수요 {forecast.regionalPotentialDemand.toLocaleString("ko-KR")}명
+          </small>
+        ) : null}
         <small className="metric-trend">{forecast.peakHour}:00 피크 예상</small>
       </article>
       <article className="metric-card metric-card--success">

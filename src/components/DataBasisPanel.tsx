@@ -147,6 +147,7 @@ export function DataBasisPanel({
         </li>
         <li>개인정보 수집 여부: 수집하지 않음</li>
         <li>예측값 성격: 실제 집계값이 아닌 사전 의사결정용 추정값</li>
+        <li>수요·수용력 연계: 문체부·통신사 기준 광역 총 잠재 수요와 행사장 통제 구역의 물리적 안전 수용 한계를 연계하여 수용 압박률을 진단합니다.</li>
       </ul>
 
       <div className="data-status-summary">

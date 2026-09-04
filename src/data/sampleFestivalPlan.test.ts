@@ -3,10 +3,10 @@ import { sampleFestivalPlan } from "./sampleFestivalPlan";
 
 describe("sampleFestivalPlan", () => {
   it("uses a large upcoming festival as the first-screen default plan", () => {
-    expect(sampleFestivalPlan.name).toContain("서울세계불꽃축제");
-    expect(sampleFestivalPlan.startDate).toBe("2026-09-04");
-    expect(sampleFestivalPlan.endDate).toBe("2026-09-05");
-    expect(sampleFestivalPlan.venueAddress).toContain("여의도");
-    expect(sampleFestivalPlan.expectedCapacity).toBeGreaterThanOrEqual(100000);
+    expect(sampleFestivalPlan.name).toContain("서울 윈터페스타");
+    expect(sampleFestivalPlan.startDate).toBe("2026-12-18");
+    expect(sampleFestivalPlan.endDate).toBe("2026-12-31");
+    expect(sampleFestivalPlan.venueAddress).toContain("광화문광장");
+    expect(sampleFestivalPlan.expectedCapacity).toBeGreaterThanOrEqual(40000);
   });
 });

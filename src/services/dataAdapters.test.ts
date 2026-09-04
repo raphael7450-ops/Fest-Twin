@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import {
   createFallbackTourismContext,
@@ -80,31 +80,31 @@ describe("public data adapters", () => {
       tourApiPayload([
         {
           contentid: "100",
-          title: "서울세계불꽃축제",
-          addr1: "서울특별시 영등포구",
-          eventstartdate: "20260904",
-          eventenddate: "20260905",
+          title: "서울 윈터페스타 & 빛초롱축제",
+          addr1: "서울특별시 종로구",
+          eventstartdate: "20261218",
+          eventenddate: "20261231",
         },
       ]),
       tourApiPayload([
         {
           contentid: "100",
-          title: "서울세계불꽃축제",
-          addr1: "서울특별시 영등포구",
+          title: "서울 윈터페스타 & 빛초롱축제",
+          addr1: "서울특별시 종로구",
           firstimage: "https://example.com/festival.jpg",
-          eventstartdate: "20260904",
-          eventenddate: "20260905",
-          overview: "여의도 한강공원에서 열리는 대형 불꽃축제",
-          mapx: "126.9347",
-          mapy: "37.5283",
+          eventstartdate: "20261218",
+          eventenddate: "20261231",
+          overview: "광화문광장에서 열리는 대형 겨울 빛축제",
+          mapx: "126.9768",
+          mapy: "37.5759",
         },
       ]),
       tourApiPayload([
         {
           contentid: "200",
-          title: "여의도 한강공원",
+          title: "광화문광장",
           contenttypeid: "12",
-          dist: "800",
+          dist: "300",
         },
       ]),
     ];
@@ -117,14 +117,14 @@ describe("public data adapters", () => {
     expect(tourism.provenance.sourceStatus).toBe("live");
     expect(tourism.similarFestivals[0]).toMatchObject({
       id: "100",
-      name: "서울세계불꽃축제",
-      region: "서울특별시 영등포구",
+      name: "서울 윈터페스타 & 빛초롱축제",
+      region: "서울특별시 종로구",
     });
     expect(tourism.nearbySpots[0]).toMatchObject({
       id: "200",
-      name: "여의도 한강공원",
+      name: "광화문광장",
       category: "관광지",
-      distanceKm: 0.8,
+      distanceKm: 0.3,
     });
 
     const urls = fetchMock.mock.calls.map(([input]) => new URL(String(input), "http://localhost"));
@@ -136,11 +136,11 @@ describe("public data adapters", () => {
     ]);
     expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
-    expect(urls[1].searchParams.get("eventStartDate")).toBe("20260904");
-    expect(urls[1].searchParams.get("eventEndDate")).toBe("20260905");
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20261218");
+    expect(urls[1].searchParams.get("eventEndDate")).toBe("20261231");
     expect(urls[2].searchParams.get("contentId")).toBe("100");
     expect(Array.from(urls[2].searchParams.keys()).sort()).toEqual(["contentId"]);
-    expect(urls[3].searchParams.get("mapX")).toBe("126.9347");
+    expect(urls[3].searchParams.get("mapX")).toBe("126.9768");
     expect(urls[3].searchParams.get("radius")).toBe("5000");
   });
 
@@ -229,22 +229,22 @@ describe("public data adapters", () => {
       tourApiPayload([
         {
           contentid: "100",
-          title: "서울세계불꽃축제",
-          addr1: "서울특별시 영등포구 여의도 한강공원",
-          eventstartdate: "20260904",
-          eventenddate: "20260905",
+          title: "서울 윈터페스타 & 빛초롱축제",
+          addr1: "서울특별시 종로구 세종대로 172 광화문광장",
+          eventstartdate: "20261218",
+          eventenddate: "20261231",
         },
       ]),
       tourApiPayload([
         {
           contentid: "100",
-          title: "서울세계불꽃축제",
-          addr1: "서울특별시 영등포구 여의도 한강공원",
+          title: "서울 윈터페스타 & 빛초롱축제",
+          addr1: "서울특별시 종로구 세종대로 172 광화문광장",
           firstimage: "https://example.com/festival.jpg",
-          eventstartdate: "20260904",
-          eventenddate: "20260905",
-          mapx: "126.9347",
-          mapy: "37.5283",
+          eventstartdate: "20261218",
+          eventenddate: "20261231",
+          mapx: "126.9768",
+          mapy: "37.5759",
         },
       ]),
     ];
@@ -254,18 +254,18 @@ describe("public data adapters", () => {
 
     const candidates = await getFestivalCandidates(sampleFestivalPlan, {
       fetchImpl: candidateFetchMock as unknown as typeof fetch,
-      today: "2026-08-30",
+      today: "2026-12-01",
     });
 
     expect(candidates).toMatchObject([
       {
         id: "100",
-        title: "서울세계불꽃축제",
-        address: "서울특별시 영등포구 여의도 한강공원",
-        startDate: "2026-09-04",
-        endDate: "2026-09-05",
-        mapX: "126.9347",
-        mapY: "37.5283",
+        title: "서울 윈터페스타 & 빛초롱축제",
+        address: "서울특별시 종로구 세종대로 172 광화문광장",
+        startDate: "2026-12-18",
+        endDate: "2026-12-31",
+        mapX: "126.9768",
+        mapY: "37.5759",
         imageUrl: "https://example.com/festival.jpg",
         searchScope: "exact-period",
       },
@@ -279,7 +279,7 @@ describe("public data adapters", () => {
       "/api/tour/detail-intro",
     ]);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
-    expect(urls[1].searchParams.get("eventStartDate")).toBe("20260904");
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20261218");
     expect(urls[2].searchParams.get("contentId")).toBe("100");
   });
 
@@ -287,11 +287,11 @@ describe("public data adapters", () => {
     const festivalItems = Array.from({ length: 8 }, (_, index) => ({
       contentid: String(3439947 + index),
       title: `축제 후보 ${index + 1}`,
-      addr1: "서울특별시 영등포구",
-      eventstartdate: "20260904",
-      eventenddate: "20260905",
-      mapx: "126.9347",
-      mapy: "37.5283",
+      addr1: "서울특별시 종로구",
+      eventstartdate: "20261218",
+      eventenddate: "20261231",
+      mapx: "126.9768",
+      mapy: "37.5759",
     }));
     const responses = [
       tourApiPayload([{ code: "1", name: "서울" }]),
@@ -302,7 +302,7 @@ describe("public data adapters", () => {
 
     const candidates = await getFestivalCandidates(sampleFestivalPlan, {
       fetchImpl: fetchImpl as unknown as typeof fetch,
-      today: "2026-08-30",
+      today: "2026-12-01",
     });
 
     const sourceDetails = candidates[0].sourceDetails ?? [];
@@ -334,21 +334,21 @@ describe("public data adapters", () => {
       tourApiPayload([
         {
           contentid: "3439947",
-          title: "서울세계불꽃축제",
-          addr1: "서울특별시 영등포구",
-          eventstartdate: "20260904",
-          eventenddate: "20260905",
+          title: "서울 윈터페스타 & 빛초롱축제",
+          addr1: "서울특별시 종로구",
+          eventstartdate: "20261218",
+          eventenddate: "20261231",
         },
       ]),
       tourApiPayload([
         {
           contentid: "3439947",
-          title: "서울세계불꽃축제",
-          addr1: "서울특별시 영등포구",
-          eventstartdate: "20260904",
-          eventenddate: "20260905",
-          mapx: "126.9347",
-          mapy: "37.5283",
+          title: "서울 윈터페스타 & 빛초롱축제",
+          addr1: "서울특별시 종로구",
+          eventstartdate: "20261218",
+          eventenddate: "20261231",
+          mapx: "126.9768",
+          mapy: "37.5759",
         },
       ]),
       tourApiPayload(
@@ -356,10 +356,10 @@ describe("public data adapters", () => {
           contentid: String(200 + index),
           title: `주변 관광지 ${index + 1}`,
           contenttypeid: "12",
-          addr1: "서울특별시 영등포구 영동대로",
+          addr1: "서울특별시 종로구 세종대로",
           dist: String(750 + index * 100),
-          mapx: "127.0588",
-          mapy: "37.5126",
+          mapx: "126.9768",
+          mapy: "37.5759",
         })),
       ),
     ];
@@ -382,7 +382,7 @@ describe("public data adapters", () => {
 
     expect(serialized).toContain("/api/tour/festivals");
     expect(festivalSearch?.query).toEqual(
-      expect.arrayContaining([{ label: "eventStartDate", value: "20260904" }]),
+      expect.arrayContaining([{ label: "eventStartDate", value: "20261218" }]),
     );
     expect(festivalDetail?.query).toEqual([{ label: "contentId", value: "3439947" }]);
     expect(serialized).toContain("/api/tour/nearby");
@@ -457,8 +457,8 @@ describe("public data adapters", () => {
       "/api/tour/detail",
       "/api/tour/nearby",
     ]);
-    expect(urls[1].searchParams.get("eventStartDate")).toBe("20260904");
-    expect(urls[1].searchParams.get("eventEndDate")).toBe("20260905");
+    expect(urls[1].searchParams.get("eventStartDate")).toBe("20261218");
+    expect(urls[1].searchParams.get("eventEndDate")).toBe("20261231");
     expect(urls[2].searchParams.get("eventStartDate")).toBe("20260101");
     expect(urls[2].searchParams.get("eventEndDate")).toBe("20261231");
     expect(urls.every((url) => url.searchParams.has("serviceKey"))).toBe(false);
@@ -773,7 +773,7 @@ describe("public data adapters", () => {
     const keywords = trends.signals.map((signal) => signal.keyword);
 
     expect(trends.provenance.collectedPersonalData).toBe(false);
-    expect(keywords).toContain("서울세계불꽃축제");
+    expect(keywords).toContain("서울빛초롱");
     expect(keywords.every((keyword) => sampleFestivalPlan.keywords.includes(keyword))).toBe(true);
   });
   it("maps Naver DataLab proxy results into trend context evidence", async () => {

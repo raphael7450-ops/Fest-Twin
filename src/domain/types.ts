@@ -299,6 +299,7 @@ export interface ForecastReason {
 
 export interface ForecastResult {
   expectedVisitors: number;
+  regionalPotentialDemand?: number;
   visitorsByHour: Array<{ hour: number; visitors: number }>;
   arrivalsByHour?: Array<{ hour: number; visitors: number }>;
   occupancyByHour?: Array<{ hour: number; visitors: number }>;

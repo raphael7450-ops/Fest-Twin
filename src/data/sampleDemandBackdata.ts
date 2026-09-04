@@ -6,6 +6,17 @@ import type {
 
 export const sampleRegionalFestivalRecords: DemandBackdataSimilarFestival[] = [
   {
+    id: "mcst-seoul-winter-festa",
+    name: "서울 윈터페스타 & 빛초롱축제",
+    region: "서울 종로구",
+    type: "야간관광/빛축제",
+    periodLabel: "겨울 야간 집중형",
+    budgetMillionKrw: 1800,
+    visitors: 1000000,
+    similarityScore: 98,
+    sourceName: "문화체육관광부_지역축제 정보",
+  },
+  {
     id: "mcst-seoul-fireworks",
     name: "서울세계불꽃축제",
     region: "서울 영등포구",
@@ -13,7 +24,18 @@ export const sampleRegionalFestivalRecords: DemandBackdataSimilarFestival[] = [
     periodLabel: "가을 야간 집중형",
     budgetMillionKrw: 4200,
     visitors: 1000000,
-    similarityScore: 98,
+    similarityScore: 90,
+    sourceName: "문화체육관광부_지역축제 정보",
+  },
+  {
+    id: "mcst-ddp-seoul-light",
+    name: "DDP 서울라이트 겨울축제",
+    region: "서울 중구",
+    type: "야간관광/미디어",
+    periodLabel: "겨울 야간형",
+    budgetMillionKrw: 1500,
+    visitors: 600000,
+    similarityScore: 86,
     sourceName: "문화체육관광부_지역축제 정보",
   },
   {
@@ -24,7 +46,7 @@ export const sampleRegionalFestivalRecords: DemandBackdataSimilarFestival[] = [
     periodLabel: "가을 야간 집중형",
     budgetMillionKrw: 3500,
     visitors: 1000000,
-    similarityScore: 88,
+    similarityScore: 82,
     sourceName: "문화체육관광부_지역축제 정보",
   },
   {
