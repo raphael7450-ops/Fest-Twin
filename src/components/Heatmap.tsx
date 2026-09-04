@@ -17,12 +17,21 @@ export function Heatmap({
   const maxScore = Math.max(0, ...simulation.cells.map((c) => c.relativeDensityScore));
   const venueAreaText = plan.venueAreaSquareMeters
     ? `${plan.venueAreaSquareMeters.toLocaleString()}m²`
-    : "35,000m²(기준)";
+    : simulation.venueAreaSquareMeters
+      ? `${simulation.venueAreaSquareMeters.toLocaleString()}m²(추정)`
+      : "35,000m²(기준)";
   const cellAreaText = simulation.cellAreaSquareMeters
     ? `셀당 약 ${simulation.cellAreaSquareMeters}m²`
     : `${plan.gridWidth} × ${plan.gridHeight}`;
   const maxDensityText =
     simulation.maxDensityPerSqm !== undefined ? `${simulation.maxDensityPerSqm}명/m²` : "-";
+
+  const minHour =
+    plan.operatingHours && plan.operatingHours.length > 0 ? plan.operatingHours[0] : 10;
+  const maxHour =
+    plan.operatingHours && plan.operatingHours.length > 0
+      ? plan.operatingHours[plan.operatingHours.length - 1]
+      : 22;
 
   return (
     <section className="panel heatmap-panel">
@@ -45,8 +54,8 @@ export function Heatmap({
           <input
             id="heatmap-hour-slider"
             type="range"
-            min={10}
-            max={22}
+            min={minHour}
+            max={maxHour}
             value={simulation.hour}
             onChange={(e) => onSelectHour(Number(e.target.value))}
             aria-label="시뮬레이션 시간대 변경"

@@ -292,6 +292,7 @@ function settledDatasets(
   };
 }
 
+
 function getPlanIdentityKey(input: FestivalAnalysisInput): string {
   const candidate = input.selectedCandidate
     ? normalizeAnalysisCandidate(input.selectedCandidate)
@@ -372,6 +373,11 @@ export function useFestivalAnalysis(
       errorMessages: [],
     }));
 
+    // 외부 공공 API 연동 지연으로 인한 화면 동결 방지를 위해 최대 3.5초 타임아웃 적용
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 3500);
+
     const requests = [
       requestDependencies.loadTourism(requestPlan, {
         signal: controller.signal,
@@ -388,8 +394,8 @@ export function useFestivalAnalysis(
     ] as const;
 
     Promise.allSettled(requests).then((results) => {
+      clearTimeout(timeoutId);
       if (
-        controller.signal.aborted ||
         latestKey.current !== analysisKey ||
         requestSequence.current !== requestId
       ) {
@@ -399,7 +405,6 @@ export function useFestivalAnalysis(
       try {
         const resolved = settledDatasets(requestPlan, input.selectedHour, results);
         if (
-          controller.signal.aborted ||
           latestKey.current !== analysisKey ||
           requestSequence.current !== requestId
         ) {
@@ -422,7 +427,6 @@ export function useFestivalAnalysis(
         });
       } catch (error) {
         if (
-          controller.signal.aborted ||
           latestKey.current !== analysisKey ||
           requestSequence.current !== requestId
         ) {
@@ -437,7 +441,10 @@ export function useFestivalAnalysis(
       }
     });
 
-    return () => controller.abort();
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, [analysisKey]);
 
   return state;

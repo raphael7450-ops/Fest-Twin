@@ -4,10 +4,69 @@ import type {
   FestivalPlan,
   ProgramItem,
   SelectedFestivalBasis,
+  VenueFacility,
 } from "../domain/types";
 import type { FestivalCandidate } from "./tourApiAdapter";
 
 type FestivalScheduleProfile = "countdown" | "food" | "daytime" | "night" | "default";
+
+function createDefaultFacilitiesForCandidate(
+  candidate: FestivalCandidate,
+  gridWidth = 30,
+  gridHeight = 20,
+): VenueFacility[] {
+  const shortTitle = candidate.title
+    .replace(/\b20\d{2}년?\s*/gi, "")
+    .replace(/제\s*\d+\s*회\s*/gi, "")
+    .replace(/[()[\]{}·ㆍ.,/\\\-_:]/g, " ")
+    .trim();
+  const venueWords = candidate.address.replace(/[()[\]{}·ㆍ.,/\\\-_:]/g, " ").split(/\s+/).filter(Boolean);
+  const venueName =
+    venueWords.length >= 2 ? venueWords.slice(-2).join(" ") : venueWords[0] || "행사장";
+
+  return [
+    {
+      id: `fac_${candidate.id}_entrance`,
+      type: "entrance",
+      name: `${venueName} 메인 진입 게이트`,
+      x: Math.max(1, Math.round(gridWidth * 0.1)),
+      y: Math.max(1, Math.round(gridHeight * 0.5)),
+      weight: 1.8,
+    },
+    {
+      id: `fac_${candidate.id}_stage`,
+      type: "stage",
+      name: `${shortTitle} 특설 메인 무대`,
+      x: Math.max(1, Math.round(gridWidth * 0.5)),
+      y: Math.max(1, Math.round(gridHeight * 0.5)),
+      weight: 2.5,
+    },
+    {
+      id: `fac_${candidate.id}_booth`,
+      type: "booth",
+      name: `${shortTitle} 체험·운영 부스군`,
+      x: Math.max(1, Math.round(gridWidth * 0.35)),
+      y: Math.max(1, Math.round(gridHeight * 0.3)),
+      weight: 1.4,
+    },
+    {
+      id: `fac_${candidate.id}_medical`,
+      type: "medical",
+      name: "현장 응급의료 및 구급 센터",
+      x: Math.max(1, Math.round(gridWidth * 0.8)),
+      y: Math.max(1, Math.round(gridHeight * 0.7)),
+      weight: 1.0,
+    },
+    {
+      id: `fac_${candidate.id}_restroom`,
+      type: "restroom",
+      name: "임시 편의 및 공중화장실 거점",
+      x: Math.max(1, Math.round(gridWidth * 0.75)),
+      y: Math.max(1, Math.round(gridHeight * 0.3)),
+      weight: 1.0,
+    },
+  ];
+}
 
 export function createSelectedFestivalBasis(
   candidate: FestivalCandidate,
@@ -107,9 +166,11 @@ export function applyFestivalCandidateToPlan(
     averageDwellMinutes: undefined,
     parkingCapacityVehicles: undefined,
     restroomFixtureCount: undefined,
+    facilities: venueIdentityChanged
+      ? createDefaultFacilitiesForCandidate(candidate, currentPlan.gridWidth, currentPlan.gridHeight)
+      : currentPlan.facilities,
     ...planningPatch,
   };
-
 }
 
 function createFestivalTypePlanningPatch(
@@ -165,14 +226,14 @@ function createFestivalTypePlanningPatch(
     };
   }
 
-  // General Regional Festival Default in Korea (09:00~18:00 Standard)
+  // General Regional Festival Default in Korea (10:00~21:00 Standard)
   return {
-    operatingHours: [9, 11, 13, 15, 17, 18],
+    operatingHours: [10, 12, 14, 16, 18, 20],
     programs: [
-      { id: "default-open", name: "09시 공식 개장 및 관람", startHour: 9, endHour: 12, expectedDraw: 75 },
-      { id: "default-main", name: "대표 문화 관람 및 지역 전시", startHour: 9, endHour: 17, expectedDraw: 85 },
-      { id: "default-booth", name: "주민 참여 체험 및 특산품 부스", startHour: 9, endHour: 18, expectedDraw: 78 },
-      { id: "default-peak", name: "오후 피크 대표 무대 행사", startHour: 13, endHour: 16, expectedDraw: 90 },
+      { id: "default-open", name: "10시 공식 개장 및 관람", startHour: 10, endHour: 13, expectedDraw: 75 },
+      { id: "default-main", name: "대표 문화 관람 및 지역 전시", startHour: 10, endHour: 18, expectedDraw: 85 },
+      { id: "default-booth", name: "주민 참여 체험 및 특산품 부스", startHour: 10, endHour: 20, expectedDraw: 78 },
+      { id: "default-peak", name: "저녁 피크 대표 무대 행사", startHour: 18, endHour: 21, expectedDraw: 90 },
     ],
   };
 }

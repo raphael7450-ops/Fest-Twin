@@ -37,13 +37,26 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
   const startDate = record.startDate || "2026-05-01";
   const endDate = record.endDate || "2026-05-05";
 
+  const estimatedArea =
+    visitors >= 800000
+      ? 100000
+      : visitors >= 300000
+        ? 70000
+        : visitors >= 100000
+          ? 50000
+          : visitors >= 50000
+            ? 35000
+            : 20000;
+
+  const venueDisplayName = record.venue || `${record.region} 행사장`;
+
   return {
     id: `db_${record.id}`,
     badgeLabel: `${record.region} ${record.type || "지역축제"}`,
     name: record.name,
     tagline: `${record.localGovernment || record.region} ${record.venue || "행사장"} 축제`,
     description: `${record.region} ${record.localGovernment || ""} ${record.venue || ""}에서 개최되는 축제 (예산 ${budget.toLocaleString()}백만원, 예상 방문객 ${visitors.toLocaleString()}명)`,
-    areaSqm: 0,
+    areaSqm: estimatedArea,
     totalBudgetMillionKrw: budget,
     targetVisitors: visitors,
     region: record.region,
@@ -60,6 +73,7 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
       targetGroups: ["youth", "families", "locals"],
       keywords: [record.name, record.region, record.localGovernment || "", record.type || "지역축제"].filter(Boolean),
       expectedCapacity: Math.max(1000, Math.round(visitors / 8)),
+      venueAreaSquareMeters: estimatedArea,
       gridWidth: 30,
       gridHeight: 20,
       programs: [
@@ -67,9 +81,10 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
         { id: `prog_${record.id}_02`, name: `지역 특산물 & 문화 체험 존`, startHour: 10, endHour: 18, expectedDraw: Math.round(visitors * 0.3) },
       ],
       facilities: [
-        { id: `fac_${record.id}_01`, type: "entrance", name: "메인 진입 게이트", x: 3, y: 10, weight: 1.5 },
-        { id: `fac_${record.id}_02`, type: "stage", name: "특설 메인 무대", x: 15, y: 10, weight: 2.0 },
-        { id: `fac_${record.id}_03`, type: "medical", name: "현장 응급 구급 센터", x: 25, y: 15, weight: 1.0 },
+        { id: `fac_${record.id}_01`, type: "entrance", name: `${venueDisplayName} 메인 진입 게이트`, x: 3, y: 10, weight: 1.8 },
+        { id: `fac_${record.id}_02`, type: "stage", name: `${record.name} 특설 무대`, x: 15, y: 10, weight: 2.5 },
+        { id: `fac_${record.id}_03`, type: "booth", name: `${record.name} 홍보 및 체험 부스군`, x: 10, y: 5, weight: 1.4 },
+        { id: `fac_${record.id}_04`, type: "medical", name: "현장 응급 구급 센터", x: 25, y: 15, weight: 1.0 },
       ],
     },
     basis: {

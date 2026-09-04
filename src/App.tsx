@@ -115,7 +115,16 @@ export function App() {
   const handleSelectPreset = (preset: FestivalPreset) => {
     setPlan(preset.plan);
     setPresetBasis(preset.basis);
-    setSelectedCandidate(null);
+    setSelectedCandidate(candidateFromSelectedBasis(preset.basis));
+    if (
+      preset.plan.operatingHours &&
+      preset.plan.operatingHours.length > 0 &&
+      !preset.plan.operatingHours.includes(selectedHour)
+    ) {
+      const middleOrPeak =
+        preset.plan.operatingHours[Math.floor(preset.plan.operatingHours.length / 2)];
+      setSelectedHour(middleOrPeak);
+    }
     setIsSearchModalOpen(false);
   };
   const selectedFestivalBasis = useMemo(
@@ -315,11 +324,21 @@ export function App() {
   const applySelectedCandidate = (candidate: FestivalCandidate) => {
     setSelectedCandidate(candidate);
     setPresetBasis(null);
-    setPlan((currentPlan) =>
-      applyFestivalCandidateToPlan(currentPlan, candidate, {
+    setPlan((currentPlan) => {
+      const nextPlan = applyFestivalCandidateToPlan(currentPlan, candidate, {
         demandBackdata: planningDemandBackdata,
-      }),
-    );
+      });
+      if (
+        nextPlan.operatingHours &&
+        nextPlan.operatingHours.length > 0 &&
+        !nextPlan.operatingHours.includes(selectedHour)
+      ) {
+        const middleOrPeak =
+          nextPlan.operatingHours[Math.floor(nextPlan.operatingHours.length / 2)];
+        setSelectedHour(middleOrPeak);
+      }
+      return nextPlan;
+    });
     setIsCandidatePanelOpen(false);
   };
 

@@ -343,6 +343,7 @@ export interface SimulationResult {
   maxDensityPerSqm?: number;
   averageDensityPerSqm?: number;
   cellAreaSquareMeters?: number;
+  venueAreaSquareMeters?: number;
 }
 
 export interface RiskScore {

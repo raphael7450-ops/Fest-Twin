@@ -71,10 +71,21 @@ export function createSimulation(
   const totalCells = gridWidth * gridHeight;
 
   // 실제 행사장 면적(m²) 산출 및 셀당 단위 면적 계산
+  const estimatedAreaFromCapacity =
+    expectedCapacity >= 100000
+      ? 100000
+      : expectedCapacity >= 50000
+        ? 60000
+        : expectedCapacity >= 20000
+          ? 40000
+          : expectedCapacity >= 10000
+            ? 25000
+            : 15000;
+
   const totalVenueAreaSqm =
     Number.isFinite(plan.venueAreaSquareMeters) && (plan.venueAreaSquareMeters ?? 0) > 0
       ? plan.venueAreaSquareMeters!
-      : DEFAULT_VENUE_AREA_SQM;
+      : estimatedAreaFromCapacity;
   const cellAreaSquareMeters = totalVenueAreaSqm / totalCells;
 
   const activeProgramDraw = plan.programs
@@ -170,5 +181,6 @@ export function createSimulation(
     maxDensityPerSqm,
     averageDensityPerSqm,
     cellAreaSquareMeters: Math.round(cellAreaSquareMeters),
+    venueAreaSquareMeters: totalVenueAreaSqm,
   };
 }
