@@ -87,7 +87,15 @@ export function applyFestivalCandidateToPlan(
     venueAreaProvenance: venueIdentityChanged ? undefined : currentPlan.venueAreaProvenance,
     startDate: candidate.startDate || currentPlan.startDate,
     endDate: candidate.endDate || currentPlan.endDate,
-    keywords: Array.from(new Set([candidate.title, ...currentPlan.keywords])).slice(0, 6),
+    keywords: venueIdentityChanged
+      ? Array.from(
+          new Set([
+            candidate.title,
+            ...candidate.title.replace(/[()[\]{}·ㆍ.,/\\\-_:]/g, " ").split(/\s+/).filter((t) => t.length >= 2),
+            currentPlan.region,
+          ]),
+        ).slice(0, 6)
+      : Array.from(new Set([candidate.title, ...currentPlan.keywords])).slice(0, 6),
     totalBudgetMillionKrw:
       !options.preserveBudget && recommendation?.budgetMillionKrw
         ? recommendation.budgetMillionKrw

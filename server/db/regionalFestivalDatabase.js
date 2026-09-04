@@ -17,20 +17,59 @@ function normalizeText(value) {
   return String(value ?? "").replace(/\s+/g, "").toLowerCase();
 }
 
+const REGION_ALIASES = {
+  서울: ["서울", "seoul"],
+  인천: ["인천", "incheon"],
+  대전: ["대전", "daejeon"],
+  대구: ["대구", "daegu"],
+  광주: ["광주", "gwangju"],
+  부산: ["부산", "busan"],
+  울산: ["울산", "ulsan"],
+  세종: ["세종", "sejong"],
+  경기: ["경기", "gyeonggi"],
+  강원: ["강원", "gangwon"],
+  충남: ["충남", "충청남", "chungnam", "chungcheongnam"],
+  충청남: ["충남", "충청남", "chungnam", "chungcheongnam"],
+  충북: ["충북", "충청북", "chungbuk", "chungcheongbuk"],
+  충청북: ["충북", "충청북", "chungbuk", "chungcheongbuk"],
+  경남: ["경남", "경상남", "gyeongnam", "gyeongsangnam"],
+  경상남: ["경남", "경상남", "gyeongnam", "gyeongsangnam"],
+  경북: ["경북", "경상북", "gyeongbuk", "gyeongsangbuk"],
+  경상북: ["경북", "경상북", "gyeongbuk", "gyeongsangbuk"],
+  전남: ["전남", "전라남", "jeonnam", "jeollanam"],
+  전라남: ["전남", "전라남", "jeonnam", "jeollanam"],
+  전북: ["전북", "전라북", "jeonbuk", "jeollabuk"],
+  전라북: ["전북", "전라북", "jeonbuk", "jeollabuk"],
+  제주: ["제주", "jeju"],
+};
+
 function normalizeRegion(value) {
-  const text = String(value ?? "").trim();
-  const aliases = {
-    충남: "충청남도",
-    충북: "충청북도",
-    전남: "전라남도",
-    전북: "전북특별자치도",
-    경남: "경상남도",
-    경북: "경상북도",
-    강원: "강원특별자치도",
-    경기: "경기도",
-    제주: "제주특별자치도",
-  };
-  return aliases[text] ?? text;
+  return String(value ?? "")
+    .replace(/\s+/g, "")
+    .replace(/특별자치도|특별자치시|광역시|특별시|자치도|도|시|군|구/g, "")
+    .toLowerCase();
+}
+
+function regionMatches(requestedRegion, recordRegion, localGovernment) {
+  if (!requestedRegion) return true;
+  const normReq = normalizeRegion(requestedRegion);
+  if (!normReq) return true;
+  const reqAliases = new Set([normReq, ...(REGION_ALIASES[normReq] ?? [])]);
+
+  const normRec = normalizeRegion(recordRegion);
+  const recAliases = new Set([normRec, ...(REGION_ALIASES[normRec] ?? [])]);
+
+  for (const rA of reqAliases) {
+    if (!rA) continue;
+    for (const cA of recAliases) {
+      if (!cA) continue;
+      if (rA.includes(cA) || cA.includes(rA)) return true;
+    }
+    if (localGovernment && normalizeRegion(localGovernment).includes(rA)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function overlapsDateRange(record, startDate, endDate) {
@@ -38,13 +77,28 @@ function overlapsDateRange(record, startDate, endDate) {
   if (!record.startDate && !record.endDate) return false;
   const recordStart = record.startDate ?? record.endDate;
   const recordEnd = record.endDate ?? record.startDate;
-  return (!endDate || recordStart <= endDate) && (!startDate || recordEnd >= startDate);
+  if ((!endDate || recordStart <= endDate) && (!startDate || recordEnd >= startDate)) {
+    return true;
+  }
+  if (startDate && recordStart) {
+    const sMD = startDate.slice(5);
+    const eMD = endDate ? endDate.slice(5) : "12-31";
+    const rsMD = recordStart.slice(5);
+    const reMD = recordEnd ? recordEnd.slice(5) : rsMD;
+    if (rsMD <= eMD && reMD >= sMD) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function endsOnOrAfter(record, minEndDate) {
   if (!minEndDate) return true;
   const recordEnd = record.endDate ?? record.startDate;
-  return Boolean(recordEnd && recordEnd >= minEndDate);
+  if (!recordEnd) return true;
+  if (recordEnd >= minEndDate) return true;
+  if (recordEnd.slice(5) >= minEndDate.slice(5)) return true;
+  return false;
 }
 
 function keywordScore(record, keywords) {
@@ -169,10 +223,7 @@ export class RegionalFestivalDatabase {
 
     const filtered = this.records
       .map((record) => festivalCorrectionRegistry.apply(record))
-      .filter((record) => {
-        if (!normalizedRegion) return true;
-        return record.region === normalizedRegion || record.localGovernment?.includes(normalizedRegion);
-      })
+      .filter((record) => regionMatches(region, record.region, record.localGovernment))
       .filter((record) => !Number.isFinite(requestedYear) || record.year === requestedYear)
       .map((record) => {
         const fullText = `${record.name} ${record.region || ""} ${record.localGovernment || ""} ${record.type || ""} ${record.venue || ""}`.toLowerCase();
@@ -193,7 +244,12 @@ export class RegionalFestivalDatabase {
         };
       })
       .filter((record) => {
-        if (hasSearchTerms) return record.keywordMatchScore > 0;
+        if (query && typeof query === "string" && query.trim()) {
+          const q = query.trim().toLowerCase();
+          const full = `${record.name} ${record.region || ""} ${record.venue || ""}`.toLowerCase();
+          if (!full.includes(q)) return false;
+        }
+        if (hasSearchTerms && record.keywordMatchScore > 0) return true;
         if (startDate || endDate) return overlapsDateRange(record, startDate, endDate);
         return true;
       })

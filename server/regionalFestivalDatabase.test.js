@@ -246,4 +246,61 @@ describe("RegionalFestivalDatabase", () => {
       visitors: 450000,
     });
   });
+
+  it("matches full metropolitan region names such as 부산광역시 to records stored as 부산", () => {
+    const db = createTestDatabase([
+      {
+        id: "busan-rock-2026",
+        year: 2026,
+        name: "2026 부산국제록페스티벌",
+        region: "부산",
+        localGovernment: "사상구",
+        type: "음악",
+        venue: "삼락생태공원",
+        startDate: "2026-10-02",
+        endDate: "2026-10-04",
+        visitors: 70000,
+        budgetMillionKrw: 1500,
+      },
+    ]);
+
+    const records = db.searchFestivals({
+      region: "부산광역시",
+      startDate: "2026-10-01",
+      endDate: "2026-10-05",
+      limit: 10,
+    });
+
+    expect(records).toHaveLength(1);
+    expect(records[0].name).toBe("2026 부산국제록페스티벌");
+  });
+
+  it("retrieves matching regional date festivals even when unrelated prior keywords are passed", () => {
+    const db = createTestDatabase([
+      {
+        id: "busan-wheat-2026",
+        year: 2026,
+        name: "2026 부산밀페스티벌",
+        region: "부산",
+        localGovernment: "북구",
+        type: "음식",
+        venue: "화명생태공원",
+        startDate: "2026-04-25",
+        endDate: "2026-04-26",
+        visitors: 33000,
+        budgetMillionKrw: 300,
+      },
+    ]);
+
+    const records = db.searchFestivals({
+      region: "부산광역시",
+      startDate: "2026-04-20",
+      endDate: "2026-04-30",
+      keywords: ["서울빛초롱", "광화문광장", "윈터페스타"],
+      limit: 10,
+    });
+
+    expect(records).toHaveLength(1);
+    expect(records[0].name).toBe("2026 부산밀페스티벌");
+  });
 });

@@ -1265,17 +1265,57 @@ export function mapTourApiItemsToTourismContext(
   };
 }
 
+const FALLBACK_AREA_CODES: Record<string, string> = {
+  서울: "1",
+  인천: "2",
+  대전: "3",
+  대구: "4",
+  광주: "5",
+  부산: "6",
+  울산: "7",
+  세종: "8",
+  경기: "31",
+  강원: "32",
+  충북: "33",
+  충남: "34",
+  전북: "35",
+  전남: "36",
+  경북: "37",
+  경남: "38",
+  제주: "39",
+};
+
+export const DEFAULT_TOUR_API_AREA_CODES: TourApiAreaCode[] = [
+  { code: "1", name: "서울" },
+  { code: "2", name: "인천" },
+  { code: "3", name: "대전" },
+  { code: "4", name: "대구" },
+  { code: "5", name: "광주" },
+  { code: "6", name: "부산" },
+  { code: "7", name: "울산" },
+  { code: "8", name: "세종특별자치시" },
+  { code: "31", name: "경기도" },
+  { code: "32", name: "강원특별자치도" },
+  { code: "33", name: "충청북도" },
+  { code: "34", name: "충청남도" },
+  { code: "35", name: "전북특별자치도" },
+  { code: "36", name: "전라남도" },
+  { code: "37", name: "경상북도" },
+  { code: "38", name: "경상남도" },
+  { code: "39", name: "제주도" },
+];
+
 async function resolveAreaCode(
   plan: FestivalPlan,
   fetchImpl: typeof fetch,
   signal?: AbortSignal,
 ) {
-  const items = (await fetchTourApiItems(
+  const items = await fetchTourApiItems(
     "area-code",
     { numOfRows: 50, pageNo: 1 },
     fetchImpl,
     signal,
-  ));
+  );
 
   return items.find((item) => item.name && regionMatches(plan.region, String(item.name)))?.code;
 }
@@ -1374,25 +1414,29 @@ async function getSelectedFestivalTourismContext(
   let selectedItem = fallbackItem;
   let detailSucceeded = false;
 
-  try {
-    const detailItems = await fetchTourApiItems(
-      "detail",
-      { contentId: selectedCandidate.id },
-      fetchImpl,
-      signal,
-    );
-    selectedItem = {
-      ...fallbackItem,
-      ...detailItems[0],
-      contentid: selectedCandidate.id,
-      title: detailItems[0]?.title ?? selectedCandidate.title,
-      addr1: detailItems[0]?.addr1 ?? selectedCandidate.address,
-      mapx: detailItems[0]?.mapx ?? selectedCandidate.mapX,
-      mapy: detailItems[0]?.mapy ?? selectedCandidate.mapY,
-    };
-    detailSucceeded = true;
-  } catch {
-    selectedItem = fallbackItem;
+  const isNumericContentId = /^\d+$/.test(String(selectedCandidate.id).trim());
+
+  if (isNumericContentId) {
+    try {
+      const detailItems = await fetchTourApiItems(
+        "detail",
+        { contentId: selectedCandidate.id },
+        fetchImpl,
+        signal,
+      );
+      selectedItem = {
+        ...fallbackItem,
+        ...detailItems[0],
+        contentid: selectedCandidate.id,
+        title: detailItems[0]?.title ?? selectedCandidate.title,
+        addr1: detailItems[0]?.addr1 ?? selectedCandidate.address,
+        mapx: detailItems[0]?.mapx ?? selectedCandidate.mapX,
+        mapy: detailItems[0]?.mapy ?? selectedCandidate.mapY,
+      };
+      detailSucceeded = true;
+    } catch {
+      selectedItem = fallbackItem;
+    }
   }
 
   const nearbyQueryParams =
@@ -1406,10 +1450,14 @@ async function getSelectedFestivalTourismContext(
           radius: 5000,
         }
       : {};
-  const nearbyItems =
-    selectedItem.mapx && selectedItem.mapy
-      ? await fetchTourApiItems("nearby", nearbyQueryParams, fetchImpl, signal)
-      : [];
+  let nearbyItems: TourApiItem[] = [];
+  if (selectedItem.mapx && selectedItem.mapy) {
+    try {
+      nearbyItems = await fetchTourApiItems("nearby", nearbyQueryParams, fetchImpl, signal);
+    } catch {
+      nearbyItems = [];
+    }
+  }
   const selectedNearbyItems = nearbyItems
     .filter(isValidNearbyItem)
     .slice(0, MAX_NEARBY_SPOTS);
@@ -1470,28 +1518,42 @@ export async function getFestivalCandidates(
   const today = options.today ?? formatLocalDate();
   const candidateMinEndDate = today;
   const candidateMaxEndDate = candidateYearEnd(today);
-  const areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
-
-  if (!areaCode) return [];
+  let areaCode: string | number | undefined;
+  try {
+    areaCode = await resolveAreaCode(plan, fetchImpl, options.signal);
+  } catch {
+    areaCode = undefined;
+  }
 
   let festivalSearchScope: FestivalSearchScope = "exact-period";
-  let festivalQueryParams = buildExactFestivalSearchParams(plan, areaCode);
-  let festivalItems = await fetchTourApiItems(
-    "festivals",
-    festivalQueryParams,
-    fetchImpl,
-    options.signal,
-  );
+  let festivalQueryParams = buildExactFestivalSearchParams(plan, areaCode ?? "");
+  let festivalItems: TourApiItem[] = [];
+  if (areaCode) {
+    try {
+      festivalItems = await fetchTourApiItems(
+        "festivals",
+        festivalQueryParams,
+        fetchImpl,
+        options.signal,
+      );
+    } catch {
+      festivalItems = [];
+    }
 
-  if (festivalItems.length === 0) {
-    festivalSearchScope = "annual-region";
-    festivalQueryParams = buildAnnualFestivalSearchParams(plan, areaCode);
-    festivalItems = await fetchTourApiItems(
-      "festivals",
-      festivalQueryParams,
-      fetchImpl,
-      options.signal,
-    );
+    if (festivalItems.length === 0) {
+      festivalSearchScope = "annual-region";
+      festivalQueryParams = buildAnnualFestivalSearchParams(plan, areaCode);
+      try {
+        festivalItems = await fetchTourApiItems(
+          "festivals",
+          festivalQueryParams,
+          fetchImpl,
+          options.signal,
+        );
+      } catch {
+        festivalItems = [];
+      }
+    }
   }
 
   const supplementalItems = shouldFetchRegionalSupplement(plan, festivalItems)
@@ -1499,28 +1561,34 @@ export async function getFestivalCandidates(
         plan,
         fetchImpl,
         candidateMinEndDate,
-        { includeKeywords: festivalItems.length === 0 && planRangeDays(plan) < 30 },
+        { includeKeywords: false },
         options.signal,
       )
     : [];
   const mergedFestivalItems = mergeDuplicateFestivalItems(
     [...festivalItems, ...supplementalItems].map(applyFestivalCorrectionToTourApiItem),
   );
+  const regionMatchedItems = mergedFestivalItems.filter(
+    (item) =>
+      (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
+      (!candidateMinEndDate || festivalItemEndsOnOrAfter(item, candidateMinEndDate)) &&
+      festivalItemEndsOnOrBefore(item, candidateMaxEndDate) &&
+      isFestivalAvailableForPlanning({
+        title: item.title,
+        region: item.addr1,
+        sourceRecordYear: String(item.eventstartdate ?? item.eventenddate ?? "").slice(0, 4),
+        startDate: formatTourApiDateForInput(item.eventstartdate),
+        endDate: formatTourApiDateForInput(item.eventenddate),
+      }),
+  );
+
+  const overlappingItems = regionMatchedItems.filter((item) =>
+    festivalItemOverlapsPlanRange(item, plan),
+  );
+
+  const candidatePool = overlappingItems.length > 0 ? overlappingItems : regionMatchedItems;
   const candidateItems = sortFestivalItemsForPlan(
-    mergedFestivalItems.filter(
-      (item) =>
-        (!item.addr1 || regionMatches(plan.region, item.addr1)) &&
-        (!candidateMinEndDate || festivalItemEndsOnOrAfter(item, candidateMinEndDate)) &&
-        festivalItemEndsOnOrBefore(item, candidateMaxEndDate) &&
-        isFestivalAvailableForPlanning({
-          title: item.title,
-          region: item.addr1,
-          sourceRecordYear: String(item.eventstartdate ?? item.eventenddate ?? "").slice(0, 4),
-          startDate: formatTourApiDateForInput(item.eventstartdate),
-          endDate: formatTourApiDateForInput(item.eventenddate),
-        }) &&
-        festivalItemOverlapsPlanRange(item, plan),
-    ),
+    candidatePool,
     plan,
   ).slice(0, MAX_FESTIVAL_CANDIDATES);
   const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
