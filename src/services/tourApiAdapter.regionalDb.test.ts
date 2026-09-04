@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
-import { getFestivalCandidates, sortFestivalCandidatesByDateAsc } from "./tourApiAdapter";
+import {
+  DEFAULT_TOUR_API_AREA_CODES,
+  getFestivalCandidates,
+  sortFestivalCandidatesByDateAsc,
+} from "./tourApiAdapter";
 
 function tourApiPayload(items: unknown, totalCount?: number) {
   const normalizedCount = totalCount ?? (Array.isArray(items) ? items.length : 1);
@@ -724,5 +728,70 @@ describe("TourAPI candidate regional DB supplement", () => {
     expect(areaParamCaptures).not.toContain("3");
     expect(candidates.map((c) => c.title)).toContain("대구 이월드 일루미네이션");
     expect(candidates.some((c) => c.address.includes("대전"))).toBe(false);
+  });
+
+  it("retrieves 2026 서울세계불꽃축제 when searching Seoul for 2026-09-01 ~ 2026-11-10", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload(DEFAULT_TOUR_API_AREA_CODES));
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        return jsonResponse(tourApiPayload([], 0));
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({
+          count: 2,
+          records: [
+            {
+              id: "seoul-fireworks-2026",
+              year: 2026,
+              name: "2026 서울세계불꽃축제",
+              region: "서울",
+              localGovernment: "영등포구",
+              venue: "여의도 한강공원 일원",
+              startDate: "2026-10-03",
+              endDate: "2026-10-03",
+              visitors: 1050000,
+              budgetMillionKrw: 4200,
+            },
+            {
+              id: "seoul-gangnam-2026",
+              year: 2026,
+              name: "제15회 강남페스티벌",
+              region: "서울",
+              localGovernment: "강남구",
+              venue: "코엑스 일원",
+              startDate: "2026-10-01",
+              endDate: "2026-10-04",
+              visitors: 916594,
+              budgetMillionKrw: 2200,
+            },
+          ],
+        });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "서울",
+        startDate: "2026-09-01",
+        endDate: "2026-11-10",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-09-04" },
+    );
+
+    expect(candidates.length).toBeGreaterThanOrEqual(1);
+    const fireworks = candidates.find((c) => c.title === "2026 서울세계불꽃축제");
+    expect(fireworks).toBeDefined();
+    expect(fireworks?.startDate).toBe("2026-10-03");
+    expect(fireworks?.address).toContain("여의도 한강공원");
   });
 });

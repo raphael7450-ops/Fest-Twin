@@ -176,6 +176,41 @@ function deduplicateLatestFestivals(records) {
   return Array.from(map.values());
 }
 
+function expandSearchTerms(terms) {
+  const expanded = new Set();
+  for (const raw of terms) {
+    if (!raw) continue;
+    const term = String(raw).toLowerCase().trim();
+    if (!term) continue;
+    expanded.add(term);
+
+    const stripped = term.replace(/축제$|페스티벌$|행사$/g, "").trim();
+    if (stripped.length >= 2) {
+      expanded.add(stripped);
+    }
+
+    for (const r of Object.keys(KNOWN_METRO_REGIONS)) {
+      if (term.startsWith(r) && term.length > r.length) {
+        const remainder = term.slice(r.length).replace(/축제$|페스티벌$|행사$/g, "").trim();
+        if (remainder.length >= 2) {
+          expanded.add(remainder);
+        }
+      }
+    }
+  }
+  return Array.from(expanded);
+}
+
+function matchesQuery(record, query) {
+  if (!query || typeof query !== "string" || !query.trim()) return true;
+  const q = query.trim().toLowerCase();
+  const full = `${record.name} ${record.region || ""} ${record.localGovernment || ""} ${record.venue || ""}`.toLowerCase();
+  if (full.includes(q)) return true;
+
+  const candidateTerms = expandSearchTerms([q]);
+  return candidateTerms.some((term) => term.length >= 2 && full.includes(term));
+}
+
 export class RegionalFestivalDatabase {
   constructor(filePath = DB_FILE_PATH) {
     this.filePath = filePath;
@@ -214,7 +249,7 @@ export class RegionalFestivalDatabase {
     if (query && typeof query === "string" && query.trim()) {
       rawKeywords.push(query.trim());
     }
-    const searchTerms = rawKeywords.map((k) => k.toLowerCase()).filter(Boolean);
+    const searchTerms = expandSearchTerms(rawKeywords.map((k) => k.toLowerCase()).filter(Boolean));
     const requestedYear = Number(year);
     const hasSearchTerms = searchTerms.length > 0;
 
@@ -241,11 +276,7 @@ export class RegionalFestivalDatabase {
         };
       })
       .filter((record) => {
-        if (query && typeof query === "string" && query.trim()) {
-          const q = query.trim().toLowerCase();
-          const full = `${record.name} ${record.region || ""} ${record.venue || ""}`.toLowerCase();
-          if (!full.includes(q)) return false;
-        }
+        if (query && !matchesQuery(record, query)) return false;
         if (hasSearchTerms && record.keywordMatchScore > 0) return true;
         if (startDate || endDate) return overlapsDateRange(record, startDate, endDate);
         return true;

@@ -614,14 +614,49 @@ function candidateYearEnd(today: string) {
 
 function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
   return [...items].sort((left, right) => {
+    const planSearchTitle = plan.name ? normalizeFestivalLookupTitle(plan.name) : "";
+    if (planSearchTitle && planSearchTitle.length >= 2) {
+      const leftTitle = normalizeFestivalLookupTitle(left.title ?? "");
+      const rightTitle = normalizeFestivalLookupTitle(right.title ?? "");
+      const leftMatch = leftTitle.includes(planSearchTitle) || planSearchTitle.includes(leftTitle);
+      const rightMatch = rightTitle.includes(planSearchTitle) || planSearchTitle.includes(rightTitle);
+      if (leftMatch && !rightMatch) return -1;
+      if (!leftMatch && rightMatch) return 1;
+    }
+
+    const planStart = parseTourApiDate(plan.startDate);
+    const planEnd = parseTourApiDate(plan.endDate);
+    const leftStart = parseTourApiDate(left.eventstartdate);
+    const rightStart = parseTourApiDate(right.eventstartdate);
+    const leftStartsInside =
+      planStart !== undefined &&
+      planEnd !== undefined &&
+      leftStart !== undefined &&
+      leftStart >= planStart &&
+      leftStart <= planEnd;
+    const rightStartsInside =
+      planStart !== undefined &&
+      planEnd !== undefined &&
+      rightStart !== undefined &&
+      rightStart >= planStart &&
+      rightStart <= planEnd;
+    if (leftStartsInside && !rightStartsInside) return -1;
+    if (!leftStartsInside && rightStartsInside) return 1;
+
+    const leftVisitors = Number(left.visitors || 0);
+    const rightVisitors = Number(right.visitors || 0);
+    const leftTier = Math.floor(leftVisitors / 100000);
+    const rightTier = Math.floor(rightVisitors / 100000);
+    if (rightTier !== leftTier) return rightTier - leftTier;
+
     const overlapDifference =
       dateOverlapDays(right.eventstartdate, right.eventenddate, plan.startDate, plan.endDate) -
       dateOverlapDays(left.eventstartdate, left.eventenddate, plan.startDate, plan.endDate);
     if (overlapDifference !== 0) return overlapDifference;
 
-    const leftStart = parseTourApiDate(left.eventstartdate) ?? Number.MAX_SAFE_INTEGER;
-    const rightStart = parseTourApiDate(right.eventstartdate) ?? Number.MAX_SAFE_INTEGER;
-    if (leftStart !== rightStart) return leftStart - rightStart;
+    const lStart = leftStart ?? Number.MAX_SAFE_INTEGER;
+    const rStart = rightStart ?? Number.MAX_SAFE_INTEGER;
+    if (lStart !== rStart) return lStart - rStart;
 
     const titleDifference = String(left.title ?? "").localeCompare(String(right.title ?? ""), "ko");
     if (titleDifference !== 0) return titleDifference;

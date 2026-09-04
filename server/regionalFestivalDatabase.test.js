@@ -355,4 +355,98 @@ describe("RegionalFestivalDatabase", () => {
     expect(records.some((r) => r.region === "대전")).toBe(false);
     expect(records.some((r) => r.region === "부산")).toBe(false);
   });
+
+  it("retrieves 2026 서울세계불꽃축제 when searching Seoul for autumn period and ranks it at top", () => {
+    const db = createTestDatabase([
+      {
+        id: "seoul-fireworks-2026",
+        year: 2026,
+        name: "2026 서울세계불꽃축제",
+        region: "서울",
+        localGovernment: "영등포구",
+        type: "문화예술",
+        venue: "여의도 한강공원 일원",
+        startDate: "2026-10-03",
+        endDate: "2026-10-03",
+        visitors: 1050000,
+        budgetMillionKrw: 4200,
+      },
+      {
+        id: "seoul-gangnam-2026",
+        year: 2026,
+        name: "제15회 강남페스티벌",
+        region: "서울",
+        localGovernment: "강남구",
+        type: "문화예술",
+        venue: "코엑스 일원",
+        startDate: "2026-10-01",
+        endDate: "2026-10-04",
+        visitors: 916594,
+        budgetMillionKrw: 2200,
+      },
+      {
+        id: "busan-fireworks-2026",
+        year: 2026,
+        name: "부산불꽃축제",
+        region: "부산",
+        localGovernment: "수영구",
+        venue: "광안리해수욕장",
+        startDate: "2026-11-07",
+        endDate: "2026-11-07",
+        visitors: 1000000,
+        budgetMillionKrw: 2500,
+      },
+    ]);
+
+    const records = db.searchFestivals({
+      region: "서울",
+      startDate: "2026-09-01",
+      endDate: "2026-11-10",
+      limit: 10,
+    });
+
+    expect(records.length).toBeGreaterThanOrEqual(1);
+    expect(records[0].name).toBe("2026 서울세계불꽃축제");
+    expect(records.some((r) => r.region === "부산")).toBe(false);
+  });
+
+  it("matches 서울세계불꽃축제 when compound query 서울불꽃축제 is searched", () => {
+    const db = createTestDatabase([
+      {
+        id: "seoul-fireworks-2026",
+        year: 2026,
+        name: "2026 서울세계불꽃축제",
+        region: "서울",
+        localGovernment: "영등포구",
+        type: "문화예술",
+        venue: "여의도 한강공원 일원",
+        startDate: "2026-10-03",
+        endDate: "2026-10-03",
+        visitors: 1050000,
+        budgetMillionKrw: 4200,
+      },
+      {
+        id: "seoul-silvergrass-2026",
+        year: 2026,
+        name: "제25회 서울억새축제",
+        region: "서울",
+        localGovernment: "마포구",
+        type: "자연생태",
+        venue: "하늘공원",
+        startDate: "2026-10-17",
+        endDate: "2026-10-23",
+        visitors: 700000,
+        budgetMillionKrw: 250,
+      },
+    ]);
+
+    const records = db.searchFestivals({
+      region: "서울",
+      query: "서울불꽃축제",
+      limit: 10,
+    });
+
+    expect(records).toHaveLength(1);
+    expect(records[0].id).toBe("seoul-fireworks-2026");
+  });
 });
