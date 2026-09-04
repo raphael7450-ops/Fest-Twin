@@ -663,4 +663,66 @@ describe("TourAPI candidate regional DB supplement", () => {
     expect(sorted[0].startDate).toBe("2026-05-01");
     expect(sorted[1].startDate).toBe("2026-12-25");
   });
+
+  it("resolves area code 4 for Daegu and excludes Daejeon festivals", async () => {
+    const areaParamCaptures: string[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(
+          tourApiPayload([
+            { code: "1", name: "서울" },
+            { code: "2", name: "인천" },
+            { code: "3", name: "대전" },
+            { code: "4", name: "대구" },
+            { code: "6", name: "부산" },
+          ]),
+        );
+      }
+
+      if (url.pathname === "/api/tour/festivals") {
+        const areaCode = url.searchParams.get("areaCode");
+        if (areaCode) areaParamCaptures.push(areaCode);
+
+        if (areaCode === "4") {
+          return jsonResponse(
+            tourApiPayload([
+              {
+                contentid: "daegu-winter-1",
+                title: "대구 이월드 일루미네이션",
+                eventstartdate: "20261120",
+                eventenddate: "20261231",
+                addr1: "대구광역시 달서구 두류공원로",
+              },
+            ]),
+          );
+        }
+
+        return jsonResponse(tourApiPayload([], 0));
+      }
+
+      if (url.pathname === "/api/regional-festivals") {
+        return jsonResponse({ count: 0, records: [] });
+      }
+
+      return jsonResponse(tourApiPayload([], 0));
+    });
+
+    const candidates = await getFestivalCandidates(
+      {
+        ...sampleFestivalPlan,
+        region: "대구",
+        startDate: "2026-12-01",
+        endDate: "2026-12-31",
+        keywords: [],
+      },
+      { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-09-04" },
+    );
+
+    expect(areaParamCaptures).toContain("4");
+    expect(areaParamCaptures).not.toContain("3");
+    expect(candidates.map((c) => c.title)).toContain("대구 이월드 일루미네이션");
+    expect(candidates.some((c) => c.address.includes("대전"))).toBe(false);
+  });
 });

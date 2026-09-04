@@ -303,4 +303,56 @@ describe("RegionalFestivalDatabase", () => {
     expect(records).toHaveLength(1);
     expect(records[0].name).toBe("2026 부산밀페스티벌");
   });
+
+  it("strictly isolates Daegu searches and never returns Daejeon or Busan festivals", () => {
+    const db = createTestDatabase([
+      {
+        id: "daegu-light-2026",
+        year: 2026,
+        name: "수성빛예술제",
+        region: "대구",
+        localGovernment: "수성구",
+        venue: "수성못 일원",
+        startDate: "2026-12-24",
+        endDate: "2027-01-03",
+        visitors: 150000,
+        budgetMillionKrw: 800,
+      },
+      {
+        id: "daejeon-yuseong-2026",
+        year: 2026,
+        name: "2026 유성온천 크리스마스축제",
+        region: "대전",
+        localGovernment: "유성구",
+        venue: "유림공원 일원",
+        startDate: "2026-12-04",
+        endDate: "2026-12-06",
+        visitors: 80000,
+        budgetMillionKrw: 400,
+      },
+      {
+        id: "busan-haeundae-2026",
+        year: 2026,
+        name: "해운대 빛축제",
+        region: "부산",
+        localGovernment: "해운대구",
+        venue: "해운대해수욕장 일원",
+        startDate: "2026-12-01",
+        endDate: "2026-12-31",
+        visitors: 500000,
+        budgetMillionKrw: 1200,
+      },
+    ]);
+
+    const records = db.searchFestivals({
+      region: "대구",
+      startDate: "2026-12-01",
+      endDate: "2026-12-31",
+      limit: 10,
+    });
+
+    expect(records.map((r) => r.id)).toEqual(["daegu-light-2026"]);
+    expect(records.some((r) => r.region === "대전")).toBe(false);
+    expect(records.some((r) => r.region === "부산")).toBe(false);
+  });
 });

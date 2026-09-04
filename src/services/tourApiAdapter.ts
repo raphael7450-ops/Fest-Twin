@@ -630,56 +630,54 @@ function sortFestivalItemsForPlan(items: TourApiItem[], plan: FestivalPlan) {
   });
 }
 
-function normalizeRegionText(value: string | undefined) {
-  return String(value ?? "")
-    .replace(/\s+/g, "")
-    .replace(/특별자치도|특별자치시|광역시|특별시|자치도|도|시|군|구/g, "")
-    .toLowerCase();
-}
-
-const REGION_ALIASES: Record<string, string[]> = {
-  서울: ["서울", "seoul"],
-  인천: ["인천", "incheon"],
-  대전: ["대전", "daejeon"],
-  대구: ["대구", "daegu"],
-  광주: ["광주", "gwangju"],
-  부산: ["부산", "busan"],
-  울산: ["울산", "ulsan"],
-  세종: ["세종", "sejong"],
-  경기: ["경기", "gyeonggi"],
-  강원: ["강원", "gangwon"],
-  충남: ["충남", "충청남", "chungnam", "chungcheongnam"],
-  충청남: ["충남", "충청남", "chungnam", "chungcheongnam"],
-  충북: ["충북", "충청북", "chungbuk", "chungcheongbuk"],
-  충청북: ["충북", "충청북", "chungbuk", "chungcheongbuk"],
+const KNOWN_METRO_REGIONS: Record<string, string[]> = {
+  서울: ["서울", "서울특별시", "seoul"],
+  부산: ["부산", "부산광역시", "busan"],
+  대구: ["대구", "대구광역시", "daegu"],
+  인천: ["인천", "인천광역시", "incheon"],
+  광주: ["광주", "광주광역시", "gwangju"],
+  대전: ["대전", "대전광역시", "daejeon"],
+  울산: ["울산", "울산광역시", "ulsan"],
+  세종: ["세종", "세종특별자치시", "sejong"],
+  경기: ["경기", "경기도", "gyeonggi"],
+  강원: ["강원", "강원도", "강원특별자치도", "gangwon"],
+  충북: ["충북", "충청북", "충청북도", "chungbuk", "chungcheongbuk"],
+  충남: ["충남", "충청남", "충청남도", "chungnam", "chungcheongnam"],
+  전북: ["전북", "전라북", "전라북도", "전북특별자치도", "jeonbuk", "jeollabuk"],
+  전남: ["전남", "전라남", "전라남도", "jeonnam", "jeollanam"],
+  경북: ["경북", "경상북", "경상북도", "gyeongbuk", "gyeongsangbuk"],
   경남: ["경남", "경상남", "gyeongnam", "gyeongsangnam"],
-  경상남: ["경남", "경상남", "gyeongnam", "gyeongsangnam"],
-  경북: ["경북", "경상북", "gyeongbuk", "gyeongsangbuk"],
-  경상북: ["경북", "경상북", "gyeongbuk", "gyeongsangbuk"],
-  전남: ["전남", "전라남", "jeonnam", "jeollanam"],
-  전라남: ["전남", "전라남", "jeonnam", "jeollanam"],
-  전북: ["전북", "전라북", "jeonbuk", "jeollabuk"],
-  전라북: ["전북", "전라북", "jeonbuk", "jeollabuk"],
-  제주: ["제주", "jeju"],
+  제주: ["제주", "제주도", "제주특별자치도", "jeju"],
 };
 
-function regionAliases(value: string) {
-  const normalized = normalizeRegionText(value);
-  return new Set([normalized, ...(REGION_ALIASES[normalized] ?? [])]);
+function canonicalRegion(value: string | undefined): string {
+  if (!value) return "";
+  const text = String(value).trim().replace(/^대한민국\s*|^한국\s*/, "").replace(/\s+/g, "");
+  const lower = text.toLowerCase();
+
+  for (const [canonical, aliases] of Object.entries(KNOWN_METRO_REGIONS)) {
+    for (const alias of aliases) {
+      if (lower === alias || lower.startsWith(alias) || text.startsWith(alias)) {
+        return canonical;
+      }
+    }
+  }
+
+  return text.replace(/특별자치도|특별자치시|광역시|특별시|자치도|도$/g, "");
 }
 
-function regionMatches(planRegion: string, candidateRegion: string) {
-  const planAliases = regionAliases(planRegion);
-  const candidateAliases = regionAliases(candidateRegion);
+function regionMatches(planRegion: string, candidateRegion: string): boolean {
+  if (!planRegion) return true;
+  const canonPlan = canonicalRegion(planRegion);
+  const canonCandidate = canonicalRegion(candidateRegion);
 
-  return Array.from(planAliases).some((planAlias) =>
-    Array.from(candidateAliases).some(
-      (candidateAlias) =>
-        planAlias.length > 0 &&
-        candidateAlias.length > 0 &&
-        (planAlias.includes(candidateAlias) || candidateAlias.includes(planAlias)),
-    ),
-  );
+  if (canonPlan in KNOWN_METRO_REGIONS) {
+    return canonCandidate === canonPlan;
+  }
+
+  const reqLower = String(planRegion).replace(/\s+/g, "").toLowerCase();
+  const candLower = String(candidateRegion).replace(/\s+/g, "").toLowerCase();
+  return candLower.includes(reqLower);
 }
 
 function createRegionalSupplementSourceDetail(items: TourApiItem[]): MetricEvidenceSourceDetail {
