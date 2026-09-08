@@ -258,6 +258,7 @@ export function App() {
     };
   }, []);
 
+  const [candidateRetry, setCandidateRetry] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     const planSnapshot = plan;
@@ -296,6 +297,7 @@ export function App() {
               planKey: candidatePlanKey,
               candidates: [],
               isLoading: false,
+              errorMessage: "축제 목록을 불러오지 못했습니다. 잠시 후 다시 조회해 주세요.",
             });
           }
         });
@@ -305,7 +307,7 @@ export function App() {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [candidatePlanKey]);
+  }, [candidatePlanKey, candidateRetry]);
 
   const committedMatchesDraft =
     committed?.analysisKey === createAnalysisKey(analysisInput);
@@ -716,6 +718,7 @@ export function App() {
         candidates={candidates}
         isLoading={isCandidateLoading}
         errorMessage={candidateState.errorMessage}
+        onRetry={() => setCandidateRetry((value) => value + 1)}
         selectedCandidateId={selectedCandidate?.id}
         applyingCandidateId={applyingCandidate?.id}
         onClose={() => setIsCandidatePanelOpen(false)}

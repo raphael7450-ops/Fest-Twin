@@ -8,6 +8,7 @@ interface FestivalCandidatePanelProps {
   candidates: FestivalCandidate[];
   isLoading: boolean;
   errorMessage?: string;
+  onRetry?: () => void;
   selectedCandidateId?: string;
   applyingCandidateId?: string | null;
   onClose: () => void;
@@ -15,6 +16,7 @@ interface FestivalCandidatePanelProps {
 }
 
 function periodLabel(candidate: FestivalCandidate) {
+  if (candidate.dateStatus === "needs-review") return candidate.periodLabel ?? "일정 확인 필요";
   if (candidate.startDate && candidate.endDate) {
     return `${candidate.startDate} ~ ${candidate.endDate}`;
   }
@@ -33,6 +35,7 @@ export function FestivalCandidatePanel({
   candidates,
   isLoading,
   errorMessage,
+  onRetry,
   selectedCandidateId,
   applyingCandidateId,
   onClose,
@@ -77,6 +80,7 @@ export function FestivalCandidatePanel({
           <div className="candidate-drawer-state">
             <strong>후보 조회에 실패했습니다.</strong>
             <span>{errorMessage}</span>
+            {onRetry ? <button type="button" onClick={onRetry}>다시 조회</button> : null}
           </div>
         ) : null}
 
@@ -113,12 +117,13 @@ export function FestivalCandidatePanel({
                     <h3>{candidate.title}</h3>
                     <p>{candidate.address}</p>
                     <small>{periodLabel(candidate)}</small>
+                    {candidate.scheduleSourceUrl ? <p><a href={candidate.scheduleSourceUrl} target="_blank" rel="noopener noreferrer">공식 일정 출처</a></p> : null}
                   </div>
                   <button
                     className="secondary-button"
-                    disabled={isApplying}
+                    disabled={isApplying || candidate.dateStatus === "needs-review"}
                     type="button"
-                    onClick={() => onSelectCandidate(candidate)}
+                    onClick={() => candidate.dateStatus !== "needs-review" && onSelectCandidate(candidate)}
                   >
                     {isApplying ? "적용 중" : "이 축제 선택"}
                   </button>

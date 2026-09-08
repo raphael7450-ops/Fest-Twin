@@ -274,8 +274,8 @@ describe("public data adapters", () => {
         },
       ]),
     ];
-    const candidateFetchMock = vi.fn(async (_input: RequestInfo | URL) =>
-      jsonResponse(candidateResponses.shift()),
+    const candidateFetchMock = vi.fn(async (input: RequestInfo | URL) =>
+      jsonResponse(String(input).startsWith("/api/regional-festivals") ? { records: [] } : candidateResponses.shift()),
     );
 
     const candidates = await getFestivalCandidates(sampleFestivalPlan, {
@@ -301,12 +301,13 @@ describe("public data adapters", () => {
     expect(urls.map((url) => url.pathname)).toEqual([
       "/api/tour/area-code",
       "/api/tour/festivals",
+      "/api/regional-festivals",
       "/api/tour/detail",
       "/api/tour/detail-intro",
     ]);
     expect(urls[1].searchParams.get("areaCode")).toBe("1");
     expect(urls[1].searchParams.get("eventStartDate")).toBe("20261218");
-    expect(urls[2].searchParams.get("contentId")).toBe("100");
+    expect(urls[3].searchParams.get("contentId")).toBe("100");
   });
 
   it("attaches every processed candidate record with separate search and detail attribution", async () => {
@@ -664,6 +665,7 @@ describe("public data adapters", () => {
       tourApiPayload([{ code: "34", name: "충청남도" }]),
       tourApiPayload([], 0),
       tourApiPayload([], 0),
+      { records: [] },
     ];
     const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse(responses.shift()));
 

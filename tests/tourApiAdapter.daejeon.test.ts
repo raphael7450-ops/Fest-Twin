@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import { getFestivalCandidates } from "../src/services/tourApiAdapter";
 import { sampleFestivalPlan } from "../src/data/sampleFestivalPlan";
 
-describe("Daejeon festival candidates debug and cross-season verification", () => {
+describe.skipIf(!process.env.FEST_TWIN_LIVE_URL)("Daejeon festival candidates debug and cross-season verification", () => {
   it("queries candidates using live remote backend", async () => {
     const remoteFetch: typeof fetch = async (input, init) => {
       const urlStr = String(input);
-      const fullUrl = urlStr.startsWith("http") ? urlStr : `http://100.104.94.112:18080${urlStr}`;
+      const fullUrl = urlStr.startsWith("http") ? urlStr : `${process.env.FEST_TWIN_LIVE_URL}${urlStr}`;
       return fetch(fullUrl, init);
     };
 
@@ -31,7 +31,7 @@ describe("Daejeon festival candidates debug and cross-season verification", () =
   it("queries candidates with exact browser state from sampleFestivalPlan across seasons", async () => {
     const remoteFetch: typeof fetch = async (input, init) => {
       const urlStr = String(input);
-      const fullUrl = urlStr.startsWith("http") ? urlStr : `http://100.104.94.112:18080${urlStr}`;
+      const fullUrl = urlStr.startsWith("http") ? urlStr : `${process.env.FEST_TWIN_LIVE_URL}${urlStr}`;
       return fetch(fullUrl, init);
     };
 

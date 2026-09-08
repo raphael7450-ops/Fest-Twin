@@ -31,6 +31,51 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("TourAPI candidate regional DB supplement", () => {
+  it("does not combine separate annual editions into one continuous event", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "1", name: "서울" }]));
+      }
+      if (url.pathname === "/api/tour/festivals") {
+        return jsonResponse(tourApiPayload([
+          { contentid: "old", title: "2025 서울 테스트빛축제", addr1: "서울",
+            eventstartdate: "20251212", eventenddate: "20260104" },
+          { contentid: "new", title: "2026 서울 테스트빛축제", addr1: "서울",
+            eventstartdate: "20261211", eventenddate: "20261231" },
+        ]));
+      }
+      if (url.pathname === "/api/regional-festivals") return jsonResponse({ records: [] });
+      return jsonResponse(tourApiPayload([], 0));
+    });
+    const candidates = await getFestivalCandidates({
+      ...sampleFestivalPlan, region: "서울", startDate: "2026-12-01",
+      endDate: "2026-12-31", keywords: [],
+    }, { fetchImpl: fetchMock as typeof fetch, today: "2026-09-09" });
+    expect(candidates.filter((item) => item.title.includes("테스트빛축제"))).toEqual([
+      expect.objectContaining({ id: "new", startDate: "2026-12-11", endDate: "2026-12-31" }),
+    ]);
+  });
+
+  it("does not constrain region and date browsing by the previously selected festival", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/tour/area-code") {
+        return jsonResponse(tourApiPayload([{ code: "1", name: "서울" }]));
+      }
+      if (url.pathname === "/api/regional-festivals") return jsonResponse({ records: [] });
+      return jsonResponse(tourApiPayload([], 0));
+    });
+    await getFestivalCandidates({
+      ...sampleFestivalPlan, region: "서울", startDate: "2026-10-09",
+      endDate: "2026-10-11", keywords: ["이전 지역 축제"],
+    }, { fetchImpl: fetchMock as typeof fetch, today: "2026-09-09" });
+    const supplementCall = fetchMock.mock.calls.find(([input]) => String(input).startsWith("/api/regional-festivals"));
+    expect(supplementCall).toBeDefined();
+    const url = new URL(String(supplementCall![0]), "http://localhost");
+    expect(url.searchParams.get("keywords") ?? "").toBe("");
+  });
+
   it("shows Busan Sea Festival only once and keeps the verified seven-day schedule", async () => {
     let festivalCallCount = 0;
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -285,7 +330,7 @@ describe("TourAPI candidate regional DB supplement", () => {
       { fetchImpl: fetchMock as unknown as typeof fetch, today: "2026-08-30" },
     );
 
-    expect(candidates.map((candidate) => candidate.id)).toEqual(["december"]);
+    expect(candidates.map((candidate) => candidate.id)).toEqual(["december", "cross-year"]);
   });
 
   it("does not show historical candidates when the selected planning range is already in the past", async () => {

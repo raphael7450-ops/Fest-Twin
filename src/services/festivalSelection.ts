@@ -116,6 +116,7 @@ export function applyFestivalCandidateToPlan(
     preserveExpectedCapacity?: boolean;
   } = {},
 ): FestivalPlan {
+  if (candidate.dateStatus === "needs-review") return currentPlan;
   const recommendation = createBackdataPlanningRecommendation(candidate, options.demandBackdata);
   const planningPatch = createFestivalTypePlanningPatch(candidate, options.demandBackdata);
   const longitude = Number(candidate.mapX);

@@ -112,6 +112,19 @@ describe("App", () => {
     window.history.pushState({}, "", "/");
   });
 
+  it("shows a candidate lookup failure instead of reporting no festival data", async () => {
+    getFestivalCandidatesMock.mockRejectedValue(new Error("TourAPI festivals HTTP 429"));
+    render(<App />);
+    await settleInitialAnalysis();
+    fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
+    expect(await screen.findByText("축제 목록을 불러오지 못했습니다. 잠시 후 다시 조회해 주세요.")).toBeInTheDocument();
+    expect(screen.queryByText("해당 조건의 후보가 없습니다.")).not.toBeInTheDocument();
+    getFestivalCandidatesMock.mockResolvedValue([]);
+    fireEvent.click(screen.getByRole("button", { name: "다시 조회" }));
+    expect(await screen.findByText("해당 조건의 후보가 없습니다.")).toBeInTheDocument();
+    expect(getFestivalCandidatesMock).toHaveBeenCalledTimes(2);
+  });
+
   it("renders the government-guided Fest-Twin MVP dashboard", async () => {
     render(<App />);
     await settleInitialAnalysis();
@@ -429,8 +442,8 @@ describe("App", () => {
       fireEvent.click(screen.getByRole("button", { name: "TourAPI 후보 보기" }));
 
       expect(screen.getByRole("dialog", { name: "TourAPI 축제 후보" })).toBeInTheDocument();
-      expect(screen.queryByText("후보 조회에 실패했습니다.")).not.toBeInTheDocument();
-      expect(screen.getByText("해당 조건의 후보가 없습니다.")).toBeInTheDocument();
+      expect(screen.getByText("후보 조회에 실패했습니다.")).toBeInTheDocument();
+      expect(screen.queryByText("해당 조건의 후보가 없습니다.")).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

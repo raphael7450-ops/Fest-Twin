@@ -1,5 +1,25 @@
 [
   {
+    "canonicalKey": "탐라문화제",
+    "regions": ["제주", "제주특별자치도"],
+    "status": "active",
+    "officialStartDate": "2026-10-17",
+    "officialEndDate": "2026-10-21",
+    "verifiedAt": "2026-09-09",
+    "sourceName": "제주관광공사 VisitJEJU",
+    "sourceUrl": "https://www.visitjeju.net/kr/festival/view?contentsid=CNTS_300000000014580"
+  },
+  {
+    "canonicalKey": "서울라이트광화문",
+    "regions": ["서울", "서울특별시"],
+    "status": "active",
+    "officialStartDate": "2026-12-11",
+    "officialEndDate": "2027-01-03",
+    "verifiedAt": "2026-09-09",
+    "sourceName": "서울특별시 펀서울",
+    "sourceUrl": "https://festival.seoul.go.kr/festival/main/festivalView.do?festacode=372"
+  },
+  {
     "canonicalKey": "부산바다축제",
     "regions": [
       "부산",

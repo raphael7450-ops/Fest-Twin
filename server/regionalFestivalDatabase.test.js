@@ -28,6 +28,54 @@ function createTestDatabase(records) {
 }
 
 describe("RegionalFestivalDatabase", () => {
+  it("paginates all matching festivals with stable non-overlapping pages", () => {
+    const db = createTestDatabase(Array.from({ length: 105 }, (_, i) => ({
+      id: `row-${String(i).padStart(3, "0")}`, year: 2026, name: `축제 ${i}`, region: "서울",
+      startDate: "2026-10-17", endDate: "2026-10-21",
+    })));
+    const first = db.searchFestivals({ region: "서울", limit: 100 });
+    const last = db.searchFestivals({ region: "서울", limit: 100, offset: 100 });
+    expect(first).toHaveLength(100);
+    expect(last).toHaveLength(5);
+    expect(new Set([...first, ...last].map((r) => r.id)).size).toBe(105);
+  });
+  it("keeps legacy month-first placeholders searchable but not as confirmed dates", () => {
+    const db = createTestDatabase([{
+      id: "legacy", year: 2026, name: "검증대기축제", region: "서울",
+      sourceFile: "2026년 지역축제 개최 계획 현황(공개용).xlsx",
+      startDate: "2026-10-01", endDate: "2026-10-01",
+      periodLabel: "2026-10-01 ~ 2026-10-01",
+    }]);
+    const [record] = db.searchFestivals({ region: "서울", startDate: "2026-10-17", endDate: "2026-10-21", minEndDate: "2026-10-10" });
+    expect(record).toMatchObject({ dateStatus: "needs-review", startDate: null, endDate: null,
+      searchStartDate: "2026-10-01", searchEndDate: "2026-10-31" });
+    expect(record.periodLabel).toContain("확인 필요");
+  });
+
+  it("does not relabel a verified single-day event as uncertain", () => {
+    const db = createTestDatabase([{
+      id: "day", year: 2026, name: "확정축제", region: "서울", dateStatus: "confirmed",
+      startDate: "2026-10-01", endDate: "2026-10-01",
+      sourceFile: "2026년 지역축제 개최 계획 현황(공개용).xlsx",
+    }]);
+    expect(db.searchFestivals({ region: "서울" })[0]).toMatchObject({ dateStatus: "confirmed", startDate: "2026-10-01" });
+  });
+
+  it("does not reuse past-year events for the same month and day", () => {
+    const db = createTestDatabase([{ id: "old", year: 2025, name: "과거축제", region: "서울",
+      startDate: "2025-10-17", endDate: "2025-10-21" }]);
+    expect(db.searchFestivals({ region: "서울", startDate: "2026-10-17", endDate: "2026-10-21", minEndDate: "2026-09-09" })).toEqual([]);
+  });
+
+  it("applies official Tamna dates before searching and exposes correction provenance", () => {
+    const db = createTestDatabase([{ id: "tamna", year: 2026, name: "탐라문화제", region: "제주특별자치도",
+      startDate: "2026-10-01", endDate: "2026-10-01", sourceFile: "2026년 지역축제 개최 계획 현황(공개용).xlsx" }]);
+    expect(db.searchFestivals({ region: "제주", startDate: "2026-10-17", endDate: "2026-10-21" })[0]).toMatchObject({
+      dateStatus: "confirmed", startDate: "2026-10-17", endDate: "2026-10-21",
+      correction: { sourceUrl: "https://www.visitjeju.net/kr/festival/view?contentsid=CNTS_300000000014580" },
+    });
+  });
+
   it("deduplicates edition-numbered Busan Sea Festival records and applies the verified 2026 schedule", () => {
     const db = createTestDatabase([
       {

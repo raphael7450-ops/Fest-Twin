@@ -26,6 +26,11 @@ function sanitizeRecord(record) {
     startDate: record.startDate,
     endDate: record.endDate,
     periodLabel: record.periodLabel,
+    sourcePeriodLabel: record.sourcePeriodLabel,
+    dateStatus: record.dateStatus,
+    searchStartDate: record.searchStartDate,
+    searchEndDate: record.searchEndDate,
+    correction: record.correction,
     budgetMillionKrw: record.budgetMillionKrw,
     visitors: record.visitors,
     domesticVisitors: record.domesticVisitors,
@@ -51,6 +56,7 @@ export function createRegionalFestivalRouter(options = {}) {
       minEndDate: request.query.minEndDate,
       keywords: parseKeywords(request.query.keywords),
       limit: request.query.limit,
+      offset: request.query.offset,
     }).map(sanitizeRecord);
 
     response.json({

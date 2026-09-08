@@ -9,6 +9,7 @@ import { regionalFestivalCandidateRecords } from "../data/regionalFestivalCandid
 import { getRepresentativeFestivalImage } from "./festivalImageProvider";
 import {
   applyFestivalCorrection,
+  getFestivalCorrection,
   isFestivalAvailableForPlanning,
 } from "./festivalCorrections";
 import type {
@@ -46,6 +47,9 @@ export interface FestivalCandidate {
   address: string;
   startDate: string;
   endDate: string;
+  dateStatus?: "confirmed" | "reported" | "needs-review";
+  periodLabel?: string;
+  scheduleSourceUrl?: string;
   mapX?: string;
   mapY?: string;
   coordinateSource?: "tourapi" | "vworld";
@@ -69,6 +73,9 @@ export function sortFestivalCandidatesByDateAsc(
 }
 
 interface TourApiItem {
+  dateStatus?: FestivalCandidate["dateStatus"];
+  periodLabel?: string;
+  scheduleSourceUrl?: string;
   code?: string | number;
   name?: string;
   contentid?: string | number;
@@ -92,6 +99,10 @@ interface TourApiItem {
 }
 
 interface RegionalFestivalApiRecord {
+  dateStatus?: FestivalCandidate["dateStatus"];
+  searchStartDate?: string;
+  searchEndDate?: string;
+  correction?: { sourceUrl: string };
   id: string;
   name: string;
   region: string;
@@ -130,7 +141,7 @@ type ValidNearbyItem = TourApiItem & {
 };
 
 const FESTIVAL_SEARCH_ROWS = 50;
-const MAX_FESTIVAL_CANDIDATES = 20;
+const MAX_FESTIVAL_CANDIDATES = 100;
 const MAX_FESTIVAL_CANDIDATE_DETAILS = 5;
 const MAX_SIMILAR_FESTIVALS = 5;
 const MAX_NEARBY_SPOTS = 6;
@@ -604,7 +615,7 @@ function festivalItemEndsOnOrAfter(item: TourApiItem, minEndDate: string) {
 }
 
 function festivalItemEndsOnOrBefore(item: TourApiItem, maxEndDate: string) {
-  const endDate = formatTourApiDateForInput(item.eventenddate) || formatTourApiDateForInput(item.eventstartdate);
+  const endDate = formatTourApiDateForInput(item.eventstartdate);
   return Boolean(endDate && endDate <= maxEndDate);
 }
 
@@ -794,9 +805,15 @@ function applyFestivalCorrectionToTourApiItem(item: TourApiItem): TourApiItem {
     startDate: formatTourApiDateForInput(item.eventstartdate),
     endDate: formatTourApiDateForInput(item.eventenddate),
   });
+  const correction = getFestivalCorrection(corrected);
 
   return {
     ...item,
+    ...(correction?.officialStartDate && correction?.officialEndDate ? {
+      dateStatus: "confirmed" as const,
+      periodLabel: `${correction.officialStartDate} ~ ${correction.officialEndDate}`,
+      scheduleSourceUrl: correction.sourceUrl,
+    } : {}),
     eventstartdate: corrected.startDate?.replace(/-/g, "") ?? item.eventstartdate,
     eventenddate: corrected.endDate?.replace(/-/g, "") ?? item.eventenddate,
   };
@@ -823,7 +840,12 @@ function mergeDuplicateFestivalItems(items: TourApiItem[]) {
 
   for (const item of items) {
     const titleKey = normalizeFestivalTitleKey(item.title);
-    const key = titleKey || String(item.contentid ?? Math.random());
+    // Annual editions must not become one continuous multi-year schedule.
+    const year = String(item.eventstartdate ?? "").slice(0, 4);
+    const identity = titleKey && /^\d{4}$/.test(year)
+      ? `${titleKey}|${year}`
+      : String(item.contentid ?? titleKey);
+    const key = identity;
     const existing = map.get(key);
 
     if (!existing) {
@@ -835,6 +857,8 @@ function mergeDuplicateFestivalItems(items: TourApiItem[]) {
       hasFestivalEditionNumber(item.title) && !hasFestivalEditionNumber(existing.title)
         ? item.title
         : existing.title ?? item.title;
+    const scheduleRank = (value: TourApiItem) => value.dateStatus === "confirmed" ? 2 : value.dateStatus === "needs-review" ? 0 : 1;
+    const schedule = scheduleRank(item) > scheduleRank(existing) ? item : existing;
 
     map.set(key, {
       ...item,
@@ -845,8 +869,11 @@ function mergeDuplicateFestivalItems(items: TourApiItem[]) {
       mapx: existing.mapx ?? item.mapx,
       mapy: existing.mapy ?? item.mapy,
       firstimage: existing.firstimage ?? item.firstimage,
-      eventstartdate: earlierFestivalDate(existing.eventstartdate, item.eventstartdate),
-      eventenddate: laterFestivalDate(existing.eventenddate, item.eventenddate),
+      eventstartdate: schedule.eventstartdate,
+      eventenddate: schedule.eventenddate,
+      dateStatus: schedule.dateStatus,
+      periodLabel: schedule.periodLabel,
+      scheduleSourceUrl: schedule.scheduleSourceUrl,
       budgetMillionKrw: item.budgetMillionKrw ?? existing.budgetMillionKrw,
       visitors: item.visitors ?? existing.visitors,
       overview: item.overview ?? existing.overview,
@@ -876,8 +903,11 @@ function regionalFestivalRecordToTourApiItem(record: RegionalFestivalApiRecord):
     contentid: record.id,
     title: record.name,
     addr1: [record.region, record.localGovernment, record.venue].filter(Boolean).join(" "),
-    eventstartdate: record.startDate?.replace(/-/g, ""),
-    eventenddate: record.endDate?.replace(/-/g, ""),
+    eventstartdate: (record.startDate ?? record.searchStartDate)?.replace(/-/g, ""),
+    eventenddate: (record.endDate ?? record.searchEndDate)?.replace(/-/g, ""),
+    dateStatus: record.dateStatus,
+    periodLabel: record.periodLabel,
+    scheduleSourceUrl: record.correction?.sourceUrl,
     budgetMillionKrw: record.budgetMillionKrw,
     visitors: record.visitors,
     overview: `${record.sourceName ?? "문화체육관광부_지역축제 정보"}${
@@ -894,13 +924,19 @@ async function fetchRegionalSupplementFestivalItems(
   signal?: AbortSignal,
 ): Promise<TourApiItem[]> {
   try {
-    const response = await fetchImpl(buildRegionalFestivalSupplementUrl(plan, minEndDate, options), { signal });
-    if (!response.ok) throw new Error(`Regional festival DB HTTP ${response.status}`);
-    const payload = (await response.json()) as { records?: RegionalFestivalApiRecord[] };
-    const records = Array.isArray(payload.records) ? payload.records : [];
-    return records.length > 0
-      ? records.map(regionalFestivalRecordToTourApiItem)
-      : getRegionalSupplementFestivalItems(plan);
+    const records: RegionalFestivalApiRecord[] = [];
+    for (let page = 0; page < 100; page += 1) {
+      const url = `${buildRegionalFestivalSupplementUrl(plan, minEndDate, options)}&offset=${page * MAX_FESTIVAL_CANDIDATES}`;
+      const response = await fetchImpl(url, { signal });
+      if (!response.ok) throw new Error(`Regional festival DB HTTP ${response.status}`);
+      const payload = (await response.json()) as { records?: RegionalFestivalApiRecord[] };
+      const batch = Array.isArray(payload?.records) ? payload.records : [];
+      records.push(...batch);
+      if (batch.length < MAX_FESTIVAL_CANDIDATES) {
+        return records.length > 0 ? records.map(regionalFestivalRecordToTourApiItem) : getRegionalSupplementFestivalItems(plan);
+      }
+    }
+    throw new Error("Regional festival pagination did not terminate");
   } catch (error) {
     if (
       signal?.aborted ||
@@ -908,7 +944,7 @@ async function fetchRegionalSupplementFestivalItems(
     ) {
       throw error;
     }
-    return getRegionalSupplementFestivalItems(plan);
+    throw error;
   }
 }
 
@@ -1402,8 +1438,11 @@ function mapFestivalCandidate(
     id: String(item.contentid ?? item.code ?? Math.random()),
     title: item.title ?? "축제 명칭 미상",
     address,
-    startDate: formatTourApiDateForInput(item.eventstartdate),
-    endDate: formatTourApiDateForInput(item.eventenddate),
+    startDate: item.dateStatus === "needs-review" ? "" : formatTourApiDateForInput(item.eventstartdate),
+    endDate: item.dateStatus === "needs-review" ? "" : formatTourApiDateForInput(item.eventenddate),
+    dateStatus: item.dateStatus,
+    periodLabel: item.periodLabel,
+    scheduleSourceUrl: item.scheduleSourceUrl,
     mapX: hasFiniteNumber(item.mapx) ? String(item.mapx) : undefined,
     mapY: hasFiniteNumber(item.mapy) ? String(item.mapy) : undefined,
     imageUrl: getRepresentativeFestivalImage({
@@ -1604,15 +1643,13 @@ export async function getFestivalCandidates(
     }
   }
 
-  const supplementalItems = shouldFetchRegionalSupplement(plan, festivalItems)
-    ? await fetchRegionalSupplementFestivalItems(
+  const supplementalItems = await fetchRegionalSupplementFestivalItems(
         plan,
         fetchImpl,
         candidateMinEndDate,
         { includeKeywords: false },
         options.signal,
-      )
-    : [];
+      );
   const mergedFestivalItems = mergeDuplicateFestivalItems(
     [...festivalItems, ...supplementalItems].map(applyFestivalCorrectionToTourApiItem),
   );
@@ -1634,11 +1671,11 @@ export async function getFestivalCandidates(
     festivalItemOverlapsPlanRange(item, plan),
   );
 
-  const candidatePool = overlappingItems.length > 0 ? overlappingItems : regionMatchedItems;
+  const candidatePool = overlappingItems;
   const candidateItems = sortFestivalItemsForPlan(
     candidatePool,
     plan,
-  ).slice(0, MAX_FESTIVAL_CANDIDATES);
+  );
   const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
   const detailLookups = await Promise.all(
     detailCandidateItems.map((item) => {
@@ -1671,7 +1708,7 @@ export async function getFestivalCandidates(
         const introItem = introResult.status === "fulfilled" ? introResult.value[0] : undefined;
 
         return {
-          item: mergeMatchingFestivalIntro(mergeMatchingFestivalDetail(item, detailItem), introItem),
+          item: applyFestivalCorrectionToTourApiItem(mergeMatchingFestivalIntro(mergeMatchingFestivalDetail(item, detailItem), introItem)),
           succeeded: detailResult.status === "fulfilled" || introResult.status === "fulfilled",
         };
       });

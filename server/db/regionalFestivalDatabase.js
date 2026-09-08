@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createFestivalCorrectionRegistry } from "../festivalCorrectionRegistry.js";
+import { normalizeFestivalSchedule } from "../festivalSchedule.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,31 +72,15 @@ function regionMatches(requestedRegion, candidateRegion, localGovernment) {
 
 function overlapsDateRange(record, startDate, endDate) {
   if (!startDate && !endDate) return true;
-  if (!record.startDate && !record.endDate) return false;
-  const recordStart = record.startDate ?? record.endDate;
-  const recordEnd = record.endDate ?? record.startDate;
-  if ((!endDate || recordStart <= endDate) && (!startDate || recordEnd >= startDate)) {
-    return true;
-  }
-  if (startDate && recordStart) {
-    const sMD = startDate.slice(5);
-    const eMD = endDate ? endDate.slice(5) : "12-31";
-    const rsMD = recordStart.slice(5);
-    const reMD = recordEnd ? recordEnd.slice(5) : rsMD;
-    if (rsMD <= eMD && reMD >= sMD) {
-      return true;
-    }
-  }
-  return false;
+  const recordStart = record.searchStartDate ?? record.startDate;
+  const recordEnd = record.searchEndDate ?? record.endDate;
+  return Boolean(recordStart && recordEnd && (!endDate || recordStart <= endDate) && (!startDate || recordEnd >= startDate));
 }
 
 function endsOnOrAfter(record, minEndDate) {
   if (!minEndDate) return true;
-  const recordEnd = record.endDate ?? record.startDate;
-  if (!recordEnd) return true;
-  if (recordEnd >= minEndDate) return true;
-  if (recordEnd.slice(5) >= minEndDate.slice(5)) return true;
-  return false;
+  const recordEnd = record.searchEndDate ?? record.endDate;
+  return Boolean(recordEnd && recordEnd >= minEndDate);
 }
 
 function keywordScore(record, keywords) {
@@ -238,7 +223,8 @@ export class RegionalFestivalDatabase {
     };
   }
 
-  searchFestivals({ query, region, year, startDate, endDate, minEndDate, keywords = [], limit = 30 } = {}) {
+  searchFestivals({ query, region, year, startDate, endDate, minEndDate, keywords = [], limit = 30, offset = 0 } = {}) {
+    const pageOffset = Number.isFinite(Number(offset)) ? Math.max(0, Math.floor(Number(offset))) : 0;
     const canonRegion = canonicalRegion(region);
     const rawKeywords = Array.isArray(keywords)
       ? keywords
@@ -255,6 +241,7 @@ export class RegionalFestivalDatabase {
 
     const filtered = this.records
       .map((record) => festivalCorrectionRegistry.apply(record))
+      .map(normalizeFestivalSchedule)
       .filter((record) => regionMatches(region, record.region, record.localGovernment))
       .filter((record) => !Number.isFinite(requestedYear) || record.year === requestedYear)
       .map((record) => {
@@ -295,8 +282,8 @@ export class RegionalFestivalDatabase {
           (record.budgetMillionKrw ? Math.min(record.budgetMillionKrw / 80, 25) : 0) +
           record.keywordMatchScore,
       }))
-      .sort((a, b) => b.matchScore - a.matchScore || b.year - a.year)
-      .slice(0, Math.min(Math.max(Number(limit) || 30, 1), 100));
+      .sort((a, b) => b.matchScore - a.matchScore || b.year - a.year || String(a.id).localeCompare(String(b.id)))
+      .slice(pageOffset, pageOffset + Math.min(Math.max(Number(limit) || 30, 1), 100));
   }
 }
 

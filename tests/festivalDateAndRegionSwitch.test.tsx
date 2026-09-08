@@ -3,13 +3,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import React from "react";
 import { App } from "../src/App";
 
-describe("Festival Date and Region Switching Integration Tests", () => {
+describe.skipIf(!process.env.FEST_TWIN_LIVE_URL)("Festival Date and Region Switching Integration Tests", () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const urlStr = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-      const targetUrl = urlStr.startsWith("http") ? urlStr : `http://100.104.94.112:18080${urlStr}`;
+      const targetUrl = urlStr.startsWith("http") ? urlStr : `${process.env.FEST_TWIN_LIVE_URL}${urlStr}`;
       const { signal: _signal, ...nodeInit } = (init || {}) as any;
       try {
         return await originalFetch(targetUrl, nodeInit);
