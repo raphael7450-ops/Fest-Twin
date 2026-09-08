@@ -1641,8 +1641,19 @@ export async function getFestivalCandidates(
   ).slice(0, MAX_FESTIVAL_CANDIDATES);
   const detailCandidateItems = candidateItems.slice(0, MAX_FESTIVAL_CANDIDATE_DETAILS);
   const detailLookups = await Promise.all(
-    detailCandidateItems.map((item) =>
-      Promise.allSettled([
+    detailCandidateItems.map((item) => {
+      const isNumericContentId =
+        typeof item.contentid === "number" ||
+        (typeof item.contentid === "string" && /^\d+$/.test(item.contentid.trim()));
+
+      if (!isNumericContentId) {
+        return Promise.resolve({
+          item,
+          succeeded: true,
+        });
+      }
+
+      return Promise.allSettled([
         fetchTourApiItems(
           "detail",
           { contentId: item.contentid },
@@ -1663,8 +1674,8 @@ export async function getFestivalCandidates(
           item: mergeMatchingFestivalIntro(mergeMatchingFestivalDetail(item, detailItem), introItem),
           succeeded: detailResult.status === "fulfilled" || introResult.status === "fulfilled",
         };
-      }),
-    ),
+      });
+    }),
   );
   const detailItems = [
     ...detailLookups.map((lookup) => lookup.item),
