@@ -30,5 +30,1757 @@
     "share_token": "token_seoul_fireworks_2026",
     "created_at": "2026-07-23T12:27:34.824Z",
     "updated_at": "2026-07-23T12:27:34.824Z"
+  },
+  {
+    "id": "scen_1788843868399_tfx4",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_ctsft0qgganj",
+    "created_at": "2026-09-08T05:04:28.399Z",
+    "updated_at": "2026-09-08T05:04:28.399Z"
+  },
+  {
+    "id": "scen_1788843868405_k4fj",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_4hzn57kqganp",
+    "created_at": "2026-09-08T05:04:28.405Z",
+    "updated_at": "2026-09-08T05:04:28.405Z"
+  },
+  {
+    "id": "scen_1788843868408_snlm",
+    "title": "시나리오 B / 1200백만원 / 45,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "시나리오 B",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 45000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 45000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_ydmdw4augans",
+    "created_at": "2026-09-08T05:04:28.408Z",
+    "updated_at": "2026-09-08T05:04:28.408Z"
+  },
+  {
+    "id": "scen_1788846336638_vok2",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_p552suvex75q",
+    "created_at": "2026-09-08T05:45:36.638Z",
+    "updated_at": "2026-09-08T05:45:36.638Z"
+  },
+  {
+    "id": "scen_1788846336645_1geh",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_n4zgf3trx75x",
+    "created_at": "2026-09-08T05:45:36.645Z",
+    "updated_at": "2026-09-08T05:45:36.645Z"
+  },
+  {
+    "id": "scen_1788846336648_y0nh",
+    "title": "시나리오 B / 1200백만원 / 45,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "시나리오 B",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 45000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 45000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_nds7g5p1x760",
+    "created_at": "2026-09-08T05:45:36.648Z",
+    "updated_at": "2026-09-08T05:45:36.648Z"
+  },
+  {
+    "id": "scen_1788846869825_2rrh",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_hjowbh3g8mkh",
+    "created_at": "2026-09-08T05:54:29.825Z",
+    "updated_at": "2026-09-08T05:54:29.825Z"
+  },
+  {
+    "id": "scen_1788846869836_nue2",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_dm5mf0jt8mks",
+    "created_at": "2026-09-08T05:54:29.836Z",
+    "updated_at": "2026-09-08T05:54:29.836Z"
+  },
+  {
+    "id": "scen_1788846869848_83k2",
+    "title": "시나리오 B / 1200백만원 / 45,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "시나리오 B",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 45000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 45000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_zs9zuc478ml4",
+    "created_at": "2026-09-08T05:54:29.848Z",
+    "updated_at": "2026-09-08T05:54:29.848Z"
+  },
+  {
+    "id": "scen_1788847049961_0nd9",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_9vv2blq7chk9",
+    "created_at": "2026-09-08T05:57:29.961Z",
+    "updated_at": "2026-09-08T05:57:29.961Z"
+  },
+  {
+    "id": "scen_1788847049966_wn9i",
+    "title": "예산 확장안 / 1200백만원 / 30,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "예산 확장안",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 30000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 30000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_5onaud1hchkf",
+    "created_at": "2026-09-08T05:57:29.967Z",
+    "updated_at": "2026-09-08T05:57:29.967Z"
+  },
+  {
+    "id": "scen_1788847049971_28q9",
+    "title": "시나리오 B / 1200백만원 / 45,000명",
+    "description": "서울 서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+    "parameters": {
+      "plan": {
+        "name": "시나리오 B",
+        "region": "서울",
+        "venueAddress": "서울특별시 종로구 세종대로 172 광화문광장 및 청계광장 일원",
+        "venueCoordinates": {
+          "latitude": 37.5759,
+          "longitude": 126.9768,
+          "source": "tourapi"
+        },
+        "venueAreaSquareMeters": 35000,
+        "totalExitWidthMeters": 32,
+        "evacuationDistanceMeters": 150,
+        "startDate": "2026-12-18",
+        "endDate": "2026-12-31",
+        "operatingHours": [
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "totalBudgetMillionKrw": 1200,
+        "promotionBudgetMillionKrw": 280,
+        "safetyBudgetMillionKrw": 320,
+        "targetGroups": [
+          "youth",
+          "families",
+          "locals",
+          "foreigners"
+        ],
+        "keywords": [
+          "서울빛초롱",
+          "광화문광장",
+          "윈터페스타",
+          "청계천등불",
+          "미디어아트"
+        ],
+        "expectedCapacity": 45000,
+        "gridWidth": 35,
+        "gridHeight": 22,
+        "programs": [
+          {
+            "id": "p1",
+            "name": "광화문 크리스마스 마켓 & 마켓 부스 개장",
+            "startHour": 16,
+            "endHour": 21,
+            "expectedDraw": 82
+          },
+          {
+            "id": "p2",
+            "name": "청계천 전통·현대 등초롱 빛길 산책로 운영",
+            "startHour": 17,
+            "endHour": 22,
+            "expectedDraw": 88
+          },
+          {
+            "id": "p3",
+            "name": "광화문 대형 미디어파사드 & 윈터 라이트 쇼",
+            "startHour": 18,
+            "endHour": 22,
+            "expectedDraw": 96
+          },
+          {
+            "id": "p4",
+            "name": "심야 귀가 안전 유도 및 분산 퇴장 동선",
+            "startHour": 21,
+            "endHour": 22,
+            "expectedDraw": 76
+          }
+        ],
+        "facilities": [
+          {
+            "id": "e1",
+            "type": "entrance",
+            "name": "광화문역 9번 출구 진입 통제선",
+            "x": 4,
+            "y": 11,
+            "weight": 2
+          },
+          {
+            "id": "e2",
+            "type": "entrance",
+            "name": "청계광장 및 종각역 방면 진입로",
+            "x": 30,
+            "y": 11,
+            "weight": 1.8
+          },
+          {
+            "id": "s1",
+            "type": "stage",
+            "name": "광화문광장 특설 미디어 무대",
+            "x": 18,
+            "y": 11,
+            "weight": 2.7
+          },
+          {
+            "id": "b1",
+            "type": "booth",
+            "name": "광화문 크리스마스 마켓 부스군",
+            "x": 12,
+            "y": 6,
+            "weight": 1.5
+          },
+          {
+            "id": "r1",
+            "type": "restroom",
+            "name": "세종로 지하 공중화장실",
+            "x": 26,
+            "y": 16,
+            "weight": 1
+          },
+          {
+            "id": "m1",
+            "type": "medical",
+            "name": "현장 응급의료 및 안내 거점",
+            "x": 8,
+            "y": 16,
+            "weight": 1.2
+          },
+          {
+            "id": "rest1",
+            "type": "rest",
+            "name": "청계천 모전교 보행 완충 구역",
+            "x": 22,
+            "y": 18,
+            "weight": 1.1
+          }
+        ]
+      },
+      "selectedHour": 20
+    },
+    "results_summary": {
+      "targetVisitors": 45000,
+      "budgetKrw": 1200000000
+    },
+    "share_token": "tok_t6ut1ovlchkj",
+    "created_at": "2026-09-08T05:57:29.971Z",
+    "updated_at": "2026-09-08T05:57:29.971Z"
   }
 ]

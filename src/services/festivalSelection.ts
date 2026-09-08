@@ -144,6 +144,8 @@ export function applyFestivalCandidateToPlan(
     venueCoordinates,
     venueAreaSquareMeters: venueIdentityChanged ? undefined : currentPlan.venueAreaSquareMeters,
     venueAreaProvenance: venueIdentityChanged ? undefined : currentPlan.venueAreaProvenance,
+    totalExitWidthMeters: venueIdentityChanged ? undefined : currentPlan.totalExitWidthMeters,
+    evacuationDistanceMeters: venueIdentityChanged ? undefined : currentPlan.evacuationDistanceMeters,
     startDate: candidate.startDate || currentPlan.startDate,
     endDate: candidate.endDate || currentPlan.endDate,
     keywords: venueIdentityChanged
@@ -403,3 +405,132 @@ function estimatePeakCapacity(festival: DemandBackdataSimilarFestival) {
     Math.max(1000, Math.round(festival.visitors * 0.2)),
   );
 }
+
+export interface RegionDefaultGeoInfo {
+  region: string;
+  fullName: string;
+  venueAddress: string;
+  latitude: number;
+  longitude: number;
+}
+
+export const REGION_DEFAULT_GEO_TABLE: Record<string, RegionDefaultGeoInfo> = {
+  "서울": { region: "서울", fullName: "서울특별시", venueAddress: "서울특별시 종로구 세종대로 172 광화문광장", latitude: 37.5759, longitude: 126.9768 },
+  "부산": { region: "부산", fullName: "부산광역시", venueAddress: "부산광역시 수영구 광안해변로 219 광안리해변", latitude: 35.1532, longitude: 129.1186 },
+  "대구": { region: "대구", fullName: "대구광역시", venueAddress: "대구광역시 중구 동성로2가 동성로 야외무대", latitude: 35.8700, longitude: 128.5960 },
+  "인천": { region: "인천", fullName: "인천광역시", venueAddress: "인천광역시 연수구 컨벤시아대로 123 송도센트럴파크", latitude: 37.3925, longitude: 126.6392 },
+  "광주": { region: "광주", fullName: "광주광역시", venueAddress: "광주광역시 동구 문화전당로 38 국립아시아문화전당", latitude: 35.1468, longitude: 126.9204 },
+  "대전": { region: "대전", fullName: "대전광역시", venueAddress: "대전광역시 중구 중앙로 100 대전역~옛도청 구간", latitude: 36.3287, longitude: 127.4258 },
+  "울산": { region: "울산", fullName: "울산광역시", venueAddress: "울산광역시 남구 삼산로 35 태화강국가정원", latitude: 35.5510, longitude: 129.2990 },
+  "세종": { region: "세종", fullName: "세종특별자치시", venueAddress: "세종특별자치시 연기면 세종호수공원", latitude: 36.4980, longitude: 127.2680 },
+  "세종특별자치시": { region: "세종특별자치시", fullName: "세종특별자치시", venueAddress: "세종특별자치시 연기면 세종호수공원", latitude: 36.4980, longitude: 127.2680 },
+  "경기": { region: "경기", fullName: "경기도", venueAddress: "경기도 수원시 팔달구 정조로 825 화성행궁", latitude: 37.2828, longitude: 127.0163 },
+  "경기도": { region: "경기도", fullName: "경기도", venueAddress: "경기도 수원시 팔달구 정조로 825 화성행궁", latitude: 37.2828, longitude: 127.0163 },
+  "강원": { region: "강원", fullName: "강원특별자치도", venueAddress: "강원특별자치도 춘천시 평화로 26 의암공원", latitude: 37.8710, longitude: 127.7120 },
+  "강원특별자치도": { region: "강원특별자치도", fullName: "강원특별자치도", venueAddress: "강원특별자치도 춘천시 평화로 26 의암공원", latitude: 37.8710, longitude: 127.7120 },
+  "충북": { region: "충북", fullName: "충청북도", venueAddress: "충청북도 청주시 상당구 상당로 143 상당공원", latitude: 36.6380, longitude: 127.4910 },
+  "충청북도": { region: "충청북도", fullName: "충청북도", venueAddress: "충청북도 청주시 상당구 상당로 143 상당공원", latitude: 36.6380, longitude: 127.4910 },
+  "충남": { region: "충남", fullName: "충청남도", venueAddress: "충청남도 보령시 대천해수욕장 머드광장", latitude: 36.3045, longitude: 126.5165 },
+  "충청남도": { region: "충청남도", fullName: "충청남도", venueAddress: "충청남도 보령시 대천해수욕장 머드광장", latitude: 36.3045, longitude: 126.5165 },
+  "전북": { region: "전북", fullName: "전북특별자치도", venueAddress: "전북특별자치도 전주시 완산구 기린대로 99 전주한옥마을", latitude: 35.8150, longitude: 127.1530 },
+  "전북특별자치도": { region: "전북특별자치도", fullName: "전북특별자치도", venueAddress: "전북특별자치도 전주시 완산구 기린대로 99 전주한옥마을", latitude: 35.8150, longitude: 127.1530 },
+  "전남": { region: "전남", fullName: "전라남도", venueAddress: "전라남도 여수시 종화동 해양공원 일원", latitude: 34.7410, longitude: 127.7420 },
+  "전라남도": { region: "전라남도", fullName: "전라남도", venueAddress: "전라남도 여수시 종화동 해양공원 일원", latitude: 34.7410, longitude: 127.7420 },
+  "경북": { region: "경북", fullName: "경상북도", venueAddress: "경상북도 안동시 육사로 239 탈춤공원", latitude: 36.5647, longitude: 128.7368 },
+  "경상북도": { region: "경상북도", fullName: "경상북도", venueAddress: "경상북도 안동시 육사로 239 탈춤공원", latitude: 36.5647, longitude: 128.7368 },
+  "경남": { region: "경남", fullName: "경상남도", venueAddress: "경상남도 진주시 남강로 626 진주성 및 남강 일원", latitude: 35.1895, longitude: 128.0827 },
+  "경상남도": { region: "경상남도", fullName: "경상남도", venueAddress: "경상남도 진주시 남강로 626 진주성 및 남강 일원", latitude: 35.1895, longitude: 128.0827 },
+  "제주": { region: "제주", fullName: "제주특별자치도", venueAddress: "제주특별자치도 제주시 일주동로 17 탑동광장", latitude: 33.5180, longitude: 126.5250 },
+  "제주특별자치도": { region: "제주특별자치도", fullName: "제주특별자치도", venueAddress: "제주특별자치도 제주시 일주동로 17 탑동광장", latitude: 33.5180, longitude: 126.5250 },
+};
+
+export function getRegionDefaultGeoInfo(region: string): RegionDefaultGeoInfo | undefined {
+  const normalized = region.trim();
+  if (REGION_DEFAULT_GEO_TABLE[normalized]) return REGION_DEFAULT_GEO_TABLE[normalized];
+  const matchedKey = Object.keys(REGION_DEFAULT_GEO_TABLE).find(
+    (key) => normalized.includes(key) || key.includes(normalized),
+  );
+  return matchedKey ? REGION_DEFAULT_GEO_TABLE[matchedKey] : undefined;
+}
+
+export function updatePlanRegion(currentPlan: FestivalPlan, newRegion: string): FestivalPlan {
+  if (currentPlan.region === newRegion) return currentPlan;
+
+  const geoInfo = getRegionDefaultGeoInfo(newRegion);
+  const isAddressInNewRegion =
+    currentPlan.venueAddress.includes(newRegion) ||
+    (geoInfo ? currentPlan.venueAddress.includes(geoInfo.fullName) : false);
+
+  if (isAddressInNewRegion) {
+    return {
+      ...currentPlan,
+      region: newRegion,
+    };
+  }
+
+  const nextAddress = geoInfo ? geoInfo.venueAddress : `${newRegion} 행사장 일원`;
+  const nextCoordinates = geoInfo
+    ? { latitude: geoInfo.latitude, longitude: geoInfo.longitude, source: "vworld" as const }
+    : currentPlan.venueCoordinates;
+
+  const nextFacilities: VenueFacility[] = [
+    {
+      id: `fac_reg_${newRegion}_entrance`,
+      type: "entrance",
+      name: `${newRegion} 행사장 메인 진입로`,
+      x: Math.max(1, Math.round(currentPlan.gridWidth * 0.1)),
+      y: Math.max(1, Math.round(currentPlan.gridHeight * 0.5)),
+      weight: 1.8,
+    },
+    {
+      id: `fac_reg_${newRegion}_stage`,
+      type: "stage",
+      name: `${newRegion} 특설 메인 무대`,
+      x: Math.max(1, Math.round(currentPlan.gridWidth * 0.5)),
+      y: Math.max(1, Math.round(currentPlan.gridHeight * 0.5)),
+      weight: 2.5,
+    },
+    {
+      id: `fac_reg_${newRegion}_booth`,
+      type: "booth",
+      name: `${newRegion} 지역 특산물 및 체험 부스`,
+      x: Math.max(1, Math.round(currentPlan.gridWidth * 0.35)),
+      y: Math.max(1, Math.round(currentPlan.gridHeight * 0.3)),
+      weight: 1.4,
+    },
+    {
+      id: `fac_reg_${newRegion}_medical`,
+      type: "medical",
+      name: "통합 현장 안전 종합 지휘소",
+      x: Math.max(1, Math.round(currentPlan.gridWidth * 0.8)),
+      y: Math.max(1, Math.round(currentPlan.gridHeight * 0.7)),
+      weight: 1.0,
+    },
+  ];
+
+  return {
+    ...currentPlan,
+    region: newRegion,
+    venueAddress: nextAddress,
+    venueCoordinates: nextCoordinates,
+    venueAreaSquareMeters: undefined,
+    venueAreaProvenance: undefined,
+    totalExitWidthMeters: undefined,
+    evacuationDistanceMeters: undefined,
+    facilities: nextFacilities,
+    keywords: [newRegion, `${newRegion}축제`, "지역문화", "체험행사"],
+  };
+}
+
+export function updatePlanDates(
+  currentPlan: FestivalPlan,
+  nextStartDate: string,
+  nextEndDate: string,
+): FestivalPlan {
+  return {
+    ...currentPlan,
+    startDate: nextStartDate,
+    endDate: nextEndDate,
+  };
+}
+

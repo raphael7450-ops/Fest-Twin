@@ -34,7 +34,7 @@ export function SelectedFestivalCard({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span className="badge badge-success" style={{ fontSize: "0.78rem" }}>
-            한국관광공사 TourAPI 4.0 연동
+            {selectedFestivalBasis.sourceName}
           </span>
           <h3 style={{ margin: 0, fontSize: "1.15rem", color: "#38bdf8" }}>
             [선택 축제] {selectedFestivalBasis.title}
@@ -84,13 +84,14 @@ export function SelectedFestivalCard({
             <div>
               <dt style={{ color: "#cbd5e1", fontSize: "0.78rem" }}>주최 / 주관</dt>
               <dd style={{ margin: 0, fontWeight: 600, color: "#38bdf8" }}>
-                {selectedFestivalBasis.organizer || "해당 지자체 / 문화재단"}
+                {selectedFestivalBasis.organizer || "주최 / 주관 미확인"}
               </dd>
             </div>
             <div>
               <dt style={{ color: "#cbd5e1", fontSize: "0.78rem" }}>축제 시간 (운영시간)</dt>
               <dd style={{ margin: 0, fontWeight: 600, color: "#facc15" }}>
-                {selectedFestivalBasis.operatingTimeText || "10:00 ~ 22:00 (주간 및 야간 운영)"}
+                {selectedFestivalBasis.operatingTimeText || "운영시간 미확인"}
+                {selectedFestivalBasis.operatingTimeText && selectedFestivalBasis.operatingTimeSource === "classified_by_type" && " (기획 가정 · 공식 시간 미확인)"}
               </dd>
             </div>
             <div>

@@ -35,6 +35,32 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("public data adapters", () => {
+  it("does not label preset metadata as live TourAPI even when nearby lookup succeeds", async () => {
+    const tourism = await getTourismContext(sampleFestivalPlan, {
+      selectedCandidate: {
+        id: "preset-2026", title: "기획 축제", address: "서울", startDate: "2026-10-01",
+        endDate: "2026-10-02", mapX: "126.98", mapY: "37.57", searchScope: "exact-period",
+      },
+      fetchImpl: vi.fn(async () => jsonResponse(tourApiPayload([
+        { contentid: "123", title: "인근 관광지", addr1: "서울", mapx: "126.98", mapy: "37.57", contenttypeid: "12", dist: "100" },
+      ]))),
+    });
+    expect(tourism.provenance.sourceStatus).toBe("partial-fallback");
+  });
+
+  it("does not claim success for empty detail or failed nearby responses", async () => {
+    const tourism = await getTourismContext(sampleFestivalPlan, {
+      selectedCandidate: {
+        id: "12345", title: "선택 축제", address: "서울", startDate: "2026-10-01",
+        endDate: "2026-10-02", mapX: "126.98", mapY: "37.57", searchScope: "exact-period",
+      },
+      fetchImpl: vi.fn(async (input) => String(input).includes("/nearby")
+        ? jsonResponse({}, { ok: false, status: 503 }) : jsonResponse(tourApiPayload([], 0))),
+    });
+    const sources = tourism.sourceDetails?.filter((source) => source.sourceId.startsWith("tourapi-selected-tourism"));
+    expect(sources).toHaveLength(2);
+    expect(sources?.every((source) => !source.statusLabel.includes("실시간 조회 성공"))).toBe(true);
+  });
   it("returns TourAPI-like fallback data with explicit provenance when the proxy fails", async () => {
     const fetchMock = vi.fn(async () => jsonResponse({}, { ok: false, status: 503 }));
     const tourism = await getTourismContext(sampleFestivalPlan, {

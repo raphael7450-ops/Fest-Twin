@@ -4,6 +4,15 @@ import type { SelectedFestivalBasis } from "../domain/types";
 import { SelectedFestivalCard } from "./SelectedFestivalCard";
 
 describe("SelectedFestivalCard", () => {
+  it("does not invent an organizer or operating time for a DB festival", () => {
+    render(<SelectedFestivalCard selectedFestivalBasis={{
+      contentId: "db-1", title: "DB 축제", address: "서울", startDate: "2026-10-01",
+      endDate: "2026-10-02", sourceName: "문화체육관광부 지역축제 DB",
+    }} />);
+    expect(screen.getByText("문화체육관광부 지역축제 DB")).toBeInTheDocument();
+    expect(screen.queryByText(/10:00 ~ 22:00/)).not.toBeInTheDocument();
+    expect(screen.getByText("운영시간 미확인")).toBeInTheDocument();
+  });
   it("renders nothing when selectedFestivalBasis is null", () => {
     const { container } = render(<SelectedFestivalCard selectedFestivalBasis={null} />);
     expect(container.firstChild).toBeNull();

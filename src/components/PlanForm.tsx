@@ -1,5 +1,6 @@
 import type { DwellProfile, FestivalPlan } from "../domain/types";
 import type { TourApiAreaCode } from "../services/tourApiAdapter";
+import { updatePlanDates, updatePlanRegion } from "../services/festivalSelection";
 import { VenueAreaReference } from "./VenueAreaReference";
 
 interface PlanFormProps {
@@ -65,7 +66,7 @@ export function PlanForm({
             <select
               value={plan.region}
               onChange={(event) =>
-                onPlanChange({ ...plan, region: event.target.value })
+                onPlanChange(updatePlanRegion(plan, event.target.value))
               }
             >
               {regionOptions.map((area) => (
@@ -78,7 +79,7 @@ export function PlanForm({
             <input
               value={plan.region}
               onChange={(event) =>
-                onPlanChange({ ...plan, region: event.target.value })
+                onPlanChange(updatePlanRegion(plan, event.target.value))
               }
             />
           )}
@@ -90,7 +91,7 @@ export function PlanForm({
             type="date"
             value={plan.startDate}
             onChange={(event) =>
-              onPlanChange({ ...plan, startDate: event.target.value })
+              onPlanChange(updatePlanDates(plan, event.target.value, plan.endDate))
             }
           />
         </label>
@@ -100,8 +101,9 @@ export function PlanForm({
           <input
             type="date"
             value={plan.endDate}
+            min={plan.startDate}
             onChange={(event) =>
-              onPlanChange({ ...plan, endDate: event.target.value })
+              onPlanChange(updatePlanDates(plan, plan.startDate, event.target.value))
             }
           />
         </label>

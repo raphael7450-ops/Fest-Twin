@@ -1457,14 +1457,18 @@ async function getSelectedFestivalTourismContext(
         fetchImpl,
         signal,
       );
+      const detailItem = detailItems.find((item) =>
+        String(item.contentid) === selectedCandidate.id && isValidFestivalItem(item),
+      );
+      if (!detailItem) throw new Error("선택 축제와 일치하는 유효한 상세 정보 없음");
       selectedItem = {
         ...fallbackItem,
-        ...detailItems[0],
+        ...detailItem,
         contentid: selectedCandidate.id,
-        title: detailItems[0]?.title ?? selectedCandidate.title,
-        addr1: detailItems[0]?.addr1 ?? selectedCandidate.address,
-        mapx: detailItems[0]?.mapx ?? selectedCandidate.mapX,
-        mapy: detailItems[0]?.mapy ?? selectedCandidate.mapY,
+        title: detailItem.title ?? selectedCandidate.title,
+        addr1: detailItem.addr1 ?? selectedCandidate.address,
+        mapx: detailItem.mapx ?? selectedCandidate.mapX,
+        mapy: detailItem.mapy ?? selectedCandidate.mapY,
       };
       detailSucceeded = true;
     } catch {
@@ -1484,9 +1488,11 @@ async function getSelectedFestivalTourismContext(
         }
       : {};
   let nearbyItems: TourApiItem[] = [];
+  let nearbySucceeded = false;
   if (selectedItem.mapx && selectedItem.mapy) {
     try {
       nearbyItems = await fetchTourApiItems("nearby", nearbyQueryParams, fetchImpl, signal);
+      nearbySucceeded = true;
     } catch {
       nearbyItems = [];
     }
@@ -1523,7 +1529,7 @@ async function getSelectedFestivalTourismContext(
     })),
     statusLabel:
       selectedItem.mapx && selectedItem.mapy
-        ? "실시간 조회 성공"
+        ? nearbySucceeded ? "실시간 조회 성공" : "조회 실패: 주변 관광지 보완 데이터 사용"
         : "조회하지 않음: 선택 축제 좌표 없음",
     note:
       selectedItem.mapx && selectedItem.mapy
@@ -1531,7 +1537,7 @@ async function getSelectedFestivalTourismContext(
         : "선택 축제 후보에 좌표가 없어 주변 관광지 조회를 생략했습니다.",
   });
 
-  return mapTourApiItemsToTourismContext(
+  const context = mapTourApiItemsToTourismContext(
     plan,
     [selectedItem],
     nearbyItems,
@@ -1541,6 +1547,15 @@ async function getSelectedFestivalTourismContext(
       sourceDetails: [detailSource, nearbySource],
     },
   );
+  if (!detailSucceeded) {
+    context.provenance = {
+      ...context.provenance,
+      sourceStatus: "partial-fallback",
+      sourceName: "선택 축제 메타데이터 + 관광정보 보완",
+      fallbackReason: "선택 축제 상세의 실시간 확인 없이 기획 후보 메타데이터를 사용했습니다.",
+    };
+  }
+  return context;
 }
 
 export async function getFestivalCandidates(

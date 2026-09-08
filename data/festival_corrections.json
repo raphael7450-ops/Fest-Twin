@@ -1,7 +1,10 @@
 [
   {
     "canonicalKey": "부산바다축제",
-    "regions": ["부산", "부산광역시"],
+    "regions": [
+      "부산",
+      "부산광역시"
+    ],
     "status": "active",
     "officialStartDate": "2026-08-07",
     "officialEndDate": "2026-08-13",
@@ -11,10 +14,52 @@
   },
   {
     "canonicalKey": "대전0시축제",
-    "regions": ["대전", "대전광역시"],
+    "regions": [
+      "대전",
+      "대전광역시"
+    ],
     "status": "inactive",
     "verifiedAt": "2026-08-11",
     "sourceName": "운영 확인 정정 데이터",
     "sourceUrl": "https://www.daejeon.go.kr/"
+  },
+  {
+    "canonicalKey": "보령머드축제",
+    "regions": [
+      "충남",
+      "충청남도"
+    ],
+    "status": "active",
+    "officialStartDate": "2026-07-24",
+    "officialEndDate": "2026-08-09",
+    "verifiedAt": "2026-09-08",
+    "sourceName": "충남문화관광재단 충남문화포털",
+    "sourceUrl": "https://cnc.cacf.or.kr/main/html/sub06/0601.html?mng_no=9491&mode=V"
+  },
+  {
+    "canonicalKey": "진주남강유등축제",
+    "regions": [
+      "경남",
+      "경상남도"
+    ],
+    "status": "active",
+    "officialStartDate": "2026-10-03",
+    "officialEndDate": "2026-10-18",
+    "verifiedAt": "2026-09-08",
+    "sourceName": "진주남강유등축제 공식 홈페이지",
+    "sourceUrl": "https://yudeung.com/"
+  },
+  {
+    "canonicalKey": "부산불꽃축제",
+    "regions": [
+      "부산",
+      "부산광역시"
+    ],
+    "status": "active",
+    "officialStartDate": "2026-11-07",
+    "officialEndDate": "2026-11-07",
+    "verifiedAt": "2026-09-08",
+    "sourceName": "부산광역시 보도자료 (2026-09-04)",
+    "sourceUrl": "https://www.busan.go.kr/nbtnewsBU/1752768"
   }
 ]

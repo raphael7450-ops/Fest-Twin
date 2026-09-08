@@ -4,7 +4,6 @@ import type { FestivalPlan } from "../domain/types";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { resolveFestivalCoordinatesByKeyword } from "../services/tourApiAdapter";
 import { resolveVenueCoordinatesByVWorld } from "../services/vworldAdapter";
-import { lookupCityParkCandidates } from "../services/cityParkAdapter";
 
 interface FestivalSearchModalProps {
   isOpen: boolean;
@@ -37,17 +36,6 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
   const startDate = record.startDate || "2026-05-01";
   const endDate = record.endDate || "2026-05-05";
 
-  const estimatedArea =
-    visitors >= 800000
-      ? 100000
-      : visitors >= 300000
-        ? 70000
-        : visitors >= 100000
-          ? 50000
-          : visitors >= 50000
-            ? 35000
-            : 20000;
-
   const venueDisplayName = record.venue || `${record.region} 행사장`;
 
   return {
@@ -56,7 +44,7 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
     name: record.name,
     tagline: `${record.localGovernment || record.region} ${record.venue || "행사장"} 축제`,
     description: `${record.region} ${record.localGovernment || ""} ${record.venue || ""}에서 개최되는 축제 (예산 ${budget.toLocaleString()}백만원, 예상 방문객 ${visitors.toLocaleString()}명)`,
-    areaSqm: estimatedArea,
+    areaSqm: 0,
     totalBudgetMillionKrw: budget,
     targetVisitors: visitors,
     region: record.region,
@@ -73,12 +61,11 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
       targetGroups: ["youth", "families", "locals"],
       keywords: [record.name, record.region, record.localGovernment || "", record.type || "지역축제"].filter(Boolean),
       expectedCapacity: Math.max(1000, Math.round(visitors / 8)),
-      venueAreaSquareMeters: estimatedArea,
       gridWidth: 30,
       gridHeight: 20,
       programs: [
-        { id: `prog_${record.id}_01`, name: `${record.name} 개막식 & 메인 행사`, startHour: 18, endHour: 21, expectedDraw: Math.round(visitors * 0.4) },
-        { id: `prog_${record.id}_02`, name: `지역 특산물 & 문화 체험 존`, startHour: 10, endHour: 18, expectedDraw: Math.round(visitors * 0.3) },
+        { id: `prog_${record.id}_01`, name: `${record.name} 개막식 & 메인 행사`, startHour: 18, endHour: 21, expectedDraw: 85 },
+        { id: `prog_${record.id}_02`, name: `지역 특산물 & 문화 체험 존`, startHour: 10, endHour: 18, expectedDraw: 75 },
       ],
       facilities: [
         { id: `fac_${record.id}_01`, type: "entrance", name: `${venueDisplayName} 메인 진입 게이트`, x: 3, y: 10, weight: 1.8 },
@@ -95,7 +82,7 @@ function dbRecordToPreset(record: ApiRecord): FestivalPreset {
       endDate,
       sourceName: record.sourceName || "문화체육관광부 전국 지역축제 DB",
       operatingTimeText: "10:00 ~ 21:00",
-      operatingTimeSource: "official",
+      operatingTimeSource: "classified_by_type",
       scheduleProfileLabel: "주야간 문화형",
     },
   };
@@ -253,27 +240,6 @@ export function FestivalSearchModal({
         ).catch(() => null));
       if (controller.signal.aborted) return;
 
-      let matchedParkArea: number | undefined;
-      let matchedParkName: string | undefined;
-      if (match?.mapX && match?.mapY) {
-        const parkCandidates = await lookupCityParkCandidates(
-          {
-            venueName: preset.name,
-            venueAddress: preset.plan.venueAddress,
-            region: preset.region,
-            coordinates: {
-              latitude: Number(match.mapY),
-              longitude: Number(match.mapX),
-            },
-          },
-          { signal: controller.signal },
-        ).catch(() => []);
-        if (parkCandidates.length > 0 && parkCandidates[0].areaSquareMeters > 0) {
-          matchedParkArea = parkCandidates[0].areaSquareMeters;
-          matchedParkName = parkCandidates[0].name;
-        }
-      }
-
       const coordinates = match
         ? {
             longitude: Number(match.mapX),
@@ -282,25 +248,11 @@ export function FestivalSearchModal({
           }
         : preset.plan.venueCoordinates;
 
-      const venueAreaSquareMeters = matchedParkArea ?? preset.plan.venueAreaSquareMeters;
-      const venueAreaProvenance = matchedParkArea
-        ? {
-            origin: "public-data" as const,
-            sourceDataset: "전국도시공원정보표준데이터" as const,
-            sourceParkName: matchedParkName,
-            referenceAreaSquareMeters: matchedParkArea,
-            appliedAt: new Date().toISOString(),
-          }
-        : preset.plan.venueAreaProvenance;
-
       const enrichedPreset: FestivalPreset = {
         ...preset,
-        areaSqm: venueAreaSquareMeters ?? preset.areaSqm,
         plan: {
           ...preset.plan,
           venueCoordinates: coordinates,
-          venueAreaSquareMeters,
-          venueAreaProvenance,
         },
         basis: {
           ...preset.basis,
@@ -390,6 +342,7 @@ export function FestivalSearchModal({
           ))}
         </div>
 
+        <p className="muted">대표 프리셋의 예산·방문객·면적·운영시간은 시뮬레이션 가정입니다. DB 방문객은 수록 자료값이며, 공식 계획과 행사 운영 면적을 확인해 주세요.</p>
         <div className="candidate-list" style={{ maxHeight: "calc(100vh - 230px)", overflowY: "auto" }}>
           {isLoading && combinedPresets.length === 0 ? (
             <div className="candidate-drawer-state">
@@ -436,7 +389,7 @@ export function FestivalSearchModal({
                     <div style={{ fontSize: "0.78rem", color: "#64748b", display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       <span>목표 방문객: {(preset.targetVisitors / 10000).toLocaleString()}만 명</span>
                       <span>|</span>
-                      <span>예산: {(preset.totalBudgetMillionKrw / 10).toLocaleString()}억 원</span>
+                      <span>예산: {(preset.totalBudgetMillionKrw / 100).toLocaleString()}억 원</span>
                       <span>|</span>
                       <span>
                         면적: {displayArea > 0 ? `${displayArea.toLocaleString()}m²` : "VWorld 실측 권장"}

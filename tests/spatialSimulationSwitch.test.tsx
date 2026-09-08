@@ -138,6 +138,8 @@ describe("Spatial Congestion and Density Simulation Switch Tests", () => {
     // Check bottleneck labels update from Gwanghwamun to Gwangalli
     const bottleneckText = within(heatmapSection).queryAllByText(/광안/);
     expect(bottleneckText.length).toBeGreaterThan(0);
+    expect(screen.getByText("부산광역시 / 부산문화관광축제조직위원회")).toBeInTheDocument();
+    expect(screen.getByText(/14:00 ~ 21:30/)).toBeInTheDocument();
   });
 
   it("updates spatial congestion simulation when selecting a TourAPI candidate", async () => {
@@ -212,10 +214,10 @@ describe("Spatial Congestion and Density Simulation Switch Tests", () => {
 
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "전체 축제 실시간 검색" })).not.toBeInTheDocument();
-      // Should show estimated 50,000m² (based on 120,000 visitors)
-      expect(within(heatmapSection).getByText("50,000m²")).toBeInTheDocument();
+      // A visitor count is not measured venue geometry.
+      expect(within(heatmapSection).queryByText("50,000m²")).not.toBeInTheDocument();
       expect(within(heatmapSection).queryByText("35,000m²")).not.toBeInTheDocument();
+      expect(screen.getAllByText("문화체육관광부_지역축제 정보").length).toBeGreaterThan(0);
     });
   });
 });
-

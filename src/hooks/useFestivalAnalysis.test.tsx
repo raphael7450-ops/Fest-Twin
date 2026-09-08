@@ -86,6 +86,18 @@ function dependencies(
 }
 
 describe("useFestivalAnalysis", () => {
+  it("refreshes time-specific traffic instead of reusing the previous hour's evidence", async () => {
+    const deps = dependencies({ loadTraffic: vi.fn(async (_plan, options) => ({
+      ...structuredClone(sampleTrafficContext), time: String(options?.hour),
+    })) });
+    const { result, rerender } = renderHook(({ input }) => useFestivalAnalysis(input, deps), {
+      initialProps: { input: inputA },
+    });
+    await waitFor(() => expect(result.current.phase).toBe("ready"));
+    const nextHour = inputA.selectedHour === 18 ? 20 : 18;
+    rerender({ input: { ...inputA, selectedHour: nextHour } });
+    await waitFor(() => expect(result.current.snapshot?.datasets.traffic.value?.time).toBe(String(nextHour)));
+  });
   it("starts with loading and no synthetic previous festival", () => {
     const pendingTourism = deferred<TourismContext>();
     const deps = dependencies({ loadTourism: vi.fn(() => pendingTourism.promise) });

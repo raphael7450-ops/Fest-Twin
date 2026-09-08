@@ -128,7 +128,7 @@ export function App() {
     setIsSearchModalOpen(false);
   };
   const selectedFestivalBasis = useMemo(
-    () => (selectedCandidate ? createSelectedFestivalBasis(selectedCandidate) : presetBasis),
+    () => presetBasis ?? (selectedCandidate ? createSelectedFestivalBasis(selectedCandidate) : null),
     [selectedCandidate, presetBasis],
   );
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<MetricEvidenceId | null>(null);
@@ -189,6 +189,7 @@ export function App() {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
             setPlan(restoredPlan);
             setSelectedCandidate(candidateFromSelectedBasis(data.parameters.selectedFestivalBasis));
+            setPresetBasis(data.parameters.selectedFestivalBasis ?? null);
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
@@ -205,6 +206,7 @@ export function App() {
             const restoredPlan = normalizeFestivalPlan(data.parameters.plan);
             setPlan(restoredPlan);
             setSelectedCandidate(candidateFromSelectedBasis(data.parameters.selectedFestivalBasis));
+            setPresetBasis(data.parameters.selectedFestivalBasis ?? null);
             if (data.parameters.selectedHour !== undefined) {
               setSelectedHour(data.parameters.selectedHour);
             }
@@ -216,6 +218,7 @@ export function App() {
             if (found) {
               setPlan(normalizeFestivalPlan(found.plan));
               setSelectedCandidate(candidateFromSelectedBasis(found.selectedFestivalBasis));
+            setPresetBasis(found.selectedFestivalBasis ?? null);
               setSelectedHour(found.selectedHour ?? 20);
               setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
             }
@@ -227,6 +230,7 @@ export function App() {
           if (found) {
             setPlan(normalizeFestivalPlan(found.plan));
             setSelectedCandidate(candidateFromSelectedBasis(found.selectedFestivalBasis));
+            setPresetBasis(found.selectedFestivalBasis ?? null);
             setSelectedHour(found.selectedHour ?? 20);
             setRestoredNotice(`[저장 시나리오] [${found.name}] 기획안이 복원되었습니다.`);
           }
@@ -621,6 +625,7 @@ export function App() {
                       onLoadScenario={(scenario) => {
                         setPlan(normalizeFestivalPlan(scenario.plan));
                         setSelectedCandidate(candidateFromSelectedBasis(scenario.selectedFestivalBasis));
+            setPresetBasis(scenario.selectedFestivalBasis ?? null);
                         setSelectedHour(scenario.selectedHour ?? 20);
                       }}
                     />

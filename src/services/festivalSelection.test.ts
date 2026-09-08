@@ -19,6 +19,13 @@ const candidate: FestivalCandidate = {
 };
 
 describe("festivalSelection", () => {
+  it("clears the previous venue's evacuation geometry when switching venues", () => {
+    const next = applyFestivalCandidateToPlan({
+      ...sampleFestivalPlan, totalExitWidthMeters: 40, evacuationDistanceMeters: 200,
+    }, candidate);
+    expect(next.totalExitWidthMeters).toBeUndefined();
+    expect(next.evacuationDistanceMeters).toBeUndefined();
+  });
   it("creates a selected festival basis from a TourAPI candidate", () => {
     const basis = createSelectedFestivalBasis(candidate);
 

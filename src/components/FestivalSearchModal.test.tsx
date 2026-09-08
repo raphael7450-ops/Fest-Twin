@@ -4,6 +4,11 @@ import { FESTIVAL_PRESETS } from "../data/festivalPresets";
 import { FestivalSearchModal } from "./FestivalSearchModal";
 
 describe("FestivalSearchModal", () => {
+  it("converts 3500 million KRW to 35 hundred-million KRW in search", () => {
+    render(<FestivalSearchModal isOpen onClose={vi.fn()} onSelectPreset={vi.fn()} />);
+    const card = screen.getByText("부산 불꽃축제").closest("article")!;
+    expect(within(card).getByText("예산: 35억 원")).toBeInTheDocument();
+  });
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-11T09:00:00+09:00"));
@@ -174,6 +179,10 @@ describe("FestivalSearchModal", () => {
     );
     expect(handleClose).toHaveBeenCalledTimes(1);
     expect(screen.queryAllByRole("img")).toHaveLength(0);
+    const selected = handleSelectPreset.mock.calls[0][0];
+    expect(selected.plan.venueAreaSquareMeters).toBeUndefined();
+    expect(selected.basis.operatingTimeSource).toBe("classified_by_type");
+    expect(selected.plan.programs.every((program: { expectedDraw: number }) => program.expectedDraw <= 100)).toBe(true);
   });
 
   it("renders festival choices without image elements so search stays lightweight", () => {
