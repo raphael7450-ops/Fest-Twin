@@ -4472,7 +4472,9 @@ a:focus-visible {
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.1s ease;
   border-radius: 4px;
-  padding: 2px 4px;
+  padding: 2px 4px 2px 6px;
+  border-left: 3px solid transparent;
+  box-sizing: border-box;
 }
 
 .bar-row:hover {
@@ -4481,8 +4483,7 @@ a:focus-visible {
 
 .bar-row--selected {
   background-color: #eff6ff !important;
-  border-left: 3px solid #2563eb;
-  padding-left: 6px;
+  border-left-color: #2563eb !important;
 }
 
 .bar-row--selected strong {

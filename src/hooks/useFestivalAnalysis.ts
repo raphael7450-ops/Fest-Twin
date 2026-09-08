@@ -293,12 +293,25 @@ function settledDatasets(
 }
 
 
+function getPlanIdentityKey(input: FestivalAnalysisInput): string {
+  const candidate = input.selectedCandidate
+    ? normalizeAnalysisCandidate(input.selectedCandidate)
+    : null;
+  return JSON.stringify({
+    plan: input.plan,
+    basis: input.selectedFestivalBasis ?? null,
+    candidate,
+  });
+}
+
 export function useFestivalAnalysis(
   input: FestivalAnalysisInput,
   dependencies: FestivalAnalysisDependencies = defaultDependencies,
 ): FestivalAnalysisState {
   const analysisKey = createAnalysisKey(input);
+  const planIdentityKey = getPlanIdentityKey(input);
   const latestKey = useRef(analysisKey);
+  const latestPlanIdentityKey = useRef(planIdentityKey);
   const latestDependencies = useRef(dependencies);
   const requestSequence = useRef(0);
   const [state, setState] = useState<FestivalAnalysisState>({
@@ -318,7 +331,73 @@ export function useFestivalAnalysis(
       : undefined;
     const requestDependencies = latestDependencies.current;
 
-    // Traffic evidence is hour-specific; commit it together with the selected hour.
+    // 오직 시간대(selectedHour)만 변경된 경우:
+    // refreshing 배너를 띄우지 않고 기존 데이터셋으로 즉시 스냅샷을 갱신하여 화면 흔들림(Layout Shift)을 원천 차단하고,
+    // 시간대별 교통 데이터(traffic)만 백그라운드에서 조용히 갱신합니다.
+    const isOnlyHourChange =
+      latestPlanIdentityKey.current === planIdentityKey &&
+      state.snapshot !== undefined &&
+      state.phase === "ready" &&
+      state.snapshot.selectedHour !== input.selectedHour;
+
+    if (isOnlyHourChange && state.snapshot) {
+      try {
+        const instantSnapshot = createFestivalAnalysisSnapshot({
+          plan: requestPlan,
+          selectedFestivalBasis: requestBasis,
+          selectedCandidate: requestCandidate,
+          selectedHour: input.selectedHour,
+          datasets: state.snapshot.datasets,
+          now: requestDependencies.now(),
+        });
+        setState((current) => ({
+          snapshot: instantSnapshot,
+          phase: "ready",
+          pendingFestivalTitle: undefined,
+          errorMessages: current.errorMessages,
+        }));
+      } catch {
+        // Fallback to standard flow if instant calculation fails
+      }
+
+      requestSequence.current += 1;
+      const requestId = requestSequence.current;
+      const hourTrafficController = new AbortController();
+
+      requestDependencies
+        .loadTraffic(requestPlan, { signal: hourTrafficController.signal, hour: input.selectedHour })
+        .then((traffic) => {
+          if (latestKey.current !== analysisKey || requestSequence.current !== requestId) return;
+          setState((current) => {
+            if (!current.snapshot) return current;
+            const updatedDatasets = {
+              ...current.snapshot.datasets,
+              traffic: trafficState(traffic),
+            };
+            const updatedSnapshot = createFestivalAnalysisSnapshot({
+              plan: requestPlan,
+              selectedFestivalBasis: requestBasis,
+              selectedCandidate: requestCandidate,
+              selectedHour: input.selectedHour,
+              datasets: updatedDatasets,
+              now: requestDependencies.now(),
+            });
+            return {
+              snapshot: updatedSnapshot,
+              phase: "ready",
+              pendingFestivalTitle: undefined,
+              errorMessages: current.errorMessages,
+            };
+          });
+        })
+        .catch(() => {});
+
+      return () => {
+        hourTrafficController.abort();
+      };
+    }
+
+    latestPlanIdentityKey.current = planIdentityKey;
     requestSequence.current += 1;
     const requestId = requestSequence.current;
     const controller = new AbortController();

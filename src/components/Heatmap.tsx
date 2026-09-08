@@ -121,7 +121,16 @@ export function Heatmap({
         </div>
       </div>
 
-      <div style={{ minHeight: "80px" }}>
+      <div
+        className="heatmap-bottlenecks-container"
+        style={{
+          minHeight: "150px",
+          maxHeight: "180px",
+          overflowY: "auto",
+          padding: "2px 0",
+          boxSizing: "border-box",
+        }}
+      >
         {simulation.bottlenecks.length > 0 ? (
           <ul className="evidence-list heatmap-bottleneck-list" aria-label="병목 후보 설명" style={{ margin: 0 }}>
             {simulation.bottlenecks.map((item) => (
@@ -131,7 +140,21 @@ export function Heatmap({
             ))}
           </ul>
         ) : (
-          <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "6px", color: "#64748b", fontSize: "0.85rem", textAlign: "center" }}>
+          <div
+            style={{
+              minHeight: "140px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              background: "#f8fafc",
+              borderRadius: "6px",
+              color: "#64748b",
+              fontSize: "0.85rem",
+              textAlign: "center",
+              boxSizing: "border-box",
+            }}
+          >
             {simulation.hour}:00 시점에는 행안부 관리 기준을 초과하는 고위험 병목 구역이 감지되지 않았습니다.
           </div>
         )}
