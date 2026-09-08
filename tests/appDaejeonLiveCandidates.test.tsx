@@ -9,7 +9,9 @@ describe.skipIf(!process.env.FEST_TWIN_LIVE_URL)("App Daejeon Candidate Selectio
   beforeEach(() => {
     globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const urlStr = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-      const targetUrl = urlStr.startsWith("http") ? urlStr : `${process.env.FEST_TWIN_LIVE_URL}${urlStr}`;
+      const requestUrl = new URL(urlStr, process.env.FEST_TWIN_LIVE_URL);
+      const targetUrl = requestUrl.hostname === "localhost"
+        ? `${process.env.FEST_TWIN_LIVE_URL}${requestUrl.pathname}${requestUrl.search}` : requestUrl.toString();
       const { signal: _signal, ...nodeInit } = (init || {}) as any;
       try {
         const res = await originalFetch(targetUrl, nodeInit);
@@ -69,9 +71,11 @@ describe.skipIf(!process.env.FEST_TWIN_LIVE_URL)("App Daejeon Candidate Selectio
       expect(applyButtons.length).toBeGreaterThan(0);
     });
 
-    // Select the first candidate
+    // Uncertain schedules are intentionally not selectable.
     const applyButtons = screen.getAllByRole("button", { name: "이 축제 선택" });
-    fireEvent.click(applyButtons[0]);
+    const selectable = applyButtons.find((button) => !(button as HTMLButtonElement).disabled);
+    expect(selectable).toBeDefined();
+    fireEvent.click(selectable!);
 
     // Check panel closes and candidate is selected
     await waitFor(

@@ -51,3 +51,16 @@ Other festivals are not newly labelled officially verified. In particular, ambig
 
 Deployment must preserve the running container's `scenarios_db.json`, retain the old container for rollback,
 and replace only Fest-Twin. AutoChart and other services are outside this change.
+
+## Verified Deployment
+
+- Runtime image: `fest-twin-demo:20260909-6d3eb05`, built from commit `6d3eb05`.
+- Source release: `/home/cwuser/fest-twin-releases/20260909-6d3eb05`, with `/home/cwuser/fest-twin-demo` pointing to it.
+- Previous container retained as `fest-twin-before-6d3eb05`; stored scenario JSON compared byte-for-byte after deployment and matched.
+- Deterministic tests: 545 passed. Four live-only tests were separately run with the current server URL and all four passed.
+- TypeScript and production build passed; the pre-existing bundle-size warning remains.
+- Browser checks used the region dropdown and date fields, not the top festival-change button:
+  Jeju October 17-21 showed and applied the corrected Tamna schedule; Seoul December 1-31 showed
+  Seoul Light through January 3; Busan October 1-31 showed the mackerel festival as review-required with selection disabled.
+- The map build argument was empty, but the application's existing fallback configuration was confirmed equal to the prior deployment setting. No map credential was changed.
+- Follow-up changes to the live test select an enabled candidate instead of trying to apply a quarantined first result.
