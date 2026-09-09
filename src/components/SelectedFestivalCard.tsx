@@ -22,7 +22,6 @@ export function SelectedFestivalCard({
     <div
       className="selected-festival-card panel"
       style={{
-        margin: "16px 24px 0 24px",
         padding: "16px",
         background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
         color: "#f8fafc",
@@ -31,8 +30,8 @@ export function SelectedFestivalCard({
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div className="selected-festival-card__heading">
+        <div className="selected-festival-card__title">
           <span className="badge badge-success" style={{ fontSize: "0.78rem" }}>
             {selectedFestivalBasis.sourceName}
           </span>
@@ -45,14 +44,14 @@ export function SelectedFestivalCard({
             type="button"
             className="text-button"
             onClick={onClearSelection}
-            style={{ color: "#cbd5e1", fontSize: "0.82rem", cursor: "pointer" }}
+            style={{ fontSize: "0.82rem", cursor: "pointer" }}
           >
             기본 기획안으로 변경
           </button>
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "flex-start" }}>
+      <div className="selected-festival-card__body">
         {(() => {
           const displayImgUrl = getRepresentativeFestivalImage({
             title: selectedFestivalBasis.title,
@@ -61,7 +60,7 @@ export function SelectedFestivalCard({
           });
 
           return (
-            <div style={{ flexShrink: 0, width: "160px", height: "110px", borderRadius: "6px", overflow: "hidden", border: "1px solid #475569" }}>
+            <div className="selected-festival-card__image">
               <img
                 src={displayImgUrl}
                 alt={selectedFestivalBasis.title}
@@ -71,11 +70,11 @@ export function SelectedFestivalCard({
           );
         })()}
 
-        <div style={{ flex: 1, minWidth: "260px" }}>
+        <div className="selected-festival-card__information">
           <dl
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
               gap: "8px 16px",
               margin: 0,
               fontSize: "0.88rem",

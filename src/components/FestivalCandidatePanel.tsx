@@ -74,7 +74,7 @@ export function FestivalCandidatePanel({
       <aside
         aria-label="TourAPI 축제 후보"
         aria-modal="true"
-        className="candidate-drawer"
+        className="candidate-drawer festival-candidate-drawer"
         role="dialog"
         onKeyDown={(event) => {
           if (event.key === "Escape") { event.preventDefault(); onClose(); }

@@ -1653,7 +1653,20 @@ a:focus-visible {
 .analysis-status-banner { flex-wrap: wrap; }
 .analysis-status-banner__identity { width: 100%; overflow-wrap: anywhere; font-size: 12px; }
 .analysis-status-banner__identity summary { cursor: pointer; padding: 6px 0; }
-.candidate-drawer { grid-template-rows: auto auto minmax(0, 1fr); overflow: hidden; height: 100dvh; }
+.festival-candidate-drawer { grid-template-rows: auto auto minmax(0, 1fr); overflow: hidden; height: 100dvh; }
+.festival-search-drawer { display: flex; flex-direction: column; overflow-y: auto; height: 100dvh; }
+.festival-search-drawer > * { flex-shrink: 0; min-width: 0; }
+.festival-search-drawer .candidate-drawer-heading { position: sticky; top: -18px; z-index: 1; background: #fff; padding-top: 12px; }
+.festival-search-drawer .candidate-card { overflow-wrap: anywhere; }
+.festival-search-drawer .badge { white-space: normal; overflow-wrap: anywhere; }
+.selected-festival-card { margin: 16px 24px 0; min-width: 0; }
+.selected-festival-card__heading { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.selected-festival-card__title { display: grid; gap: 8px; flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+.selected-festival-card__title .badge { justify-self: start; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.selected-festival-card__heading > button { max-width: 100%; white-space: normal; background: #334155; color: #f8fafc; border-color: #64748b; }
+.selected-festival-card__body { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.selected-festival-card__image { flex: 0 1 160px; max-width: 100%; height: 110px; border-radius: 6px; overflow: hidden; border: 1px solid #475569; }
+.selected-festival-card__information { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
 .candidate-toolbar { display: grid; gap: 10px; }
 .candidate-toolbar input { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid #bbc9c6; border-radius: 6px; }
 .candidate-filters { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -1669,6 +1682,7 @@ a:focus-visible {
   .government-header__meta { width: 100%; justify-content: flex-start; }
 }
 @media (max-width: 480px) {
+  .selected-festival-card { margin-inline: 0; }
   .candidate-card { grid-template-columns: minmax(0, 1fr); }
   .candidate-card > button { width: 100%; min-height: 44px; }
   .government-header__content h1 { font-size: 20px; }

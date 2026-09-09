@@ -291,7 +291,7 @@ export function FestivalSearchModal({
       <div
         aria-label="전체 축제 실시간 검색"
         aria-modal="true"
-        className="candidate-drawer"
+        className="candidate-drawer festival-search-drawer"
         role="dialog"
         style={{ width: "min(640px, 92vw)" }}
       >
@@ -343,7 +343,7 @@ export function FestivalSearchModal({
         </div>
 
         <p className="muted">대표 프리셋의 예산·방문객·면적·운영시간은 시뮬레이션 가정입니다. DB 방문객은 수록 자료값이며, 공식 계획과 행사 운영 면적을 확인해 주세요.</p>
-        <div className="candidate-list" style={{ maxHeight: "calc(100vh - 230px)", overflowY: "auto" }}>
+        <div className="candidate-list">
           {isLoading && combinedPresets.length === 0 ? (
             <div className="candidate-drawer-state">
               <strong>전국 축제 DB를 검색하고 있습니다...</strong>
@@ -362,7 +362,6 @@ export function FestivalSearchModal({
                   key={preset.id}
                   className="candidate-card"
                   style={{
-                    display: "flex",
                     gap: "14px",
                     alignItems: "flex-start",
                     padding: "14px",
