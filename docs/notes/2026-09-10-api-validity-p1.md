@@ -1,5 +1,20 @@
 # API validity P1 follow-up
 
+## Credential follow-up on 2026-09-10
+
+Newly supplied credentials were decoded once and installed only in the remote
+runtime configuration, with mode 0600. Existing TOUR_API_KEY was preserved;
+SPENDING_API_KEY is now independent. No credentials are stored in this document
+or the repository. All four upstreams returned HTTP 200 and successful business
+codes. The deployed proxy also returned successful responses for all four APIs;
+TAGO had usable data at the Daejeon test coordinate, while the Gwanghwamun query
+returned zero upstream stops. These results supersede the approval failures below.
+
+The spending response contains an intensity index, not an explicit KRW-per-visitor
+amount. It is no longer used as a monetary input. Economic estimates retain the
+sample label until a correctly typed monetary observation is available. API
+connectivity does not establish validity of downstream scoring assumptions.
+
 ## Changes
 
 - TAGO now uses HTTPS and `getCrdntPrxmtSttnList`, matching the [official operation](https://www.data.go.kr/data/15098534/openapi.do).

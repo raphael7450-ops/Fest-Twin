@@ -36,7 +36,6 @@ const TOTAL_SPEND_KEYS = [
   "csAmt",
 ];
 const AVERAGE_SPEND_KEYS = [
-  "tarExpDsIxVal",
   "avgSpendPerVisitorKrw",
   "avgSpendPerVisitor",
   "visitAmountPerPerson",
@@ -215,6 +214,6 @@ export async function getSpendingContext(
     if (options.signal?.aborted || (typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")) {
       throw error;
     }
-    return createFallbackSpendingContext(plan, "지역별 관광 수요 강도 조회 실패 또는 미승인 API 응답");
+    return createFallbackSpendingContext(plan, "조회 실패 또는 원/인 단위 소비액 미확보 (소비 강도 지수는 원화로 환산하지 않음)");
   }
 }

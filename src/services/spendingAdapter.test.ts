@@ -11,6 +11,16 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("spendingAdapter", () => {
+  it("does not treat a tourism intensity index as KRW per visitor", async () => {
+    const spending = await getSpendingContext(sampleFestivalPlan, {
+      fetchImpl: async () => jsonResponse({ response: {
+        header: { resultCode: "0000" },
+        body: { items: { item: [{ tarExpDsIxVal: "135.7" }] } },
+      } }),
+    });
+    expect(spending.sourceStatus).not.toBe("live");
+    expect(spending.basisLabel).toContain("샘플");
+  });
   it.each([
     { _fallback: true },
     { response: { header: { resultCode: "30" } } },
@@ -41,7 +51,7 @@ describe("spendingAdapter", () => {
                   baseYm: "202509",
                   tarExpDsIxCd: "2203",
                   tarExpDsIxNm: "visitor spend per visit",
-                  tarExpDsIxVal: "72000",
+                  avgSpendPerVisitorKrw: "72000",
                 },
               ],
             },
@@ -82,7 +92,7 @@ describe("spendingAdapter", () => {
                 areaNm: "Busan",
                 baseYm: "202405",
                 tarExpDsIxNm: "visitor spend per visit",
-                tarExpDsIxVal: "61000",
+                avgSpendPerVisitorKrw: "61000",
               },
             },
           },
