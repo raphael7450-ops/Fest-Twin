@@ -169,7 +169,7 @@ describe("App", () => {
     expect(screen.getByDisplayValue("2026 서울 윈터페스타 & 빛초롱축제")).toBeInTheDocument();
     expect(screen.getByText("축제 기획안 입력")).toBeInTheDocument();
     expect(screen.getByText("지역 우선 조회")).toBeInTheDocument();
-    expect(screen.getByText("TourAPI 지역 기반 후보 조회")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "개최 지역" })).toBeInTheDocument();
     expect(screen.getByLabelText("개최 지역")).toBeInTheDocument();
     expect(screen.getByLabelText("시작일")).toBeInTheDocument();
     expect(screen.getByLabelText("종료일")).toBeInTheDocument();

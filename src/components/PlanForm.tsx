@@ -50,15 +50,6 @@ export function PlanForm({
         <span>지역 우선 조회</span>
       </div>
 
-      <div className="tourapi-example-note" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
-        <div>
-          <strong>TourAPI 지역 기반 후보 조회</strong>
-          <span>
-            지역과 기간을 선택해 올해 말까지 예정된 축제를 불러옵니다.
-          </span>
-        </div>
-      </div>
-
       <div className="form-grid">
         <label>
           개최 지역

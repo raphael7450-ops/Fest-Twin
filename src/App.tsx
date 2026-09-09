@@ -493,7 +493,6 @@ export function App() {
           {!analysisSelectedFestivalBasis ? (
             <section className="festival-start-guide" role="status">
               <strong>먼저 지역과 기간을 선택해 축제를 불러오세요.</strong>
-              <span>후보를 선택하면 요약 대시보드와 예측, 현장 진단이 선택 축제 기준으로 갱신됩니다.</span>
             </section>
           ) : null}
           {activeDashboardSection !== "planning" ? analysisSummary : null}

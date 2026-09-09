@@ -1643,7 +1643,7 @@ a:focus-visible {
 }
 
 /* Keep planning controls readable before secondary analysis. */
-.government-header { flex-wrap: wrap; gap: 16px; }
+.government-header { display: flex; flex-wrap: wrap; gap: 16px; }
 .government-header__brand { flex: 1 1 320px; min-width: 0; }
 .government-header__content { min-width: 0; }
 .government-header__content h1 { font-size: 22px; word-break: keep-all; }

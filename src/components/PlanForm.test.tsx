@@ -88,7 +88,7 @@ describe("PlanForm", () => {
 
     expect(screen.queryByRole("button", { name: "전체 축제 검색" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "TourAPI 후보 보기" })).toBeInTheDocument();
-    expect(screen.getByText("지역과 기간을 선택해 올해 말까지 예정된 축제를 불러옵니다.")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "개최 지역" })).toBeInTheDocument();
   });
 
   it("emits changed plan values when the current region option is selected", () => {
