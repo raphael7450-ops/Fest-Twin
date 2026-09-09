@@ -72,7 +72,7 @@ export function createSpendingProxyRouter(options = {}) {
   const log = options.logger ?? noopLogger;
 
   router.get("/consumer-strength", async (request, response) => {
-    const apiKey = options.apiKey ?? process.env.TOUR_API_KEY ?? "";
+    const apiKey = options.apiKey ?? process.env.SPENDING_API_KEY ?? process.env.TOUR_API_KEY ?? "";
     if (!apiKey) {
       return errorResponse(
         response,

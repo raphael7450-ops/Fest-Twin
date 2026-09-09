@@ -10,9 +10,9 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
   } as Response;
 }
 
-async function request(path: string, fetchImpl: typeof fetch, apiKey = "server-key+/=") {
+async function request(path: string, fetchImpl: typeof fetch, apiKey: string | null = "server-key+/=") {
   const app = express();
-  app.use("/api/spending", createSpendingProxyRouter({ fetchImpl, apiKey }));
+  app.use("/api/spending", createSpendingProxyRouter({ fetchImpl, apiKey: apiKey ?? undefined }));
   const server = app.listen(0);
   const address = server.address();
   if (!address || typeof address === "string") {
@@ -31,6 +31,19 @@ async function request(path: string, fetchImpl: typeof fetch, apiKey = "server-k
 }
 
 describe("tourism spending server proxy", () => {
+  it("uses a dedicated spending credential without replacing the tourism key", async () => {
+    vi.stubEnv("SPENDING_API_KEY", "spending-only+/=");
+    vi.stubEnv("TOUR_API_KEY", "tourism-only");
+    const fetchMock = vi.fn(async () => jsonResponse({ response: { body: { items: { item: [] } } } }));
+    try {
+      await request("/api/spending/consumer-strength?areaCd=26&baseYm=202508&tarExpDsIxCd=2203", fetchMock, null);
+      const calls = fetchMock.mock.calls as unknown as Array<[URL]>;
+      expect(new URL(String(calls[0][0])).searchParams.get("serviceKey")).toBe("spending-only+/=");
+      expect(process.env.TOUR_API_KEY).toBe("tourism-only");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it("adds serviceKey on the server and forwards a regional consumer-strength request", async () => {
     const fetchMock = vi.fn(async () =>
       jsonResponse({ response: { body: { items: { item: [{ areaNm: "Seoul" }] } } } }),
