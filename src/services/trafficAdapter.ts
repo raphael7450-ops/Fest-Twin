@@ -117,7 +117,7 @@ function createEffectiveTrafficMapping(plan: FestivalPlan): EffectiveTrafficMapp
       linkId: mapping.linkId,
       roadName: mapping.roadName,
       note: mapping.note,
-      isLocalLinkMapping: true,
+      isLocalLinkMapping: mapping.verified === true,
     };
   }
 
@@ -577,6 +577,11 @@ export async function getTrafficContext(
   const weekType = isWeekendPlan(plan) ? "weekend" : "weekday";
   const time = normalizeTime(options.hour);
 
+  options.signal?.throwIfAborted();
+  if (!mapping.isLocalLinkMapping) {
+    return createFallbackTrafficContext(plan, "행사장 인접 LINKID 미검증: 예시 링크를 실측 근거로 사용하지 않습니다.", options.hour);
+  }
+
   try {
     const url = new URL("/api/traffic/selected-link", window.location.origin);
     url.searchParams.set("linkId", mapping.linkId);
@@ -586,9 +591,14 @@ export async function getTrafficContext(
     const response = await fetchImpl(`${url.pathname}${url.search}`, { signal: options.signal });
     if (!response.ok) throw new Error(`Traffic proxy HTTP ${response.status}`);
     const payload = (await response.json()) as {
+      _fallback?: boolean;
+      year?: number;
       result?: ViewTRecord[];
       RESULT?: ViewTRecord[];
     };
+    if (payload._fallback || payload.year !== DEFAULT_YEAR) {
+      throw new Error("Traffic observations are fallback or have an unverified year");
+    }
     const records = Array.isArray(payload.result)
       ? payload.result
       : Array.isArray(payload.RESULT)

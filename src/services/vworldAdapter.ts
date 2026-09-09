@@ -123,6 +123,40 @@ function itemToCoordinateMatch(item: VWorldItem): VWorldCoordinateMatch | null {
   };
 }
 
+const REGION_ALIASES = [
+  ["서울", "서울특별시"], ["부산", "부산광역시"], ["대구", "대구광역시"],
+  ["인천", "인천광역시"], ["광주", "광주광역시"], ["대전", "대전광역시"],
+  ["울산", "울산광역시"], ["세종", "세종특별자치시"], ["경기", "경기도"],
+  ["강원", "강원도", "강원특별자치도"], ["충북", "충청북도"], ["충남", "충청남도"],
+  ["전북", "전라북도", "전북특별자치도"], ["전남", "전라남도"],
+  ["경북", "경상북도"], ["경남", "경상남도"], ["제주", "제주도", "제주특별자치도"],
+];
+
+function regionName(value: string) {
+  const token = value.trim().split(/\s+/)[0];
+  return REGION_ALIASES.find((aliases) => aliases.includes(token))?.[0];
+}
+
+function canonicalPlace(value: string) {
+  return normalizeQuery(value).replace(/\s+/g, "").toLowerCase();
+}
+
+function isRelevantMatch(
+  match: VWorldCoordinateMatch,
+  input: { title: string; address: string; region: string },
+  type: "PLACE" | "ADDRESS",
+) {
+  const region = regionName(input.region);
+  if (!region || regionName(match.address) !== region) return false;
+  if (type === "ADDRESS") {
+    // An address search for a landmark is not proof of that landmark's identity.
+    const canonicalAddress = (value: string) => canonicalPlace(value.replace(/^\S+\s+/, `${region} `));
+    return canonicalAddress(input.address) === canonicalAddress(match.address);
+  }
+  const names = [input.title, ...extractLandmarkTerms(input.address), ...extractParentheticalPlaceTerms(input.address)];
+  return names.some((name) => canonicalPlace(name) === canonicalPlace(match.title));
+}
+
 export async function resolveVenueCoordinatesByVWorld(
   input: { title: string; address: string; region: string },
   options: VWorldSearchOptions = {},
@@ -130,8 +164,11 @@ export async function resolveVenueCoordinatesByVWorld(
   for (const query of buildVWorldCoordinateQueries(input)) {
     for (const type of ["PLACE", "ADDRESS"] as const) {
       const items = await fetchVWorldSearchItems(query, type, options);
-      const match = items.map(itemToCoordinateMatch).find(Boolean);
-      if (match) return match;
+      const matches = items.map(itemToCoordinateMatch)
+        .filter((match): match is VWorldCoordinateMatch => match !== null && isRelevantMatch(match, input, type));
+      const unique = new Map(matches.map((match) => [`${Number(match.mapX)}|${Number(match.mapY)}`, match]));
+      if (unique.size > 1) return null;
+      if (unique.size === 1) return unique.values().next().value ?? null;
     }
   }
 

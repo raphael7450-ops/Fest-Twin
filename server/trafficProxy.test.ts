@@ -166,16 +166,16 @@ describe("KTDB/View-T traffic proxy", () => {
     expect(JSON.stringify(body)).not.toContain("viewt.ktdb.go.kr");
   });
 
-  it("serves fallback data when upstream fails and a matching fallback record exists", async () => {
+  it.each([2024, 2025])("rejects legacy fallback without verified observation year for %s", async (year) => {
     const fetchMock = vi.fn(async () => jsonResponse({}, { ok: false, status: 503 }));
 
     const { response, body } = await request(
-      "/api/traffic/selected-link?linkId=1000007&year=2024&weekType=weekday&time=ALL",
+      `/api/traffic/selected-link?linkId=1000007&year=${year}&weekType=weekday&time=ALL`,
       fetchMock as unknown as typeof fetch,
     );
 
-    expect(response.status).toBe(200);
-    expect(body._fallback).toBe(true);
-    expect(body.result).toBeDefined();
+    expect(response.status).toBe(502);
+    expect(body._fallback).toBeUndefined();
+    expect(body.result).toBeUndefined();
   });
 });

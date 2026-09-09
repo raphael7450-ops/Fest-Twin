@@ -35,7 +35,8 @@ function buildFallbackKey(type, query) {
   const id = type === "selectedLink" ? query.linkId : query.zoneId;
   const weekTypeCode = query.weekType === "weekend" ? "1" : "0";
   const time = String(query.time).toUpperCase();
-  const key = `${id}_${weekTypeCode}_${time}`;
+  // Legacy keys have no observation year and cannot safely satisfy any year.
+  const key = `${id}_${query.year}_${weekTypeCode}_${time}`;
   return section[key] ?? null;
 }
 
@@ -239,7 +240,7 @@ async function forwardViewTRequest({
           event: "TRAFFIC_FALLBACK_SERVED",
           fallbackType,
         });
-        return response.status(200).json({ ...fallbackPayload, _fallback: true });
+        return response.status(200).json({ ...fallbackPayload, year: Number(request.query.year), _fallback: true });
       }
       return errorResponse(
         response,
@@ -249,7 +250,10 @@ async function forwardViewTRequest({
       );
     }
 
-    const normalizedPayload = normalizePayload(await upstreamResponse.json(), request.query);
+    const normalizedPayload = {
+      ...normalizePayload(await upstreamResponse.json(), request.query),
+      year: Number(request.query.year),
+    };
     setCachedData(cacheKey, normalizedPayload);
     return response.status(200).json(normalizedPayload);
   } catch (error) {
@@ -269,7 +273,7 @@ async function forwardViewTRequest({
         fallbackType,
         errorCode: code,
       });
-      return response.status(200).json({ ...fallbackPayload, _fallback: true });
+      return response.status(200).json({ ...fallbackPayload, year: Number(request.query.year), _fallback: true });
     }
     return errorResponse(response, 502, code, "Traffic proxy request failed.");
   }

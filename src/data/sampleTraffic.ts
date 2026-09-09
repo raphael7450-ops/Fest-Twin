@@ -7,6 +7,7 @@ export interface TrafficLinkMapping {
   linkId: string;
   roadName: string;
   note: string;
+  verified?: boolean;
 }
 
 export const trafficLinkMappings: TrafficLinkMapping[] = [

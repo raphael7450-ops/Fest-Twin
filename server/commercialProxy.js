@@ -44,7 +44,7 @@ export function createCommercialProxyRouter(options = {}) {
     }
 
     try {
-      const url = `http://apis.data.go.kr/B553077/api/open/sdg/storeListInRadius?serviceKey=${encodeURIComponent(apiKey)}&pageNo=1&numOfRows=20&radius=1000&cx=${lon}&cy=${lat}&type=json`;
+      const url = `https://apis.data.go.kr/B553077/api/open/sdsc2/storeListInRadius?serviceKey=${encodeURIComponent(apiKey)}&pageNo=1&numOfRows=20&radius=1000&cx=${lon}&cy=${lat}&type=json`;
 
       const response = await fetchImpl(url);
       if (!response.ok) {

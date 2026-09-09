@@ -40,8 +40,11 @@ describe("server/commercialProxy", () => {
   });
 
   it("parses live commercial store response when mock fetch returns items", async () => {
-    const mockFetch = (async () =>
-      new Response(
+    const mockFetch = (async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      expect(url.origin).toBe("https://apis.data.go.kr");
+      expect(url.pathname).toBe("/B553077/api/open/sdsc2/storeListInRadius");
+      return new Response(
         JSON.stringify({
           body: {
             items: [
@@ -52,7 +55,8 @@ describe("server/commercialProxy", () => {
           },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
-      )) as typeof fetch;
+      );
+    }) as typeof fetch;
 
     const dummyLimiter = (_req: any, _res: any, next: any) => next();
     const app = createApp({

@@ -13,6 +13,29 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("VWorld coordinate adapter", () => {
+  const venueInput = { title: "광화문광장", address: "서울 종로구 광화문광장", region: "서울" };
+  const place = (title: string, address = "서울특별시 종로구 세종대로 172", x = "126.9768") => ({
+    title, address: { road: address }, point: { x, y: "37.5759" },
+  });
+  it("chooses an exact venue instead of a similarly named business", async () => {
+    const match = await resolveVenueCoordinatesByVWorld(venueInput, {
+      fetchImpl: async () => jsonResponse({ response: { status: "OK", result: { items: [
+        place("광화문광장치과의원"), place("광화문광장"),
+      ] } } }),
+    });
+    expect(match?.title).toBe("광화문광장");
+  });
+  it.each([
+    [place("광화문광장치과의원")],
+    [place("광화문광장", "부산광역시 중구 중앙대로 1")],
+    [place("광화문광장", "")],
+    [place("광화문광장"), place("광화문광장", undefined, "127.1")],
+  ])("does not guess when name, region, or uniqueness is unverified: %j", async (...items) => {
+    const match = await resolveVenueCoordinatesByVWorld(venueInput, {
+      fetchImpl: async () => jsonResponse({ response: { status: "OK", result: { items } } }),
+    });
+    expect(match).toBeNull();
+  });
   it("extracts landmark and parenthetical place queries from regional festival addresses", () => {
     const queries = buildVWorldCoordinateQueries({
       title: "제4회 중앙시장 주말축제 야시장 동구夜놀자",
@@ -28,7 +51,7 @@ describe("VWorld coordinate adapter", () => {
       const url = new URL(String(input), "http://localhost");
       if (
         url.searchParams.get("query") === "대전 중앙시장" &&
-        url.searchParams.get("type") === "ADDRESS"
+        url.searchParams.get("type") === "PLACE"
       ) {
         return jsonResponse({
           response: {
@@ -36,6 +59,7 @@ describe("VWorld coordinate adapter", () => {
             result: {
               items: [
                 {
+                  title: "중앙시장",
                   address: { road: "대전광역시 동구 대전로779번길 8" },
                   point: { x: "127.43286719691503", y: "36.32957497803072" },
                 },

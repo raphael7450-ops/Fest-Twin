@@ -49,7 +49,7 @@ export function createTransitProxyRouter(options = {}) {
     }
 
     try {
-      const url = `http://apis.data.go.kr/1613000/BusSttnInfoInqireService/getCrdntPrximitySttnList?serviceKey=${encodeURIComponent(apiKey)}&pageNo=1&numOfRows=10&_type=json&gpsLati=${lat}&gpsLong=${lon}`;
+      const url = `https://apis.data.go.kr/1613000/BusSttnInfoInqireService/getCrdntPrxmtSttnList?serviceKey=${encodeURIComponent(apiKey)}&pageNo=1&numOfRows=10&_type=json&gpsLati=${lat}&gpsLong=${lon}`;
 
       const response = await fetchImpl(url);
       if (!response.ok) {

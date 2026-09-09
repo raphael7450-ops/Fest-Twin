@@ -40,8 +40,11 @@ describe("server/transitProxy", () => {
   });
 
   it("parses live TAGO transit response when fetch returns items", async () => {
-    const mockFetch = (async () =>
-      new Response(
+    const mockFetch = (async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      expect(url.origin).toBe("https://apis.data.go.kr");
+      expect(url.pathname).toBe("/1613000/BusSttnInfoInqireService/getCrdntPrxmtSttnList");
+      return new Response(
         JSON.stringify({
           response: {
             body: {
@@ -55,7 +58,8 @@ describe("server/transitProxy", () => {
           },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
-      )) as typeof fetch;
+      );
+    }) as typeof fetch;
 
     const dummyLimiter = (_req: any, _res: any, next: any) => next();
     const app = createApp({
