@@ -10,8 +10,9 @@ describe("candidate schedule guard", () => {
     render(<FestivalCandidatePanel isOpen isLoading={false} onClose={vi.fn()} onSelectCandidate={onSelectCandidate}
       candidates={[{ id: "unknown", title: "검증대기축제", address: "서울", startDate: "", endDate: "",
         dateStatus: "needs-review", periodLabel: "2026-10 일정 확인 필요", searchScope: "regional-supplement" }]} />);
+    fireEvent.click(screen.getByRole("button", { name: "일정 확인 필요 1" }));
     expect(screen.getByText("2026-10 일정 확인 필요")).toBeInTheDocument();
-    const button = screen.getByRole("button", { name: "이 축제 선택" });
+    const button = screen.getByRole("button", { name: "일정 확인 필요" });
     expect(button).toBeDisabled();
     fireEvent.click(button);
     expect(onSelectCandidate).not.toHaveBeenCalled();

@@ -1642,6 +1642,38 @@ a:focus-visible {
   margin-bottom: 4px;
 }
 
+/* Keep planning controls readable before secondary analysis. */
+.government-header { flex-wrap: wrap; gap: 16px; }
+.government-header__brand { flex: 1 1 320px; min-width: 0; }
+.government-header__content { min-width: 0; }
+.government-header__content h1 { font-size: 22px; word-break: keep-all; }
+.government-header__meta { flex-wrap: wrap; max-width: 100%; gap: 10px; }
+.planning-analysis-summary { border-top: 1px solid #d8e2e0; margin-top: 20px; }
+.planning-analysis-summary > summary { cursor: pointer; padding: 16px 0; font-weight: 600; }
+.analysis-status-banner { flex-wrap: wrap; }
+.analysis-status-banner__identity { width: 100%; overflow-wrap: anywhere; font-size: 12px; }
+.analysis-status-banner__identity summary { cursor: pointer; padding: 6px 0; }
+.candidate-drawer { grid-template-rows: auto auto minmax(0, 1fr); overflow: hidden; height: 100dvh; }
+.candidate-toolbar { display: grid; gap: 10px; }
+.candidate-toolbar input { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid #bbc9c6; border-radius: 6px; }
+.candidate-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.candidate-filters button { padding: 10px 12px; border: 1px solid #bbc9c6; border-radius: 6px; background: #fff; color: #344a44; cursor: pointer; }
+.candidate-filters button[aria-pressed="true"] { background: #e3f3ee; border-color: #287c63; color: #155a45; }
+.candidate-results { overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.candidate-card { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.candidate-card-content { min-width: 0; overflow-wrap: anywhere; }
+.candidate-photo { width: 72px; height: 54px; object-fit: cover; float: left; margin: 0 12px 8px 0; border-radius: 6px; }
+.candidate-card button:disabled { color: #5d6965; background: #edf0ef; border-color: #d4dbd8; box-shadow: none; cursor: not-allowed; opacity: 1; }
+.candidate-drawer :focus-visible { outline: 3px solid #287c63; outline-offset: 3px; }
+@media (max-width: 1100px) {
+  .government-header__meta { width: 100%; justify-content: flex-start; }
+}
+@media (max-width: 480px) {
+  .candidate-card { grid-template-columns: minmax(0, 1fr); }
+  .candidate-card > button { width: 100%; min-height: 44px; }
+  .government-header__content h1 { font-size: 20px; }
+}
+
 .safety-metric span,
 .safety-metric strong,
 .safety-metric small {

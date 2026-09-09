@@ -1,6 +1,6 @@
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 import { sortFestivalCandidatesByDateAsc } from "../services/tourApiAdapter";
-import { getRepresentativeFestivalImage } from "../services/festivalImageProvider";
+import { useEffect, useRef, useState } from "react";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface FestivalCandidatePanelProps {
@@ -42,14 +42,32 @@ export function FestivalCandidatePanel({
   onSelectCandidate,
 }: FestivalCandidatePanelProps) {
   useBodyScrollLock(isOpen);
+  const [query, setQuery] = useState("");
+  const [reviewOnly, setReviewOnly] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const opener = document.activeElement as HTMLElement | null;
+    setQuery("");
+    setReviewOnly(false);
+    searchRef.current?.focus();
+    return () => { if (opener?.isConnected) opener.focus(); };
+  }, [isOpen]);
 
   if (!isOpen) return null;
+  const reviewCount = candidates.filter((item) => item.dateStatus === "needs-review").length;
+  const search = query.trim().toLocaleLowerCase();
+  const visibleCandidates = sortFestivalCandidatesByDateAsc(candidates.filter((item) =>
+    (item.dateStatus === "needs-review") === reviewOnly &&
+    `${item.title} ${item.address}`.toLocaleLowerCase().includes(search),
+  ));
 
   return (
     <div className="candidate-drawer-layer">
       <button
         aria-label="TourAPI 후보 패널 닫기"
         className="candidate-drawer-backdrop"
+        tabIndex={-1}
         type="button"
         onClick={onClose}
       />
@@ -58,16 +76,35 @@ export function FestivalCandidatePanel({
         aria-modal="true"
         className="candidate-drawer"
         role="dialog"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") { event.preventDefault(); onClose(); }
+          if (event.key !== "Tab") return;
+          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), input:not(:disabled), a[href], [tabindex="0"]',
+          ));
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        }}
       >
         <div className="candidate-drawer-heading">
           <div>
-            <p className="eyebrow">TourAPI</p>
-            <h2>TourAPI 축제 후보</h2>
+            <h2>축제 후보</h2>
           </div>
           <button className="text-button" type="button" onClick={onClose}>
             닫기
           </button>
         </div>
+        <div className="candidate-toolbar">
+          <input ref={searchRef} type="search" aria-label="축제명 또는 장소 검색"
+            placeholder="축제명 또는 장소 검색" value={query} onChange={(event) => setQuery(event.target.value)} />
+          <div className="candidate-filters" role="group" aria-label="일정 확인 상태">
+            <button type="button" aria-pressed={!reviewOnly} onClick={() => setReviewOnly(false)}>선택 가능 {candidates.length - reviewCount}</button>
+            <button type="button" aria-pressed={reviewOnly} onClick={() => setReviewOnly(true)}>일정 확인 필요 {reviewCount}</button>
+          </div>
+        </div>
+        <div className="candidate-results" aria-busy={isLoading}>
 
         {isLoading ? (
           <div className="candidate-drawer-state">
@@ -91,28 +128,22 @@ export function FestivalCandidatePanel({
           </div>
         ) : null}
 
-        {!isLoading && candidates.length > 0 ? (
+        {!isLoading && !errorMessage && candidates.length > 0 && visibleCandidates.length === 0 ? (
+          <p role="status">{search ? "검색 결과가 없습니다." : reviewOnly ? "일정 확인이 필요한 후보가 없습니다." : "선택 가능한 후보가 없습니다."}</p>
+        ) : null}
+        {!isLoading && !errorMessage && visibleCandidates.length > 0 ? (
           <div className="candidate-list">
-            {sortFestivalCandidatesByDateAsc(candidates).map((candidate) => {
+            {visibleCandidates.map((candidate) => {
               const isSelected = selectedCandidateId === candidate.id;
               const isApplying = applyingCandidateId === candidate.id;
-
-              const imgUrl = getRepresentativeFestivalImage({
-                title: candidate.title,
-                address: candidate.address,
-                existingImageUrl: candidate.imageUrl,
-              });
 
               return (
                 <article
                   className={`candidate-card${isSelected ? " candidate-card-selected" : ""}`}
                   key={candidate.id}
-                  style={{ display: "flex", gap: "12px", alignItems: "center" }}
                 >
-                  <div style={{ width: "72px", height: "54px", borderRadius: "6px", overflow: "hidden", flexShrink: 0, border: "1px solid #e2e8f0" }}>
-                    <img src={imgUrl} alt={candidate.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="candidate-card-content">
+                    {candidate.imageUrl?.startsWith("http") ? <img className="candidate-photo" src={candidate.imageUrl} alt="" loading="lazy" /> : null}
                     <span>{scopeLabel(candidate)}</span>
                     <h3>{candidate.title}</h3>
                     <p>{candidate.address}</p>
@@ -121,17 +152,18 @@ export function FestivalCandidatePanel({
                   </div>
                   <button
                     className="secondary-button"
-                    disabled={isApplying || candidate.dateStatus === "needs-review"}
+                    disabled={Boolean(applyingCandidateId) || candidate.dateStatus === "needs-review"}
                     type="button"
                     onClick={() => candidate.dateStatus !== "needs-review" && onSelectCandidate(candidate)}
                   >
-                    {isApplying ? "적용 중" : "이 축제 선택"}
+                    {isApplying ? "적용 중" : candidate.dateStatus === "needs-review" ? "일정 확인 필요" : "이 축제 선택"}
                   </button>
                 </article>
               );
             })}
           </div>
         ) : null}
+        </div>
       </aside>
     </div>
   );

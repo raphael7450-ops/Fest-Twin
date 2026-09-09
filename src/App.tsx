@@ -443,6 +443,14 @@ export function App() {
   const safetyDecisionProfiles = committed.safety;
   const metricEvidence = committed.evidence;
   const report = committed.report;
+  const analysisSummary = <>
+    <OperationalScoreHeader plan={analysisPlan} forecast={forecast} report={report}
+      evidenceSet={metricEvidence} selectedFestivalBasis={analysisSelectedFestivalBasis}
+      successPotential={committed.metrics.summary.successPotential} />
+    <SelectedFestivalCard selectedFestivalBasis={analysisSelectedFestivalBasis}
+      onClearSelection={() => setSelectedCandidate(null)} />
+    <SummaryKpiCards metrics={committed.metrics.summary} onOpenEvidence={setSelectedEvidenceId} />
+  </>;
 
   return (
     <>
@@ -488,14 +496,7 @@ export function App() {
               <span>후보를 선택하면 요약 대시보드와 예측, 현장 진단이 선택 축제 기준으로 갱신됩니다.</span>
             </section>
           ) : null}
-          <OperationalScoreHeader
-            plan={analysisPlan}
-            forecast={forecast}
-            report={report}
-            evidenceSet={metricEvidence}
-            selectedFestivalBasis={analysisSelectedFestivalBasis}
-            successPotential={committed.metrics.summary.successPotential}
-          />
+          {activeDashboardSection !== "planning" ? analysisSummary : null}
           {restoredNotice && (
             <div
               style={{
@@ -527,14 +528,6 @@ export function App() {
               </button>
             </div>
           )}
-          <SelectedFestivalCard
-            selectedFestivalBasis={analysisSelectedFestivalBasis}
-            onClearSelection={() => setSelectedCandidate(null)}
-          />
-          <SummaryKpiCards
-            metrics={committed.metrics.summary}
-            onOpenEvidence={setSelectedEvidenceId}
-          />
           <div className="dashboard-section-tabs" aria-label="대시보드 섹션">
             {railItems.map((item) => (
               <button
@@ -711,6 +704,12 @@ export function App() {
             )}
 
           </div>
+          {activeDashboardSection === "planning" ? (
+            <details className="planning-analysis-summary">
+              <summary>현재 기획안 분석 요약</summary>
+              {analysisSummary}
+            </details>
+          ) : null}
         </div>
       </div>
       <FestivalCandidatePanel

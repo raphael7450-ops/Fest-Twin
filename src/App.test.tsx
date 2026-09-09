@@ -69,6 +69,14 @@ const settleInitialAnalysis = async () => {
 };
 
 describe("App", () => {
+  it("places planning inputs before the expandable analysis summary", async () => {
+    render(<App />);
+    await settleInitialAnalysis();
+    const inputs = screen.getByRole("heading", { name: "축제 기획안 입력" });
+    const summary = screen.getByText("현재 기획안 분석 요약").closest("details")!;
+    expect(summary).not.toHaveAttribute("open");
+    expect(inputs.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
   beforeEach(() => {
     getTourismContextMock.mockReset();
     getTourApiAreaCodesMock.mockReset();

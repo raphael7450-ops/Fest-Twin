@@ -8,11 +8,9 @@ export function GovernmentHeader({ onOpenFestivalSearch }: GovernmentHeaderProps
       <div className="government-header__brand">
         <span className="government-header__mark" aria-hidden="true">FT</span>
         <div className="government-header__content">
-          <p className="eyebrow">B2G SaaS Control Center</p>
           <h1>페스트트윈(Fest-Twin)</h1>
           <p>
-            지자체가 축제 예산 집행 전에 수요, 혼잡, 안전, 만족도 리스크를
-            공공데이터와 시뮬레이션으로 검토하는 사전 진단 플랫폼입니다.
+            공공데이터 기반 축제 수요·혼잡·안전 사전 검토
           </p>
         </div>
       </div>

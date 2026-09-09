@@ -6,6 +6,11 @@ import { AnalysisStatusBanner } from "./AnalysisStatusBanner";
 afterEach(cleanup);
 
 describe("AnalysisStatusBanner", () => {
+  it("keeps technical identity in a collapsed details section", () => {
+    render(<AnalysisStatusBanner phase="ready" snapshot={createTestAnalysisSnapshot()} errorMessages={[]} />);
+    expect(screen.getByTestId("analysis-id").closest("details")).not.toHaveAttribute("open");
+    expect(screen.getByText("분석 상세")).toBeInTheDocument();
+  });
   it("announces initial loading accessibly", () => {
     render(
       <AnalysisStatusBanner phase="loading" errorMessages={[]} />,

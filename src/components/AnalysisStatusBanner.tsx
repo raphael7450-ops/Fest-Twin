@@ -37,11 +37,12 @@ function DatasetStatusSummary({ snapshot }: { snapshot: FestivalAnalysisSnapshot
 
 function SnapshotIdentity({ snapshot }: { snapshot: FestivalAnalysisSnapshot }) {
   return (
-    <span className="analysis-status-banner__identity">
+    <details className="analysis-status-banner__identity">
+      <summary>분석 상세</summary>
       <time dateTime={snapshot.createdAt}>{snapshot.createdAt}</time>
       <span aria-hidden="true"> · </span>
       <span data-testid="analysis-id">{snapshot.analysisId}</span>
-    </span>
+    </details>
   );
 }
 
@@ -74,13 +75,13 @@ export function AnalysisStatusBanner({
       <p>
         <span className="analysis-status-banner__spinner" aria-hidden="true" />
         현재 결과는 {displayTitle}의 이전 분석입니다. {pendingFestivalTitle ?? "새 축제"} 분석을
-        새로고침하고 있습니다. <SnapshotIdentity snapshot={snapshot} />
+        새로고침하고 있습니다.
       </p>
     );
   } else if (phase === "ready" && snapshot) {
     message = (
       <p>
-        분석 완료 · <SnapshotIdentity snapshot={snapshot} />
+        분석 완료
       </p>
     );
   } else if (phase === "error") {
@@ -90,7 +91,7 @@ export function AnalysisStatusBanner({
           분석 갱신에 실패했습니다.
           {snapshot ? (
             <>
-              {" "}이전 결과를 유지합니다. <SnapshotIdentity snapshot={snapshot} />
+              {" "}이전 결과를 유지합니다.
             </>
           ) : null}
         </p>
@@ -114,6 +115,7 @@ export function AnalysisStatusBanner({
     >
       <div className="analysis-status-banner__message">{message}</div>
       {snapshot ? <DatasetStatusSummary snapshot={snapshot} /> : null}
+      {snapshot ? <SnapshotIdentity snapshot={snapshot} /> : null}
     </section>
   );
 }
