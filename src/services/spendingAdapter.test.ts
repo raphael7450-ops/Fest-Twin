@@ -11,6 +11,24 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("spendingAdapter", () => {
+  it.each([
+    { _fallback: true },
+    { response: { header: { resultCode: "30" } } },
+  ])("does not promote fallback or business errors to live data: %j", async (flags) => {
+    const payload = {
+      ...flags,
+      response: {
+        ...flags.response,
+        body: { items: { item: [{ avgSpendPerVisitorKrw: 58400 }] } },
+      },
+    };
+    const spending = await getSpendingContext(sampleFestivalPlan, {
+      fetchImpl: vi.fn(async () => jsonResponse(payload)),
+    });
+    expect(spending.sourceStatus).not.toBe("live");
+    expect(spending.confidence).toBe("low");
+    expect(spending.basisLabel).toContain("샘플");
+  });
   it("loads public-data spending context from the regional tourism demand proxy", async () => {
     const fetchImpl = vi.fn(async () =>
       jsonResponse({

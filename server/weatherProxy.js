@@ -4,6 +4,7 @@
  */
 
 import { Router } from "express";
+import { assertUpstreamSuccess, requireObservedItems } from "./upstreamValidity.js";
 
 // Lambert 정각원추 투영 변환 함수 (위경도 -> 기상청 격자 X, Y)
 export function convertLatLonToGrid(lat, lon) {
@@ -96,7 +97,9 @@ export function createWeatherProxyRouter(options = {}) {
       }
 
       const data = await response.json();
+      assertUpstreamSuccess(data);
       const items = data?.response?.body?.items?.item ?? [];
+      requireObservedItems(items);
 
       const popItem = items.find((i) => i.category === "POP");
       const tmpItem = items.find((i) => i.category === "TMP");

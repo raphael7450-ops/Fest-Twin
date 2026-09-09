@@ -67,23 +67,11 @@ function tagoTransitSourceDetails(): MetricEvidence["sourceDetails"] {
     {
       sourceId: "tago-public-transit-accessibility",
       sourceName: "국토교통부 TAGO 대중교통 정류소 및 노선 정보",
-      sourceType: "public-data",
-      statusLabel: "TAGO 버스정류소 API 연동",
-      retrievedAt: new Date().toISOString(),
+      sourceType: "sample",
+      statusLabel: "행사장 대중교통 자료 미확보",
       endpoint: "/api/transit/nearby-stops",
-      records: [
-        {
-          label: "대중교통 접근성 지표",
-          fields: [
-            { label: "반경 500m 정류소 수", value: "6곳" },
-            { label: "경유 노선 수", value: "14개 노선" },
-            { label: "대중교통 접근성 점수", value: "84점" },
-            { label: "메인 게이트 분담률", value: "62%" },
-            { label: "보조 게이트 분담률", value: "38%" },
-          ],
-        },
-      ],
-      note: "국토교통부 TAGO 버스정류소/노선 API를 통해 행사장 반경 500m 대중교통 접근성 및 게이트 분담률을 산출했습니다.",
+      records: [],
+      note: "이 분석에 검증된 정류소·노선 응답이 연결되지 않았습니다. 접근성 및 게이트 배분은 현장 검증이 필요한 모델 가정이며 API 관측값이 아닙니다.",
     },
   ];
 }
@@ -93,23 +81,11 @@ function commercialDensitySourceDetails(): MetricEvidence["sourceDetails"] {
     {
       sourceId: "small-business-commercial-density",
       sourceName: "소상공인시장진흥공단 상가(상권)정보",
-      sourceType: "public-data",
-      statusLabel: "상권정보 API 연동",
-      retrievedAt: new Date().toISOString(),
+      sourceType: "sample",
+      statusLabel: "행사장 상권 자료 미확보",
       endpoint: "/api/commercial/nearby-stores",
-      records: [
-        {
-          label: "행사장 반경 1km 상권 밀도",
-          fields: [
-            { label: "총 상가 수", value: "420개소" },
-            { label: "식음료 (음식점/카페)", value: "215개소 (51%)" },
-            { label: "숙박업 (호텔/게스트하우스)", value: "45개소 (11%)" },
-            { label: "도소매 및 문화쇼핑", value: "160개소 (38%)" },
-            { label: "상권 밀도 점수", value: "82점" },
-          ],
-        },
-      ],
-      note: "소상공인시장진흥공단 상가업소 정보 API를 연동하여 행사장 반경 1km 업종 밀도 및 상권 파급효과를 산출했습니다.",
+      records: [],
+      note: "이 분석에 검증된 지역 상가 목록이 연결되지 않았습니다. 경제효과는 시나리오 추정이며 실제 상가 수나 업종 비중을 확인한 결과가 아닙니다.",
     },
   ];
 }
@@ -119,22 +95,11 @@ function emergencyFacilitySourceDetails(): MetricEvidence["sourceDetails"] {
     {
       sourceId: "emergency-hospital-and-119-safety-center",
       sourceName: "보건복지부/소방청 응급의료기관 및 119 안전센터",
-      sourceType: "public-data",
-      statusLabel: "응급의료 기관 API 연동",
-      retrievedAt: new Date().toISOString(),
+      sourceType: "sample",
+      statusLabel: "행사장 응급시설 자료 미확보",
       endpoint: "/api/emergency/nearby-facilities",
-      records: [
-        {
-          label: "반경 5km 응급의료 및 비상 이송 지표",
-          fields: [
-            { label: "권역응급의료센터", value: "여의도성모병원 응급의료권역 (2.4km)" },
-            { label: "119 안전센터", value: "여의도119안전센터 (1.0km)" },
-            { label: "평균 비상 이송 시간", value: "7.5분 (골든타임 확보)" },
-            { label: "안전 인프라 준비도", value: "93점" },
-          ],
-        },
-      ],
-      note: "보건복지부/소방청 응급의료기관 위치 정보 API를 연동하여 골든타임 이송 및 안전 인력 배치를 보정했습니다.",
+      records: [],
+      note: "지역 응급시설·수용 가능 여부·이송 시간을 확인하지 못했습니다. 안전 인력 수는 모델 추정이며 골든타임이나 현장 안전을 보장하지 않습니다. 운영 전 관할 기관의 확인이 필요합니다.",
     },
   ];
 }

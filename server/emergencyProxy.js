@@ -4,6 +4,7 @@
  */
 
 import { Router } from "express";
+import { assertUpstreamSuccess, requireObservedItems } from "./upstreamValidity.js";
 
 export function createEmergencyProxyRouter(options = {}) {
   const router = Router();
@@ -51,8 +52,10 @@ export function createEmergencyProxyRouter(options = {}) {
       }
 
       const data = await response.json();
+      assertUpstreamSuccess(data);
       const rawItems = data?.response?.body?.items?.item ?? [];
       const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+      requireObservedItems(items);
 
       const facilities = items.slice(0, 4).map((item) => ({
         facilityName: item.dutyName ?? "지역 응급의료기관",

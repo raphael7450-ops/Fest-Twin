@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { assertUpstreamSuccess } from "./upstreamValidity.js";
 
 const CITY_PARK_API_URL =
   "https://api.data.go.kr/openapi/tn_pubr_public_cty_park_info_api";
@@ -85,6 +86,7 @@ function normalizeCityParkItem(item) {
 }
 
 export function normalizeCityParkPayload(payload) {
+  assertUpstreamSuccess(payload, { allowNoData: true });
   const { rawItems, totalCount } = extractPayloadItems(payload);
   return {
     items: rawItems.map(normalizeCityParkItem).filter(Boolean),

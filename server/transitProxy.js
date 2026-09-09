@@ -4,6 +4,7 @@
  */
 
 import { Router } from "express";
+import { assertUpstreamSuccess, requireObservedItems } from "./upstreamValidity.js";
 
 export function createTransitProxyRouter(options = {}) {
   const router = Router();
@@ -56,8 +57,10 @@ export function createTransitProxyRouter(options = {}) {
       }
 
       const data = await response.json();
+      assertUpstreamSuccess(data);
       const rawItems = data?.response?.body?.items?.item ?? [];
       const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+      requireObservedItems(items);
 
       const stops = items.slice(0, 5).map((item) => ({
         stopName: item.nodenm ?? item.nodename ?? "인근 정류장",

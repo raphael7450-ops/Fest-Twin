@@ -148,18 +148,29 @@ function createSourceDetails(
 function createFallbackSpendingContext(plan: FestivalPlan, reason: string): SpendingContext {
   return {
     ...sampleSpendingContext,
+    basisLabel: "소비 단가 샘플 가정 (실측 미확보)",
+    confidence: "low",
     region: plan.region,
     retrievedAt: new Date().toISOString(),
     note: `${sampleSpendingContext.note} 사유: ${reason}`,
     sourceDetails: sampleSpendingContext.sourceDetails.map((detail) => ({
       ...detail,
-      statusLabel: "공공데이터 구조 기반 대체값",
+      statusLabel: "소비 실측 미확보 · 샘플 가정",
+      query: detail.query?.map((field) => field.label === "region" ? { ...field, value: plan.region } : field),
       note: `${detail.note} 사유: ${reason}`,
     })),
   };
 }
 
 function normalizeSpendingContext(plan: FestivalPlan, payload: unknown): SpendingContext | undefined {
+  const envelope = payload as {
+    _fallback?: boolean;
+    response?: { header?: { resultCode?: string | number } };
+    OpenAPI_ServiceResponse?: unknown;
+  } | null;
+  const code = envelope?.response?.header?.resultCode;
+  if (envelope?._fallback || envelope?.OpenAPI_ServiceResponse ||
+      (code !== undefined && !["0", "00", "0000"].includes(String(code)))) return undefined;
   const record = extractItems(payload)[0];
   if (!record) return undefined;
 

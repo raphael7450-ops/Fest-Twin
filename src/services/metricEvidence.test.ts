@@ -60,6 +60,24 @@ function createEvidenceForPlan(plan: typeof sampleFestivalPlan) {
 }
 
 describe("metricEvidence", () => {
+  it("does not invent facility, transit or store observations for a Busan plan", () => {
+    const evidence = createEvidenceForPlan({ ...sampleFestivalPlan, region: "부산" });
+    const ids = new Set([
+      "emergency-hospital-and-119-safety-center",
+      "tago-public-transit-accessibility",
+      "small-business-commercial-density",
+    ]);
+    const details = Object.values(evidence).flatMap((item) => item.sourceDetails)
+      .filter((detail) => ids.has(detail.sourceId));
+    expect(details.length).toBeGreaterThan(0);
+    for (const detail of details) {
+      expect(detail.statusLabel).toContain("미확보");
+      expect(detail.sourceType).not.toBe("public-data");
+      expect(detail.records).toEqual([]);
+      expect(detail.retrievedAt).toBeUndefined();
+    }
+    expect(JSON.stringify(details)).not.toMatch(/여의도|골든타임 확보|420개소|93점/);
+  });
   it.each([
     ["public data", { venueAreaSquareMeters: 229539, venueAreaProvenance: publicDataProvenance }, "전국도시공원정보표준데이터 참고값 적용", "public-data"],
     ["manual input", { venueAreaSquareMeters: 4000, venueAreaProvenance: { origin: "user-input" as const } }, "사용자 입력", "user-input"],

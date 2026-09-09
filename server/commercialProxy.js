@@ -4,6 +4,7 @@
  */
 
 import { Router } from "express";
+import { assertUpstreamSuccess, requireObservedItems } from "./upstreamValidity.js";
 
 export function createCommercialProxyRouter(options = {}) {
   const router = Router();
@@ -51,8 +52,10 @@ export function createCommercialProxyRouter(options = {}) {
       }
 
       const data = await response.json();
+      assertUpstreamSuccess(data);
       const rawItems = data?.body?.items ?? data?.response?.body?.items?.item ?? [];
       const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+      requireObservedItems(items);
 
       const totalCount = items.length;
       const foodStores = items.filter((item) => String(item.indsLclsNm ?? "").includes("음식")).length;
