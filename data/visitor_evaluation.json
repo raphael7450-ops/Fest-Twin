@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "note": "Official announcement collected for review. No historical model forecast has been fabricated. Unknown counting method prevents comparison.",
+  "actuals": [
+    {
+      "id": "daejeon-zero-2025-official-announcement",
+      "festivalId": "daejeon-zero",
+      "year": 2025,
+      "startDate": "2025-08-08",
+      "endDate": "2025-08-16",
+      "value": 2160000,
+      "unit": "people",
+      "measure": "unknown",
+      "scope": "event_total",
+      "geography": "daejeon-zero-old-downtown-event-area",
+      "source": {
+        "url": "https://tv.daejeon.go.kr/mobile/vodView.do?ccode=001000000000&ocode=20250821050743689",
+        "publisher": "Daejeon Metropolitan City",
+        "publicationDate": "2025-08-21",
+        "publishedAt": "2025-08-22T00:00:00+09:00",
+        "publishedAtNote": "Publication time unavailable; end-of-publication-day bound, not an observed timestamp.",
+        "reviewedAt": "2026-09-10T19:53:50+09:00",
+        "kind": "official_result",
+        "method": "unknown",
+        "precision": "approximately 2.16 million; rounded official announcement",
+        "scheduleUrl": "https://www.daejeon.go.kr/drh/board/boardNormalView.do?boardId=normal_0189&menuSeq=1632&ntatcSeq=1487728646&pageIndex=18"
+      }
+    }
+  ],
+  "predictions": [],
+  "inputs": []
+}
