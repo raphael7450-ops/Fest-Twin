@@ -14,7 +14,7 @@
 - [x] Add nonblocking committed-snapshot capture and a compact status panel. Test stale responses and failed capture; do not label captured records as validated.
 - [x] Expose freshly evaluated trusted local evidence; preserve insufficient-evidence status and source issues. Review a second official outcome report.
 - [x] Run full tests/build; update findings and remaining evidence limitations. Full rerun: 627 passed, 4 skipped. A prior run exposed an intermittent pre-existing map timer teardown error; no forecast or map code was changed to conceal it.
-- [ ] Push scoped changes, deploy with stable host storage/key, verify browser/mobile capture and persistence across restart.
+- [x] Push scoped changes, deploy with stable host storage/key, verify browser/mobile capture and persistence across restart. Deployment c028ca3: live POST returned 201; 320/390/768px festival switching passed; 10 receipt files retained an identical SHA-256 manifest across container restart, with zero integrity errors.
 
 ## Evidence limitations
 
