@@ -19,6 +19,7 @@ import { createCommercialProxyRouter } from "./commercialProxy.js";
 import { createEmergencyProxyRouter } from "./emergencyProxy.js";
 import { createCityParkProxyRouter } from "./cityParkProxy.js";
 import { createVWorldProxyRouter } from "./vworldProxy.js";
+import { createForecastArchiveRouter } from "./validation/forecastArchiveRouter.js";
 import { logger as defaultLogger, auditLogger as defaultAuditLogger, noopLogger } from "./logger.js";
 import { createHttpLoggerMiddleware } from "./middleware/httpLogger.js";
 
@@ -178,6 +179,7 @@ export function createApp(options = {}) {
 
   // 1. 일반 API 라우트 (/api/scenarios 등)
   app.use("/api", generalRateLimiter);
+  app.use("/api/forecast-archive", createForecastArchiveRouter(options.forecastArchive));
 
   // 2. 외부 OpenAPI 중계 라우트 (/api/tour, /api/spending, /api/traffic, /api/trends, /api/weather)
   app.use("/api/tour", openApiRateLimiter);

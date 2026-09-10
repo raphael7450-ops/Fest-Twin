@@ -25,6 +25,32 @@
         "precision": "approximately 2.16 million; rounded official announcement",
         "scheduleUrl": "https://www.daejeon.go.kr/drh/board/boardNormalView.do?boardId=normal_0189&menuSeq=1632&ntatcSeq=1487728646&pageIndex=18"
       }
+    },
+    {
+      "id": "gunsan-time-travel-2025-evaluation",
+      "festivalId": "gunsan-time-travel",
+      "year": 2025,
+      "startDate": "2025-10-09",
+      "endDate": "2025-10-12",
+      "value": 134597,
+      "unit": "people",
+      "measure": "cumulative_entries",
+      "scope": "event_total",
+      "geography": "gunsan-time-travel-2025-four-counting-points-report-p113",
+      "source": {
+        "url": "https://www.gunsan.go.kr/_cms/board/eFileDownload/359/9828373/73f49bc164b896c7a4c2c1bd8b393c49",
+        "publisher": "Gunsan City",
+        "publishedAt": null,
+        "reviewedAt": "2026-09-10T12:38:16Z",
+        "kind": "official_result",
+        "method": "Manual counters at four entry points, 11:00-20:00 on October 10-11; weekday count 20210 plus weekend count 38129 times three days. Event total is extrapolated, not a full-period census.",
+        "measurementQuality": "extrapolated_estimate",
+        "deduplication": "not established",
+        "reviewNote": "Counting method and location map reviewed. Publication timestamp and compatibility with model arrival geography still need verification; not eligible for scoring.",
+        "documentPage": 113,
+        "pdfPage": 115,
+        "sha256": "7ed64b452ad4c197b63c526df24e9c85993ac3da78afdfad66447d08792e7be8"
+      }
     }
   ],
   "predictions": [],

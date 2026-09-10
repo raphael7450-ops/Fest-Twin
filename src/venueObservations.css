@@ -14,3 +14,7 @@
 .venue-observations__records dl { margin: 4px 0; }
 .venue-observations__records dl div { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 6px; padding: 2px 0; }
 .venue-observations__records dd { margin: 0; }
+.forecast-validation { margin-block: 20px; padding-block: 16px; border-block: 1px solid #cbd5df; overflow-wrap: anywhere; }
+.forecast-validation h2 { font-size: 18px; }
+.forecast-validation__counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 12px; }
+.forecast-validation__counts dd { margin: 4px 0 0; font-size: 20px; font-weight: 600; }

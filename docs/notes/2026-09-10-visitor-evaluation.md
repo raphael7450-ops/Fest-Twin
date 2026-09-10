@@ -44,4 +44,20 @@ Statistics are separated by mode, model version, event year, measurement and per
 3. Add further festivals and years with compatible definitions; inspect both error and directional bias.
 4. Only after an untouched holdout evaluation should forecast calibration be proposed.
 
-The current delivery is a validation tool and an initial evidence finding, not completed empirical validation of forecasting accuracy. Dashboard presentation and automatic prospective snapshot capture are not part of this change.
+## Automatic Archive Follow-up
+
+Committed browser snapshots now submit plan, forecast and dataset inputs to `/api/forecast-archive`. Capture runs separately from the analysis; a failed capture does not invalidate the forecast. One bounded retry is attempted. Selecting a different analysis invalidates old UI responses. The server ignores browser timestamps and uses Korea midnight at the event start to distinguish pre-event receipt from after-start receipt.
+
+The server sanitizes credentials, caps snapshots at 128 KiB and stores up to 1,000 distinct payloads. SHA-256 IDs deduplicate identical sanitized payloads; create-if-absent hard links prevent replacement. A receipt includes server release, server timestamp and HMAC authentication. File and directory fsync protect committed writes on Linux. Tampering is checked when reading receipts; the public summary can be cached for up to 60 seconds. Existing files are never purged automatically. Operators must archive/expand storage when the quota fills.
+
+These are **client-reported, unverified** predictions, not server-recomputed forecasts. Exact Origin allowlisting and request limits reduce browser abuse but do not authenticate a caller. Server HMAC detects content changes without the secret; it is not an external timestamp, WORM backup, anti-deletion mechanism or proof against a privileged server administrator. Two independently deployed writers are not supported for quota accounting. The page does not poll in the background: it captures when an analysis snapshot changes and refreshes status afterward.
+
+`scripts/deploy-forecast-archive.sh REVISION EXPECTED_IMAGE` keeps receipts under `/home/cwuser/fest-twin-state/forecast-archive`, outside releases, and mounts an existing persistent signing key read-only. It preserves the original runtime environment file. The key must be backed up privately with the receipt store; replacing it makes old signatures unverifiable. The deployment script creates a key only when none exists. Old deployment scripts that lack these mounts must not be used for subsequent releases.
+
+The dashboard now shows capture status, whole-server archived and pre-event counts, comparable pairs, evidence defects, and grouped errors from the trusted local evidence ledger. Archive counts never become accuracy percentages. The outcome ledger is not editable through a public endpoint.
+
+## Additional Outcome Review
+
+[Gunsan City's 2025 evaluation report](https://www.gunsan.go.kr/_cms/board/eFileDownload/359/9828373/73f49bc164b896c7a4c2c1bd8b393c49) was downloaded and page 113 (PDF page 115) was visually checked. Four entry points were measured on October 10-11 between 11:00 and 20:00. Its 134,597 total extrapolates one weekday count and three weekend-equivalent counts across the October 9-12 event. This is not an audited count of unique people. The ledger records the method, location reference, original document SHA-256 and extrapolation caveat. Exact publication time and compatibility with model geography are still unresolved, so it remains excluded. No valid historical model prediction has been invented to force a comparison.
+
+Remaining work requires evidence, not a code bypass: verify release-specific browser inputs/model outputs, confirm comparable visit definitions and publication dates, match completed events to preserved forecasts, and evaluate an untouched holdout before calibration. The new archive starts collecting now; it cannot create authentic records from before deployment.

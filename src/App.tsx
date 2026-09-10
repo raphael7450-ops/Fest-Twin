@@ -33,6 +33,8 @@ import { sampleFestivalPlan } from "./data/sampleFestivalPlan";
 import type { MetricEvidenceId, SelectedFestivalBasis } from "./domain/types";
 import { useFestivalAnalysis } from "./hooks/useFestivalAnalysis";
 import { VenueObservations } from "./components/VenueObservations";
+import { ForecastValidationPanel } from "./components/ForecastValidationPanel";
+import { useForecastArchive } from "./hooks/useForecastArchive";
 import { createAnalysisKey } from "./services/analysisSnapshot";
 import {
   applyFestivalCandidateToPlan,
@@ -166,6 +168,7 @@ export function App() {
     : lastValidAnalysisInput.current;
   const analysis = useFestivalAnalysis(analysisInput);
   const committed = analysis.snapshot;
+  const archiveState = useForecastArchive(committed);
 
   const candidates =
     candidateState.planKey === candidatePlanKey ? candidateState.candidates : [];
@@ -545,6 +548,7 @@ export function App() {
             {activeDashboardSection === "overview" && (
               <section className="dashboard-section-panel dashboard-section-panel--overview active">
                 <VenueObservations infrastructure={committed.datasets.infrastructure?.value} spending={committed.datasets.spending.value} />
+                <ForecastValidationPanel state={archiveState} />
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <ForecastChart
