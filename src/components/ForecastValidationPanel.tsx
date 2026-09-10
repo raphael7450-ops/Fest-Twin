@@ -23,7 +23,7 @@ export function ForecastValidationPanel({ state }: { state: ArchiveState }) {
       </p>)}
       <details><summary>비교 제외 사유</summary>
         <p>일치하는 예측이 없는 실적 {summary.evaluation.unmatchedActuals}건 · 제외된 예측 {summary.evaluation.excluded}건</p>
-        {summary.evaluation.actualIssues.map(issue => <p key={issue.actualId}>{issue.actualId}: {issue.reasons.map(reason => ({ INVALID_ACTUAL: "집계 기준 미확인", UNVERIFIED_ACTUAL: "실적 출처·방법 검토 필요", EVENT_NOT_FINISHED: "행사 종료 전" }[reason] ?? reason)).join(", ")}</p>)}
+        {summary.evaluation.actualIssues.map(issue => <p key={issue.actualId}>{issue.actualId}: {issue.reasons.map(reason => ({ INVALID_ACTUAL: "집계 기준 미확인", UNVERIFIED_ACTUAL: "실적 출처·방법 검토 필요", EVENT_NOT_FINISHED: "행사 종료 전", PENDING_ACTUAL_REVIEW: "집계 범위·추정 방식 비교 검토 중" }[reason] ?? reason)).join(", ")}</p>)}
       </details>
     </> : <p>검증 현황을 아직 확인하지 못했습니다.</p>}
     <p className="muted">보관은 예측 정확도 인증이 아닙니다. 브라우저가 제출한 예측은 모델·입력 검토 전까지 미검증으로 유지합니다.</p>

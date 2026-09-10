@@ -17,6 +17,12 @@ function fixture() {
 const evaluate = (input) => evaluateVisitors(input, { now });
 
 describe("visitor evaluation contracts", () => {
+  it("does not admit an explicitly pending outcome after publication metadata is completed", () => {
+    const input = fixture(); input.actuals[0].source.reviewStatus = "pending_basis_match";
+    const report = evaluate(input);
+    expect(report.accepted).toEqual([]);
+    expect(report.actualIssues[0].reasons).toContain("PENDING_ACTUAL_REVIEW");
+  });
   it("computes signed error, MAE, WAPE and bias without claiming prospective accuracy", () => {
     const report = evaluate(fixture());
     expect(report.groups[0]).toMatchObject({ mode: "replay", year: 2025, count: 1, mae: 20, wapePercent: 20, bias: 20, overPredictions: 1 });

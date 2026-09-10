@@ -42,6 +42,7 @@ const comparisonKey = row => JSON.stringify([...basisFields.map(key => row[key])
 
 function actualReasons(actual, nowMs) {
   const reasons = [], source = actual.source ?? {};
+  if (source.reviewStatus !== undefined && source.reviewStatus !== "approved") reasons.push("PENDING_ACTUAL_REVIEW");
   const published = timestamp(source.publishedAt), reviewed = timestamp(source.reviewedAt);
   if (!validBasis(actual)) reasons.push("INVALID_ACTUAL");
   if (!(date(actual.endDate) + 86400000 <= nowMs)) reasons.push("EVENT_NOT_FINISHED");
