@@ -28,6 +28,7 @@ import { createSafetyDecisionProfiles } from "./safetyDecisionMetrics";
 import { createSimulation } from "./simulation";
 import type { FestivalCandidate } from "./tourApiAdapter";
 import type { WeatherContext } from "./weatherAdapter";
+import type { VenueInfrastructureContext } from "./infrastructureAdapter";
 
 export const ANALYSIS_MODEL_VERSION = "phase1-v1" as const;
 
@@ -43,6 +44,7 @@ export interface AnalysisDatasetState<T> {
 }
 
 export interface AnalysisDatasets {
+  infrastructure?: AnalysisDatasetState<VenueInfrastructureContext>;
   tourism: AnalysisDatasetState<TourismContext>;
   trends: AnalysisDatasetState<TrendContext>;
   traffic: AnalysisDatasetState<TrafficContext>;
@@ -287,6 +289,7 @@ export function createFestivalAnalysisSnapshot(
     selectedFestivalBasis,
     weather,
     safety,
+    datasets.infrastructure?.value,
   );
   const createdAt = input.now.toISOString();
   const snapshot: FestivalAnalysisSnapshot = {

@@ -19,7 +19,7 @@ async function withAppServer(app: ReturnType<typeof createApp>, callback: (baseU
 }
 
 describe("server/emergencyProxy", () => {
-  it("returns sample-fallback emergency response when API key is missing", async () => {
+  it("returns unavailable without fabricated emergency facilities when API key is missing", async () => {
     const dummyLimiter = (_req: any, _res: any, next: any) => next();
     const app = createApp({
       generalRateLimiter: dummyLimiter,
@@ -33,10 +33,8 @@ describe("server/emergencyProxy", () => {
       const body = await response.json();
 
       expect(response.status).toBe(200);
-      expect(body.status).toBe("sample-fallback");
-      expect(body.goldenTimeMinutes).toBeGreaterThan(0);
-      expect(body.facilities.length).toBeGreaterThan(0);
-      expect(body.facilities[0].facilityName).toContain("여의도");
+      expect(body.status).toBe("unavailable");
+      expect(body.observations).toEqual([]);
     });
   });
 
@@ -45,11 +43,11 @@ describe("server/emergencyProxy", () => {
       new Response(
         JSON.stringify({
           response: {
+            header: { resultCode: "00" },
             body: {
               items: {
                 item: [
-                  { dutyName: "강남세브란스병원", dutyDivName: "권역응급센터", distance: "2.0" },
-                  { dutyName: "강남소방서 119안전센터", dutyDivName: "119안전센터", distance: "1.0" },
+                  { dutyName: "강남세브란스병원", dutyDivName: "권역응급센터", latitude: 37.5101, longitude: 127.0601 },
                 ],
               },
             },
@@ -73,8 +71,8 @@ describe("server/emergencyProxy", () => {
 
       expect(response.status).toBe(200);
       expect(body.status).toBe("live");
-      expect(body.goldenTimeMinutes).toBeGreaterThan(0);
-      expect(body.facilities[0].facilityName).toBe("강남세브란스병원");
+      expect(body).not.toHaveProperty("goldenTimeMinutes");
+      expect(body.observations[0].name).toBe("강남세브란스병원");
     });
   });
 });

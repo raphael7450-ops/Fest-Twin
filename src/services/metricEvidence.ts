@@ -22,6 +22,7 @@ import type {
   TrendContext,
 } from "../domain/types";
 import type { WeatherContext } from "./weatherAdapter";
+import type { VenueInfrastructureContext } from "./infrastructureAdapter";
 import {
   createEconomicImpactMetrics,
   createLogisticsMetrics,
@@ -587,6 +588,7 @@ export function createMetricEvidenceSet(
   selectedFestivalBasis?: SelectedFestivalBasis | null,
   weather?: WeatherContext,
   safetyDecisionProfiles?: SafetyDecisionProfiles,
+  infrastructure?: VenueInfrastructureContext,
 ): Record<MetricEvidenceId, MetricEvidence> {
   const safetyProfiles =
     safetyDecisionProfiles ?? createSafetyDecisionProfiles(plan, forecast, simulation, traffic);
@@ -609,9 +611,13 @@ export function createMetricEvidenceSet(
   const demandBackdataDetails = demandBackdata?.sourceDetails ?? [];
   const selectedFestivalDetails = selectedFestivalBasisDetails(selectedFestivalBasis);
   const weatherDetails = weatherSourceDetails(weather);
-  const transitDetails = tagoTransitSourceDetails();
-  const commercialDetails = commercialDensitySourceDetails();
-  const emergencyDetails = emergencyFacilitySourceDetails();
+  const infrastructureDetails = (sourceId: string, fallback: MetricEvidence["sourceDetails"]) => {
+    const detail = infrastructure?.sourceDetails.find((item) => item.sourceId === sourceId);
+    return detail ? [detail] : fallback;
+  };
+  const transitDetails = infrastructureDetails("tago-public-transit-accessibility", tagoTransitSourceDetails());
+  const commercialDetails = infrastructureDetails("small-business-commercial-density", commercialDensitySourceDetails());
+  const emergencyDetails = infrastructureDetails("emergency-hospital-and-119-safety-center", emergencyFacilitySourceDetails());
   const peakOccupancy = Math.max(
     ...occupancySeries(forecast).map((item) => item.visitors),
     0,

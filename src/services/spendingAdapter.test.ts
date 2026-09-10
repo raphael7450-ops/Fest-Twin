@@ -11,6 +11,22 @@ function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number
 }
 
 describe("spendingAdapter", () => {
+  it("exposes a matching dated consumption index separately from sample monetary assumptions", async () => {
+    const spending = await getSpendingContext(sampleFestivalPlan, { fetchImpl: async () => jsonResponse({ response: {
+      header: { resultCode: "0000" }, body: { items: { item: [
+        { areaCd: "11", areaNm: "서울", baseYm: "202509", signguNm: "종로구", tarExpDsIxNm: "소비 강도", tarExpDsIxVal: "135.7" },
+        { areaCd: "26", areaNm: "부산", baseYm: "202509", tarExpDsIxVal: "200" },
+      ] } },
+    } }) });
+    const detail = spending.sourceDetails.find((item) => item.sourceId === "observed-tourism-consumption-index");
+    expect(detail?.sourceType).toBe("public-data");
+    expect(detail?.records).toHaveLength(1);
+    expect(JSON.stringify(detail)).toContain("135.7");
+    expect(JSON.stringify(detail)).toContain("202509");
+    expect(JSON.stringify(detail)).not.toContain("부산");
+    expect(spending.sourceStatus).not.toBe("live");
+    expect(spending.averageSpendPerVisitorKrw).not.toBe(136);
+  });
   it("does not treat a tourism intensity index as KRW per visitor", async () => {
     const spending = await getSpendingContext(sampleFestivalPlan, {
       fetchImpl: async () => jsonResponse({ response: {

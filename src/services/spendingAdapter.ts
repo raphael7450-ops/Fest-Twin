@@ -207,9 +207,31 @@ export async function getSpendingContext(
     const url = buildSpendingUrl(plan);
     const response = await fetchImpl(`${url.pathname}${url.search}`, { signal: options.signal });
     if (!response.ok) throw new Error(`Spending proxy HTTP ${response.status}`);
-    const context = normalizeSpendingContext(plan, await response.json());
-    if (!context) throw new Error("Spending response did not include usable records");
-    return context;
+    const payload = await response.json();
+    const context = normalizeSpendingContext(plan, payload);
+    if (context) return context;
+    const indices = !payload?._fallback && String(payload?.response?.header?.resultCode) === "0000"
+      ? extractItems(payload).filter((record) => String(record.areaCd) === areaCodeFromRegion(plan.region)
+          && String(record.baseYm) === baseYmFromPlan(plan) && numericValue(record.tarExpDsIxVal) !== undefined)
+      : [];
+    if (!indices.length) throw new Error("Spending response did not include usable records");
+    const fallback = createFallbackSpendingContext(plan, "소비 지수 조회 성공, 원/인 소비액은 미확보");
+    fallback.sourceDetails.unshift({
+      sourceId: "observed-tourism-consumption-index", sourceName: "관광 소비 지표",
+      sourceType: "public-data", statusLabel: "공식 통계 조회 · 과거 기준월",
+      retrievedAt: new Date().toISOString(), endpoint: "/api/spending/consumer-strength",
+      query: [{ label: "지역", value: plan.region }, { label: "기준월", value: baseYmFromPlan(plan) }],
+      records: indices.map((record) => ({
+        label: `${String(record.areaNm ?? plan.region)} ${String(record.signguNm ?? "")}`.trim(),
+        fields: [
+          { label: "기준월", value: String(record.baseYm) },
+          { label: "지표명", value: String(record.tarExpDsIxNm ?? "소비 지표") },
+          { label: "API 원 지표값", value: String(numericValue(record.tarExpDsIxVal)) },
+        ],
+      })),
+      note: "조회된 기준월의 공식 지표 원값입니다. 현재 소비액·방문객 1인당 원화·매출 예측으로 환산하지 않습니다. 객단가와 ROI는 별도의 샘플 가정을 유지합니다.",
+    });
+    return fallback;
   } catch (error) {
     if (options.signal?.aborted || (typeof error === "object" && error !== null && "name" in error && error.name === "AbortError")) {
       throw error;

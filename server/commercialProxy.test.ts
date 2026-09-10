@@ -19,7 +19,7 @@ async function withAppServer(app: ReturnType<typeof createApp>, callback: (baseU
 }
 
 describe("server/commercialProxy", () => {
-  it("returns sample-fallback commercial response when API key is missing", async () => {
+  it("returns unavailable without fabricated stores when API key is missing", async () => {
     const dummyLimiter = (_req: any, _res: any, next: any) => next();
     const app = createApp({
       generalRateLimiter: dummyLimiter,
@@ -33,9 +33,8 @@ describe("server/commercialProxy", () => {
       const body = await response.json();
 
       expect(response.status).toBe(200);
-      expect(body.status).toBe("sample-fallback");
-      expect(body.commercialDensityScore).toBeGreaterThan(50);
-      expect(body.categories.length).toBe(3);
+      expect(body.status).toBe("unavailable");
+      expect(body.observations).toEqual([]);
     });
   });
 
@@ -46,11 +45,12 @@ describe("server/commercialProxy", () => {
       expect(url.pathname).toBe("/B553077/api/open/sdsc2/storeListInRadius");
       return new Response(
         JSON.stringify({
+          header: { resultCode: "00" },
           body: {
             items: [
-              { indsLclsNm: "음식", bizesNm: "강남 카페" },
-              { indsLclsNm: "숙박", bizesNm: "강남 호텔" },
-              { indsLclsNm: "소매", bizesNm: "강남 편의점" },
+              { indsLclsNm: "음식", bizesNm: "강남 카페", lat: 37.5101, lon: 127.0601 },
+              { indsLclsNm: "숙박", bizesNm: "강남 호텔", lat: 37.511, lon: 127.061 },
+              { indsLclsNm: "소매", bizesNm: "강남 편의점", lat: 37.512, lon: 127.062 },
             ],
           },
         }),
@@ -73,8 +73,8 @@ describe("server/commercialProxy", () => {
 
       expect(response.status).toBe(200);
       expect(body.status).toBe("live");
-      expect(body.commercialDensityScore).toBeGreaterThan(50);
-      expect(body.categories[0].storeCount).toBeGreaterThan(0);
+      expect(body).not.toHaveProperty("commercialDensityScore");
+      expect(body.observations).toHaveLength(3);
     });
   });
 });

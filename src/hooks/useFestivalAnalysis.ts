@@ -24,6 +24,7 @@ import {
   getDemandBackdataContextFromApi,
 } from "../services/demandBackdataAdapter";
 import { getSpendingContext } from "../services/spendingAdapter";
+import { createUnavailableInfrastructureContext, getInfrastructureContext, type VenueInfrastructureContext } from "../services/infrastructureAdapter";
 import { createFallbackTrafficContext, getTrafficContext } from "../services/trafficAdapter";
 import { getTrendContext } from "../services/trendAdapter";
 import {
@@ -44,6 +45,7 @@ export interface FestivalAnalysisInput {
 }
 
 export interface FestivalAnalysisDependencies {
+  loadInfrastructure?: typeof getInfrastructureContext;
   loadTourism: typeof getTourismContext;
   loadTrends: typeof getTrendContext;
   loadTraffic: typeof getTrafficContext;
@@ -63,6 +65,7 @@ export interface FestivalAnalysisState {
 }
 
 const defaultDependencies: FestivalAnalysisDependencies = {
+  loadInfrastructure: getInfrastructureContext,
   loadTourism: getTourismContext,
   loadTrends: getTrendContext,
   loadTraffic: getTrafficContext,
@@ -209,9 +212,11 @@ function settledDatasets(
     PromiseSettledResult<SpendingContext>,
     PromiseSettledResult<DemandBackdataContext>,
     PromiseSettledResult<WeatherContext>,
+    PromiseSettledResult<VenueInfrastructureContext | undefined>,
   ],
 ): { datasets: AnalysisDatasets; errorMessages: string[] } {
-  const [tourism, trends, traffic, spending, demandBackdata, weather] = results;
+  const [tourism, trends, traffic, spending, demandBackdata, weather, infrastructure] = results;
+  const facilities = infrastructure.status === "fulfilled" ? infrastructure.value : createUnavailableInfrastructureContext();
   const failures = [
     ["Tourism", tourism],
     ["Trends", trends],
@@ -235,6 +240,11 @@ function settledDatasets(
 
   return {
     datasets: {
+      ...(facilities ? { infrastructure: {
+        status: facilities.sourceDetails.every((detail) => detail.sourceType === "public-data") ? "live" as const
+          : facilities.sourceDetails.some((detail) => detail.sourceType === "public-data") ? "supplemented" as const : "unavailable" as const,
+        value: facilities, sourceName: "행사장 주변 공공 시설 자료",
+      } } : {}),
       tourism:
         tourism.status === "fulfilled"
           ? tourismState(tourism.value)
@@ -427,6 +437,7 @@ export function useFestivalAnalysis(
       requestDependencies.loadSpending(requestPlan, { signal: controller.signal }),
       requestDependencies.loadDemandBackdata(requestPlan, { signal: controller.signal }),
       requestDependencies.loadWeather(requestPlan, controller.signal),
+      requestDependencies.loadInfrastructure?.(requestPlan, { signal: controller.signal }) ?? Promise.resolve(undefined),
     ] as const;
 
     Promise.allSettled(requests).then((results) => {

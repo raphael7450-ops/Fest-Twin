@@ -10,6 +10,7 @@ import type { FestivalPlan, SelectedFestivalBasis, TourismContext } from "../dom
 import { createAnalysisKey } from "../services/analysisSnapshot";
 import type { FestivalCandidate } from "../services/tourApiAdapter";
 import { getFallbackWeatherContext } from "../services/weatherAdapter";
+import { createUnavailableInfrastructureContext } from "../services/infrastructureAdapter";
 import {
   useFestivalAnalysis,
   type FestivalAnalysisDependencies,
@@ -86,6 +87,23 @@ function dependencies(
 }
 
 describe("useFestivalAnalysis", () => {
+  it("commits infrastructure with its festival and ignores late previous-region responses", async () => {
+    const stale = deferred<ReturnType<typeof createUnavailableInfrastructureContext>>();
+    const current = createUnavailableInfrastructureContext();
+    current.sourceDetails[2] = { ...current.sourceDetails[2], sourceType: "public-data", statusLabel: "위치 확인 1곳", records: [{ label: "B 지역 실제 기관", fields: [] }] };
+    const loadInfrastructure = vi.fn((plan: FestivalPlan) => plan.name === planA.name ? stale.promise : Promise.resolve(current));
+    const deps = dependencies({ loadInfrastructure });
+    const { result, rerender } = renderHook((input) => useFestivalAnalysis(input, deps), { initialProps: inputA });
+    rerender(inputB);
+    await waitFor(() => expect(result.current.phase).toBe("ready"));
+    expect(result.current.snapshot?.datasets.infrastructure?.value?.sourceDetails[2].records?.[0].label).toBe("B 지역 실제 기관");
+    expect(JSON.stringify(result.current.snapshot?.evidence["safety-staff"].sourceDetails)).toContain("B 지역 실제 기관");
+    await act(async () => { stale.resolve(createUnavailableInfrastructureContext()); });
+    expect(result.current.snapshot?.plan.name).toBe(planB.name);
+    rerender({ ...inputB, selectedHour: inputB.selectedHour + 1 });
+    await waitFor(() => expect(result.current.snapshot?.selectedHour).toBe(inputB.selectedHour + 1));
+    expect(loadInfrastructure).toHaveBeenCalledTimes(2);
+  });
   it("refreshes time-specific traffic instead of reusing the previous hour's evidence", async () => {
     const deps = dependencies({ loadTraffic: vi.fn(async (_plan, options) => ({
       ...structuredClone(sampleTrafficContext), time: String(options?.hour),

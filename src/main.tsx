@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
 import "./styles.css";
+import "./venueObservations.css";
 import { scheduleAppReady } from "./services/appBoot";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

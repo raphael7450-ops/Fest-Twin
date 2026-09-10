@@ -1,0 +1,16 @@
+.venue-observations { margin-bottom: 20px; min-width: 0; }
+.venue-observations h2 { font-size: 18px; margin: 0 0 12px; }
+.venue-observations__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.venue-observations__dataset { min-width: 0; border: 1px solid #d1d5db; border-radius: 6px; padding: 14px; overflow-wrap: anywhere; }
+.venue-observations__dataset h3 { font-size: 15px; margin: 0 0 8px; }
+.venue-observations__dataset p { font-size: 12px; line-height: 1.6; margin: 8px 0; }
+.venue-observations__status { font-weight: 700; }
+.venue-observations__status[data-observed="true"] { color: #16734b; }
+.venue-observations__dataset time { display: block; font-size: 11px; }
+.venue-observations__dataset details { margin-top: 10px; }
+.venue-observations__dataset summary { cursor: pointer; font-size: 13px; }
+.venue-observations__records { list-style: none; padding: 0; max-height: 280px; overflow-y: auto; }
+.venue-observations__records li { border-top: 1px solid #d1d5db; padding: 10px 0; font-size: 12px; }
+.venue-observations__records dl { margin: 4px 0; }
+.venue-observations__records dl div { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 6px; padding: 2px 0; }
+.venue-observations__records dd { margin: 0; }

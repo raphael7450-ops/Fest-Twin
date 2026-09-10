@@ -19,7 +19,7 @@ async function withAppServer(app: ReturnType<typeof createApp>, callback: (baseU
 }
 
 describe("server/transitProxy", () => {
-  it("returns sample-fallback transit response when API key is missing", async () => {
+  it("returns unavailable without fabricated stops when API key is missing", async () => {
     const dummyLimiter = (_req: any, _res: any, next: any) => next();
     const app = createApp({
       generalRateLimiter: dummyLimiter,
@@ -33,9 +33,8 @@ describe("server/transitProxy", () => {
       const body = await response.json();
 
       expect(response.status).toBe(200);
-      expect(body.status).toBe("sample-fallback");
-      expect(body.accessibilityScore).toBeGreaterThan(50);
-      expect(body.stops.length).toBeGreaterThan(0);
+      expect(body.status).toBe("unavailable");
+      expect(body.observations).toEqual([]);
     });
   });
 
@@ -47,11 +46,12 @@ describe("server/transitProxy", () => {
       return new Response(
         JSON.stringify({
           response: {
+            header: { resultCode: "00" },
             body: {
               items: {
                 item: [
-                  { nodenm: "강남역 정류장", distance: "120" },
-                  { nodenm: "COEX 정류장", distance: "240" },
+                  { nodenm: "강남역 정류장", gpslati: 37.5101, gpslong: 127.0601 },
+                  { nodenm: "COEX 정류장", gpslati: 37.511, gpslong: 127.061 },
                 ],
               },
             },
@@ -76,8 +76,8 @@ describe("server/transitProxy", () => {
 
       expect(response.status).toBe(200);
       expect(body.status).toBe("live");
-      expect(body.accessibilityScore).toBeGreaterThan(60);
-      expect(body.stops[0].stopName).toBe("강남역 정류장");
+      expect(body).not.toHaveProperty("accessibilityScore");
+      expect(body.observations[0].name).toBe("강남역 정류장");
     });
   });
 });
