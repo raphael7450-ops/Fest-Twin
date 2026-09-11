@@ -60,6 +60,18 @@ function createEvidenceForPlan(plan: typeof sampleFestivalPlan) {
 }
 
 describe("metricEvidence", () => {
+  it("does not fabricate a venue area or zero density when area is missing", () => {
+    const evidence = createEvidenceForPlan({ ...sampleFestivalPlan, venueAreaSquareMeters: undefined });
+    expect(evidence["peak-density"].takeawaySummary).toContain("산출 불가");
+    expect(evidence["peak-density"].takeawaySummary).not.toMatch(/20,000|0\.00/);
+    expect(evidence["peak-density"].inputComparison?.[0].planValue).toBe("미확인");
+  });
+
+  it("converts million KRW to hundred-million KRW without inventing a quotient", () => {
+    const evidence = createEvidenceForPlan({ ...sampleFestivalPlan, totalBudgetMillionKrw: 50 });
+    expect(evidence["budget-efficiency"].takeawaySummary).toContain("0.5억원");
+    expect(evidence["budget-efficiency"].formulaSummary).toContain("65%");
+  });
   it("does not invent facility, transit or store observations for a Busan plan", () => {
     const evidence = createEvidenceForPlan({ ...sampleFestivalPlan, region: "부산" });
     const ids = new Set([
@@ -280,7 +292,8 @@ describe("metricEvidence", () => {
 
     expect(evidence["demand-index"].calculationSteps).toBeDefined();
     expect(evidence["demand-index"].calculationSteps?.length).toBeGreaterThan(0);
-    expect(evidence["demand-index"].calculationSteps![0].formula).toContain("베이스라인");
+    expect(evidence["demand-index"].calculationSteps![0].formula).toContain("모델 입력");
+    expect(evidence["demand-index"].calculationSteps![0].subtotal).toBe("중간 산출값 미기록");
 
     expect(evidence["economic-roi"].calculationSteps).toBeDefined();
     expect(evidence["economic-roi"].calculationSteps?.length).toBeGreaterThan(0);
@@ -660,7 +673,7 @@ describe("metricEvidence", () => {
     );
     const jsonStr = JSON.stringify(safetyBasis);
 
-    expect(jsonStr).toContain("일일 고유 방문객");
+    expect(jsonStr).toContain("하루 예상 유입 (모델 추정)");
     expect(jsonStr).toContain("시간대 신규 유입");
     expect(jsonStr).toContain("최대 동시 체류인원");
     expect(jsonStr).toContain("평균 체류시간");

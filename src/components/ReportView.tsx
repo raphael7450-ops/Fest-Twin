@@ -110,7 +110,7 @@ export function ReportView({
         <p className="muted">{report.governmentReviewNote}</p>
         <div className="report-kpi-strip">
           <article>
-            <span>일일 고유 방문객</span>
+            <span>하루 예상 유입 (모델 추정)</span>
             <strong data-testid="report-expected-visitors">
               {forecast.expectedVisitors.toLocaleString("ko-KR")}명
             </strong>
@@ -139,12 +139,12 @@ export function ReportView({
           <article>
             <span>성공 예측 점수</span>
             <strong>{successPotential.score}점</strong>
-            <small>신뢰도 {forecast.confidence}</small>
+            <small>신뢰도 {{ high: "높음", medium: "보통", low: "낮음", critical: "매우 낮음" }[forecast.confidence]}</small>
           </article>
           <article>
             <span>수용 정원률</span>
             <strong>{metrics.summary.capacityPressure.displayPercent}%</strong>
-            <small>{metrics.summary.capacityPressure.status}</small>
+            <small>{{ within: "범위 내", caution: "주의", over: "초과" }[metrics.summary.capacityPressure.status]}</small>
           </article>
         </div>
       </section>
@@ -183,7 +183,7 @@ export function ReportView({
 
       <section className="report-section" aria-labelledby="report-budget-heading">
         <div className="report-section-heading">
-          <span>ROI 검토 (총 누적 관람객 기준)</span>
+          <span>하루 추정 소비 / 총 사업 예산 (수익률 아님)</span>
           <h3 id="report-budget-heading">예산·경제 효과</h3>
         </div>
         <div className="report-budget-note">

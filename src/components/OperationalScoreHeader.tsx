@@ -68,7 +68,7 @@ export function OperationalScoreHeader({
         <strong data-testid="dashboard-expected-visitors">
           {formatNumber(forecast.expectedVisitors)}명
         </strong>
-        <small>축제 총 누적 (경제·행정 기준)</small>
+        <small>하루 예상 유입 (모델 추정)</small>
       </div>
 
       <div className="ops-score-card">

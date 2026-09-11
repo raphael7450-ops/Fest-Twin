@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import type { SelectedFestivalBasis, VenueAreaProvenance } from "../domain/types";
 import {
@@ -6,6 +6,8 @@ import {
   loadScenarios,
   normalizeFestivalPlan,
   saveScenario,
+  fetchServerScenarios,
+  deleteServerScenario,
 } from "./scenarioStorage";
 
 const selectedFestivalBasis: SelectedFestivalBasis = {
@@ -31,6 +33,34 @@ const venueAreaProvenance: VenueAreaProvenance = {
 };
 
 describe("scenarioStorage", () => {
+  it("retains local drafts across a full remote list and another save", async () => {
+    const draft = saveScenario({ ...sampleFestivalPlan, name: "unsynced" }, 20);
+    const scenarios = Array.from({ length: 10 }, (_, i) => ({ id: `remote-${i}`, share_token: `token-${i}`, title: `server ${i}`, parameters: { plan: sampleFestivalPlan } }));
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ scenarios })));
+    try {
+      await fetchServerScenarios();
+      saveScenario({ ...sampleFestivalPlan, name: "another draft" }, 20);
+      expect(loadScenarios().map((item) => item.id)).toContain(draft.id);
+      expect(loadScenarios().filter((item) => item.shareToken)).toHaveLength(10);
+    } finally { request.mockRestore(); }
+  });
+  it("preserves an unsynchronized local plan when the remote list is empty", async () => {
+    localStorage.clear();
+    const saved = saveScenario(sampleFestivalPlan, 20);
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ scenarios: [] })));
+    try { expect((await fetchServerScenarios()).map((item) => item.id)).toContain(saved.id); }
+    finally { request.mockRestore(); }
+  });
+
+  it("does not discard the cached server plan after a rejected deletion", async () => {
+    const saved = { ...saveScenario(sampleFestivalPlan, 20), shareToken: "qa-token" };
+    localStorage.setItem("fest-twin-scenarios", JSON.stringify([saved]));
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("unavailable", { status: 503 }));
+    try {
+      expect(await deleteServerScenario(saved.id)).toBe(false);
+      expect(loadScenarios()).toHaveLength(1);
+    } finally { request.mockRestore(); }
+  });
   beforeEach(() => {
     localStorage.clear();
   });

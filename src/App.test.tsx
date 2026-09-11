@@ -148,9 +148,9 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "대시보드 섹션: 근거" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "대시보드 섹션: 리포트" })).toBeInTheDocument();
     expect(screen.getAllByText("흥행 가능성 점수").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("최고 밀집 위험도").length).toBeGreaterThan(0);
-    expect(screen.getByText("예산 효율성 점수")).toBeInTheDocument();
-    expect(screen.getByText("지역 상권 유출 연계도")).toBeInTheDocument();
+    expect(screen.getAllByText("피크 시간 평균 밀도").length).toBeGreaterThan(0);
+    expect(screen.getByText("예산 단가 참고값")).toBeInTheDocument();
+    expect(screen.getByText("주변 관광 연계 점수")).toBeInTheDocument();
     openDashboardSection("요약");
     expect(screen.getByRole("button", { name: "대시보드 섹션: 요약" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByLabelText("핵심 진단 지표")).toBeInTheDocument();
@@ -196,7 +196,7 @@ describe("App", () => {
     expect(screen.getByText("기획 보완 리포트")).toBeInTheDocument();
     expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
     expect(screen.getAllByText("총 투입 예산").length).toBeGreaterThan(0);
-    expect(screen.getByText("예상 지역 상권 소비 창출액")).toBeInTheDocument();
+    expect(screen.getByText("하루 추정 소비액 (행사 전체 아님)")).toBeInTheDocument();
     expect(screen.getByText(/지역 관광 소비 강도 기반/)).toBeInTheDocument();
     expect(screen.getAllByText(/58,400원/).length).toBeGreaterThan(0);
   });

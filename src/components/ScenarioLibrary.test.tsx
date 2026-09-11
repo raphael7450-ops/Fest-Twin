@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, cleanup } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleFestivalPlan } from "../data/sampleFestivalPlan";
 import type { FestivalPlan } from "../domain/types";
@@ -6,7 +6,32 @@ import { ScenarioLibrary } from "./ScenarioLibrary";
 
 describe("ScenarioLibrary", () => {
   beforeEach(() => {
+    cleanup();
     localStorage.clear();
+  });
+
+  it("reports local-only saving and refuses a misleading share link when the server fails", async () => {
+    const request = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
+    try {
+      render(<ScenarioLibrary plan={sampleFestivalPlan} selectedHour={20} onLoadScenario={vi.fn()} />);
+      fireEvent.click(screen.getByRole("button", { name: "시나리오 저장" }));
+      await waitFor(() => expect(screen.getByText(/이 브라우저에만 저장/)).toBeInTheDocument());
+      fireEvent.click(screen.getByRole("button", { name: /공유 링크/ }));
+      expect(screen.getByText(/서버 저장 후 공유/)).toBeInTheDocument();
+    } finally { request.mockRestore(); }
+  });
+
+  it("keeps server entries visible after clearing browser copies and saving again", async () => {
+    const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ scenarios: [{ id: "remote", share_token: "token", title: "remote retained plan", parameters: { plan: sampleFestivalPlan } }] })));
+    try {
+      render(<ScenarioLibrary plan={sampleFestivalPlan} selectedHour={20} onLoadScenario={vi.fn()} />);
+      await screen.findByRole("button", { name: /remote retained plan/ });
+      fireEvent.click(screen.getByRole("button", { name: "브라우저 저장본 지우기" }));
+      request.mockRejectedValue(new Error("offline"));
+      fireEvent.click(screen.getByRole("button", { name: "시나리오 저장" }));
+      await screen.findByText(/이 브라우저에만 저장/);
+      expect(screen.getByRole("button", { name: /remote retained plan/ })).toBeInTheDocument();
+    } finally { request.mockRestore(); }
   });
 
   it("saves and restores the current scenario", () => {

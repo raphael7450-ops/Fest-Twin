@@ -15,7 +15,6 @@ import {
   fetchServerScenarios,
   getShareUrl,
   loadScenarios,
-  saveScenario,
   saveServerScenario,
   type SavedScenario,
 } from "../services/scenarioStorage";
@@ -46,7 +45,7 @@ export function ScenarioLibrary({
     let active = true;
     fetchServerScenarios().then((list) => {
       if (active) {
-        setScenarios(list);
+        setScenarios((current) => [...list, ...current.filter((item) => !item.shareToken && !list.some((remote) => remote.id === item.id))]);
       }
     });
     return () => {
@@ -56,22 +55,29 @@ export function ScenarioLibrary({
 
   // 시나리오 저장 처리
   async function handleSave() {
-    const localSaved = saveScenario(plan, selectedHour, selectedFestivalBasis);
-    setScenarios((current) => [localSaved, ...current.filter((item) => item.id !== localSaved.id)].slice(0, 10));
-    setCopyNotice({ text: "시나리오가 저장되었습니다. 하단 목록의 [공유 링크]를 눌러 URL을 복사하거나 열 수 있습니다." });
-    setTimeout(() => setCopyNotice(null), 4000);
-
-    saveServerScenario(plan, selectedHour, selectedFestivalBasis).then((serverSaved) => {
-      setScenarios((current) =>
-        [serverSaved, ...current.filter((item) => item.id !== serverSaved.id && item.id !== localSaved.id)].slice(0, 10),
-      );
-    }).catch(() => {});
+    try {
+      const saving = saveServerScenario(plan, selectedHour, selectedFestivalBasis);
+      const local = loadScenarios();
+      setScenarios((current) => [...local, ...current.filter((item) => item.shareToken && !local.some((saved) => saved.id === item.id))]);
+      setCopyNotice({ text: "서버 저장 확인 중" });
+      const saved = await saving;
+      const updated = loadScenarios();
+      setScenarios((current) => [...updated, ...current.filter((item) => item.shareToken && !updated.some((record) => record.id === item.id))]);
+      setCopyNotice({ text: saved.shareToken
+        ? "서버에 저장되었습니다. 공유 링크를 사용할 수 있습니다."
+        : "서버 저장에 실패하여 이 브라우저에만 저장했습니다. 연결을 확인하고 다시 저장하세요." });
+    } catch {
+      setCopyNotice({ text: "저장하지 못했습니다. 브라우저 저장 공간과 연결 상태를 확인하세요." });
+    }
   }
 
   // 시나리오 삭제 처리
   async function handleDelete(id: string, event: React.MouseEvent) {
     event.stopPropagation();
-    await deleteServerScenario(id);
+    if (!await deleteServerScenario(id)) {
+      setCopyNotice({ text: "서버에서 삭제하지 못했습니다. 목록을 유지합니다. 다시 시도하세요." });
+      return;
+    }
     setScenarios((current) => current.filter((item) => item.id !== id));
     setCompareIds((current) => current.filter((item) => item !== id));
   }
@@ -92,6 +98,10 @@ export function ScenarioLibrary({
   // 공유 링크 클립보드 복사 및 즉시 이동 지원
   async function handleCopyShareLink(scenario: SavedScenario, event: React.MouseEvent) {
     event.stopPropagation();
+    if (!scenario.shareToken) {
+      setCopyNotice({ text: "이 브라우저 전용 기획안입니다. 서버 저장 후 공유할 수 있습니다." });
+      return;
+    }
     const url = getShareUrl(scenario);
     try {
       await navigator.clipboard.writeText(url);
@@ -111,7 +121,8 @@ export function ScenarioLibrary({
   // 전체 지우기
   function handleClear() {
     clearScenarios();
-    setScenarios([]);
+    setScenarios((current) => current.filter((item) => item.shareToken));
+    setCopyNotice({ text: "브라우저 저장본을 지웠습니다. 서버 기획안은 삭제하지 않았습니다." });
     setCompareIds([]);
     setIsCompareOpen(false);
   }
@@ -124,7 +135,7 @@ export function ScenarioLibrary({
       <div className="panel-heading">
         <div>
           <h2>시나리오 저장 및 부서 공유</h2>
-          <span className="badge badge-success">SQLite 서버 영속 동기화</span>
+          <span className="badge">서버 저장 및 브라우저 임시 보관</span>
         </div>
       </div>
 
@@ -146,7 +157,7 @@ export function ScenarioLibrary({
           onClick={handleClear}
           disabled={scenarios.length === 0}
         >
-          모두 지우기
+          브라우저 저장본 지우기
         </button>
       </div>
 

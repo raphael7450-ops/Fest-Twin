@@ -51,10 +51,10 @@ export function ForecastChart({
       <div className="panel-heading">
         <div className="panel-heading-title">
           <h2>시간대별 수요 및 체류 예측</h2>
-          <span className="source-tag">문체부·관광공사 모델</span>
+          <span className="source-tag">Fest-Twin 추정 모델</span>
         </div>
         <div className="panel-heading-actions">
-          <span className="confidence-pill">예측 신뢰도 {forecast.confidence}</span>
+          <span className="confidence-pill">예측 신뢰도 {{ high: "높음", medium: "보통", low: "낮음", critical: "매우 낮음" }[forecast.confidence]}</span>
           {onOpenEvidence && (
             <EvidenceButton onClick={() => onOpenEvidence("demand-index")} />
           )}
@@ -148,7 +148,7 @@ export function ForecastChart({
           </div>
         )}
         <div className="day-type-metric-item">
-          <span className="metric-label">일평균 총 유입 (경제 참고)</span>
+          <span className="metric-label">하루 예상 유입 (모델 추정)</span>
           <strong className="metric-value">
             {currentProfile.expectedDailyVisitors.toLocaleString("ko-KR")}명
           </strong>
@@ -186,7 +186,7 @@ export function ForecastChart({
               }}
               aria-label={`${item.hour}시 ${item.visitors.toLocaleString("ko-KR")}명 ${isSelected ? "(선택됨)" : ""}`}
             >
-              <span>{item.hour}:00</span>
+              <span>{item.hour >= 24 ? "익일 " : ""}{String(item.hour % 24).padStart(2, "0")}:00</span>
               <div className="bar-track" aria-hidden="true">
                 <div
                   className="bar-fill"

@@ -8,6 +8,7 @@ import type {
   TrendContext,
 } from "../domain/types";
 import type { WeatherContext } from "../services/weatherAdapter";
+import type { VenueInfrastructureContext } from "../services/infrastructureAdapter";
 
 interface DataBasisPanelProps {
   tourism: TourismContext;
@@ -16,6 +17,7 @@ interface DataBasisPanelProps {
   spending?: SpendingContext;
   demandBackdata?: DemandBackdataContext;
   weather?: WeatherContext;
+  infrastructure?: VenueInfrastructureContext;
   selectedFestivalBasis?: SelectedFestivalBasis | null;
 }
 
@@ -54,6 +56,7 @@ export function DataBasisPanel({
   spending,
   demandBackdata,
   weather,
+  infrastructure,
   selectedFestivalBasis,
 }: DataBasisPanelProps) {
   const statusRows = [
@@ -65,14 +68,14 @@ export function DataBasisPanel({
     {
       label: "검색 관심도",
       status: compactStatusLabel(trends.provenance.sourceStatus),
-      basis: `${trends.provenance.sourceName} (사전 관심도 실시간 수집)`,
+      basis: trends.provenance.sourceName,
     },
     ...(weather
       ? [
           {
-            label: "기상청 단기예보",
+            label: "기상 참고값",
             status: compactStatusLabel(weather.provenance.sourceStatus),
-            basis: "기상청 계절/월별 평년 기후 통계 모델 (사전 예측 기준)",
+            basis: weather.provenance.sourceStatus === "live" ? "기상청 예보 조회값" : "계절별 기상 샘플 (실제 예보 아님)",
           },
         ]
       : []),
@@ -83,16 +86,6 @@ export function DataBasisPanel({
             status: trafficStatusLabel(traffic.status),
             basis: `${traffic.provenance.sourceName} (KTDB 기준 도로 용량 통계)`,
           },
-          {
-            label: "TAGO 대중교통",
-            status: "실조회",
-            basis: "국토교통부 버스정류소/노선 기준 데이터",
-          },
-          {
-            label: "응급의료/119 안전센터",
-            status: "실조회",
-            basis: "보건복지부/소방청 응급기관 기준 데이터",
-          },
         ]
       : []),
     ...(spending
@@ -101,11 +94,6 @@ export function DataBasisPanel({
             label: "관광소비",
             status: compactStatusLabel(spending.sourceStatus),
             basis: `${spending.sourceName} (소비 원단위 기준 통계)`,
-          },
-          {
-            label: "소상공인 상가정보",
-            status: "실조회",
-            basis: "소상공인시장진흥공단 상권 기준 데이터",
           },
         ]
       : []),
@@ -120,6 +108,11 @@ export function DataBasisPanel({
           },
         ]
       : []),
+    ...(infrastructure?.sourceDetails.map((detail) => ({
+      label: detail.sourceName,
+      status: detail.statusLabel,
+      basis: "행사장 주변 시설 참고 정보. 관측 목록과 조회 범위는 현장 탭에서 확인하세요.",
+    })) ?? []),
   ];
 
   return (
@@ -145,16 +138,16 @@ export function DataBasisPanel({
         <li>
           {trends.provenance.sourceName}: {trends.provenance.basisText}
         </li>
-        <li>개인정보 수집 여부: 수집하지 않음</li>
+        <li>기획안과 공유 내용에는 개인정보를 입력하지 마세요.</li>
         <li>예측값 성격: 실제 집계값이 아닌 사전 의사결정용 추정값</li>
-        <li>수요·수용력 연계: 문체부·통신사 기준 광역 총 잠재 수요와 행사장 통제 구역의 물리적 안전 수용 한계를 연계하여 수용 압박률을 진단합니다.</li>
+        <li>수요·수용력 연계: 모델 예상 수요와 입력한 행사장 수용 인원을 비교합니다. 통신 기반 실측 인구나 현장 안전 인증이 아닙니다.</li>
       </ul>
 
       <div className="data-status-summary">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
           <h3 style={{ margin: 0 }}>데이터 상태 요약</h3>
           <span style={{ fontSize: "0.78rem", color: "#10b981", background: "#ecfdf5", padding: "2px 8px", borderRadius: "12px", border: "1px solid #a7f3d0" }}>
-            게이트웨이 정상 가동 중
+            분석 시점 조회 상태
           </span>
         </div>
         <dl className="data-status-grid">
@@ -211,7 +204,7 @@ export function DataBasisPanel({
             </div>
             <div>
               <dt>주최 / 주관</dt>
-              <dd>{selectedFestivalBasis.organizer || "해당 지자체 / 문화재단"}</dd>
+              <dd>{selectedFestivalBasis.organizer || "주최 정보 미확인"}</dd>
             </div>
             <div>
               <dt>기간</dt>

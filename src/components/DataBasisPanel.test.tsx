@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
 import { sampleTourismContext } from "../data/sampleTourApi";
 import { sampleTrendContext } from "../data/sampleTrends";
 import { sampleTrafficContext } from "../data/sampleTraffic";
@@ -20,6 +20,14 @@ const selectedFestivalBasis: SelectedFestivalBasis = {
 };
 
 describe("DataBasisPanel", () => {
+  beforeEach(cleanup);
+  it("does not claim unqueried infrastructure is live", () => {
+    const { container } = render(<DataBasisPanel tourism={sampleTourismContext} trends={sampleTrendContext} traffic={sampleTrafficContext} spending={sampleSpendingContext} />);
+    expect(container.textContent).not.toContain("119 안전센터");
+    expect(container.textContent).not.toContain("통신사");
+    expect(container.textContent).not.toContain("게이트웨이 정상 가동 중");
+    expect(container.querySelector(".data-status-summary")?.textContent).not.toContain("실조회");
+  });
   it("shows TourAPI operating account application evidence without exposing secrets", () => {
     render(<DataBasisPanel tourism={sampleTourismContext} trends={sampleTrendContext} />);
 

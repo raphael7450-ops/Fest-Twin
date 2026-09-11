@@ -188,7 +188,7 @@ describe("Fest-Twin E2E User Scenarios and Bug Exploration Suite", () => {
     await waitFor(() => {
       expect(screen.getByText("기획 보완 리포트")).toBeInTheDocument();
       expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
-      expect(screen.getByText("예상 지역 상권 소비 창출액")).toBeInTheDocument();
+      expect(screen.getByText("하루 추정 소비액 (행사 전체 아님)")).toBeInTheDocument();
     });
   });
 });

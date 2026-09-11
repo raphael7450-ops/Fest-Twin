@@ -57,10 +57,11 @@ export function RoiEconomicImpact({
         </div>
         <div className="metric-inline-heading">
           <EvidenceButton onClick={() => onOpenEvidence("economic-roi")} />
-          <strong>{metrics.roiMultiplier.toFixed(1)}배 창출 예상</strong>
+          <strong>{metrics.roiMultiplier.toFixed(1)}배 참고 비교</strong>
         </div>
       </div>
 
+      <p>하루 모델 유입에 소비 단가를 곱해 총 사업 예산과 비교한 참고값입니다. 행사 전체 매출이나 투자 수익률이 아닙니다.</p>
       <div className="roi-bars">
         <div className="roi-bar-row">
           <span>총 투입 예산</span>
@@ -74,7 +75,7 @@ export function RoiEconomicImpact({
         </div>
 
         <div className="roi-bar-row">
-          <span>예상 지역 상권 소비 창출액</span>
+          <span>하루 추정 소비액 (행사 전체 아님)</span>
           <div className="roi-bar-track">
             <div
               className="roi-bar-fill roi-bar-fill-impact"

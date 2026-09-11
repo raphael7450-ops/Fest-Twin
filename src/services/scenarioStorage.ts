@@ -246,8 +246,10 @@ export async function fetchServerScenarios(): Promise<SavedScenario[]> {
       }));
 
       // 서버 응답 성공 시 LocalStorage에도 최신화
-      writeScenarios(mapped);
-      return mapped;
+      const localOnly = readRawScenarios().filter((item) => !item.shareToken && !mapped.some((remote) => remote.id === item.id));
+      const merged = [...localOnly, ...mapped];
+      writeScenarios(merged);
+      return merged;
     }
   } catch {
     // 백엔드 미가동 또는 쿨다운 시 조용히 LocalStorage 반환
@@ -298,7 +300,7 @@ export async function saveServerScenario(
         selectedFestivalBasis: created.parameters?.selectedFestivalBasis ?? selectedFestivalBasis ?? undefined,
       };
 
-      const updated = [serverSaved, ...readRawScenarios().filter((i) => i.id !== localSaved.id)].slice(0, 10);
+      const updated = [serverSaved, ...readRawScenarios().filter((i) => i.id !== localSaved.id)];
       writeScenarios(updated);
       return serverSaved;
     }
@@ -311,10 +313,16 @@ export async function saveServerScenario(
 
 // 3. 서버 REST API 시나리오 삭제
 export async function deleteServerScenario(id: string): Promise<boolean> {
+  const local = readRawScenarios().find((item) => item.id === id);
+  if (local && !local.shareToken) {
+    writeScenarios(readRawScenarios().filter((item) => item.id !== id));
+    return true;
+  }
   try {
-    await fetch(createApiUrl(`/api/scenarios/${id}`), { method: "DELETE" });
+    const response = await fetch(createApiUrl(`/api/scenarios/${encodeURIComponent(id)}`), { method: "DELETE" });
+    if (!response.ok) return false;
   } catch {
-    // ignore
+    return false;
   }
 
   const filtered = readRawScenarios().filter((item) => item.id !== id);
@@ -357,7 +365,9 @@ export function saveScenario(
     plan: normalizedPlan,
     selectedFestivalBasis: selectedFestivalBasis ?? undefined,
   };
-  const scenarios = [scenario, ...readRawScenarios()].slice(0, 10);
+  const existing = readRawScenarios();
+  const scenarios = [scenario, ...existing.filter((item) => !item.shareToken)].slice(0, 10)
+    .concat(existing.filter((item) => item.shareToken));
 
   writeScenarios(scenarios);
 

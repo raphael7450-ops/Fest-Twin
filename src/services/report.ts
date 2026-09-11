@@ -111,7 +111,7 @@ export function createPlanningReport(
   ];
 
   return {
-    summary: `${plan.name}은 흥행 가능성이 높지만 ${forecast.peakHour}:00 피크 시간대 밀집 관리와 예산 효율 검토가 필요합니다.`,
+    summary: `기획안 '${plan.name}' 분석 결과, 흥행 가능성 참고 점수는 ${successPotential.score}점입니다. ${forecast.peakHour}:00 피크 시간대 밀집 관리와 예산 검토가 필요합니다.`,
     scores,
     findings: [
       `수용 정원률 ${capacityPressure.displayPercent}%로 ${

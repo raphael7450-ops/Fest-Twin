@@ -444,7 +444,7 @@ function selectedSafetyLogisticsBasisDetails(
               value: `${plan.expectedCapacity.toLocaleString("ko-KR")}명`,
             },
             {
-              label: "일일 고유 방문객",
+              label: "하루 예상 유입 (모델 추정)",
               value: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
             },
             {
@@ -778,38 +778,38 @@ export function createMetricEvidenceSet(
       calculationSteps: [
         {
           stepNumber: 1,
-          title: "1단계: 유사 축제 수요 베이스라인 추출",
-          formula: "베이스라인 = 유사 축제 평균 방문객 × 주제 연관도",
+          title: "유사 축제 및 지역 참고 자료",
+          formula: "유사 축제 수요, 수용 인원, 주변 관광 매력도를 모델 입력으로 사용",
           inputValue: `${plan.region} / ${plan.keywords.slice(0, 2).join(", ")}`,
-          coefficient: "연관도 85%",
-          subtotal: `${Math.round(forecast.expectedVisitors * 0.45).toLocaleString("ko-KR")}명`,
-          note: "TourAPI 유사 축제 실적 데이터 기반 베이스라인",
+          coefficient: "세부 입력은 아래 출처에서 확인",
+          subtotal: "중간 산출값 미기록",
+          note: "축제 후보 정보는 확정 방문 실적을 의미하지 않습니다.",
         },
         {
           stepNumber: 2,
-          title: "2단계: 기상청 단기예보 & 기후 조건 가중",
+          title: "기상 참고 입력",
           formula: "기상 보정치 = 베이스라인 × 기상 가감 보정계수",
-          inputValue: `${weather?.weather.conditionText ?? "맑음"}, 기온 ${weather?.weather.temperatureCelsius ?? 18}°C`,
+          inputValue: weather ? `${weather.weather.conditionText}, 기온 ${weather.weather.temperatureCelsius}°C` : "기상 정보 미확보",
           coefficient: `${(weather?.attractivenessMultiplier ?? 1.0).toFixed(2)}배`,
-          subtotal: `${Math.round(forecast.expectedVisitors * 0.52).toLocaleString("ko-KR")}명`,
-          note: "기상청 단기예보 API 실시간 연동 결과",
+          subtotal: "중간 산출값 미기록",
+          note: !weather ? "기상 보정 없음" : weather.provenance.sourceStatus === "live" ? "기상청 예보 조회값" : "계절별 기상 샘플 (실제 예보 아님)",
         },
         {
           stepNumber: 3,
           title: "3단계: 기획안 규모 및 프로그램 매력도 가중",
           formula: "중간 보정치 = 베이스라인 × (수용규모 가중치 + 프로그램 매력도)",
           inputValue: `수용인원 ${plan.expectedCapacity.toLocaleString("ko-KR")}명 / 프로그램 ${plan.programs.length}개`,
-          coefficient: "가중치 1.25x",
-          subtotal: `${Math.round(forecast.expectedVisitors * 0.75).toLocaleString("ko-KR")}명`,
+          coefficient: "기획 입력에 따라 변동",
+          subtotal: "중간 산출값 미기록",
         },
         {
           stepNumber: 4,
           title: "4단계: 주변 관광 매력도 & 네이버 데이터랩 트렌드 연동",
           formula: "최종 예상 방문객 = 중간 보정치 × 관광매력도 가중치",
           inputValue: `주변 관광지 ${tourism.nearbySpots.length}곳 매력도`,
-          coefficient: "가중치 1.33x",
+          coefficient: "기획 입력과 수요 상하한 적용",
           subtotal: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
-          note: "피크 시간대 18~20시 집중 방문 반영",
+          note: "하루 운영시간에 배분할 모델 유입량이며 행사 전체 실적이 아닙니다.",
         },
       ],
       assumptions: [
@@ -902,17 +902,19 @@ export function createMetricEvidenceSet(
     },
     "peak-density": {
       metricId: "peak-density",
-      title: "최고 밀집 위험도",
+      title: "피크 시간 평균 밀도",
       summary:
         summary.peakDensity.status === "available"
           ? `피크 방문객과 ${venueAreaDescription.label} 행사장 면적으로 물리 밀도 ${summary.peakDensity.value.toFixed(2)}명/m²를 산출했습니다.`
           : `물리 밀도 산출 불가: ${summary.peakDensity.reason}`,
-      takeawaySummary: `피크 시간(${simulation.hour}시) 체류 인원(${peakVisitors.toLocaleString("ko-KR")}명) ÷ 행사장 면적(${(plan.venueAreaSquareMeters ?? 20000).toLocaleString("ko-KR")}m²) = 최고 밀집도 ${summary.peakDensity.status === "available" ? summary.peakDensity.value.toFixed(2) : "0.00"}명/m²`,
-      plainExplanation: `행정안전부 다중운집 안전관리 매뉴얼 기준, 단위 면적(1m²)당 동시 체류하는 인원수입니다. 3명/m² 초과 시 이동 제한 및 압사 위험 경보가 발생하며 일방통행 유도가 필수입니다.`,
+      takeawaySummary: summary.peakDensity.status === "available"
+        ? `피크 체류 인원(${peakVisitors.toLocaleString("ko-KR")}명) ÷ 행사장 면적(${plan.venueAreaSquareMeters?.toLocaleString("ko-KR")}m²) = 평균 밀도 ${summary.peakDensity.value.toFixed(2)}명/m²`
+        : `산출 불가: ${summary.peakDensity.reason}`,
+      plainExplanation: "행사장 전체에 인원이 고르게 분포한다고 가정한 평균입니다. 출입구 등 국소 최대 밀도와 다르며, 평균이 낮아도 현장 안전을 보장하지 않습니다.",
       inputComparison: [
         {
           label: "행사장 면적",
-          planValue: `${(plan.venueAreaSquareMeters ?? 20000).toLocaleString("ko-KR")}m²`,
+          planValue: summary.peakDensity.status === "available" ? `${plan.venueAreaSquareMeters?.toLocaleString("ko-KR")}m²` : "미확인",
           adjustedFactor: venueAreaDescription.label,
           resultValue: "유효 관람 면적",
         },
@@ -958,10 +960,10 @@ export function createMetricEvidenceSet(
     },
     "budget-efficiency": {
       metricId: "budget-efficiency",
-      title: "예산 효율성 점수",
-      summary: `총 예산을 예상 방문객으로 나누어 1인당 ${summary.budgetEfficiency.costPerVisitorKrw.toLocaleString("ko-KR")}원 수준으로 산출했습니다.`,
-      takeawaySummary: `총 투입 예산(${(plan.totalBudgetMillionKrw / 10).toFixed(1)}억원) ÷ 예상 방문객(${forecast.expectedVisitors.toLocaleString("ko-KR")}명) = 1인당 유치 단가 ${summary.budgetEfficiency.costPerVisitorKrw.toLocaleString("ko-KR")}원`,
-      plainExplanation: `지자체 재정 성과 평가 지표로, 방문객 1인을 현장에 유치하기 위해 투입된 공공 예산의 단가입니다. 동급 축제 평균 대비 투입 단가가 낮을수록 높은 예산 효율성 점수를 획득합니다.`,
+      title: "예산 단가 참고값",
+      summary: `${summary.budgetEfficiency.description}. 참고 단가는 ${summary.budgetEfficiency.costPerVisitorKrw.toLocaleString("ko-KR")}원입니다.`,
+      takeawaySummary: `총 투입 예산 ${ (plan.totalBudgetMillionKrw / 100).toFixed(1)}억원 / 하루 예상 유입 ${forecast.expectedVisitors.toLocaleString("ko-KR")}명. 비교 자료 반영 후 참고 단가: ${summary.budgetEfficiency.costPerVisitorKrw.toLocaleString("ko-KR")}원`,
+      plainExplanation: "총 사업 예산과 하루 모델 유입을 비교하는 기획 참고값입니다. 행사 전체 방문 실적에 대한 1인당 집행비나 공식 재정 성과 지표가 아닙니다.",
       inputComparison: [
         {
           label: "총 투입 예산",
@@ -983,7 +985,7 @@ export function createMetricEvidenceSet(
         },
       ],
       dataSources: ["사용자 입력 총 예산", "예상 방문객"],
-      formulaSummary: "방문객 1인당 예산 = 총 투입 예산 / 예상 방문객",
+      formulaSummary: "기본 단가 = 총 예산 / 하루 예상 유입. 유효한 비교 축제 단가가 있으면 기본 단가 65% + 비교 단가 35%, 없으면 기본 단가를 사용하고 원 단위로 반올림합니다.",
       assumptions: ["총 예산은 백만원 단위 입력값을 원 단위로 환산합니다."],
       confidence,
       confidenceLabel: confidenceLabel(confidence),
@@ -1004,10 +1006,10 @@ export function createMetricEvidenceSet(
     },
     "commercial-spillover": {
       metricId: "commercial-spillover",
-      title: "지역 상권 유출 연계도",
-      summary: `주변 관광지 매력도와 개수를 바탕으로 ${summary.spillover.nearbyInflowRate}%의 연계 가능성을 추정했습니다.`,
-      takeawaySummary: `주변 관광 매력도 + 소상공인 상권 밀집도 = 상권 유출 연계율 ${summary.spillover.nearbyInflowRate}%, 예상 소비 창출 ${(economy.expectedLocalSpendingKrw / 100000000).toFixed(1)}억원`,
-      plainExplanation: `한국관광공사 지역별 관광소비강도 데이터 기반으로, 축제 방문객이 행사장 관람 후 인근 골목상권, 식당, 숙박시설로 이동하여 유발하는 지역 경제 파급효과 추정치입니다.`,
+      title: "주변 관광 연계 점수",
+      summary: `주변 관광지 매력도와 개수, 비교 축제 보정을 바탕으로 ${summary.spillover.nearbyInflowRate}점의 참고 지수를 산출했습니다.`,
+      takeawaySummary: `주변 관광 연계 참고 점수 ${summary.spillover.nearbyInflowRate}점. 실제 상권 이동률이나 소비 확률이 아닙니다.`,
+      plainExplanation: "주변 관광지 정보와 비교 축제 수요를 이용하는 모델 점수입니다. 상가 조회 목록이나 관광소비지수는 이 점수의 계산 입력이 아닙니다.",
       inputComparison: [
         {
           label: "개최 지역",
@@ -1018,14 +1020,14 @@ export function createMetricEvidenceSet(
         {
           label: "방문객 1인 소비액",
           planValue: `${(economy.averageSpendPerVisitorKrw ?? 58400).toLocaleString("ko-KR")}원`,
-          adjustedFactor: "관광소비강도 계수",
+          adjustedFactor: economy.spendingBasisLabel,
           resultValue: "소비 유발 단가",
         },
         {
           label: "총 지역 소비 창출",
           planValue: `${((economy.expectedLocalSpendingKrw ?? 0) / 100000000).toFixed(1)}억원`,
-          adjustedFactor: `상권 연계율 ${summary.spillover.nearbyInflowRate}%`,
-          resultValue: "지역 경제 파급효과",
+          adjustedFactor: "하루 유입 × 소비 단가 (연계 점수와 별도 계산)",
+          resultValue: "하루 추정 소비액",
         },
       ],
       dataSources: ["TourAPI 주변 관광지", "관광지 매력도 점수", "한국관광공사 관광소비강도"],
@@ -1250,7 +1252,7 @@ export function createMetricEvidenceSet(
     "economic-roi": {
       metricId: "economic-roi",
       title: "예산 대비 경제적 파급효과",
-      summary: `예상 방문객 소비액을 총 예산과 비교해 ${economy.roiMultiplier.toFixed(1)}배 창출 가능성으로 표시합니다.`,
+      summary: `하루 추정 소비액을 총 사업 예산과 비교한 참고 비율 ${economy.roiMultiplier.toFixed(1)}배입니다. 행사 전체 매출이나 투자 수익률이 아닙니다.`,
       dataSources: [
         "소상공인시장진흥공단 상가(상권)정보 API",
         "예상 방문객",
@@ -1271,7 +1273,7 @@ export function createMetricEvidenceSet(
         {
           stepNumber: 2,
           title: "2단계: 방문객 1인당 평균 소비 단가 추정",
-          formula: "소비 단가 = 관광데이터랩 카드 소비 지출 객단가",
+          formula: "적용 소비 단가 = 아래 출처의 금액 참고값 (소비지수는 금액으로 변환하지 않음)",
           inputValue: economy.spendingBasisLabel,
           coefficient: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원/인`,
           subtotal: `${economy.averageSpendPerVisitorKrw.toLocaleString("ko-KR")}원`,

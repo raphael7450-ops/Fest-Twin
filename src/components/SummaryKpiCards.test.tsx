@@ -43,7 +43,8 @@ describe("SummaryKpiCards", () => {
     expect(screen.getByText("수용 정원률 145%")).toBeInTheDocument();
     expect(screen.getByText("초과")).toBeInTheDocument();
     expect(screen.getByText("TourAPI·문체부")).toBeInTheDocument();
-    expect(screen.getByText("VWorld·감쇠격자")).toBeInTheDocument();
+    expect(screen.getByText("피크 인원·행사장 면적")).toBeInTheDocument();
+    expect(screen.queryByText("우수 수준")).not.toBeInTheDocument();
   });
 });
 

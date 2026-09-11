@@ -88,11 +88,11 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
       {/* 2. 최고 밀집 위험도 */}
       <article className="metric-card metric-card--danger">
         <div className="kpi-card-header">
-          <span className="kpi-title-label">최고 밀집 위험도</span>
+          <span className="kpi-title-label">피크 시간 평균 밀도</span>
           <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />
         </div>
         <div className="kpi-meta-row">
-          <span className="source-tag">VWorld·감쇠격자</span>
+          <span className="source-tag">피크 인원·행사장 면적</span>
           <div className="kpi-badges-group">
             <em className={`risk-badge risk-badge-${densityTone}`}>
               {densityLabel}
@@ -116,13 +116,13 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
       {/* 3. 예산 효율성 점수 */}
       <article className="metric-card metric-card--warning">
         <div className="kpi-card-header">
-          <span className="kpi-title-label">예산 효율성 점수</span>
+          <span className="kpi-title-label">예산 단가 참고값</span>
           <EvidenceButton onClick={() => onOpenEvidence("budget-efficiency")} />
         </div>
         <div className="kpi-meta-row">
           <span className="source-tag">예산·관광백데이터</span>
           <div className="kpi-badges-group">
-            <em className="kpi-badge kpi-badge-high">우수 수준</em>
+            <em className="kpi-badge kpi-badge-medium">기획 참고값</em>
           </div>
         </div>
         <div className="kpi-body">
@@ -134,17 +134,17 @@ export function SummaryKpiCards({ metrics, onOpenEvidence }: SummaryKpiCardsProp
       {/* 4. 지역 상권 유출 연계도 */}
       <article className="metric-card metric-card--success">
         <div className="kpi-card-header">
-          <span className="kpi-title-label">지역 상권 유출 연계도</span>
+          <span className="kpi-title-label">주변 관광 연계 점수</span>
           <EvidenceButton onClick={() => onOpenEvidence("commercial-spillover")} />
         </div>
         <div className="kpi-meta-row">
-          <span className="source-tag">관광소비·상권</span>
+          <span className="source-tag">주변 관광지·축제 참고자료</span>
           <div className="kpi-badges-group">
             <em className={`kpi-badge kpi-badge-${spilloverTone}`}>{spilloverLabel}</em>
           </div>
         </div>
         <div className="kpi-body">
-          <strong className="kpi-value">{metrics.spillover.nearbyInflowRate}%</strong>
+          <strong className="kpi-value">{metrics.spillover.nearbyInflowRate}점</strong>
           <small className="metric-trend">{metrics.spillover.description}</small>
         </div>
       </article>

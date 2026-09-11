@@ -688,6 +688,7 @@ export function App() {
             {activeDashboardSection === "evidence" && (
               <section className="dashboard-section-panel active">
                 <DataBasisPanel
+                  infrastructure={committed.datasets.infrastructure?.value}
                   tourism={tourism}
                   trends={trends}
                   traffic={traffic}
