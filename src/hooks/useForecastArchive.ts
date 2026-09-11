@@ -5,7 +5,8 @@ export interface ArchiveSummary {
   archive: { archived: number; preEvent: number; afterStart: number; verified: number; corrupt: number; quota: number };
   evaluation: { status: string; comparable: number; excluded: number; unmatchedActuals: number;
     actualIssues: Array<{ actualId: string; reasons: string[] }>;
-    groups: Array<{ mode: string; modelVersion: string; year: number; measure: string; scope: string; count: number; mae: number; bias: number; wapePercent: number | null }> };
+    groups: Array<{ mode: string; modelVersion: string; year: number; measure: string; scope: string; count: number; mae: number; bias: number; wapePercent: number | null; evaluationRole?: string; independentFestivals?: number }>;
+    benchmarks?: Array<{ mode: string; modelVersion: string; year: number; measure: string; scope: string; count: number; independentFestivals: number; candidateMae: number; baselineMae: number; maeImprovementPercent: number | null; status: string }> };
 }
 export interface ArchiveState {
   phase: "idle" | "saving" | "saved" | "failed";

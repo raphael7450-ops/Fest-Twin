@@ -38,6 +38,7 @@ export function createForecastArchiveRouter(options = {}) {
       const value = { archive: await archive.summary(), evaluation: {
         status: evaluation.status, comparable: evaluation.accepted.length, excluded: evaluation.excluded.length,
         unmatchedActuals: evaluation.unmatchedActualIds.length, actualIssues: evaluation.actualIssues, groups: evaluation.groups,
+        benchmarks: evaluation.benchmarks,
       } };
       summaryCache = { at: Date.now(), value };
       return res.json(value);

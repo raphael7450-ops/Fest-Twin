@@ -23,7 +23,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     const report = await runVisitorEvaluation(process.argv[2] ?? "data/visitor_evaluation.json",
       process.argv[3] ?? "reports/visitor_evaluation.json");
     console.log(JSON.stringify({ status: report.status, accepted: report.accepted.length,
-      excluded: report.excluded.length, unmatchedActuals: report.unmatchedActualIds.length, actualIssues: report.actualIssues, groups: report.groups }, null, 2));
+      excluded: report.excluded.length, unmatchedActuals: report.unmatchedActualIds.length, actualIssues: report.actualIssues, groups: report.groups, benchmarks: report.benchmarks }, null, 2));
     process.exitCode = report.accepted.length ? 0 : 2;
   } catch (error) {
     console.error(`Visitor evaluation failed: ${error.message}`);

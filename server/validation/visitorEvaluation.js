@@ -68,7 +68,7 @@ export function evaluateVisitors(document, { now = new Date().toISOString() } = 
     if (!actual) reasons.push("MISSING_ACTUAL");
     if (!validBasis(p)) reasons.push("INVALID_PREDICTION");
     if (frequencies.get(comparisonKey(p)) > 1) reasons.push("DUPLICATE_COMPARISON");
-    const start = date(p.startDate);
+    const start = date(p.startDate) - 9 * 3600000;
     const generated = timestamp(p.generatedAt), cutoff = timestamp(p.inputCutoff);
     if (!text(p.modelVersion) || !Number.isFinite(generated) || generated > nowMs
       || !Number.isFinite(cutoff) || cutoff >= start || cutoff > generated) reasons.push("INVALID_PREDICTION_PROVENANCE");
@@ -86,7 +86,8 @@ export function evaluateVisitors(document, { now = new Date().toISOString() } = 
       if (id === p.actualId) reasons.push("TARGET_LEAKAGE");
       const input = inputs.get(id);
       if (!input || !httpUrl(input.sourceUrl)) { reasons.push("MISSING_INPUT_PROVENANCE"); continue; }
-      if (!Number.isInteger(input.year) || input.year >= p.year) reasons.push("YEAR_LEAKAGE");
+      const reviewedSnapshot = input.kind === "pre_event_snapshot" && input.reviewStatus === "approved";
+      if (!Number.isInteger(input.year) || input.year > p.year || (input.year === p.year && !reviewedSnapshot)) reasons.push("YEAR_LEAKAGE");
       if (!Number.isFinite(timestamp(input.availableAt)) || timestamp(input.availableAt) > cutoff) reasons.push("FUTURE_INPUT");
     }
     if (reasons.length) {
@@ -96,6 +97,7 @@ export function evaluateVisitors(document, { now = new Date().toISOString() } = 
     const error = p.value - actual.value;
     accepted.push({ predictionId: p.id, actualId: actual.id, festivalId: p.festivalId, year: p.year,
       mode: p.mode, modelVersion: p.modelVersion, measure: p.measure, scope: p.scope,
+      evaluationRole: p.evaluationRole ?? "unassigned",
       predicted: p.value, actual: actual.value, error, absoluteError: Math.abs(error),
       absolutePercentageError: actual.value === 0 ? null : Math.abs(error) / actual.value * 100,
       sourceUrl: actual.source.url });
@@ -103,7 +105,7 @@ export function evaluateVisitors(document, { now = new Date().toISOString() } = 
   // Never pool replay runs, measurement definitions or model versions into an apparent accuracy score.
   const grouped = new Map();
   for (const row of accepted) {
-    const key = JSON.stringify([row.mode, row.modelVersion, row.year, row.measure, row.scope]);
+    const key = JSON.stringify([row.mode, row.modelVersion, row.year, row.measure, row.scope, row.evaluationRole]);
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key).push(row);
   }
@@ -112,6 +114,7 @@ export function evaluateVisitors(document, { now = new Date().toISOString() } = 
     const totalActual = rows.reduce((sum, row) => sum + row.actual, 0);
     const absoluteError = rows.reduce((sum, row) => sum + row.absoluteError, 0);
     return { mode: first.mode, modelVersion: first.modelVersion, year: first.year, measure: first.measure, scope: first.scope,
+      evaluationRole: first.evaluationRole, independentFestivals: new Set(rows.map(row => row.festivalId)).size,
       count: n, mae: absoluteError / n, bias: rows.reduce((sum, row) => sum + row.error, 0) / n,
       wapePercent: totalActual === 0 ? null : absoluteError / totalActual * 100,
       overPredictions: rows.filter(row => row.error > 0).length,
@@ -120,9 +123,43 @@ export function evaluateVisitors(document, { now = new Date().toISOString() } = 
   });
   const referenced = new Set([...predictions.values()].map(row => row.actualId));
   return { schemaVersion: 1, evaluatedAt: now, status: accepted.length ? "COMPARISONS_AVAILABLE" : "INSUFFICIENT_EVIDENCE",
-    accepted, excluded, groups, unmatchedActualIds: [...actuals.keys()].filter(id => !referenced.has(id)),
+    accepted, excluded, groups, benchmarks: compareVisitorBaselines(accepted), unmatchedActualIds: [...actuals.keys()].filter(id => !referenced.has(id)),
     actualIssues: [...actuals.values()].map(actual => ({ actualId: actual.id, reasons: actualReasons(actual, nowMs) })).filter(row => row.reasons.length),
     limitations: ["Comparisons are not a reliability certification.", "Pre-event archive references require independent authenticity review.",
       "Only declared input provenance can be checked; undeclared leakage is not detectable.",
       "Official visitor estimates may differ from audited unique-person counts."] };
+}
+
+/** Pair on identical outcome IDs; never compare averages of different cohorts. */
+export function compareVisitorBaselines(accepted, { minFestivals = 5 } = {}) {
+  if (!Number.isInteger(minFestivals) || minFestivals < 5) throw new Error("At least five independent festivals required for review");
+  const holdout = accepted.filter(row => row.evaluationRole === "holdout");
+  const baseline = new Map(holdout.filter(row => row.modelVersion === "prior-year-v1")
+    .map(row => [JSON.stringify([row.actualId, row.mode, row.year, row.measure, row.scope]), row]));
+  const groups = new Map();
+  for (const row of holdout.filter(item => item.modelVersion !== "prior-year-v1")) {
+    const prior = baseline.get(JSON.stringify([row.actualId, row.mode, row.year, row.measure, row.scope]));
+    if (!prior) continue;
+    const key = JSON.stringify([row.mode, row.modelVersion, row.year, row.measure, row.scope]);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({ row, prior });
+  }
+  return [...groups.values()].map(pairs => {
+    const count = pairs.length, first = pairs[0].row;
+    const independentFestivals = new Set(pairs.map(({ row }) => row.festivalId)).size;
+    const sum = fn => pairs.reduce((total, pair) => total + fn(pair), 0);
+    const totalActual = sum(({ row }) => row.actual);
+    const candidateMae = sum(({ row }) => row.absoluteError) / count;
+    const baselineMae = sum(({ prior }) => prior.absoluteError) / count;
+    const candidateBias = sum(({ row }) => row.error) / count;
+    const baselineBias = sum(({ prior }) => prior.error) / count;
+    return { mode: first.mode, modelVersion: first.modelVersion, year: first.year, measure: first.measure, scope: first.scope,
+      count, independentFestivals, candidateMae, baselineMae, candidateBias, baselineBias,
+      candidateWapePercent: totalActual ? candidateMae * count / totalActual * 100 : null,
+      baselineWapePercent: totalActual ? baselineMae * count / totalActual * 100 : null,
+      maeImprovementPercent: baselineMae ? (baselineMae - candidateMae) / baselineMae * 100 : null,
+      status: independentFestivals < minFestivals || totalActual === 0 ? "INSUFFICIENT_EVIDENCE"
+        : candidateMae < baselineMae && Math.abs(candidateBias) <= Math.abs(baselineBias) ? "REVIEW_REQUIRED" : "NO_IMPROVEMENT",
+      automaticPromotion: false };
+  });
 }

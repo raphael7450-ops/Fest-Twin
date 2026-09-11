@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { evaluateVisitors } from "./visitorEvaluation.js";
+import { evaluateVisitors, compareVisitorBaselines } from "./visitorEvaluation.js";
 
 const now = "2026-09-10T00:00:00Z";
 function fixture() {
@@ -17,6 +17,24 @@ function fixture() {
 const evaluate = (input) => evaluateVisitors(input, { now });
 
 describe("visitor evaluation contracts", () => {
+  it("rejects a supposed pre-event record received after midnight in Korea", () => {
+    const input = fixture();
+    Object.assign(input.predictions[0], { mode: "pre_event", generatedAt: "2025-07-31T16:00:00Z", recordedAt: "2025-07-31T16:00:00Z", archiveReference: "fixture" });
+    expect(evaluate(input).excluded[0]?.reasons).toContain("NOT_PRE_EVENT");
+  });
+  it("compares only paired holdout cases and never promotes a one-festival result", () => {
+    const input = fixture(); input.predictions[0].evaluationRole = "holdout";
+    input.predictions.push({ ...input.predictions[0], id: "baseline", modelVersion: "prior-year-v1", value: 150 });
+    const result = evaluate(input);
+    const comparison = compareVisitorBaselines(result.accepted)[0];
+    expect(comparison).toMatchObject({ count: 1, independentFestivals: 1, candidateMae: 20, baselineMae: 50,
+      status: "INSUFFICIENT_EVIDENCE", maeImprovementPercent: 60 });
+  });
+  it("does not compare training samples or unmatched model cohorts", () => {
+    const input = fixture(); input.predictions[0].evaluationRole = "training";
+    input.predictions.push({ ...input.predictions[0], id: "baseline", modelVersion: "prior-year-v1", evaluationRole: "holdout" });
+    expect(compareVisitorBaselines(evaluate(input).accepted)).toEqual([]);
+  });
   it("does not admit an explicitly pending outcome after publication metadata is completed", () => {
     const input = fixture(); input.actuals[0].source.reviewStatus = "pending_basis_match";
     const report = evaluate(input);
@@ -38,6 +56,14 @@ describe("visitor evaluation contracts", () => {
   });
   it("blocks target-year inputs even if they were published before the festival", () => {
     const input = fixture(); input.inputs[0].year = 2025;
+    expect(evaluate(input).excluded[0].reasons).toContain("YEAR_LEAKAGE");
+  });
+  it("allows an explicitly reviewed pre-event snapshot from the target year, but not a target-year outcome", () => {
+    const input = fixture();
+    Object.assign(input.inputs[0], { year: 2025, kind: "pre_event_snapshot", reviewStatus: "approved", availableAt: "2025-01-01T00:00:00Z" });
+    input.predictions[0].inputCutoff = "2025-07-01T00:00:00Z";
+    expect(evaluate(input).accepted).toHaveLength(1);
+    input.inputs[0].reviewStatus = "pending";
     expect(evaluate(input).excluded[0].reasons).toContain("YEAR_LEAKAGE");
   });
   it("blocks a target actual ID used as an input", () => {

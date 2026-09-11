@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "validate:visitors": "node server/validation/checkVisitorForecasts.js",
+    "replay:visitors": "node scripts/replay-visitor-forecasts.mjs",
     "test:mobile": "node scripts/check-mobile-festival-layout.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
