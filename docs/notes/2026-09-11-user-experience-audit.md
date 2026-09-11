@@ -30,7 +30,7 @@ Daejeon and compared KPI summaries with their evidence dialogs.
 
 ## Verification
 
-- Vitest: 636 passed, 4 existing skips before final deployment.
+- Vitest: 637 passed, 4 existing skips, including the follow-up source-badge regression.
 - TypeScript and Vite production build passed; existing bundle-size warning.
 - Edge mobile viewport 390 x 844: all six tabs, no document horizontal
   overflow and no page errors. Desktop CSV download completed; print-button
@@ -42,6 +42,21 @@ Daejeon and compared KPI summaries with their evidence dialogs.
   after clearing local copies. Both now have passing regression tests.
 
 ## Boundaries
+
+## Deployed workflow checks (2026-09-12)
+
+- Public HTTPS site: all six tabs at 390px and Daejeon regional/date selection
+  had no document overflow or browser page errors.
+- Missing-area density displayed unavailable; the 50-million-KRW plan showed
+  0.5 hundred-million KRW and explained the blended 7,365-KRW reference.
+- Saved a uniquely named QA plan through the UI, reloaded it, opened its share
+  token in a separate page, then deleted only that QA record through the UI.
+- Original scenario JSON SHA-256 was identical before deployment, after
+  migration, and after QA cleanup. Host persistence mount was verified.
+- Removed an additional unconditional provider badge discovered in the live
+  evidence drawer; provider names must come from the selected evidence.
+
+## Remaining limits
 
 This change does not establish forecast accuracy. Sample consumption prices,
 heuristic demand calibration, benchmark comparability, safety assumptions and

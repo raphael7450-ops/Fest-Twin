@@ -972,9 +972,9 @@ export function createMetricEvidenceSet(
           resultValue: "총 사업비",
         },
         {
-          label: "예상 총 집객",
+          label: "하루 예상 유입",
           planValue: `${forecast.expectedVisitors.toLocaleString("ko-KR")}명`,
-          adjustedFactor: "AI 수요 예측치",
+          adjustedFactor: "모델 추정값",
           resultValue: "유치 인원",
         },
         {
