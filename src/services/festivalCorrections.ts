@@ -2,6 +2,8 @@ import corrections from "../../data/festival_corrections.json";
 
 export interface FestivalCorrection {
   canonicalKey: string;
+  aliases?: string[];
+  requireKnownYear?: boolean;
   regions: string[];
   status: "active" | "inactive";
   officialStartDate?: string;
@@ -19,6 +21,7 @@ export interface FestivalCorrectionInput {
   year?: string | number;
   startDate?: string;
   endDate?: string;
+  visitors?: number;
 }
 
 const festivalCorrections = corrections as FestivalCorrection[];
@@ -64,7 +67,8 @@ export function getFestivalCorrection(input: FestivalCorrectionInput) {
       : undefined;
 
     return (
-      correction.canonicalKey === canonicalKey &&
+      (correction.canonicalKey === canonicalKey || correction.aliases?.includes(canonicalKey)) &&
+      (!correction.requireKnownYear || recordYear !== undefined) &&
       regionsMatch(input.region, correction.regions) &&
       (!officialYear || !recordYear || officialYear === recordYear)
     );
@@ -77,6 +81,7 @@ export function applyFestivalCorrection<T extends FestivalCorrectionInput>(candi
 
   return {
     ...candidate,
+    ...(correction.requireKnownYear ? { visitors: undefined, domesticVisitors: undefined, foreignVisitors: undefined, unverifiedReportedVisitors: candidate.visitors } : {}),
     ...(correction.officialStartDate ? { startDate: correction.officialStartDate } : {}),
     ...(correction.officialEndDate ? { endDate: correction.officialEndDate } : {}),
     correction,

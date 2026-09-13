@@ -1,5 +1,28 @@
 [
   {
+    "canonicalKey": "푸드앤아트페스티벌",
+    "aliases": ["순천푸드앤아트페스티벌"],
+    "regions": ["전남", "전라남도"],
+    "status": "active",
+    "requireKnownYear": true,
+    "officialStartDate": "2023-10-07",
+    "officialEndDate": "2023-10-09",
+    "verifiedAt": "2026-09-13",
+    "sourceName": "순천시 관광과 공식 개최 공지 (일정만 검증)",
+    "sourceUrl": "https://www.suncheon.go.kr/kr/news/0001/0001/?boardId=BBS_0000000000000130&cntId=9876&mode=view"
+  },
+  {
+    "canonicalKey": "무주산골영화제",
+    "regions": ["전북", "전라북도", "전북특별자치도"],
+    "status": "active",
+    "requireKnownYear": true,
+    "officialStartDate": "2024-06-05",
+    "officialEndDate": "2024-06-09",
+    "verifiedAt": "2026-09-13",
+    "sourceName": "무주산골영화제 주최 측 프로그램 공지 (일정만 검증)",
+    "sourceUrl": "https://www.mjff.or.kr/kor/artyboard/mboard.asp?Action=view&intPage=1&intSeq=8710&strBoardID=H63U_QQUO"
+  },
+  {
     "canonicalKey": "탐라문화제",
     "regions": ["제주", "제주특별자치도"],
     "status": "active",

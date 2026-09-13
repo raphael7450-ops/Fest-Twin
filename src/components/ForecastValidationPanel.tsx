@@ -5,6 +5,15 @@ export function ForecastValidationPanel({ state }: { state: ArchiveState }) {
   const summary = state.summary;
   return <section className="forecast-validation" aria-label="예측 검증 현황">
     <h2>예측 검증</h2>
+    <details>
+      <summary>공개 방문객 자료 검토 현황</summary>
+      <p>집계 방식 미확인 자료는 정확도 평가와 모델 보정에 사용하지 않습니다. 아래 수집 자료는 운영 예측 입력으로 추가하지 않았습니다.</p>
+      <p>순천 축제 방문객 26행: 집계 방식 미확인. 누적 출입 횟수인지 중복 제거 인원인지 확인 중입니다.</p>
+      <a href="https://www.data.go.kr/data/15150652/fileData.do" target="_blank" rel="noopener noreferrer">순천시 축제 현황 원문</a>
+      <p>충북 세부 관광객 통계: 성별·연령, 국적, 시간대는 서로 다른 집계이므로 합산하지 않습니다.</p>
+      <a href="https://www.data.go.kr/data/15153074/fileData.do" target="_blank" rel="noopener noreferrer">충북 관광객 통계 원문</a>
+      <p>일정 보정은 방문객 수 검증이 아닙니다. 보정된 행사 기간에 기존 방문객 수를 재배정하지 않습니다.</p>
+    </details>
     <p role="status">{labels[state.phase]}</p>
     {state.receipt && <p>서버 수신: <time dateTime={state.receipt.receivedAt}>{new Date(state.receipt.receivedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} KST</time>
       {state.receipt.timing === "after_start_received" && " · 행사 시작 이후 수신"}</p>}

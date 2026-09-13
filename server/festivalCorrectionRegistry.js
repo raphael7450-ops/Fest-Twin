@@ -47,7 +47,8 @@ function getCorrection(corrections, record) {
       : undefined;
 
     return (
-      correction.canonicalKey === canonicalKey &&
+      (correction.canonicalKey === canonicalKey || correction.aliases?.includes(canonicalKey)) &&
+      (!correction.requireKnownYear || recordYear !== undefined) &&
       regionsMatch(record.region, correction.regions) &&
       (!officialYear || !recordYear || officialYear === recordYear)
     );
@@ -64,6 +65,7 @@ export function createFestivalCorrectionRegistry(filePath = DEFAULT_CORRECTION_F
 
       return {
         ...record,
+        ...(correction.requireKnownYear ? { visitors: undefined, domesticVisitors: undefined, foreignVisitors: undefined, unverifiedReportedVisitors: record.visitors } : {}),
         ...(correction.officialStartDate ? { startDate: correction.officialStartDate } : {}),
         ...(correction.officialEndDate ? { endDate: correction.officialEndDate } : {}),
         correction,

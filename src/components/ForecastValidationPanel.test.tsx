@@ -10,6 +10,8 @@ it("does not label captured predictions as validated or fabricate an accuracy pe
   expect(screen.getByText("정확도 판정 보류")).toBeInTheDocument();
   expect(screen.getByText("서버 보관 완료 · 검증 전")).toBeInTheDocument();
   expect(screen.queryByText(/100%/)).not.toBeInTheDocument();
+  expect(screen.getByText(/집계 방식 미확인 자료는 정확도 평가와 모델 보정에 사용하지 않습니다/)).toBeInTheDocument();
+  expect(screen.getByText("순천시 축제 현황 원문")).toHaveAttribute("href", "https://www.data.go.kr/data/15150652/fileData.do");
 });
 
 it("explains error and warns that a single holdout festival is insufficient", () => {
