@@ -548,7 +548,7 @@ export function App() {
             {activeDashboardSection === "overview" && (
               <section className="dashboard-section-panel dashboard-section-panel--overview active">
                 <VenueObservations infrastructure={committed.datasets.infrastructure?.value} spending={committed.datasets.spending.value} />
-                <ForecastValidationPanel state={archiveState} />
+                <ForecastValidationPanel state={archiveState} plan={committed.plan} />
                 <div className="workspace-grid workspace-grid--dashboard">
                   <div className="main-column">
                     <ForecastChart

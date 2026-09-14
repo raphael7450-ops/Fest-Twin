@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FestivalAnalysisSnapshot } from "../services/analysisSnapshot";
+import { selectPriorYearVisitors } from '../services/priorYearVisitors';
 
 export interface ArchiveSummary {
   archive: { archived: number; preEvent: number; afterStart: number; verified: number; corrupt: number; quota: number };
@@ -24,7 +25,8 @@ export function useForecastArchive(snapshot?: FestivalAnalysisSnapshot): Archive
     setState({ phase: "saving" });
     async function capture() {
       const body = JSON.stringify({ festivalId: snapshot!.festivalId, modelVersion: snapshot!.modelVersion,
-        plan: snapshot!.plan, forecast: snapshot!.forecast, datasets: snapshot!.datasets });
+        plan: snapshot!.plan, forecast: snapshot!.forecast,
+        datasets: { ...snapshot!.datasets, priorYearReference: selectPriorYearVisitors(snapshot!.plan) } });
       let receipt: ArchiveState["receipt"];
       for (let attempt = 0; attempt < 2 && active && !controller.signal.aborted; attempt++) {
         try {

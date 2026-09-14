@@ -1,10 +1,12 @@
 import type { ArchiveState } from "../hooks/useForecastArchive";
+import { PriorYearVisitorReference } from './PriorYearVisitorReference';
 
 const labels = { idle: "보관 대기", saving: "서버 보관 중", saved: "서버 보관 완료 · 검증 전", failed: "보관 실패 · 분석 결과는 유지됩니다" };
-export function ForecastValidationPanel({ state }: { state: ArchiveState }) {
+export function ForecastValidationPanel({ state, plan }: { state: ArchiveState; plan?: { name: string; region: string; startDate: string } }) {
   const summary = state.summary;
   return <section className="forecast-validation" aria-label="예측 검증 현황">
     <h2>예측 검증</h2>
+    {plan && <PriorYearVisitorReference plan={plan} />}
     <details>
       <summary>공개 방문객 자료 검토 현황</summary>
       <p>집계 방식 미확인 자료는 정확도 평가와 모델 보정에 사용하지 않습니다. 아래 수집 자료는 운영 예측 입력으로 추가하지 않았습니다.</p>

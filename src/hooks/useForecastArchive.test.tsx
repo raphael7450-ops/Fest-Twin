@@ -14,6 +14,8 @@ it("archives a committed snapshot once without sending unrelated report fields",
   rerender();
   expect(fetch.mock.calls.filter(call => call[1]?.method === "POST")).toHaveLength(1);
   expect(JSON.parse(fetch.mock.calls[0][1].body)).not.toHaveProperty("analysisId");
+  expect(JSON.parse(fetch.mock.calls[0][1].body).datasets.priorYearReference.eligibleForAccuracy).toBe(false);
+  expect(snapshot.datasets).not.toHaveProperty('priorYearReference');
 });
 it("keeps a failed archive separate from the analysis and handles stale responses", async () => {
   let resolveFirst!: (value: Response) => void;
