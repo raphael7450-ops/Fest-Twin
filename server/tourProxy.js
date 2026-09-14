@@ -121,6 +121,8 @@ export function createTourProxyRouter(options = {}) {
   const router = express.Router();
   const fetchImpl = options.fetchImpl ?? fetch;
   const log = options.logger ?? noopLogger;
+  const timeoutMs = Number.isFinite(options.timeoutMs) && options.timeoutMs > 0
+    ? options.timeoutMs : 10000;
 
   router.get("/:endpoint", async (request, response) => {
     const apiKey = options.apiKey ?? process.env.TOUR_API_KEY ?? "";
@@ -146,9 +148,11 @@ export function createTourProxyRouter(options = {}) {
     }
 
     const upstreamUrl = buildTourApiUrl(request.params.endpoint, apiKey, request.query);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const upstreamResponse = await fetchImpl(upstreamUrl);
+      const upstreamResponse = await fetchImpl(upstreamUrl, { signal: controller.signal });
       if (!upstreamResponse.ok) {
         log.warn("TourAPI upstream error", {
           event: "TOUR_API_UPSTREAM_FALLBACK",
@@ -164,20 +168,25 @@ export function createTourProxyRouter(options = {}) {
       }
 
       const payload = await upstreamResponse.json();
+      const resultCode = payload?.response?.header?.resultCode;
+      if (resultCode !== "0000" && resultCode !== "00") {
+        return errorResponse(response, 502, "TOUR_API_INVALID_RESPONSE", "TourAPI returned an unsuccessful application response.");
+      }
       // 2. 정상 수신 응답 캐시 저장소에 저장
       setCachedData(cacheKey, payload);
       return response.status(200).json(payload);
     } catch (error) {
-      const code = error instanceof SyntaxError
+      const code = controller.signal.aborted ? "TOUR_API_TIMEOUT" : error instanceof SyntaxError
         ? "TOUR_API_INVALID_RESPONSE"
         : "TOUR_API_UPSTREAM_ERROR";
       log.error("TourAPI proxy request failed", {
         event: "TOUR_API_PROXY_ERROR",
         endpoint: request.params.endpoint,
         errorCode: code,
-        message: error.message,
       });
-      return errorResponse(response, 502, code, "TourAPI proxy request failed.");
+      return errorResponse(response, controller.signal.aborted ? 504 : 502, code, "TourAPI proxy request failed.");
+    } finally {
+      clearTimeout(timer);
     }
   });
 

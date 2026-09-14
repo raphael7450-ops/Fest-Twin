@@ -197,7 +197,7 @@ describe("App", () => {
     expect(screen.getAllByText("예산 대비 경제적 파급효과").length).toBeGreaterThan(0);
     expect(screen.getAllByText("총 투입 예산").length).toBeGreaterThan(0);
     expect(screen.getByText("하루 추정 소비액 (행사 전체 아님)")).toBeInTheDocument();
-    expect(screen.getByText(/지역 관광 소비 강도 기반/)).toBeInTheDocument();
+    expect(screen.getAllByText(/지역 관광 소비 강도 기반/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/58,400원/).length).toBeGreaterThan(0);
   });
 

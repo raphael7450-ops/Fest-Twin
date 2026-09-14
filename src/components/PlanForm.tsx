@@ -106,6 +106,7 @@ export function PlanForm({
             TourAPI 후보 보기
           </button>
         </div>
+        <p>축제 변경 후 수용 정원과 예산을 확인하세요. 수용 정원은 기존 입력 가정이며, 누적 방문객 수로 자동 산정하지 않습니다.</p>
 
         <label>
           신규/선택 축제명

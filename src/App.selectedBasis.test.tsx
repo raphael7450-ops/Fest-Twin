@@ -150,7 +150,7 @@ describe("App selected festival basis", () => {
     );
   });
 
-  it("updates budget and expected capacity inputs when a selected TourAPI candidate matches DB backdata", async () => {
+  it("updates budget but preserves operator capacity when a selected candidate matches DB backdata", async () => {
     vi.useFakeTimers();
     const view = render(<App />);
     await act(async () => Promise.resolve());
@@ -168,7 +168,7 @@ describe("App selected festival basis", () => {
 
     openDashboardSection("기획");
     expect(screen.getByDisplayValue("4321")).toHaveValue(4321);
-    expect(screen.getByDisplayValue("20000")).toHaveValue(20000);
+    expect(screen.getByDisplayValue("45000")).toHaveValue(45000);
   });
 
   it("refreshes trend, traffic, and spending contexts from the selected candidate plan", async () => {

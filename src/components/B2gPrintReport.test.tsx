@@ -10,6 +10,35 @@ import { B2gPrintReport } from "./B2gPrintReport";
 afterEach(cleanup);
 
 describe("B2gPrintReport", () => {
+  it("labels daily estimates without claiming official approval or investment returns", () => {
+    render(<B2gPrintReport snapshot={createTestAnalysisSnapshot()} />);
+    expect(screen.getByText("하루 예상 방문객 (추정)")).toBeInTheDocument();
+    expect(screen.getByText("하루 추정 지역 소비액")).toBeInTheDocument();
+    expect(screen.getByText(/행사 전체 방문객·매출이나 투자 수익률이 아닙니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/행정안전부 및 지자체 감사 제출 서식/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/투입 예산 대비 ROI/)).not.toBeInTheDocument();
+  });
+
+  it("prints the snapshot consumption source instead of an unrelated agency claim", () => {
+    const base = createTestAnalysisSnapshot();
+    const snapshot = {
+      ...base,
+      metrics: {
+        ...base.metrics,
+        economic: {
+          ...base.metrics.economic,
+          spendingSourceName: "검증용 소비 원단위 출처",
+          spendingBasisLabel: "샘플 가정",
+        },
+      },
+    };
+    render(<B2gPrintReport snapshot={snapshot} />);
+    expect(screen.getByText("소비 원단위 출처: 검증용 소비 원단위 출처")).toBeInTheDocument();
+    expect(screen.getByText("적용 근거: 샘플 가정")).toBeInTheDocument();
+    expect(screen.queryByText("소상공인진흥공단 1인당 소비단가 모델 적용")).not.toBeInTheDocument();
+    expect(screen.getByText(/공식 승인 서식이 아니며/)).toBeInTheDocument();
+  });
+
   it("prints dwell-aware flow evidence from the forecast", () => {
     const baseSnapshot = createTestAnalysisSnapshot();
     const snapshot = {

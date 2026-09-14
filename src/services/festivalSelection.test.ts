@@ -204,10 +204,10 @@ describe("festivalSelection", () => {
     });
 
     expect(nextPlan.totalBudgetMillionKrw).toBe(1100);
-    expect(nextPlan.expectedCapacity).toBe(12200);
+    expect(nextPlan.expectedCapacity).toBe(sampleFestivalPlan.expectedCapacity);
   });
 
-  it("prefills budget and expected capacity directly from a regional DB candidate", () => {
+  it("prefills budget but never converts cumulative visitors into venue capacity", () => {
     const regionalDbCandidate: FestivalCandidate = {
       id: "mcst-boryeong-mud-2026",
       title: "제29회 보령머드축제",
@@ -222,7 +222,7 @@ describe("festivalSelection", () => {
     const nextPlan = applyFestivalCandidateToPlan(sampleFestivalPlan, regionalDbCandidate);
 
     expect(nextPlan.totalBudgetMillionKrw).toBe(3500);
-    expect(nextPlan.expectedCapacity).toBe(338072);
+    expect(nextPlan.expectedCapacity).toBe(sampleFestivalPlan.expectedCapacity);
   });
 
   it("extends operating hours and adds a midnight program for countdown festivals", () => {

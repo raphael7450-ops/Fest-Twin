@@ -62,7 +62,7 @@ export function B2gPrintReport({
           <div className="b2g-print-header__logo">
             <span className="b2g-print-logo-box">FT</span>
             <div className="b2g-print-header__org">
-              <span className="b2g-org-name">행정안전부 및 지자체 감사 제출 서식</span>
+              <span className="b2g-org-name">Fest-Twin 자체 작성 사전 검토 자료</span>
               <span className="b2g-org-sub">Fest-Twin B2G SaaS Control Center</span>
             </div>
           </div>
@@ -77,7 +77,7 @@ export function B2gPrintReport({
         <div className="b2g-print-doc-title">
           <h1>[Fest-Twin] 축제 사전 진단 및 수요 추정 보고서</h1>
           <p className="b2g-print-doc-sub">
-            지자체 축제 예산 집행 사전 검토 | TourAPI 및 KTDB 공공데이터 기반 수요·안전·경제 파급효과 산출
+            축제 운영계획 사전 검토 | 조회 자료와 입력 가정을 바탕으로 한 시나리오 추정
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export function B2gPrintReport({
           <h2 className="b2g-section-heading">2. 핵심 지표 요약 (Key Executive Metrics)</h2>
           <div className="b2g-kpi-grid">
             <div className="b2g-kpi-card">
-              <span className="b2g-kpi-title">총 예상 방문객</span>
+              <span className="b2g-kpi-title">하루 예상 방문객 (추정)</span>
               <strong className="b2g-kpi-val">{expectedVisitors.toLocaleString("ko-KR")} 명</strong>
               <span className="b2g-kpi-sub">피크 시간: {forecast.peakHour}:00 ({peakVisitorCount.toLocaleString("ko-KR")}명)</span>
             </div>
@@ -125,11 +125,12 @@ export function B2gPrintReport({
               </span>
             </div>
             <div className="b2g-kpi-card">
-              <span className="b2g-kpi-title">추정 상권 경제 파급효과</span>
+              <span className="b2g-kpi-title">하루 추정 지역 소비액</span>
               <strong className="b2g-kpi-val">{formatKrw(totalEconomicEffect)}</strong>
-              <span className="b2g-kpi-sub">투입 예산 대비 ROI: {roi}배</span>
+              <span className="b2g-kpi-sub">총 예산 대비 하루 소비액 비율: {roi}배</span>
             </div>
           </div>
+          <p>하루 단위 시나리오 추정이며 행사 전체 방문객·매출이나 투자 수익률이 아닙니다. 실측 방문객 기반 예측 정확도는 검증 전입니다.</p>
         </div>
 
         <div className="b2g-print-section">
@@ -156,7 +157,7 @@ export function B2gPrintReport({
           <div className="b2g-breakdown-grid">
             <div className="b2g-breakdown-step">
               <h3>Step 1. 수요 추정</h3>
-              <p>TourAPI 4.0 및 KTDB 이동 데이터 합성 추산</p>
+              <p>관광·수요 참고자료와 입력 가정을 결합한 하루 수요 추정</p>
               <ul>
                 <li>예상 방문객: {expectedVisitors.toLocaleString("ko-KR")}명</li>
                 <li>흥행 가능성 점수: {successPotential.score}점</li>
@@ -188,10 +189,11 @@ export function B2gPrintReport({
             </div>
             <div className="b2g-breakdown-step">
               <h3>Step 3. 상권 경제 효과</h3>
-              <p>소상공인진흥공단 1인당 소비단가 모델 적용</p>
+              <p>소비 원단위 출처: {metrics.economic.spendingSourceName}</p>
               <ul>
+                <li>적용 근거: {metrics.economic.spendingBasisLabel}</li>
                 <li>1인당 소비액: {avgSpend.toLocaleString("ko-KR")}원</li>
-                <li>ROI 효과: {roi}배 ({formatKrw(totalEconomicEffect)})</li>
+                <li>총 예산 대비 하루 소비액 비율: {roi}배 ({formatKrw(totalEconomicEffect)})</li>
               </ul>
             </div>
             <div className="b2g-breakdown-step">
@@ -266,7 +268,7 @@ export function B2gPrintReport({
                 </tr>
                 <tr>
                   <th>데이터 출처 및 동의</th>
-                  <td colSpan={3}>한국관광공사 TourAPI 4.0 및 국토교통부 KTDB 공공데이터 출처 표기 동의 적용</td>
+                  <td colSpan={3}>관광공사 제공 데이터 출처: ⓒ한국관광공사. 실제 적용 데이터와 샘플·보완 여부는 위 데이터셋별 출처 및 상태를 따릅니다.</td>
                 </tr>
               </tbody>
             </table>
@@ -290,7 +292,7 @@ export function B2gPrintReport({
             </div>
           </div>
           <p className="b2g-sign-notice">
-            본 보고서는 Fest-Twin 사전 진단 플랫폼에서 자동 산출된 B2G 행정 결재 및 감사 제출용 전용 서식입니다.
+            본 보고서는 Fest-Twin 자체 생성 참고자료입니다. 정부기관의 공식 승인 서식이 아니며, 안전성 인증이나 투자 수익을 보장하지 않습니다. 현장 실측 및 담당자 검토가 필요합니다.
           </p>
         </div>
 

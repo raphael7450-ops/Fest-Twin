@@ -2,6 +2,7 @@ import express from "express";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./index.js";
 import { createTourProxyRouter } from "./tourProxy.js";
+import { clearCache } from "./cache.js";
 
 function jsonResponse(payload: unknown, options: { ok?: boolean; status?: number } = {}) {
   return {
@@ -23,9 +24,9 @@ function tourApiPayload(items: unknown, totalCount = 1) {
   };
 }
 
-async function request(path: string, fetchImpl: typeof fetch, apiKey = "server-key+/=") {
+async function request(path: string, fetchImpl: typeof fetch, apiKey = "server-key+/=", timeoutMs = 50) {
   const app = express();
-  app.use("/api/tour", createTourProxyRouter({ fetchImpl, apiKey }));
+  app.use("/api/tour", createTourProxyRouter({ fetchImpl, apiKey, timeoutMs }));
   const server = app.listen(0);
   const address = server.address();
   if (!address || typeof address === "string") {
@@ -45,7 +46,34 @@ async function request(path: string, fetchImpl: typeof fetch, apiKey = "server-k
 
 describe("TourAPI server proxy", () => {
   afterEach(() => {
+    clearCache();
     vi.restoreAllMocks();
+  });
+
+  it("does not cache HTTP 200 application errors and recovers on the next request", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ response: { header: { resultCode: "22", resultMsg: "LIMIT" } } }))
+      .mockResolvedValueOnce(jsonResponse(tourApiPayload([], 0)));
+    const path = "/api/tour/festivals?areaCode=3&eventStartDate=20260914";
+    const failed = await request(path, fetchMock);
+    const recovered = await request(path, fetchMock);
+    expect(failed.response.status).toBe(502);
+    expect(recovered.response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("aborts a stalled upstream request within the configured timeout", async () => {
+    let aborted = false;
+    const fetchMock = vi.fn((_url, options) => new Promise((_resolve, reject) => {
+      const fail = () => { aborted = true; reject(new DOMException("aborted", "AbortError")); };
+      options?.signal?.addEventListener("abort", fail, { once: true });
+      // Keep the regression test bounded even before the timeout guard exists.
+      setTimeout(() => reject(new Error("test upstream watchdog")), 250);
+    }));
+    const result = await request("/api/tour/area-code?numOfRows=49", fetchMock as typeof fetch);
+    expect(aborted).toBe(true);
+    expect(result.response.status).toBe(504);
+    expect(result.body.error.code).toBe("TOUR_API_TIMEOUT");
   });
 
   it("adds serviceKey from the server only and forwards an allowed area code request", async () => {

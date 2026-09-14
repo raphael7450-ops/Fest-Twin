@@ -1,6 +1,5 @@
 import type {
   DemandBackdataContext,
-  DemandBackdataSimilarFestival,
   FestivalPlan,
   ProgramItem,
   SelectedFestivalBasis,
@@ -162,10 +161,8 @@ export function applyFestivalCandidateToPlan(
       !options.preserveBudget && recommendation?.budgetMillionKrw
         ? recommendation.budgetMillionKrw
         : currentPlan.totalBudgetMillionKrw,
-    expectedCapacity:
-      !options.preserveExpectedCapacity && recommendation?.expectedCapacity
-        ? recommendation.expectedCapacity
-        : currentPlan.expectedCapacity,
+    // Attendance is a cumulative flow, not a physical venue capacity.
+    expectedCapacity: currentPlan.expectedCapacity,
     averageDwellMinutes: undefined,
     parkingCapacityVehicles: undefined,
     restroomFixtureCount: undefined,
@@ -356,18 +353,6 @@ function createBackdataPlanningRecommendation(
   if (candidate.budgetMillionKrw || candidate.visitors) {
     return {
       budgetMillionKrw: candidate.budgetMillionKrw,
-      expectedCapacity: candidate.visitors
-        ? estimatePeakCapacity({
-            id: candidate.id,
-            name: candidate.title,
-            region: candidate.address,
-            type: "selected",
-            periodLabel: `${candidate.startDate} ~ ${candidate.endDate}`,
-            visitors: candidate.visitors,
-            similarityScore: 100,
-            sourceName: "selected regional festival DB candidate",
-          })
-        : undefined,
     };
   }
 
@@ -386,7 +371,6 @@ function createBackdataPlanningRecommendation(
 
   return {
     budgetMillionKrw: bestMatch.budgetMillionKrw,
-    expectedCapacity: estimatePeakCapacity(bestMatch),
   };
 }
 
@@ -396,15 +380,6 @@ function normalizeText(value: string) {
 
 function hasAny(text: string, keywords: string[]) {
   return keywords.some((keyword) => text.includes(normalizeText(keyword)));
-}
-
-function estimatePeakCapacity(festival: DemandBackdataSimilarFestival) {
-  if (!festival.visitors) return undefined;
-
-  return Math.min(
-    festival.visitors,
-    Math.max(1000, Math.round(festival.visitors * 0.2)),
-  );
 }
 
 export interface RegionDefaultGeoInfo {
