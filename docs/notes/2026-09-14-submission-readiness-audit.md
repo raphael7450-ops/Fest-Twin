@@ -16,13 +16,15 @@
 3. Printed report claimed an official administrative form and hard-coded a consumption agency unrelated to its actual inputs. Replaced these claims with a self-generated reference notice and the snapshot consumption source/basis.
 4. TourAPI HTTP-200 business errors were cached for ten minutes. Only successful application codes are now cached; failed responses return 502 and the next request can retry.
 5. TourAPI requests had no explicit upstream deadline. Added a ten-second abort deadline covering fetch/body consumption and a 504 timeout response. Raw exception messages are no longer logged because they may contain credential-bearing URLs.
+6. Post-deployment browser inspection found the heatmap reporting physical density from a fallback 40,000 square metres while the canonical KPI correctly reported missing area. The heatmap now withholds the grid and physical-density verdict when the plan area is missing, zero, negative or non-finite. The underlying relative simulation is unchanged and is not field-validated safety evidence.
 
 ## Verification
 
 - Regression tests failed before each production correction.
-- `npm test`: 666 passed, 4 skipped, exit 0.
+- `npm test`: 671 passed, 4 skipped, exit 0 (including the heatmap follow-up).
 - `npm run build`: exit 0. Existing bundle-size warning remains.
 - `git diff --check`: exit 0.
+- Release 21da2a9 was deployed and verified with HTTP 200, TourAPI area codes, mobile 390x844 selection and no page-width overflow. Selecting Seoul Light Gwanghwamun preserved the 45,000 input capacity rather than assigning 623,792. This input is not a certified safe capacity.
 
 ## Submission gates not certified by this audit
 

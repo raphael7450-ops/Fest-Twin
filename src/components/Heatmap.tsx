@@ -14,6 +14,15 @@ export function Heatmap({
   onOpenEvidence,
   onSelectHour,
 }: HeatmapProps) {
+  if (!Number.isFinite(plan.venueAreaSquareMeters) || (plan.venueAreaSquareMeters ?? 0) <= 0) {
+    return (
+      <section className="panel heatmap-panel">
+        <div className="panel-heading"><h2>공간 혼잡도 및 밀도 시뮬레이션</h2></div>
+        <p role="status">행사장 면적을 입력해야 공간 밀도를 산출할 수 있습니다. 임의 면적으로 안전 등급을 판정하지 않습니다.</p>
+        {onOpenEvidence && <EvidenceButton onClick={() => onOpenEvidence("peak-density")} />}
+      </section>
+    );
+  }
   const maxScore = Math.max(0, ...simulation.cells.map((c) => c.relativeDensityScore));
   const venueAreaText = plan.venueAreaSquareMeters
     ? `${plan.venueAreaSquareMeters.toLocaleString()}m²`

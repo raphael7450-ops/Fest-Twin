@@ -36,6 +36,13 @@ afterEach(() => {
 });
 
 describe("Heatmap", () => {
+  it.each([undefined, 0, -1, Number.NaN, Number.POSITIVE_INFINITY])("withholds physical density when venue area is %s", (area) => {
+    render(<Heatmap plan={{ ...sampleFestivalPlan, venueAreaSquareMeters: area }} simulation={{ ...simulation, venueAreaSquareMeters: 40000, maxDensityPerSqm: 7.55 }} />);
+    expect(screen.getByText(/행사장 면적을 입력해야 공간 밀도를/)).toBeInTheDocument();
+    expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+    expect(screen.queryByText("7.55명/m²")).not.toBeInTheDocument();
+  });
+
   it("separates bottleneck notes from the heatmap grid", () => {
     render(<Heatmap plan={sampleFestivalPlan} simulation={simulation} />);
 
